@@ -128,6 +128,12 @@ export default function MenuClient() {
 
   const dietaryOptions = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free']
   
+  const scrollTo = (elementId: string) => {
+    if (typeof window === 'undefined') return
+    const el = document.getElementById(elementId)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  
   if (error) return <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
   if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading menu...</div>
 
@@ -137,13 +143,20 @@ export default function MenuClient() {
   return (
     <div className="min-h-screen bg-white text-black">
       {/* Sticky Header with Search and Filters */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="sticky top-0 z-40 border-b border-gray-200 shadow-sm">
+        <div
+          className="px-4 py-6"
+          style={{
+            background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
+          }}
+        >
           {/* Restaurant Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-black mb-2">Monochrome Bistro</h1>
-            <p className="text-gray-600">Fresh, seasonal ingredients crafted with care</p>
+          <div className="max-w-7xl mx-auto text-center">
+            <h1 className="text-3xl font-bold text-white mb-1">Digital Menu</h1>
+            <p className="text-white/80 text-sm">Browse categories, search, and add to cart</p>
           </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 py-4 bg-white">
 
           {/* Search Bar */}
           <div className="mb-4">
@@ -217,11 +230,35 @@ export default function MenuClient() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8">
+        {/* Category Sidebar */}
+        <aside className="hidden lg:block lg:col-span-3">
+          <div className="sticky top-24 bg-white border border-gray-200 rounded-xl p-4" style={{ borderRadius: 'var(--radius)' }}>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Categories</h3>
+            <nav className="space-y-1">
+              <button
+                onClick={() => scrollTo('top')}
+                className="w-full text-left px-3 py-2 rounded-md text-sm transition hover:bg-gray-100"
+              >
+                All Categories
+              </button>
+              {filteredCategories.map(category => (
+                <button
+                  key={category.id}
+                  onClick={() => scrollTo(`cat-${category.id}`)}
+                  className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-700 transition hover:bg-gray-100"
+                >
+                  {category.name}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </aside>
+
         {/* Menu Grid */}
-        <div className="space-y-12">
+        <div className="space-y-12 lg:col-span-9" id="top">
           {filteredCategories.map(category => (
-            <div key={category.id} className="category-section">
+            <div key={category.id} id={`cat-${category.id}`} className="category-section scroll-mt-24">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-black">{category.name}</h2>
                 <div className="h-px flex-1 bg-gray-200 ml-6"></div>

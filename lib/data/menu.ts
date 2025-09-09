@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import type { MenuResponse } from "@/types/api";
+import type { MenuResponse, MenuCategory, MenuItem } from "@/types/api";
 
 // Simple in-memory override store (used when filesystem is unavailable)
 const memoryStore = new Map<string, MenuResponse>();
@@ -90,6 +90,44 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
   } catch {
     return STUB;
   }
+}
+
+// Alias requested by the new assistant API
+export async function getMenuForTenant(tenantId: string): Promise<MenuResponse> {
+  // TODO: if process.env.DATABASE_URL and prisma available, fetch from DB instead (same return shape)
+  return readMenu(tenantId)
+}
+
+export function filterMenuByDiet(menu: MenuResponse, filters: { vegan?: boolean; glutenFree?: boolean; dairyFree?: boolean } = {}): MenuResponse {
+  const wants = {
+    vegan: !!filters.vegan,
+    glutenFree: !!filters.glutenFree,
+    dairyFree: !!filters.dairyFree,
+  }
+  const hasAll = (item: MenuItem) => {
+    const tags = (item.tags || []).map(t => t.toLowerCase())
+    if (wants.vegan && !tags.includes('vegan')) return false
+    if (wants.glutenFree && !tags.includes('gluten-free')) return false
+    if (wants.dairyFree && !tags.includes('dairy-free')) return false
+    return true
+  }
+  const categories: MenuCategory[] = menu.categories
+    .map(c => ({ ...c, items: c.items.filter(hasAll) }))
+    .filter(c => c.items.length > 0)
+  return { categories }
+}
+
+export function snippet(menu: MenuResponse, limit = 12): string {
+  const lines: string[] = []
+  for (const cat of menu.categories) {
+    for (const item of cat.items) {
+      const price = typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : ''
+      const tags = (item.tags || []).join(', ')
+      lines.push(`${item.name} — ${tags}${price ? ` — ${price}` : ''}`.trim())
+      if (lines.length >= limit) return lines.join('\n')
+    }
+  }
+  return lines.join('\n')
 }
 
 

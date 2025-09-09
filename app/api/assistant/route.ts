@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import OpenAI from 'openai'
-
-// Guard: if no key, return 501 from both POST and GET for safety
-function ensureOpenAI() {
-  const key = process.env.OPENAI_API_KEY
-  if (!key) return null
-  return new OpenAI({ apiKey: key })
-}
-
-const openai = ensureOpenAI()
+import { getMenuForTenant, filterMenuByDiet, snippet } from '@/lib/data/menu'
+import { buildPrompt } from '@/lib/ai/prompt'
+import { generate } from '@/lib/ai/model'
+import { resolveTenant } from '@/lib/tenant'
+import { promises as fs } from 'fs'
+import path from 'path'
 
 interface MenuContext {
   categories: Array<{
@@ -58,69 +53,61 @@ interface TenantProfile {
   locationContext?: string
 }
 
-// POST /api/assistant - Production GPT-4o assistant
+// Single multi-tenant assistant endpoint (LLaMA-ready)
 export async function POST(request: NextRequest) {
-  if (!openai) {
-    return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
-  }
   try {
-    const { tenant, message, customerFingerprint } = await request.json()
+    const body = await request.json()
+    const query: string = body?.query || ''
+    const providedTenant: string | undefined = body?.tenantId
+    const filters = body?.filters || {}
 
-    if (!tenant || !message?.trim()) {
-      return NextResponse.json({ 
-        response: "Hi! I'm here to help you explore our menu. What can I tell you about our delicious dishes?",
-        error: 'Missing required fields'
-      })
+    if (!query.trim()) {
+      return NextResponse.json({ ok: false, message: 'Missing query' }, { status: 400 })
     }
 
-    // Get tenant profile and menu data
-    const [tenantProfile, menuContext] = await Promise.all([
-      getTenantProfile(tenant),
-      getMenuContext(tenant)
-    ])
+    const tenantId = providedTenant || resolveTenant(request.url)
 
-    if (!tenantProfile || !menuContext) {
-      return NextResponse.json({
-        response: "I'm having trouble accessing our menu right now, but I'd love to help! Could you try again in a moment?",
-        error: 'Tenant or menu not found'
-      }, { status: 404 })
-    }
+    // Load menu and apply diet filters
+    const menu = await getMenuForTenant(tenantId)
+    const filtered = filterMenuByDiet(menu, {
+      vegan: !!filters.vegan,
+      glutenFree: !!filters.glutenFree,
+      dairyFree: !!filters.dairyFree,
+    })
+    const menuSnippet = snippet(filtered, 12)
 
-    // Get or create customer memory
-    const customerMemory = await getCustomerMemory(tenant, customerFingerprint)
+    // Load tenant meta from theme.json if available
+    const themePath = path.join(process.cwd(), 'data', 'tenants', tenantId, 'theme.json')
+    let restaurantName = 'Our Restaurant'
+    let tone = 'casual'
+    try {
+      const themeRaw = await fs.readFile(themePath, 'utf8')
+      const theme = JSON.parse(themeRaw)
+      restaurantName = theme?.name || restaurantName
+      tone = theme?.tone || tone
+    } catch {}
 
-    // Generate contextual response using GPT-4o
-    const aiResponse = await generateAIResponse({
-      userMessage: message,
-      tenantProfile,
-      menuContext,
-      customerMemory
+    const { system, user } = buildPrompt({
+      tenantId,
+      restaurantName,
+      tone,
+      menuSnippet,
+      userQuery: query,
+      filters,
     })
 
-    // Update customer memory with new interaction
-    await updateCustomerMemory(tenant, customerFingerprint, message, aiResponse, menuContext)
-
-    // Return response with optional recommendations
-    const recommendations = generateRecommendations(menuContext, customerMemory, message)
-    
-    return NextResponse.json({
-      response: aiResponse,
-      recommendations: recommendations.length > 0 ? recommendations : undefined,
-      customerInsights: {
-        isReturning: customerMemory.visitCount > 1,
-        favoriteCount: customerMemory.favoriteItems.length
+    // Guard if provider requires key and missing
+    if ((process.env.AI_PROVIDER || 'compatible') !== 'ollama') {
+      if (!process.env.AI_API_KEY) {
+        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
       }
-    })
+    }
 
-  } catch (error) {
-    console.error('Assistant API error:', error)
-    
-    // Graceful fallback response
-    const fallbackResponse = generateFallbackResponse()
-    return NextResponse.json({ 
-      response: fallbackResponse,
-      error: 'AI service temporarily unavailable'
-    })
+    const text = await generate({ model: process.env.AI_MODEL, system, user })
+    return NextResponse.json({ ok: true, tenantId, text })
+  } catch (e) {
+    console.error('Assistant error:', e)
+    return NextResponse.json({ ok: false, message: 'Assistant error' }, { status: 500 })
   }
 }
 
@@ -297,7 +284,7 @@ async function generateAIResponse({
 }
 
 export async function GET() {
-  if (!openai) {
+  if ((process.env.AI_PROVIDER || 'compatible') !== 'ollama' && !process.env.AI_API_KEY) {
     return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
   }
   return NextResponse.json({ ok: true })
