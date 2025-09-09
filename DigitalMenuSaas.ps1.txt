@@ -1,0 +1,132 @@
+# Run-DigitalMenuLocal.ps1
+# One-and-done local bootstrap for Digital Menu (dev)
+
+$ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
+
+function Write-Info($msg){ Write-Host "[INFO] $msg" -ForegroundColor Cyan }
+function Write-Ok($msg){ Write-Host "[ OK ] $msg" -ForegroundColor Green }
+function Write-Warn($msg){ Write-Host "[WARN] $msg" -ForegroundColor Yellow }
+function Write-Err($msg){ Write-Host "[ERR ] $msg" -ForegroundColor Red }
+
+function Test-Command($name) {
+  $null -ne (Get-Command $name -ErrorAction SilentlyContinue)
+}
+
+function Wait-ForPort {
+  param(
+    [int]$Port = 3000,
+    [int]$TimeoutSeconds = 90
+  )
+  $sw = [Diagnostics.Stopwatch]::StartNew()
+  while ($sw.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
+    $test = Test-NetConnection -ComputerName "127.0.0.1" -Port $Port -InformationLevel Quiet
+    if ($test) { return $true }
+    Start-Sleep -Seconds 2
+  }
+  return $false
+}
+
+Write-Info "Digital Menu (Local) — Bootstrap starting..."
+
+# 1) Basic sanity: run from project root (must see prisma/schema.prisma)
+if (-not (Test-Path ".\prisma\schema.prisma")) {
+  Write-Err "Missing prisma/schema.prisma. Run this from your project root (where the code was generated)."
+  exit 1
+}
+
+# 2) Node
+if (-not (Test-Command "node")) {
+  Write-Err "Node.js not found. Install Node LTS (v18+) and re-run."
+  exit 1
+} else {
+  $nodeVer = node -v
+  Write-Ok "Node found: $nodeVer"
+}
+
+# 3) pnpm (install if missing)
+if (-not (Test-Command "pnpm")) {
+  Write-Warn "pnpm not found. Installing globally with npm..."
+  npm install -g pnpm | Out-Null
+  if (-not (Test-Command "pnpm")) {
+    Write-Err "Failed to install pnpm. Install it manually: npm i -g pnpm"
+    exit 1
+  }
+}
+Write-Ok "pnpm ready: $(pnpm -v)"
+
+# 4) Ensure .env.local exists for LOCAL DEV
+$envLocalPath = ".\.env.local"
+if (-not (Test-Path $envLocalPath)) {
+  Write-Warn ".env.local not found. Creating a local dev one..."
+  @'
+DATABASE_URL="postgresql://postgres:password@localhost:5432/digitalmenu?schema=public"
+NEXTAUTH_SECRET="local-dev-secret"
+NEXTAUTH_URL="http://localhost:3000"
+OPENAI_API_KEY="sk-REPLACE_WITH_YOUR_KEY_OR_LEAVE_BLANK"
+NEXT_PUBLIC_DEFAULT_TENANT="monochrome-bistro"
+'@ | Set-Content -Encoding UTF8 $envLocalPath
+  Write-Ok "Created .env.local (edit OPENAI_API_KEY later for the chat to talk)."
+} else {
+  Write-Ok ".env.local found."
+}
+
+# 5) Check Postgres is reachable on 5432
+Write-Info "Checking Postgres on localhost:5432 ..."
+$pgReady = Test-NetConnection -ComputerName "127.0.0.1" -Port 5432 -InformationLevel Quiet
+if (-not $pgReady) {
+  Write-Err "Postgres isn't reachable on 5432. Start Postgres (or install it), create DB 'digitalmenu'."
+  Write-Host "TIP: With default .env, user=postgres, password=password, DB=digitalmenu" -ForegroundColor DarkYellow
+  exit 1
+} else {
+  Write-Ok "Postgres port open."
+}
+
+# 6) Dependencies
+Write-Info "Installing dependencies with pnpm..."
+pnpm install
+
+# 7) Prisma: generate, push, seed
+Write-Info "Prisma generate..."
+npx prisma generate
+
+Write-Info "Prisma db push..."
+npx prisma db push
+
+Write-Info "Prisma db seed..."
+# Seed may fail if OPENAI not set; it shouldn't — but we surface the error if so.
+try {
+  npx prisma db seed
+  Write-Ok "Database seeded."
+} catch {
+  Write-Warn "Seeding reported an error. Continuing, but the demo data may be incomplete."
+}
+
+# 8) Start dev server (pnpm dev) — start in a detached process so we can wait for port
+Write-Info "Starting Next dev server (pnpm dev)..."
+# If a dev server is already running, kill it on port 3000 (best effort)
+try {
+  $pids = (Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique) 2>$null
+  if ($pids) {
+    Write-Warn "Port 3000 in use — attempting to stop processes: $($pids -join ', ')"
+    foreach ($pid in $pids) { Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Seconds 2
+  }
+} catch {}
+
+Start-Process -FilePath "pnpm" -ArgumentList "dev" -WindowStyle Minimized
+
+Write-Info "Waiting for http://localhost:3000 to become available..."
+if (Wait-ForPort -Port 3000 -TimeoutSeconds 120) {
+  Write-Ok "Server is up on http://localhost:3000"
+  Start-Process "http://localhost:3000"
+  Write-Host ""
+  Write-Host "Demo credentials:" -ForegroundColor Yellow
+  Write-Host "  Super Admin: admin@digitalmenusaas.com / superadmin123"
+  Write-Host "  Restaurant:  owner@bellavista.com / restaurant123"
+} else {
+  Write-Err "Dev server did not open port 3000 in time. Check the terminal window running 'pnpm dev' for errors."
+  exit 1
+}
+
+Write-Ok "Done. Press Ctrl+C in the dev window to stop the server."

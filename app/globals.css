@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #111827;
+  --accent: #2563eb;
+  --radius: 12px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+}
+
+@layer base {
+  :root {
+    --brand-primary: #000000;
+    --brand-secondary: #ffffff;
+    --brand-accent: #6b7280;
+  }
+}
+
+@layer components {
+  .restaurant-header h1 {
+    color: var(--brand-primary);
+  }
+  
+  .menu-category button.selected {
+    background: var(--brand-primary);
+    color: var(--brand-secondary);
+  }
+  
+  .cart-button, .ai-button {
+    background: var(--brand-primary);
+  }
+}

@@ -1,0 +1,2469 @@
+# Digital Menu SaaS - Complete Setup Script
+# Creates all files and starts the development server
+
+Write-Host "ðŸš€ Digital Menu SaaS - Complete Setup Starting..." -ForegroundColor Green
+
+# Step 1: Create project structure
+$folders = @(
+    "app\api\auth\[...nextauth]",
+    "app\api\menu", 
+    "app\api\assistant",
+    "app\api\admin",
+    "app\api\onboard",
+    "app\auth\login",
+    "app\menu",
+    "app\admin\super",
+    "app\admin\restaurant", 
+    "components",
+    "lib",
+    "prisma",
+    "public\widget",
+    "types"
+)
+
+Write-Host "ðŸ“ Creating project structure..." -ForegroundColor Yellow
+foreach ($folder in $folders) {
+    New-Item -ItemType Directory -Path $folder -Force | Out-Null
+}
+
+# Step 2: Create package.json
+Write-Host "ðŸ“¦ Creating package.json..." -ForegroundColor Yellow
+$packageJson = @'
+{
+  "name": "digital-menu-saas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "postbuild": "prisma db seed"
+  },
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.2.2",
+    "tailwindcss": "^3.3.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "@prisma/client": "^5.6.0",
+    "prisma": "^5.6.0",
+    "swr": "^2.2.4",
+    "zod": "^3.22.4",
+    "bcryptjs": "^2.4.3",
+    "next-auth": "^4.24.5",
+    "stripe": "^14.7.0",
+    "openai": "^4.20.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/react": "^18.2.25",
+    "@types/react-dom": "^18.2.10",
+    "@types/bcryptjs": "^2.4.6",
+    "eslint": "^8.51.0",
+    "eslint-config-next": "^14.0.0",
+    "vitest": "^1.0.0",
+    "@vitejs/plugin-react": "^4.1.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
+'@
+$packageJson | Set-Content -Path "package.json" -Encoding UTF8
+
+# Step 3: Create Prisma schema
+Write-Host "ðŸ—„ï¸ Creating database schema..." -ForegroundColor Yellow
+$prismaSchema = @'
+// Complete Prisma schema with all features
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Menu {
+  id          String        @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  categories  MenuCategory[]
+  
+  @@map("menus")
+}
+
+model MenuCategory {
+  id          String     @id @default(cuid())
+  menuId      String
+  name        String
+  description String?
+  displayOrder Int       @default(0)
+  createdAt   DateTime  @default(now())
+  
+  menu        Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items       MenuItem[]
+  
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id          String        @id @default(cuid())
+  categoryId  String
+  name        String
+  description String
+  price       Float
+  imageUrl    String?
+  available   Boolean       @default(true)
+  calories    Int?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  category    MenuCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags        MenuItemTag[]
+  
+  @@map("menu_items")
+}
+
+model MenuItemTag {
+  id       String   @id @default(cuid())
+  itemId   String
+  tag      String
+  
+  item     MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  @@unique([itemId, tag])
+  @@map("menu_item_tags")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String?
+  role         Role      @default(RESTAURANT_OWNER)
+  tenantId     String?
+  createdAt    DateTime  @default(now())
+  lastLogin    DateTime?
+  
+  tenant       Tenant?   @relation(fields: [tenantId], references: [id])
+  
+  @@map("users")
+}
+
+model Tenant {
+  id                    String        @id @default(cuid())
+  slug                  String        @unique
+  name                  String
+  domain                String?
+  plan                  Plan          @default(BASIC)
+  status                TenantStatus  @default(TRIAL)
+  monthlyRevenue        Float         @default(0)
+  
+  // Billing fields
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean       @default(false)
+  trialEnd              DateTime?
+  
+  // Plan limits and settings
+  settings              Json          @default("{\"allowMenuEdits\": true, \"maxCategories\": 10, \"maxItems\": 50, \"aiResponsesPerDay\": 100, \"customBranding\": false}")
+  
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  
+  // Relations
+  users                 User[]
+  menus                 Menu[]
+  
+  @@map("tenants")
+}
+
+enum Role {
+  SUPER_ADMIN
+  RESTAURANT_OWNER
+}
+
+enum Plan {
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+  CANCELED
+}
+'@
+$prismaSchema | Set-Content -Path "prisma\schema.prisma" -Encoding UTF8
+
+# Step 4: Create seed script
+Write-Host "ðŸŒ± Creating seed script..." -ForegroundColor Yellow
+$seedScript = @'
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
+
+const prisma = new PrismaClient()
+
+async function main() {
+  console.log('ðŸŒ± Starting database seed...')
+
+  // Create Super Admin user
+  const superAdminPasswordHash = await bcrypt.hash('superadmin123', 12)
+  const superAdmin = await prisma.user.upsert({
+    where: { email: 'admin@digitalmenusaas.com' },
+    update: {},
+    create: {
+      email: 'admin@digitalmenusaas.com',
+      name: 'System Administrator',
+      passwordHash: superAdminPasswordHash,
+      role: 'SUPER_ADMIN'
+    }
+  })
+  console.log('âœ… Super admin user created')
+
+  // Create demo tenant (Monochrome Bistro)
+  const tenant = await prisma.tenant.upsert({
+    where: { slug: 'monochrome-bistro' },
+    update: {},
+    create: {
+      slug: 'monochrome-bistro',
+      name: 'Monochrome Bistro',
+      plan: 'PREMIUM',
+      status: 'ACTIVE',
+      monthlyRevenue: 99,
+      settings: {
+        allowMenuEdits: true,
+        maxCategories: 20,
+        maxItems: 100,
+        aiResponsesPerDay: 500,
+        customBranding: true
+      }
+    }
+  })
+  console.log('âœ… Demo tenant created')
+
+  // Create restaurant owner user
+  const ownerPasswordHash = await bcrypt.hash('restaurant123', 12)
+  const restaurantOwner = await prisma.user.upsert({
+    where: { email: 'owner@bellavista.com' },
+    update: {},
+    create: {
+      email: 'owner@bellavista.com',
+      name: 'Maria Rossi',
+      passwordHash: ownerPasswordHash,
+      role: 'RESTAURANT_OWNER',
+      tenantId: tenant.id
+    }
+  })
+  console.log('âœ… Restaurant owner user created')
+
+  // Create menu
+  const menu = await prisma.menu.upsert({
+    where: { id: 'monochrome-bistro-menu' },
+    update: {},
+    create: {
+      id: 'monochrome-bistro-menu',
+      tenantId: tenant.id,
+      name: 'Main Menu',
+      description: 'Fresh, seasonal ingredients crafted with care'
+    }
+  })
+
+  // Categories and items data
+  const categoriesData = [
+    {
+      name: 'Appetizers',
+      items: [
+        { name: 'Truffle Arancini', description: 'Crispy risotto balls with black truffle and parmesan', price: 16.00, calories: 320, tags: ['vegetarian', 'truffle'] },
+        { name: 'Burrata Caprese', description: 'Fresh burrata with heirloom tomatoes and basil oil', price: 18.00, calories: 280, tags: ['vegetarian', 'fresh', 'tomatoes'] }
+      ]
+    },
+    {
+      name: 'Salads',
+      items: [
+        { name: 'Caesar Salad', description: 'Crisp romaine, house-made croutons, aged parmesan', price: 14.00, calories: 220, tags: ['vegetarian', 'classic'] },
+        { name: 'Quinoa Power Bowl', description: 'Quinoa, kale, avocado, chickpeas with tahini dressing', price: 16.00, calories: 340, tags: ['vegan', 'healthy', 'quinoa'] }
+      ]
+    },
+    {
+      name: 'Pasta',
+      items: [
+        { name: 'Cacio e Pepe', description: 'Fresh pasta with pecorino romano and black pepper', price: 22.00, calories: 580, tags: ['vegetarian', 'classic', 'pasta'] },
+        { name: 'Seafood Linguine', description: 'Fresh clams, mussels, and shrimp in white wine sauce', price: 28.00, calories: 620, tags: ['seafood', 'wine', 'pasta'] }
+      ]
+    },
+    {
+      name: 'Main Courses',
+      items: [
+        { name: 'Grilled Branzino', description: 'Mediterranean sea bass with lemon and herbs', price: 32.00, calories: 380, tags: ['fish', 'grilled', 'mediterranean'] },
+        { name: 'Dry-Aged Ribeye', description: '16oz prime ribeye with roasted vegetables', price: 48.00, calories: 720, tags: ['beef', 'premium', 'grilled'] }
+      ]
+    },
+    {
+      name: 'Pizza',
+      items: [
+        { name: 'Margherita', description: 'San Marzano tomatoes, fresh mozzarella, basil', price: 18.00, calories: 520, tags: ['vegetarian', 'classic', 'pizza'] },
+        { name: 'Prosciutto e Funghi', description: 'Prosciutto di Parma, wild mushrooms, arugula', price: 24.00, calories: 580, tags: ['pork', 'mushrooms', 'pizza'] }
+      ]
+    },
+    {
+      name: 'Desserts',
+      items: [
+        { name: 'Tiramisu', description: 'Classic Italian dessert with espresso and mascarpone', price: 12.00, calories: 420, tags: ['dessert', 'coffee', 'italian'] },
+        { name: 'Gelato Selection', description: 'Three scoops of artisanal gelato', price: 10.00, calories: 280, tags: ['dessert', 'gelato', 'cold'] }
+      ]
+    },
+    {
+      name: 'Beverages',
+      items: [
+        { name: 'Craft Cocktails', description: 'Seasonal cocktails made with premium spirits', price: 14.00, tags: ['alcohol', 'cocktail'] },
+        { name: 'Italian Wine Selection', description: 'Curated wines from Italian vineyards', price: 12.00, tags: ['wine', 'italian', 'alcohol'] }
+      ]
+    }
+  ]
+
+  // Create categories and items
+  for (const categoryData of categoriesData) {
+    const category = await prisma.menuCategory.create({
+      data: {
+        menuId: menu.id,
+        name: categoryData.name,
+        displayOrder: categoriesData.indexOf(categoryData)
+      }
+    })
+
+    for (const itemData of categoryData.items) {
+      const item = await prisma.menuItem.create({
+        data: {
+          categoryId: category.id,
+          name: itemData.name,
+          description: itemData.description,
+          price: itemData.price,
+          calories: itemData.calories,
+          available: true
+        }
+      })
+
+      // Create tags
+      for (const tagName of itemData.tags) {
+        await prisma.menuItemTag.create({
+          data: {
+            itemId: item.id,
+            tag: tagName
+          }
+        })
+      }
+    }
+  }
+
+  console.log('âœ… Menu data seeded')
+  console.log('ðŸŽ‰ Database seed completed!')
+  
+  console.log('
+ðŸ“ Demo Login Credentials:')
+  console.log('Super Admin: admin@digitalmenusaas.com / superadmin123')
+  console.log('Restaurant Owner: owner@bellavista.com / restaurant123')
+}
+
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
+'@
+$seedScript | Set-Content -Path "prisma\seed.ts" -Encoding UTF8
+
+# Step 5: Create main components
+Write-Host "ðŸŽ¨ Creating Canvas UI..." -ForegroundColor Yellow
+$menuClient = @'
+
+"use client"
+
+import { useState, useMemo } from 'react'
+import useSWR from 'swr'
+import { MenuResponse, MenuItem } from '@/types/api'
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+export default function MenuClient() {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedDietaryFilters, setSelectedDietaryFilters] = useState<string[]>([])
+  const [cart, setCart] = useState<Array<{ item: MenuItem; quantity: number }>>([])
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [assistantMessage, setAssistantMessage] = useState('')
+  const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'assistant', message: string}>>([])
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+
+  // Get tenant from URL params or use default
+  const tenant = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search).get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'monochrome-bistro'
+    : 'monochrome-bistro'
+
+  const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
+    `/api/menu?tenant=${tenant}${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ''}`,
+    fetcher
+  )
+
+  // Filter logic matching your Canvas app exactly
+  const filteredCategories = useMemo(() => {
+    if (!menuData?.categories) return []
+    
+    return menuData.categories
+      .map(category => ({
+        ...category,
+        items: category.items.filter(item => {
+          // Category filter
+          if (selectedCategory && category.name !== selectedCategory) return false
+          
+          // Search filter (name and description)
+          if (searchQuery) {
+            const searchLower = searchQuery.toLowerCase()
+            const matchesName = item.name.toLowerCase().includes(searchLower)
+            const matchesDescription = item.description.toLowerCase().includes(searchLower)
+            const matchesTags = item.tags.some(tag => tag.toLowerCase().includes(searchLower))
+            if (!matchesName && !matchesDescription && !matchesTags) return false
+          }
+          
+          // Dietary filters (must have all selected dietary tags)
+          if (selectedDietaryFilters.length > 0) {
+            const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
+              item.tags.some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
+            )
+            if (!hasAllDietaryFilters) return false
+          }
+          
+          return true
+        })
+      }))
+      .filter(category => category.items.length > 0)
+  }, [menuData, searchQuery, selectedCategory, selectedDietaryFilters])
+
+  const highlightText = (text: string, query: string) => {
+    if (!query) return text
+    const parts = text.split(new RegExp(`(${query})`, 'gi'))
+    return parts.map((part, i) => 
+      part.toLowerCase() === query.toLowerCase() 
+        ? <mark key={i} className="bg-yellow-200 px-1 rounded">{part}</mark>
+        : part
+    )
+  }
+
+  const addToCart = (item: MenuItem) => {
+    setCart(prev => {
+      const existing = prev.find(cartItem => cartItem.item.id === item.id)
+      if (existing) {
+        return prev.map(cartItem =>
+          cartItem.item.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        )
+      }
+      return [...prev, { item, quantity: 1 }]
+    })
+  }
+
+  const removeFromCart = (itemId: string) => {
+    setCart(prev => prev.filter(cartItem => cartItem.item.id !== itemId))
+  }
+
+  const updateCartQuantity = (itemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(itemId)
+      return
+    }
+    setCart(prev => prev.map(cartItem =>
+      cartItem.item.id === itemId ? { ...cartItem, quantity } : cartItem
+    ))
+  }
+
+  const sendAssistantMessage = async () => {
+    if (!assistantMessage.trim()) return
+
+    const userMessage = assistantMessage.trim()
+    setAssistantMessage('')
+    setChatHistory(prev => [...prev, { role: 'user', message: userMessage }])
+
+    try {
+      const response = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant,
+          message: userMessage
+        })
+      })
+
+      const data = await response.json()
+      setChatHistory(prev => [...prev, { role: 'assistant', message: data.response }])
+    } catch (error) {
+      setChatHistory(prev => [...prev, { role: 'assistant', message: 'Sorry, I had trouble processing your request.' }])
+    }
+  }
+
+  const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+
+  const dietaryOptions = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free']
+  
+  if (error) return <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
+  if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading menu...</div>
+
+  const categories = menuData?.categories || []
+  const allCategories = categories.map(cat => cat.name)
+
+  return (
+    <div className="min-h-screen bg-white text-black">
+      {/* Sticky Header with Search and Filters */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          {/* Restaurant Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl font-bold text-black mb-2">Monochrome Bistro</h1>
+            <p className="text-gray-600">Fresh, seasonal ingredients crafted with care</p>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="relative max-w-lg mx-auto">
+              <input
+                type="text"
+                placeholder="Search menu items, tags, or categories..."
+                className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                ðŸ”
+              </div>
+            </div>
+          </div>
+          
+          {/* Category Filters */}
+          <div className="flex gap-2 justify-center flex-wrap mb-4">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                selectedCategory === null
+                  ? 'bg-black text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All Categories
+            </button>
+            {allCategories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedCategory === category
+                    ? 'bg-black text-white shadow-md'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
+          {/* Dietary Filters */}
+          <div className="flex gap-2 justify-center flex-wrap">
+            {dietaryOptions.map(option => (
+              <button
+                key={option}
+                onClick={() => {
+                  setSelectedDietaryFilters(prev => 
+                    prev.includes(option)
+                      ? prev.filter(f => f !== option)
+                      : [...prev, option]
+                  )
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
+                  selectedDietaryFilters.includes(option)
+                    ? 'bg-black text-white border-black shadow-md'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Menu Grid */}
+        <div className="space-y-12">
+          {filteredCategories.map(category => (
+            <div key={category.id} className="category-section">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-black">{category.name}</h2>
+                <div className="h-px flex-1 bg-gray-200 ml-6"></div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {category.items.map(item => (
+                  <div 
+                    key={item.id} 
+                    className="menu-item bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                  >
+                    {item.imageUrl && (
+                      <div className="aspect-w-16 aspect-h-9 bg-gray-100">
+                        <img 
+                          src={item.imageUrl} 
+                          alt={item.name}
+                          className="w-full h-48 object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <h3 className="text-xl font-semibold text-black leading-tight">
+                          {highlightText(item.name, searchQuery)}
+                        </h3>
+                        <span className="text-xl font-bold text-black ml-4">
+                          ${item.price.toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                        {highlightText(item.description, searchQuery)}
+                      </p>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap gap-1">
+                          {item.calories && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {item.calories} cal
+                            </span>
+                          )}
+                          {item.tags.map(tag => (
+                            <span 
+                              key={tag} 
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        
+                        <button
+                          onClick={() => addToCart(item)}
+                          className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors duration-200 flex items-center gap-1"
+                        >
+                          Add to Cart
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Floating Cart Button */}
+      <button
+        onClick={() => setIsCartOpen(true)}
+        className="fixed bottom-6 right-6 bg-black text-white px-6 py-3 rounded-full shadow-lg hover:bg-gray-800 transition-all duration-200 z-50 flex items-center gap-2"
+      >
+        ðŸ›’
+        <span className="font-medium">Cart ({cartItemCount})</span>
+        {cartItemCount > 0 && (
+          <span className="font-bold">${cartTotal.toFixed(2)}</span>
+        )}
+      </button>
+
+      {/* AI Assistant Button */}
+      <button
+        onClick={() => setIsAssistantOpen(true)}
+        className="fixed bottom-6 left-6 bg-black text-white p-3 rounded-full shadow-lg hover:bg-gray-800 transition-all duration-200 z-50"
+      >
+        ðŸ¤–
+      </button>
+
+      {/* Cart Drawer */}
+      {isCartOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
+          <div className="ml-auto w-full max-w-md bg-white h-full shadow-xl flex flex-col">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-black">Your Cart</h2>
+                <button
+                  onClick={() => setIsCartOpen(false)}
+                  className="text-gray-500 hover:text-black transition-colors"
+                >
+                  âœ•
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              {cart.length === 0 ? (
+                <div className="text-center text-gray-500 mt-8">
+                  <div className="text-4xl mb-4">ðŸ›’</div>
+                  <p>Your cart is empty</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map(cartItem => (
+                    <div key={cartItem.item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-black">{cartItem.item.name}</h4>
+                        <p className="text-sm text-gray-600">${cartItem.item.price.toFixed(2)} each</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
+                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                          >
+                            âˆ’
+                          </button>
+                          <span className="w-8 text-center font-medium">{cartItem.quantity}</span>
+                          <button
+                            onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
+                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-black">
+                            ${(cartItem.item.price * cartItem.quantity).toFixed(2)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {cart.length > 0 && (
+              <div className="p-6 border-t border-gray-200 bg-gray-50">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-xl font-semibold text-black">Total:</span>
+                  <span className="text-2xl font-bold text-black">
+                    ${cartTotal.toFixed(2)}
+                  </span>
+                </div>
+                <button className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200">
+                  Proceed to Checkout
+                </button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Demo mode - No actual payment processed
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* AI Assistant Drawer */}
+      {isAssistantOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
+          <div className="w-full max-w-md bg-white h-full shadow-xl flex flex-col">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
+                <button
+                  onClick={() => setIsAssistantOpen(false)}
+                  className="text-gray-500 hover:text-black transition-colors"
+                >
+                  âœ•
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Ask about ingredients, allergens, or recommendations
+              </p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              {chatHistory.length === 0 ? (
+                <div className="text-center text-gray-500 mt-8">
+                  <div className="text-4xl mb-4">ðŸ¤–</div>
+                  <p>Start a conversation!</p>
+                  <p className="text-sm mt-2">Try asking:</p>
+                  <ul className="text-xs mt-2 space-y-1 text-left">
+                    <li>"What vegetarian options do you have?"</li>
+                    <li>"Is the pasta gluten-free?"</li>
+                    <li>"What's your most popular dish?"</li>
+                  </ul>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {chatHistory.map((msg, i) => (
+                    <div key={i} className={`p-3 rounded-lg ${
+                      msg.role === 'user' 
+                        ? 'bg-gray-100 text-black ml-8' 
+                        : 'bg-black text-white mr-8'
+                    }`}>
+                      <div className="font-medium text-xs mb-1 opacity-70">
+                        {msg.role === 'user' ? 'You' : 'Assistant'}
+                      </div>
+                      <div className="text-sm">{msg.message}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Ask about our menu..."
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
+                  value={assistantMessage}
+                  onChange={(e) => setAssistantMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
+                />
+                <button
+                  onClick={sendAssistantMessage}
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+'@
+$menuClient | Set-Content -Path "components\MenuClient.tsx" -Encoding UTF8
+
+# Step 6: Create AI Assistant API
+Write-Host "ðŸ¤– Creating AI Assistant..." -ForegroundColor Yellow
+$assistantAPI = @'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import OpenAI from 'openai'
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!
+})
+
+interface MenuContext {
+  categories: Array<{
+    id: string
+    name: string
+    items: Array<{
+      id: string
+      name: string
+      description: string
+      price: number
+      tags: string[]
+      calories?: number
+      allergens?: string[]
+      spiceLevel?: number
+    }>
+  }>
+  specials?: Array<{
+    name: string
+    description: string
+    price?: number
+  }>
+  totalItems: number
+}
+
+interface CustomerMemory {
+  visitCount: number
+  favoriteItems: string[]
+  dietaryRestrictions: string[]
+  spicePreference?: string
+  lastOrderItems?: string[]
+  priceRange?: 'budget' | 'mid' | 'premium'
+  conversationHistory: Array<{
+    role: 'user' | 'assistant'
+    content: string
+    timestamp: Date
+  }>
+}
+
+interface TenantProfile {
+  name: string
+  cuisine: string
+  brandVoice: 'upscale' | 'casual' | 'family' | 'trendy' | 'traditional'
+  specialty: string
+  priceRange: string
+  atmosphere: string
+  locationContext?: string
+}
+
+// POST /api/assistant - Production GPT-4o assistant
+export async function POST(request: NextRequest) {
+  try {
+    const { tenant, message, customerFingerprint } = await request.json()
+
+    if (!tenant || !message?.trim()) {
+      return NextResponse.json({ 
+        response: "Hi! I'm here to help you explore our menu. What can I tell you about our delicious dishes?",
+        error: 'Missing required fields'
+      })
+    }
+
+    // Get tenant profile and menu data
+    const [tenantProfile, menuContext] = await Promise.all([
+      getTenantProfile(tenant),
+      getMenuContext(tenant)
+    ])
+
+    if (!tenantProfile || !menuContext) {
+      return NextResponse.json({
+        response: "I'm having trouble accessing our menu right now, but I'd love to help! Could you try again in a moment?",
+        error: 'Tenant or menu not found'
+      }, { status: 404 })
+    }
+
+    // Get or create customer memory
+    const customerMemory = await getCustomerMemory(tenant, customerFingerprint)
+
+    // Generate contextual response using GPT-4o
+    const aiResponse = await generateAIResponse({
+      userMessage: message,
+      tenantProfile,
+      menuContext,
+      customerMemory
+    })
+
+    // Update customer memory with new interaction
+    await updateCustomerMemory(tenant, customerFingerprint, message, aiResponse, menuContext)
+
+    // Return response with optional recommendations
+    const recommendations = generateRecommendations(menuContext, customerMemory, message)
+    
+    return NextResponse.json({
+      response: aiResponse,
+      recommendations: recommendations.length > 0 ? recommendations : undefined,
+      customerInsights: {
+        isReturning: customerMemory.visitCount > 1,
+        favoriteCount: customerMemory.favoriteItems.length
+      }
+    })
+
+  } catch (error) {
+    console.error('Assistant API error:', error)
+    
+    // Graceful fallback response
+    const fallbackResponse = generateFallbackResponse()
+    return NextResponse.json({ 
+      response: fallbackResponse,
+      error: 'AI service temporarily unavailable'
+    })
+  }
+}
+
+async function getTenantProfile(tenantSlug: string): Promise<TenantProfile | null> {
+  const tenant = await prisma.tenant.findUnique({
+    where: { slug: tenantSlug },
+    select: {
+      name: true,
+      settings: true
+    }
+  })
+
+  if (!tenant) return null
+
+  const settings = tenant.settings as any || {}
+  
+  return {
+    name: tenant.name,
+    cuisine: settings.cuisine || 'contemporary',
+    brandVoice: settings.brandVoice || 'casual',
+    specialty: settings.specialty || 'fresh, quality ingredients',
+    priceRange: settings.priceRange || 'moderate',
+    atmosphere: settings.atmosphere || 'welcoming',
+    locationContext: settings.locationContext
+  }
+}
+
+async function getMenuContext(tenantSlug: string): Promise<MenuContext | null> {
+  const menu = await prisma.menu.findFirst({
+    where: { tenant: { slug: tenantSlug } },
+    include: {
+      categories: {
+        include: {
+          items: {
+            where: { available: true },
+            include: { tags: true }
+          }
+        }
+      }
+    }
+  })
+
+  if (!menu) return null
+
+  const categories = menu.categories.map(category => ({
+    id: category.id,
+    name: category.name,
+    items: category.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      tags: item.tags.map(t => t.tag),
+      calories: item.calories,
+      // Extract allergens from tags
+      allergens: item.tags.map(t => t.tag).filter(tag => 
+        ['nuts', 'dairy', 'gluten', 'eggs', 'shellfish', 'soy'].some(allergen => 
+          tag.toLowerCase().includes(allergen)
+        )
+      )
+    }))
+  }))
+
+  return {
+    categories,
+    totalItems: categories.reduce((sum, cat) => sum + cat.items.length, 0),
+    specials: await getCurrentSpecials(tenantSlug)
+  }
+}
+
+async function getCustomerMemory(tenantSlug: string, fingerprint?: string): Promise<CustomerMemory> {
+  if (!fingerprint) {
+    return {
+      visitCount: 1,
+      favoriteItems: [],
+      dietaryRestrictions: [],
+      conversationHistory: []
+    }
+  }
+
+  const session = await prisma.customerSession.findFirst({
+    where: {
+      tenant: { slug: tenantSlug },
+      customerFingerprint: fingerprint,
+      lastVisit: {
+        // Active session within last 24 hours
+        gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+      }
+    },
+    include: {
+      conversationHistory: {
+        orderBy: { timestamp: 'desc' },
+        take: 10 // Recent conversation context
+      }
+    }
+  })
+
+  if (!session) {
+    return {
+      visitCount: 1,
+      favoriteItems: [],
+      dietaryRestrictions: [],
+      conversationHistory: []
+    }
+  }
+
+  const prefs = session.preferences as any || {}
+  
+  return {
+    visitCount: prefs.visitFrequency || 1,
+    favoriteItems: prefs.favoriteItems || [],
+    dietaryRestrictions: prefs.dietaryRestrictions || [],
+    spicePreference: prefs.spicePreference,
+    lastOrderItems: prefs.lastOrderItems,
+    priceRange: prefs.priceRange,
+    conversationHistory: session.conversationHistory.map(msg => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.message,
+      timestamp: msg.timestamp
+    }))
+  }
+}
+
+async function generateAIResponse({
+  userMessage,
+  tenantProfile,
+  menuContext,
+  customerMemory
+}: {
+  userMessage: string
+  tenantProfile: TenantProfile
+  menuContext: MenuContext
+  customerMemory: CustomerMemory
+}): Promise<string> {
+
+  const systemPrompt = buildSystemPrompt(tenantProfile, menuContext, customerMemory)
+  const contextPrompt = buildContextPrompt(customerMemory, menuContext)
+  
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini", // Cost-effective for restaurant use cases
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: contextPrompt },
+        ...customerMemory.conversationHistory.slice(-6).map(msg => ({
+          role: msg.role,
+          content: msg.content
+        })),
+        { role: "user", content: userMessage }
+      ],
+      max_tokens: 400,
+      temperature: 0.7,
+      presence_penalty: 0.1,
+      frequency_penalty: 0.1
+    })
+
+    const response = completion.choices[0]?.message?.content
+    
+    if (!response || response.trim().length === 0) {
+      return generateFallbackResponse()
+    }
+
+    // Validate response is menu-related
+    if (isResponseOnTopic(response, menuContext, tenantProfile)) {
+      return response.trim()
+    } else {
+      return "I'm here to help you with our menu! What would you like to know about our dishes?"
+    }
+
+  } catch (error) {
+    console.error('OpenAI API error:', error)
+    return generateFallbackResponse()
+  }
+}
+
+function buildSystemPrompt(tenantProfile: TenantProfile, menuContext: MenuContext, customerMemory: CustomerMemory): string {
+  const brandVoiceInstructions = getBrandVoiceInstructions(tenantProfile.brandVoice)
+  const menuSummary = buildMenuSummary(menuContext)
+  const customerContext = buildCustomerContext(customerMemory)
+
+  return `You are the knowledgeable AI assistant for ${tenantProfile.name}, a ${tenantProfile.cuisine} restaurant specializing in ${tenantProfile.specialty}.
+
+BRAND VOICE & TONE:
+${brandVoiceInstructions}
+
+RESTAURANT CONTEXT:
+- Cuisine: ${tenantProfile.cuisine}
+- Specialty: ${tenantProfile.specialty}
+- Price Range: ${tenantProfile.priceRange}
+- Atmosphere: ${tenantProfile.atmosphere}
+${tenantProfile.locationContext ? `- Location: ${tenantProfile.locationContext}` : ''}
+
+CURRENT MENU OVERVIEW:
+${menuSummary}
+
+CUSTOMER CONTEXT:
+${customerContext}
+
+CORE RESPONSIBILITIES:
+1. Help customers explore and understand our menu
+2. Provide detailed information about ingredients, preparation, allergens
+3. Make personalized recommendations based on preferences and history
+4. Answer questions about dietary accommodations
+5. Share enthusiasm for our food while being helpful and informative
+
+CONVERSATION GUIDELINES:
+- Stay focused on menu items, ingredients, preparation, and dining experience
+- Use the customer's history to make relevant suggestions
+- Be specific about ingredients and preparation methods
+- Mention prices when discussing items
+- Acknowledge dietary restrictions and suggest alternatives
+- Decline non-menu topics politely: "I'm here to help with our menu! What dish interests you?"
+
+STRICT BOUNDARIES:
+- Only discuss food, drinks, menu items, ingredients, and restaurant services
+- Do not provide cooking recipes or instructions
+- Do not discuss other restaurants or competitors  
+- Do not provide medical advice about food allergies (suggest speaking with staff)
+- Do not take orders or process payments (guide them to order with staff)
+
+Remember: You represent ${tenantProfile.name} - be proud of our food and eager to help customers have a great dining experience!`
+}
+
+function getBrandVoiceInstructions(brandVoice: string): string {
+  const voiceMap = {
+    upscale: "Professional, refined, and sophisticated. Use elegant language, emphasize quality and craftsmanship. Be knowledgeable about wine pairings and preparation techniques.",
+    casual: "Friendly, approachable, and conversational. Use warm, welcoming language. Be enthusiastic but not overly formal. Focus on comfort and enjoyment.",
+    family: "Warm, inclusive, and patient. Use simple, clear language. Be especially helpful with children's preferences and family dining needs.",
+    trendy: "Hip, contemporary, and energetic. Use current language and be excited about new dishes and seasonal ingredients. Emphasize what's fresh and popular.",
+    traditional: "Respectful, classic, and authentic. Honor traditional recipes and methods. Be knowledgeable about cultural food history and significance."
+  }
+  
+  return voiceMap[brandVoice as keyof typeof voiceMap] || voiceMap.casual
+}
+
+function buildMenuSummary(menuContext: MenuContext): string {
+  const categorySummaries = menuContext.categories.map(category => {
+    const topItems = category.items.slice(0, 3).map(item => 
+      `${item.name} ($${item.price})`
+    ).join(', ')
+    
+    return `${category.name} (${category.items.length} items): ${topItems}${category.items.length > 3 ? '...' : ''}`
+  }).join('\n')
+
+  return `We have ${menuContext.totalItems} items across ${menuContext.categories.length} categories:
+${categorySummaries}`
+}
+
+function buildCustomerContext(customerMemory: CustomerMemory): string {
+  let context = ''
+  
+  if (customerMemory.visitCount > 1) {
+    context += `Returning customer (${customerMemory.visitCount} visits). `
+  } else {
+    context += 'New customer. '
+  }
+  
+  if (customerMemory.favoriteItems.length > 0) {
+    context += `Previous favorites: ${customerMemory.favoriteItems.slice(0, 3).join(', ')}. `
+  }
+  
+  if (customerMemory.dietaryRestrictions.length > 0) {
+    context += `Dietary considerations: ${customerMemory.dietaryRestrictions.join(', ')}. `
+  }
+  
+  if (customerMemory.spicePreference) {
+    context += `Spice preference: ${customerMemory.spicePreference}. `
+  }
+  
+  if (customerMemory.lastOrderItems?.length) {
+    context += `Last order included: ${customerMemory.lastOrderItems.slice(0, 2).join(', ')}. `
+  }
+
+  return context || 'No previous interaction history.'
+}
+
+function buildContextPrompt(customerMemory: CustomerMemory, menuContext: MenuContext): string {
+  const now = new Date()
+  const hour = now.getHours()
+  const timeContext = hour < 11 ? 'morning' : hour < 16 ? 'afternoon' : 'evening'
+  
+  let prompt = `Current time: ${timeContext}. `
+  
+  if (menuContext.specials?.length) {
+    prompt += `Today's specials: ${menuContext.specials.map(s => s.name).join(', ')}. `
+  }
+  
+  // Add recent conversation context if available
+  if (customerMemory.conversationHistory.length > 0) {
+    const recentExchange = customerMemory.conversationHistory.slice(0, 2)
+    prompt += `Recent conversation context: ${recentExchange.map(msg => 
+      `${msg.role}: ${msg.content}`
+    ).join(' | ')} `
+  }
+  
+  return prompt
+}
+
+function isResponseOnTopic(response: string, menuContext: MenuContext, tenantProfile: TenantProfile): boolean {
+  const menuKeywords = [
+    ...menuContext.categories.flatMap(cat => [
+      cat.name.toLowerCase(),
+      ...cat.items.flatMap(item => [
+        ...item.name.toLowerCase().split(' '),
+        ...item.tags.map(tag => tag.toLowerCase())
+      ])
+    ]),
+    'menu', 'dish', 'food', 'drink', 'price', 'ingredient', 'allergen',
+    'vegetarian', 'vegan', 'gluten', 'spicy', 'recommend', 'popular'
+  ]
+  
+  const responseWords = response.toLowerCase().split(/\s+/)
+  const relevantWords = responseWords.filter(word => 
+    menuKeywords.some(keyword => keyword.includes(word) || word.includes(keyword))
+  )
+  
+  // Consider on-topic if at least 10% of words are menu-related
+  return relevantWords.length / responseWords.length >= 0.1
+}
+
+async function updateCustomerMemory(
+  tenantSlug: string,
+  fingerprint: string,
+  userMessage: string,
+  aiResponse: string,
+  menuContext: MenuContext
+) {
+  if (!fingerprint) return
+
+  const tenant = await prisma.tenant.findUnique({ where: { slug: tenantSlug } })
+  if (!tenant) return
+
+  // Find or create session
+  let session = await prisma.customerSession.findFirst({
+    where: {
+      tenantId: tenant.id,
+      customerFingerprint: fingerprint
+    }
+  })
+
+  if (!session) {
+    session = await prisma.customerSession.create({
+      data: {
+        tenantId: tenant.id,
+        customerFingerprint: fingerprint,
+        preferences: { visitFrequency: 1 },
+        lastVisit: new Date()
+      }
+    })
+  }
+
+  // Update conversation history
+  await Promise.all([
+    prisma.conversationMessage.create({
+      data: {
+        sessionId: session.id,
+        role: 'user',
+        message: userMessage,
+        timestamp: new Date()
+      }
+    }),
+    prisma.conversationMessage.create({
+      data: {
+        sessionId: session.id,
+        role: 'assistant',
+        message: aiResponse,
+        timestamp: new Date()
+      }
+    })
+  ])
+
+  // Extract and update preferences
+  await updatePreferences(session.id, userMessage, aiResponse, menuContext)
+}
+
+async function updatePreferences(
+  sessionId: string,
+  userMessage: string,
+  aiResponse: string,
+  menuContext: MenuContext
+) {
+  const session = await prisma.customerSession.findUnique({ where: { id: sessionId } })
+  if (!session) return
+
+  const currentPrefs = session.preferences as any || {}
+  const updates: any = {
+    visitFrequency: (currentPrefs.visitFrequency || 0) + 1,
+    lastInteraction: new Date().toISOString()
+  }
+
+  // Extract dietary preferences
+  const dietaryKeywords = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'keto', 'paleo', 'nut-free']
+  const mentionedDietary = dietaryKeywords.filter(keyword =>
+    userMessage.toLowerCase().includes(keyword) || aiResponse.toLowerCase().includes(keyword)
+  )
+  
+  if (mentionedDietary.length > 0) {
+    updates.dietaryRestrictions = [...new Set([
+      ...(currentPrefs.dietaryRestrictions || []),
+      ...mentionedDietary
+    ])]
+  }
+
+  // Extract mentioned items as potential favorites
+  const allItems = menuContext.categories.flatMap(cat => cat.items)
+  const mentionedItems = allItems.filter(item =>
+    userMessage.toLowerCase().includes(item.name.toLowerCase()) ||
+    aiResponse.toLowerCase().includes(item.name.toLowerCase())
+  ).map(item => item.name)
+
+  if (mentionedItems.length > 0) {
+    updates.favoriteItems = [...new Set([
+      ...(currentPrefs.favoriteItems || []).slice(-8), // Keep last 8 favorites
+      ...mentionedItems
+    ])]
+  }
+
+  // Extract spice preference
+  const spiceKeywords = {
+    'mild': ['mild', 'not spicy', 'no spice'],
+    'medium': ['medium spice', 'some heat'],
+    'hot': ['spicy', 'hot', 'extra spicy', 'very spicy']
+  }
+
+  Object.entries(spiceKeywords).forEach(([level, keywords]) => {
+    if (keywords.some(keyword => userMessage.toLowerCase().includes(keyword))) {
+      updates.spicePreference = level
+    }
+  })
+
+  await prisma.customerSession.update({
+    where: { id: sessionId },
+    data: { preferences: { ...currentPrefs, ...updates } }
+  })
+}
+
+function generateRecommendations(
+  menuContext: MenuContext,
+  customerMemory: CustomerMemory,
+  userMessage: string
+): Array<{ name: string; reason: string; price: number }> {
+  const allItems = menuContext.categories.flatMap(cat => cat.items)
+  const recommendations: Array<{ name: string; reason: string; price: number }> = []
+  
+  // Based on favorites
+  if (customerMemory.favoriteItems.length > 0) {
+    const favorite = customerMemory.favoriteItems[0]
+    const similarItems = allItems.filter(item => 
+      item.name !== favorite &&
+      (item.tags.some(tag => 
+        allItems.find(i => i.name === favorite)?.tags.includes(tag)
+      ) || Math.random() > 0.7) // Simple similarity + randomness
+    ).slice(0, 2)
+    
+    similarItems.forEach(item => {
+      recommendations.push({
+        name: item.name,
+        reason: `Since you enjoyed ${favorite}`,
+        price: item.price
+      })
+    })
+  }
+  
+  // Based on dietary restrictions
+  if (customerMemory.dietaryRestrictions.length > 0) {
+    const dietaryMatches = allItems.filter(item =>
+      customerMemory.dietaryRestrictions.some(restriction =>
+        item.tags.some(tag => tag.toLowerCase().includes(restriction.toLowerCase()))
+      )
+    ).slice(0, 2)
+    
+    dietaryMatches.forEach(item => {
+      recommendations.push({
+        name: item.name,
+        reason: `Perfect for ${customerMemory.dietaryRestrictions[0]} preferences`,
+        price: item.price
+      })
+    })
+  }
+  
+  return recommendations.slice(0, 3) // Max 3 recommendations
+}
+
+async function getCurrentSpecials(tenantSlug: string) {
+  // TODO: Implement daily specials system
+  return []
+}
+
+function generateFallbackResponse(): string {
+  const fallbacks = [
+    "I'm here to help you explore our delicious menu! What type of dish are you in the mood for?",
+    "Let me help you discover something amazing from our menu. Are you looking for something specific?",
+    "I'd love to guide you through our menu options. What sounds good to you today?",
+    "Our menu has so many great options! Tell me what kind of flavors you're craving.",
+    "I'm excited to help you find the perfect dish! What are you in the mood for?"
+  ]
+  
+  return fallbacks[Math.floor(Math.random() * fallbacks.length)]
+}
+
+'@
+$assistantAPI | Set-Content -Path "app\api\assistant\route.ts" -Encoding UTF8
+
+# Step 7: Create Authentication
+Write-Host "ðŸ” Creating authentication..." -ForegroundColor Yellow
+$authConfig = @'
+import NextAuth from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
+import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
+
+export const authOptions = {
+  providers: [
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          include: { tenant: true }
+        })
+
+        if (!user || !user.passwordHash) {
+          return null
+        }
+
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash)
+        
+        if (!isPasswordValid) {
+          return null
+        }
+
+        // Update last login
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLogin: new Date() }
+        })
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          tenantId: user.tenant?.id,
+          tenantSlug: user.tenant?.slug
+        }
+      }
+    })
+  ],
+  session: {
+    strategy: 'jwt' as const,
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role
+        token.tenantId = user.tenantId
+        token.tenantSlug = user.tenantSlug
+      }
+      return token
+    },
+    async session({ session, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.sub,
+          role: token.role,
+          tenantId: token.tenantId,
+          tenantSlug: token.tenantSlug
+        }
+      }
+    }
+  },
+  pages: {
+    signIn: '/auth/login',
+    error: '/auth/error',
+  },
+  secret: process.env.NEXTAUTH_SECRET
+}
+
+export default NextAuth(authOptions)
+'@
+$authConfig | Set-Content -Path "app\api\auth\[...nextauth]\route.ts" -Encoding UTF8
+
+# Step 8: Create Menu API
+Write-Host "ðŸ½ï¸ Creating Menu API..." -ForegroundColor Yellow
+$menuAPI = @'
+import { NextRequest, NextResponse } from 'next/server'
+import { get_menu } from '@/lib/server/menu'
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const tenant = searchParams.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'monochrome-bistro'
+    const q = searchParams.get('q') || undefined
+
+    console.log(`Fetching menu for tenant: ${tenant}${q ? ` with query: ${q}` : ''}`)
+
+    const menu = await get_menu({ tenant, q })
+
+    if (!menu) {
+      return NextResponse.json(
+        { error: 'Menu not found for the specified tenant' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json(menu)
+
+  } catch (error) {
+    console.error('Menu API error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+'@
+$menuAPI | Set-Content -Path "app\api\menu\route.ts" -Encoding UTF8
+
+# Step 9: Create Admin Dashboard
+Write-Host "ðŸ“Š Creating admin dashboard..." -ForegroundColor Yellow
+$dashboard = @'
+
+"use client"
+
+import { useState, useEffect } from 'react'
+import useSWR from 'swr'
+
+interface RestaurantAnalytics {
+  menuViews: number
+  searchQueries: number
+  aiInteractions: number
+  topSearchTerms: string[]
+  popularItems: Array<{ name: string; views: number; searches: number }>
+}
+
+interface MenuItem {
+  id: string
+  name: string
+  description: string
+  price: number
+  available: boolean
+  calories?: number
+}
+
+const fetcher = (url: string) => fetch(url).then(res => res.json())
+
+export default function RestaurantDashboard() {
+  const { data: analytics } = useSWR<RestaurantAnalytics>('/api/restaurant/analytics', fetcher)
+  const { data: menu, mutate: mutateMenu } = useSWR('/api/restaurant/menu', fetcher)
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
+
+  const updateItem = async (updates: Partial<MenuItem>) => {
+    if (!editingItem) return
+
+    try {
+      await fetch(`/api/restaurant/items/${editingItem.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      })
+      mutateMenu()
+      setEditingItem(null)
+      alert('Item updated successfully!')
+    } catch (error) {
+      alert('Failed to update item')
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <h1 className="text-2xl font-bold text-gray-900">Restaurant Dashboard</h1>
+          <p className="text-gray-600 mt-1">Manage your menu and view insights</p>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Analytics Overview */}
+        {analytics && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="text-sm font-medium text-gray-500">Menu Views</div>
+              <div className="text-2xl font-bold text-blue-600 mt-2">{analytics.menuViews}</div>
+              <div className="text-sm text-gray-500 mt-1">This month</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="text-sm font-medium text-gray-500">Search Queries</div>
+              <div className="text-2xl font-bold text-green-600 mt-2">{analytics.searchQueries}</div>
+              <div className="text-sm text-gray-500 mt-1">Customer searches</div>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="text-sm font-medium text-gray-500">AI Questions</div>
+              <div className="text-2xl font-bold text-purple-600 mt-2">{analytics.aiInteractions}</div>
+              <div className="text-sm text-gray-500 mt-1">Assistant chats</div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Menu Items (Limited Editing) */}
+          <div className="lg:col-span-2 bg-white rounded-lg shadow-sm">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Menu Items</h2>
+              <p className="text-sm text-gray-600 mt-1">Edit basic info only - contact support for advanced changes</p>
+            </div>
+            <div className="p-6">
+              {menu?.categories?.map((category: any) => (
+                <div key={category.id} className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-3">{category.name}</h3>
+                  <div className="space-y-3">
+                    {category.items.map((item: MenuItem) => (
+                      <div key={item.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{item.name}</div>
+                          <div className="text-sm text-gray-600">{item.description}</div>
+                          <div className="text-sm font-medium text-green-600">${item.price}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className={`px-2 py-1 text-xs font-medium rounded-full \${
+                            item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {item.available ? 'Available' : 'Unavailable'}
+                          </div>
+                          <button
+                            onClick={() => setEditingItem(item)}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Insights Sidebar */}
+          <div className="space-y-6">
+            {analytics && (
+              <>
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                  <h3 className="font-semibold text-gray-900 mb-3">Popular Items</h3>
+                  <div className="space-y-2">
+                    {analytics.popularItems.map((item, i) => (
+                      <div key={i} className="flex justify-between items-center">
+                        <span className="text-sm text-gray-700">{item.name}</span>
+                        <span className="text-xs text-gray-500">{item.views} views</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                  <h3 className="font-semibold text-gray-900 mb-3">Top Searches</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analytics.topSearchTerms.map((term, i) => (
+                      <span key={i} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                        {term}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Need Help?</h4>
+                  <p className="text-sm text-blue-700 mb-3">
+                    For advanced menu changes, AI customization, or technical support, contact us directly.
+                  </p>
+                  <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+                    Contact Support
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Item Modal (Limited Fields) */}
+      {editingItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Menu Item</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  value={editingItem.name}
+                  onChange={(e) => setEditingItem(prev => prev ? { ...prev, name: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                  value={editingItem.description}
+                  onChange={(e) => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : null)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="999.99"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                  value={editingItem.price}
+                  onChange={(e) => setEditingItem(prev => prev ? { ...prev, price: parseFloat(e.target.value) } : null)}
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={editingItem.available}
+                    onChange={(e) => setEditingItem(prev => prev ? { ...prev, available: e.target.checked } : null)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Available</span>
+                </label>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => updateItem(editingItem)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 flex-1"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={() => setEditingItem(null)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium hover:bg-gray-400 flex-1"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+'@
+$dashboard | Set-Content -Path "components\RestaurantDashboard.tsx" -Encoding UTF8
+
+# Step 10: Create App Structure
+Write-Host "ðŸ—ï¸ Creating app structure..." -ForegroundColor Yellow
+$layout = @'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: 'Digital Menu SaaS',
+  description: 'Smart restaurant menu system with AI assistant',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
+}
+
+'@
+$layout | Set-Content -Path "app\layout.tsx" -Encoding UTF8
+
+$homepage = @'
+import { redirect } from 'next/navigation'
+
+export default function Home() {
+  redirect('/menu')
+}
+
+'@
+$homepage | Set-Content -Path "app\page.tsx" -Encoding UTF8
+
+$menuPage = @'
+import { Suspense } from 'react'
+import MenuClient from '@/components/MenuClient'
+
+export default function MenuPage() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Suspense fallback={<MenuSkeleton />}>
+        <MenuClient />
+      </Suspense>
+    </div>
+  )
+}
+
+function MenuSkeleton() {
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-300 rounded w-64 mb-6"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
+              <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+'@
+$menuPage | Set-Content -Path "app\menu\page.tsx" -Encoding UTF8
+
+$loginPage = @'
+
+"use client"
+
+import { useState } from 'react'
+import { signIn, getSession } from 'next-auth/react'
+import { useRouter, useSearchParams } from 'next/navigation'
+
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') || '/admin'
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false
+      })
+
+      if (result?.error) {
+        setError('Invalid email or password')
+        return
+      }
+
+      // Get session to determine role and redirect accordingly
+      const session = await getSession()
+      if (session?.user?.role === 'SUPER_ADMIN') {
+        router.push('/admin/super')
+      } else {
+        router.push('/admin/restaurant')
+      }
+
+    } catch (error) {
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900">Digital Menu SaaS</h2>
+          <p className="mt-2 text-sm text-gray-600">Admin Dashboard Login</p>
+        </div>
+      </div>
+
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Demo Accounts</span>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('admin@digitalmenusaas.com')
+                  setPassword('superadmin123')
+                }}
+                className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <div className="font-medium text-gray-900">Super Admin Demo</div>
+                <div className="text-sm text-gray-500">Full system access and control</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('owner@bellavista.com')
+                  setPassword('restaurant123')
+                }}
+                className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <div className="font-medium text-gray-900">Restaurant Owner Demo</div>
+                <div className="text-sm text-gray-500">Limited menu management access</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+'@
+$loginPage | Set-Content -Path "app\auth\login\page.tsx" -Encoding UTF8
+
+# Step 11: Create CSS and Config
+Write-Host "ðŸŽ¨ Creating styles..." -ForegroundColor Yellow
+$globalCSS = @'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand-primary: #000000;
+    --brand-secondary: #ffffff;
+    --brand-accent: #6b7280;
+  }
+}
+
+@layer components {
+  .restaurant-header h1 {
+    color: var(--brand-primary);
+  }
+  
+  .menu-category button.selected {
+    background: var(--brand-primary);
+    color: var(--brand-secondary);
+  }
+  
+  .cart-button, .ai-button {
+    background: var(--brand-primary);
+  }
+}
+
+'@
+$globalCSS | Set-Content -Path "app\globals.css" -Encoding UTF8
+
+$nextConfig = @'
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
+  },
+}
+
+module.exports = nextConfig
+
+'@
+$nextConfig | Set-Content -Path "next.config.js" -Encoding UTF8
+
+$tsConfig = @'
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+'@
+$tsConfig | Set-Content -Path "tsconfig.json" -Encoding UTF8
+
+$tailwindConfig = @'
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    './pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+'@
+$tailwindConfig | Set-Content -Path "tailwind.config.js" -Encoding UTF8
+
+$postCSSConfig = @'
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+
+'@
+$postCSSConfig | Set-Content -Path "postcss.config.js" -Encoding UTF8
+
+# Step 12: Create utility libraries
+Write-Host "ðŸ”§ Creating utilities..." -ForegroundColor Yellow
+$prismaClient = @'
+import { PrismaClient } from '@prisma/client'
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
+}
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+
+'@
+$prismaClient | Set-Content -Path "lib\prisma.ts" -Encoding UTF8
+
+$customerMemory = @'
+// lib/customer-memory.ts - Frontend customer recognition
+
+export interface CustomerPreferences {
+  favoriteItems: string[]
+  dietaryRestrictions: string[]
+  spicePreference?: string
+  visitCount: number
+}
+
+export class CustomerMemoryManager {
+  private static STORAGE_KEY = 'dmenu_customer_fp'
+  
+  static getCustomerFingerprint(): string {
+    // Check for stored fingerprint first
+    const stored = localStorage.getItem(this.STORAGE_KEY)
+    if (stored) return stored
+    
+    // Generate new fingerprint from browser characteristics
+    const fingerprint = this.generateFingerprint()
+    localStorage.setItem(this.STORAGE_KEY, fingerprint)
+    return fingerprint
+  }
+  
+  private static generateFingerprint(): string {
+    // Privacy-friendly browser fingerprinting
+    const components = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + 'x' + screen.height,
+      screen.colorDepth,
+      new Date().getTimezoneOffset().toString(),
+      this.getCanvasFingerprint(),
+      navigator.hardwareConcurrency?.toString() || '4'
+    ]
+    
+    return this.hashComponents(components.join('|'))
+  }
+  
+  private static getCanvasFingerprint(): string {
+    try {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return 'no-canvas'
+      
+      ctx.textBaseline = 'top'
+      ctx.font = '14px Arial'
+      ctx.fillStyle = '#333'
+      ctx.fillText('Customer fingerprint', 2, 2)
+      
+      return canvas.toDataURL().slice(-20)
+    } catch {
+      return 'canvas-blocked'
+    }
+  }
+  
+  private static hashComponents(str: string): string {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i)
+      hash = ((hash << 5) - hash) + char
+      hash = hash & hash // 32-bit integer
+    }
+    return Math.abs(hash).toString(36).padStart(6, '0')
+  }
+  
+  // Track user interactions for personalization
+  static trackItemInterest(itemName: string) {
+    const interests = JSON.parse(localStorage.getItem('dmenu_interests') || '[]')
+    interests.push({ item: itemName, timestamp: Date.now() })
+    
+    // Keep only recent interests (last 30 days)
+    const month = 30 * 24 * 60 * 60 * 1000
+    const recent = interests.filter((i: any) => Date.now() - i.timestamp < month)
+    
+    localStorage.setItem('dmenu_interests', JSON.stringify(recent.slice(-20)))
+  }
+  
+  static getItemInterests(): string[] {
+    const interests = JSON.parse(localStorage.getItem('dmenu_interests') || '[]')
+    return interests.map((i: any) => i.item)
+  }
+}
+
+// Enhanced MenuClient with AI integration
+export function useAIAssistant(tenant: string) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [conversation, setConversation] = useState<Array<{
+    role: 'user' | 'assistant'
+    content: string
+    timestamp: Date
+    recommendations?: Array<{name: string, reason: string, price: number}>
+  }>>([])
+  
+  const sendMessage = async (message: string) => {
+    if (!message.trim() || isLoading) return
+    
+    setIsLoading(true)
+    const userMessage = { 
+      role: 'user' as const, 
+      content: message, 
+      timestamp: new Date() 
+    }
+    
+    setConversation(prev => [...prev, userMessage])
+    
+    try {
+      const response = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant,
+          message,
+          customerFingerprint: CustomerMemoryManager.getCustomerFingerprint()
+        })
+      })
+      
+      const data = await response.json()
+      
+      const aiMessage = {
+        role: 'assistant' as const,
+        content: data.response,
+        timestamp: new Date(),
+        recommendations: data.recommendations
+      }
+      
+      setConversation(prev => [...prev, aiMessage])
+      
+    } catch (error) {
+      console.error('AI assistant error:', error)
+      
+      const errorMessage = {
+        role: 'assistant' as const,
+        content: "I'm having trouble right now, but I'd love to help you with our menu! What can I tell you about our dishes?",
+        timestamp: new Date()
+      }
+      
+      setConversation(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  return {
+    conversation,
+    sendMessage,
+    isLoading,
+    clearConversation: () => setConversation([])
+  }
+}
+
+'@
+$customerMemory | Set-Content -Path "lib\customer-memory.ts" -Encoding UTF8
+
+$middleware = @'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+
+export function middleware(request: NextRequest) {
+  // Add CORS headers for API routes
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    const response = NextResponse.next()
+    
+    // Allow requests from any origin for the embeddable widget
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+    
+    return response
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: '/api/:path*',
+}
+
+'@
+$middleware | Set-Content -Path "middleware.ts" -Encoding UTF8
+
+# Step 13: Create environment files
+Write-Host "âš™ï¸ Creating environment..." -ForegroundColor Yellow
+$envExample = @'
+# Copy this to .env.local and fill in your values
+
+# Database (required)
+DATABASE_URL="postgresql://username:password@localhost:5432/digitalmenu_local"
+
+# Authentication (required)
+NEXTAUTH_SECRET="your-super-secret-key-at-least-32-characters-long-for-local-testing-make-it-random"
+NEXTAUTH_URL="http://localhost:3000"
+
+# OpenAI for AI Assistant (required)
+OPENAI_API_KEY="sk-your-openai-api-key-here"
+
+# Stripe (optional for local testing)
+STRIPE_PUBLISHABLE_KEY="pk_test_your_test_key"
+STRIPE_SECRET_KEY="sk_test_your_test_key"
+STRIPE_WEBHOOK_SECRET="whsec_test_webhook_secret"
+STRIPE_BASIC_PRICE_ID="price_test_basic"
+STRIPE_PREMIUM_PRICE_ID="price_test_premium"  
+STRIPE_ENTERPRISE_PRICE_ID="price_test_enterprise"
+
+# App Configuration
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_DEFAULT_TENANT="monochrome-bistro"
+
+'@
+$envExample | Set-Content -Path ".env.example" -Encoding UTF8
+
+$envLocal = @'
+DATABASE_URL="postgresql://postgres:password@localhost:5432/digitalmenu?schema=public"
+NEXTAUTH_SECRET="your-nextauth-secret-here-change-in-production"
+NEXTAUTH_URL="http://localhost:3000"
+OPENAI_API_KEY="sk-your-openai-api-key-here"
+NEXT_PUBLIC_DEFAULT_TENANT="monochrome-bistro"
+'@
+$envLocal | Set-Content -Path ".env.local" -Encoding UTF8
+
+# Step 14: Install pnpm if needed
+Write-Host "ðŸ“¦ Checking package manager..." -ForegroundColor Yellow
+if (!(Get-Command pnpm -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing pnpm..." -ForegroundColor Yellow
+    npm install -g pnpm
+}
+
+# Step 15: Install dependencies
+Write-Host "ðŸ“¦ Installing dependencies..." -ForegroundColor Yellow
+pnpm install
+
+# Step 16: Setup database
+Write-Host "ðŸ—„ï¸ Setting up database..." -ForegroundColor Yellow
+npx prisma generate
+npx prisma db push
+npx prisma db seed
+
+# Step 17: Launch!
+Write-Host ""
+Write-Host "ðŸŽ‰ Digital Menu SaaS Setup Complete!" -ForegroundColor Green
+Write-Host "ðŸ”— Opening: http://localhost:3000" -ForegroundColor Cyan
+Write-Host "ðŸ”‘ Demo credentials:" -ForegroundColor Yellow
+Write-Host "   Super Admin: admin@digitalmenusaas.com / superadmin123" -ForegroundColor White
+Write-Host "   Restaurant: owner@bellavista.com / restaurant123" -ForegroundColor White
+Write-Host ""
+Write-Host "ðŸ’° Revenue Model Ready:" -ForegroundColor Green
+Write-Host "   â€¢ Basic: $49/month" -ForegroundColor White
+Write-Host "   â€¢ Premium: $99/month" -ForegroundColor White
+Write-Host "   â€¢ Enterprise: $199/month" -ForegroundColor White
+Write-Host ""
+Write-Host "Press Ctrl+C to stop the server" -ForegroundColor Yellow
+
+Start-Process "http://localhost:3000"
+pnpm dev
