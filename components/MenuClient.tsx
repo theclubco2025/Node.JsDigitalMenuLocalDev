@@ -23,11 +23,11 @@ export default function MenuClient() {
     : 'demo'
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
-    `/api/menu?tenant=${tenant}${searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : ''}`,
+    `/api/menu?tenant=${tenant}`,
     fetcher
   )
 
-  // Filter logic matching your Canvas app exactly
+  // Filter logic matching your Canvas app exactly (client-side now to avoid API refiring per keystroke)
   const filteredCategories = useMemo(() => {
     if (!menuData?.categories) return []
     
@@ -42,8 +42,8 @@ export default function MenuClient() {
           if (searchQuery) {
             const searchLower = searchQuery.toLowerCase()
             const matchesName = item.name.toLowerCase().includes(searchLower)
-            const matchesDescription = item.description.toLowerCase().includes(searchLower)
-            const matchesTags = item.tags.some(tag => tag.toLowerCase().includes(searchLower))
+            const matchesDescription = (item.description || '').toLowerCase().includes(searchLower)
+            const matchesTags = (item.tags || []).some(tag => tag.toLowerCase().includes(searchLower))
             if (!matchesName && !matchesDescription && !matchesTags) return false
           }
           
@@ -61,9 +61,11 @@ export default function MenuClient() {
       .filter(category => category.items.length > 0)
   }, [menuData, searchQuery, selectedCategory, selectedDietaryFilters])
 
-  const highlightText = (text: string, query: string) => {
-    if (!query) return text
-    const parts = text.split(new RegExp(`(${query})`, 'gi'))
+  const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const highlightText = (text: string | undefined, query: string) => {
+    const safeText = text ?? ''
+    if (!query) return safeText
+    const parts = safeText.split(new RegExp(`(${escapeRegExp(query)})`, 'gi'))
     return parts.map((part, i) => 
       part.toLowerCase() === query.toLowerCase() 
         ? <mark key={i} className="bg-yellow-200 px-1 rounded">{part}</mark>
@@ -143,20 +145,15 @@ export default function MenuClient() {
   return (
     <div className="min-h-screen bg-white text-black">
       {/* Sticky Header with Search and Filters */}
-      <div className="sticky top-0 z-40 border-b border-gray-200 shadow-sm">
-        <div
-          className="px-4 py-6"
-          style={{
-            background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)',
-          }}
-        >
+      <div className="sticky top-0 z-40 shadow-sm" style={{ background: 'var(--header)' }}>
+        <div className="px-4 py-6" style={{ background: 'var(--header)' }}>
           {/* Restaurant Header */}
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-3xl font-bold text-white mb-1">Digital Menu</h1>
-            <p className="text-white/80 text-sm">Browse categories, search, and add to cart</p>
+            <h1 className="text-3xl font-bold text-white mb-1 tracking-wide">Digital Menu</h1>
+            <p className="text-gray-300 text-sm">Refined flavors. Elevated experience.</p>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 py-4 bg-white">
+        <div className="max-w-7xl mx-auto px-4 py-4" style={{ background: 'var(--bg)' }}>
 
           {/* Search Bar */}
           <div className="mb-4">
@@ -230,15 +227,16 @@ export default function MenuClient() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: '#ffffff' }}>
         {/* Category Sidebar */}
         <aside className="hidden lg:block lg:col-span-3">
-          <div className="sticky top-24 bg-white border border-gray-200 rounded-xl p-4" style={{ borderRadius: 'var(--radius)' }}>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Categories</h3>
+          <div className="sticky top-24 lux-card rounded-xl p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)' }}>
+            <h3 className="text-sm font-semibold text-gray-200 mb-3">Categories</h3>
             <nav className="space-y-1">
               <button
                 onClick={() => scrollTo('top')}
-                className="w-full text-left px-3 py-2 rounded-md text-sm transition hover:bg-gray-100"
+                className="w-full text-left px-3 py-2 rounded-md text-sm transition"
+                style={{ color: '#ffffff', background: '#1f1f1f' }}
               >
                 All Categories
               </button>
@@ -246,7 +244,8 @@ export default function MenuClient() {
                 <button
                   key={category.id}
                   onClick={() => scrollTo(`cat-${category.id}`)}
-                  className="w-full text-left px-3 py-2 rounded-md text-sm text-gray-700 transition hover:bg-gray-100"
+                  className="w-full text-left px-3 py-2 rounded-md text-sm transition"
+                  style={{ color: '#e5e5e5', background: '#1a1a1a' }}
                 >
                   {category.name}
                 </button>
@@ -260,8 +259,8 @@ export default function MenuClient() {
           {filteredCategories.map(category => (
             <div key={category.id} id={`cat-${category.id}`} className="category-section scroll-mt-24">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-black">{category.name}</h2>
-                <div className="h-px flex-1 bg-gray-200 ml-6"></div>
+                <h2 className="text-2xl font-bold text-white">{category.name}</h2>
+                <div className="flex-1 ml-6 lux-divider"></div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -271,15 +270,13 @@ export default function MenuClient() {
                     className="menu-item bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                     style={{ borderRadius: 'var(--radius)' }}
                   >
-                    {item.imageUrl && (
-                      <div className="aspect-w-16 aspect-h-9 bg-gray-100">
-                        <img 
-                          src={item.imageUrl} 
-                          alt={item.name}
-                          className="w-full h-48 object-cover"
-                        />
-                      </div>
-                    )}
+                    <div className="bg-gray-100">
+                      <img 
+                        src={item.imageUrl || `https://via.placeholder.com/800x480/cccccc/333333?text=${encodeURIComponent(item.name)}`}
+                        alt={item.name}
+                        className="w-full h-48 object-cover"
+                      />
+                    </div>
                     
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-3">
@@ -333,7 +330,7 @@ export default function MenuClient() {
       <button
         onClick={() => setIsCartOpen(true)}
         className="fixed bottom-6 right-6 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 z-50 flex items-center gap-2"
-        style={{background:'var(--primary)'}}
+        style={{background:'var(--accent)', color:'#0b0b0b'}}
       >
         🛒
         <span className="font-medium">Cart ({cartItemCount})</span>
@@ -345,8 +342,8 @@ export default function MenuClient() {
       {/* AI Assistant Button */}
       <button
         onClick={() => setIsAssistantOpen(true)}
-        className="fixed bottom-6 left-6 text-white p-3 rounded-full shadow-lg transition-all duration-200 z-50"
-        style={{background:'var(--accent)'}}
+        className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
+        style={{background:'var(--accent)', color:'#0b0b0b'}}
       >
         🤖
       </button>

@@ -10,7 +10,7 @@
           "description": "Toasted, herbed butter",
           "price": 5.5,
           "tags": ["vegetarian"],
-          "imageUrl": "https://via.placeholder.com/300x200?text=Garlic+Bread"
+          "imageUrl": "https://images.unsplash.com/photo-1546554137-f86b9593a222?q=80&w=1200&auto=format&fit=crop"
         },
         {
           "id": "i-salad",
@@ -18,7 +18,8 @@
           "description": "Greens, vinaigrette",
           "price": 7,
           "tags": ["vegan", "gluten-free"],
-          "calories": 180
+          "calories": 180,
+          "imageUrl": "https://images.unsplash.com/photo-1551892374-ecf8754cf8c0?q=80&w=1200&auto=format&fit=crop"
         }
       ]
     },
@@ -32,14 +33,15 @@
           "description": "Cheddar, pickles",
           "price": 12,
           "tags": ["beef"],
-          "imageUrl": "https://via.placeholder.com/300x200?text=Classic+Burger"
+          "imageUrl": "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1200&auto=format&fit=crop"
         },
         {
           "id": "i-pasta",
           "name": "Pasta Alfredo",
           "description": "Creamy sauce",
           "price": 13.5,
-          "tags": ["vegetarian"]
+          "tags": ["vegetarian"],
+          "imageUrl": "https://images.unsplash.com/photo-1523986371872-9d3ba2e2f642?q=80&w=1200&auto=format&fit=crop"
         }
       ]
     },
@@ -52,9 +54,9 @@
           "name": "Sparkling Water",
           "price": 3.5,
           "tags": ["vegan", "gluten-free"],
-          "imageUrl": "https://via.placeholder.com/300x200?text=Sparkling+Water"
+          "imageUrl": "https://images.unsplash.com/photo-1543007630-9710e4a00a20?q=80&w=1200&auto=format&fit=crop"
         },
-        { "id": "i-cola", "name": "Cola", "price": 3, "tags": ["vegan"] }
+        { "id": "i-cola", "name": "Cola", "price": 3, "tags": ["vegan"], "imageUrl": "https://images.unsplash.com/photo-1541976076758-347942db1970?q=80&w=1200&auto=format&fit=crop" }
       ]
     }
   ]
