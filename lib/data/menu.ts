@@ -77,10 +77,7 @@ const STUB: MenuResponse = {
 
 export async function readMenu(tenant: string): Promise<MenuResponse> {
   try {
-    // Prefer in-memory override if present
-    if (memoryStore.has(tenant)) {
-      return memoryStore.get(tenant)!;
-    }
+    // Prefer filesystem so edits reflect immediately
     const filePath = path.join(process.cwd(), "data", "tenants", tenant, "menu.json");
     const buf = await fs.readFile(filePath, "utf8");
     const json = JSON.parse(buf);
@@ -88,6 +85,8 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
     if (!json || !Array.isArray(json.categories)) return STUB;
     return json as MenuResponse;
   } catch {
+    // Fallback to in-memory override if present; otherwise stub
+    if (memoryStore.has(tenant)) return memoryStore.get(tenant)!;
     return STUB;
   }
 }

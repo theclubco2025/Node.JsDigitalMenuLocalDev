@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
 
@@ -16,6 +16,10 @@ export default function MenuClient() {
   const [assistantMessage, setAssistantMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'assistant', message: string}>>([])
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
+  const [cartBump, setCartBump] = useState(false)
+  const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
 
   // Get tenant from URL params or use default
   const tenant = typeof window !== 'undefined' 
@@ -136,22 +140,103 @@ export default function MenuClient() {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
   
-  if (error) return <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading menu...</div>
+  // Note: avoid early returns before hooks to keep hook order stable
 
   const categories = menuData?.categories || []
   const allCategories = categories.map(cat => cat.name)
 
+  const firstImageUrl = useMemo(() => {
+    for (const cat of categories) {
+      for (const item of cat.items) {
+        if (item.imageUrl) return item.imageUrl
+      }
+    }
+    return null
+  }, [categories])
+
+  // Scroll spy to highlight active category
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const sectionIds = categories.map(c => `cat-${c.id}`)
+    const elements = sectionIds
+      .map(id => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el)
+    if (elements.length === 0) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        if (visible[0]) {
+          const id = visible[0].target.id.replace('cat-', '')
+          setActiveCategoryId(id)
+        }
+      },
+      { rootMargin: '-40% 0px -55% 0px', threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] }
+    )
+    elements.forEach(el => observer.observe(el))
+    return () => observer.disconnect()
+  }, [categories])
+
+  // Cart bump reset
+  useEffect(() => {
+    if (!cartBump) return
+    const t = setTimeout(() => setCartBump(false), 300)
+    return () => clearTimeout(t)
+  }, [cartBump])
+
+  // Toast auto-hide
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 1500)
+    return () => clearTimeout(t)
+  }, [toast])
+
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen">
+      {/* Loading and error states */}
+      {error && (
+        <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
+      )}
+      {(!error && isLoading) && (
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="lux-skeleton h-8 w-64 mb-6 rounded"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="lux-skeleton h-48 w-full"></div>
+                <div className="p-6 space-y-3">
+                  <div className="lux-skeleton h-5 w-2/3 rounded"></div>
+                  <div className="lux-skeleton h-4 w-full rounded"></div>
+                  <div className="lux-skeleton h-4 w-5/6 rounded"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {!error && !isLoading && (
+        <>
       {/* Sticky Header with Search and Filters */}
       <div className="sticky top-0 z-40 shadow-sm" style={{ background: 'var(--header)' }}>
-        <div className="px-4 py-6" style={{ background: 'var(--header)' }}>
+        <div
+          className="px-4 py-6 pb-[96px]"
+          style={{
+            backgroundColor: 'var(--header)',
+            backgroundImage: firstImageUrl
+              ? `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${firstImageUrl}')`
+              : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: firstImageUrl ? 'fixed' : undefined,
+          }}
+        >
           {/* Restaurant Header */}
           <div className="max-w-7xl mx-auto text-center">
             <h1 className="text-3xl font-bold text-white mb-1 tracking-wide">Digital Menu</h1>
             <p className="text-gray-300 text-sm">Refined flavors. Elevated experience.</p>
           </div>
+          <div className="gold-sheen h-[2px] opacity-60 mt-4"></div>
         </div>
         <div className="max-w-7xl mx-auto px-4 py-4" style={{ background: 'var(--bg)' }}>
 
@@ -215,19 +300,35 @@ export default function MenuClient() {
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
                   selectedDietaryFilters.includes(option)
                     ? 'text-white shadow-md'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                    : 'bg-gray-50 text-gray-600 border-gray-300 hover:border-gray-400'
                 }`}
                 style={selectedDietaryFilters.includes(option)?{background:'var(--primary)', borderColor:'var(--primary)'}:undefined}
               >
                 {option}
               </button>
             ))}
+            {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
+              <button
+                onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
+                className="px-3 py-1 rounded-full text-xs font-medium border border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Clear all
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: '#ffffff' }}>
+        {/* Current Category Chip */}
+        {activeCategoryId && (
+          <div className="lg:col-span-12 mb-4">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
+              Browsing: {categories.find(c => c.id === activeCategoryId)?.name || 'All'}
+            </span>
+          </div>
+        )}
         {/* Category Sidebar */}
         <aside className="hidden lg:block lg:col-span-3">
           <div className="sticky top-24 lux-card rounded-xl p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)' }}>
@@ -245,7 +346,7 @@ export default function MenuClient() {
                   key={category.id}
                   onClick={() => scrollTo(`cat-${category.id}`)}
                   className="w-full text-left px-3 py-2 rounded-md text-sm transition"
-                  style={{ color: '#e5e5e5', background: '#1a1a1a' }}
+                  style={activeCategoryId===category.id?{ color: '#0b0b0b', background: 'var(--accent)' }:{ color: '#e5e5e5', background: '#1a1a1a' }}
                 >
                   {category.name}
                 </button>
@@ -267,7 +368,7 @@ export default function MenuClient() {
                 {category.items.map(item => (
                   <div 
                     key={item.id} 
-                    className="menu-item bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                    className="menu-item bg-gray-50 border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                     style={{ borderRadius: 'var(--radius)' }}
                   >
                     <div className="bg-gray-100">
@@ -310,11 +411,17 @@ export default function MenuClient() {
                         </div>
                         
                         <button
-                          onClick={() => addToCart(item)}
+                          onClick={() => {
+                            addToCart(item)
+                            setRecentlyAddedId(item.id)
+                            setCartBump(true)
+                            setToast(`Added ${item.name}`)
+                            setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 1000)
+                          }}
                           className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
                           style={{background:'var(--accent)'}}
                         >
-                          Add to Cart
+                          {recentlyAddedId===item.id ? '✓ Added' : 'Add to Cart'}
                         </button>
                       </div>
                     </div>
@@ -329,7 +436,7 @@ export default function MenuClient() {
       {/* Floating Cart Button */}
       <button
         onClick={() => setIsCartOpen(true)}
-        className="fixed bottom-6 right-6 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 z-50 flex items-center gap-2"
+        className={`fixed bottom-6 right-6 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 z-50 flex items-center gap-2 ${cartBump ? 'animate-bump' : ''}`}
         style={{background:'var(--accent)', color:'#0b0b0b'}}
       >
         🛒
@@ -351,7 +458,7 @@ export default function MenuClient() {
       {/* Cart Drawer */}
       {isCartOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="ml-auto w-full max-w-md bg-white h-full shadow-xl flex flex-col">
+          <div className="ml-auto w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-black">Your Cart</h2>
@@ -429,7 +536,7 @@ export default function MenuClient() {
       {/* AI Assistant Drawer */}
       {isAssistantOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="w-full max-w-md bg-white h-full shadow-xl flex flex-col">
+          <div className="w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
@@ -494,6 +601,15 @@ export default function MenuClient() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-24 right-6 z-50 px-4 py-2 rounded-lg shadow" style={{ background:'#111', color:'#fff' }}>
+          {toast}
         </div>
       )}
     </div>

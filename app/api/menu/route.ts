@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { resolveTenant } from '@/lib/tenant'
 import { readMenu } from '@/lib/data/menu'
 
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json(filtered)
+    return NextResponse.json(filtered, { headers: { 'Cache-Control': 'no-store' } })
 
   } catch (error) {
     console.error('Menu API error:', error)
