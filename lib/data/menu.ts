@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { MenuResponse, MenuCategory, MenuItem } from "@/types/api";
+// Lazy DB client import to avoid crashing when Prisma isn't generated
 
 // Simple in-memory override store (used when filesystem is unavailable)
 const memoryStore = new Map<string, MenuResponse>();
@@ -76,6 +77,45 @@ const STUB: MenuResponse = {
 };
 
 export async function readMenu(tenant: string): Promise<MenuResponse> {
+  // If DATABASE_URL exists, prefer DB
+  if (process.env.DATABASE_URL) {
+    try {
+      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as any }))
+      if (!prisma) throw new Error('prisma-not-ready')
+      // Our Prisma schema is richer; map to MenuResponse using the latest Menu for tenant slug
+      const tenantRow = await prisma.tenant.findUnique({
+        where: { slug: tenant },
+        include: {
+          menus: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+            include: {
+              categories: { include: { items: { include: { tags: true } } } }
+            }
+          }
+        }
+      })
+      const menu = tenantRow?.menus?.[0]
+      if (menu) {
+        const categories: MenuCategory[] = menu.categories.map(c => ({
+          id: c.id,
+          name: c.name,
+          items: c.items.map(i => ({
+            id: i.id,
+            name: i.name,
+            description: i.description || '',
+            price: Number(i.price),
+            tags: i.tags.map(t => t.tag),
+            imageUrl: i.imageUrl || undefined,
+            calories: i.calories || undefined,
+          }))
+        }))
+        return { categories }
+      }
+    } catch (e) {
+      // fall back to FS below
+    }
+  }
   try {
     // Prefer filesystem so edits reflect immediately
     const filePath = path.join(process.cwd(), "data", "tenants", tenant, "menu.json");
@@ -92,13 +132,50 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
 }
 
 export async function writeMenu(tenant: string, menu: MenuResponse): Promise<void> {
+  // If DB present, write there; else write file (fallback to memory)
+  if (process.env.DATABASE_URL) {
+    try {
+      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as any }))
+      if (!prisma) throw new Error('prisma-not-ready')
+      await prisma.$transaction(async (tx) => {
+        // Ensure tenant exists
+        const tenantRow = await tx.tenant.upsert({
+          where: { slug: tenant },
+          update: {},
+          create: { slug: tenant, name: tenant },
+        })
+        // Create a new Menu and replace categories/items
+        const newMenu = await tx.menu.create({ data: { tenantId: tenantRow.id, name: `${tenant} menu` } })
+        for (const cat of menu.categories) {
+          const createdCat = await tx.menuCategory.create({ data: { menuId: newMenu.id, name: cat.name } })
+          for (const item of cat.items) {
+            const createdItem = await tx.menuItem.create({
+              data: {
+                categoryId: createdCat.id,
+                name: item.name,
+                description: item.description || '',
+                price: item.price as unknown as any,
+                imageUrl: item.imageUrl || null,
+                calories: item.calories || null,
+              }
+            })
+            for (const tag of item.tags || []) {
+              await tx.menuItemTag.create({ data: { itemId: createdItem.id, tag } })
+            }
+          }
+        }
+      })
+      return
+    } catch (e) {
+      // fall through to FS
+    }
+  }
   const dir = path.join(process.cwd(), "data", "tenants", tenant)
   const file = path.join(dir, "menu.json")
   try {
     await fs.mkdir(dir, { recursive: true })
     await fs.writeFile(file, JSON.stringify(menu, null, 2), "utf8")
   } catch {
-    // In environments without FS (preview, edge), fall back to memory
     setMemoryMenu(tenant, menu)
   }
 }
