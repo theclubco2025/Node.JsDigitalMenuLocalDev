@@ -26,6 +26,54 @@
 ## Deploy Notes
 - Vercel preferred; wildcard subdomains for tenants. Later: map `<tenant>.domain.com` → tenant resolver.
 
+---
+
+## Core Context Dump (concise)
+
+- Vision
+  - Multi-tenant digital menu SaaS with per-tenant theming and a lean AI assistant.
+  - File-based now; Postgres via Prisma when `DATABASE_URL` is set (same return shapes).
+
+- Data model (runtime shape)
+  - `MenuResponse`: `{ categories: [{ id, name, items: [{ id, name, description?, price, tags[], imageUrl?, calories? }] }] }`
+  - Tenancy via `tenant` slug (query param now; subdomains later).
+
+- Theming
+  - Per-tenant `theme.json`: `{ name?, tone?, primary, accent, radius }`.
+  - Applied as CSS vars in `app/layout.tsx` (`--primary`, `--accent`, `--radius`).
+
+- APIs and client
+  - `GET /api/menu?tenant=<slug>` → MenuResponse (DB if present, else files; safe fallback).
+  - `GET /api/theme?tenant=<slug>` → theme (no-store).
+  - `POST /api/assistant` → LLaMA/OpenAI-compatible; returns 501 if missing key.
+  - Dev admin: `/admin/tenant` → import `{ tenant, menu }` (writes file or memory).
+
+- DB posture (Prisma)
+  - If `DATABASE_URL` set: reads/writes from Postgres (Tenant → Menu → Category → Item).
+  - Lazy Prisma import; if Prisma not ready or no data, falls back to files.
+  - Prisma Studio as browser data UI: `npx prisma studio`.
+
+- Env
+  - `DATABASE_URL` (Postgres), `NEXT_PUBLIC_DEFAULT_TENANT=demo`.
+  - AI: `AI_PROVIDER`, `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL` (optional in dev).
+
+- Scripts
+  - `node scripts/bootstrap-tenant.mjs <slug> "Name" --preset=lux` → scaffold `data/tenants/<slug>/`.
+  - `node scripts/generate-qr.mjs <slug> [baseUrl]` → stable QR to `/menu?tenant=<slug>`.
+
+- Onboarding (≤60 min)
+  - Create slug → bootstrap → import real menu → set theme variant → generate QR → verify `/menu?tenant=<slug>`.
+
+- Dev URLs
+  - App: `/menu`, `/menu?tenant=demo`, `/admin/tenant`
+  - API: `/api/menu?tenant=demo`, `/api/tenant/list`, `/api/theme?tenant=demo`
+  - Studio: printed port after `npx prisma studio`
+
+- Safety/scale
+  - Data scoped by `tenant.slug`; RLS later if needed.
+  - File fallback ensures development resilience.
+  - QR is permanent per tenant URL.
+
 This document captures minimal context for ongoing development. Keep it short; link paths instead of pasting code.
 
 ## Goals

@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
 
@@ -20,6 +20,11 @@ export default function MenuClient() {
   const [cartBump, setCartBump] = useState(false)
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const plateButtonRef = useRef<HTMLButtonElement | null>(null)
+  const [platePile, setPlatePile] = useState<Array<{ itemId: string; src: string }>>([])
+  type Flyer = { key: string; src: string; startX: number; startY: number; dx: number; dy: number; moved: boolean }
+  const [flyers, setFlyers] = useState<Flyer[]>([])
 
   // Get tenant from URL params or use default
   const tenant = typeof window !== 'undefined' 
@@ -77,6 +82,30 @@ export default function MenuClient() {
     )
   }
 
+  const launchFlyToPlate = (item: MenuItem) => {
+    if (typeof window === 'undefined') return
+    const img = document.getElementById(`img-${item.id}`) as HTMLImageElement | null
+    const plateBtn = plateButtonRef.current
+    if (!img || !plateBtn) return
+    const imgRect = img.getBoundingClientRect()
+    const btnRect = plateBtn.getBoundingClientRect()
+    const startX = imgRect.left + imgRect.width / 2
+    const startY = imgRect.top + imgRect.height / 2
+    const endX = btnRect.left + btnRect.width / 2
+    const endY = btnRect.top + btnRect.height / 2
+    const key = `${item.id}-${Date.now()}-${Math.random()}`
+    const src = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
+    setFlyers(prev => [...prev, { key, src, startX, startY, dx: endX - startX, dy: endY - startY, moved: false }])
+    // trigger transition on next frame
+    requestAnimationFrame(() => {
+      setFlyers(prev => prev.map(f => f.key === key ? { ...f, moved: true } : f))
+    })
+    // cleanup after animation
+    setTimeout(() => {
+      setFlyers(prev => prev.filter(f => f.key !== key))
+    }, 700)
+  }
+
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
       const existing = prev.find(cartItem => cartItem.item.id === item.id)
@@ -93,6 +122,8 @@ export default function MenuClient() {
 
   const removeFromCart = (itemId: string) => {
     setCart(prev => prev.filter(cartItem => cartItem.item.id !== itemId))
+    // remove from plate pile if present
+    setPlatePile(prev => prev.filter(p => p.itemId !== itemId))
   }
 
   const updateCartQuantity = (itemId: string, quantity: number) => {
@@ -103,12 +134,24 @@ export default function MenuClient() {
     setCart(prev => prev.map(cartItem =>
       cartItem.item.id === itemId ? { ...cartItem, quantity } : cartItem
     ))
+    if (quantity === 1) {
+      // ensure plate pile has this item
+      const target = cart.find(c => c.item.id === itemId)?.item
+      if (target) {
+        const src = target.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(target.name)}`
+        setPlatePile(prev => {
+          if (prev.some(p => p.itemId === itemId)) return prev
+          const filtered = prev.filter(p => p.itemId !== itemId)
+          return [...filtered.slice(-2), { itemId, src }]
+        })
+      }
+    }
   }
 
-  const sendAssistantMessage = async () => {
-    if (!assistantMessage.trim()) return
+  const sendAssistantMessage = async (overrideMessage?: string) => {
+    const userMessage = (overrideMessage ?? assistantMessage).trim()
+    if (!userMessage) return
 
-    const userMessage = assistantMessage.trim()
     setAssistantMessage('')
     setChatHistory(prev => [...prev, { role: 'user', message: userMessage }])
 
@@ -144,6 +187,92 @@ export default function MenuClient() {
 
   const categories = menuData?.categories || []
   const allCategories = categories.map(cat => cat.name)
+
+  const getCategoryIcon = (name: string) => {
+    const n = name.toLowerCase()
+    // Icons inherit current text color via currentColor
+    if (n.includes('appet')) {
+      // Utensils
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 3v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M5 3v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M9 3v5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M7 11v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M16 3c1.66 0 3 1.34 3 3v15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M13 6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      )
+    }
+    if (n.includes('main')) {
+      // Cloche
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 14a8 8 0 0 1 16 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M2 14h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <circle cx="12" cy="7" r="1" fill="currentColor"/>
+        </svg>
+      )
+    }
+    if (n.includes('salad')) {
+      // Leaf
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 14c4-7 12-7 16 0-6 4-10 4-16 0Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+          <path d="M9 12c2 0 3 1 3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      )
+    }
+    if (n.includes('drink') || n.includes('bever')) {
+      // Cup
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 5h12l-1 9a4 4 0 0 1-4 3h-2a4 4 0 0 1-4-3L5 5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+          <path d="M17 7h2a3 3 0 0 1 0 6h-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      )
+    }
+    if (n.includes('pasta')) {
+      // Bowl noodles
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 13a8 8 0 0 0 16 0H4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+          <path d="M7 11c2 0 3-2 5-2s3 2 5 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
+      )
+    }
+    if (n.includes('pizza')) {
+      // Pizza slice
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 8c6-4 12-4 18 0L12 21 3 8Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+          <circle cx="12" cy="11" r="1" fill="currentColor"/>
+          <circle cx="9" cy="13" r="1" fill="currentColor"/>
+          <circle cx="15" cy="13" r="1" fill="currentColor"/>
+        </svg>
+      )
+    }
+    if (n.includes('dessert') || n.includes('sweet')) {
+      // Cupcake
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M7 10a5 5 0 0 1 10 0" stroke="currentColor" strokeWidth="2"/>
+          <path d="M6 11h12l-1 7H7l-1-7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+        </svg>
+      )
+    }
+    // Default: dot grid
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="6" cy="6" r="1.5" fill="currentColor"/>
+        <circle cx="12" cy="6" r="1.5" fill="currentColor"/>
+        <circle cx="18" cy="6" r="1.5" fill="currentColor"/>
+        <circle cx="6" cy="12" r="1.5" fill="currentColor"/>
+        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+        <circle cx="18" cy="12" r="1.5" fill="currentColor"/>
+      </svg>
+    )
+  }
 
   const firstImageUrl = useMemo(() => {
     for (const cat of categories) {
@@ -193,7 +322,7 @@ export default function MenuClient() {
   }, [toast])
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen lux-gradient">
       {/* Loading and error states */}
       {error && (
         <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
@@ -217,75 +346,93 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Sticky Header with Search and Filters */}
-      <div className="sticky top-0 z-40 shadow-sm" style={{ background: 'var(--header)' }}>
+      {/* Fixed Header with Logo */}
+      <div className="fixed top-0 left-0 right-0 z-50 shadow-sm" style={{ background: 'var(--header)' }}>
         <div
-          className="px-4 py-6 pb-[96px]"
+          className="px-4 py-2"
           style={{
             backgroundColor: 'var(--header)',
-            backgroundImage: firstImageUrl
-              ? `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${firstImageUrl}')`
-              : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: firstImageUrl ? 'fixed' : undefined,
+            borderBottom: '1px solid rgba(255,255,255,0.08)'
           }}
         >
           {/* Restaurant Header */}
-          <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-3xl font-bold text-white mb-1 tracking-wide">Digital Menu</h1>
-            <p className="text-gray-300 text-sm">Refined flavors. Elevated experience.</p>
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-white tracking-wide elegant-cursive">Demo Menu</h1>
+              <p className="text-gray-300 text-xs">Refined flavors. Elevated experience.</p>
+            </div>
           </div>
-          <div className="gold-sheen h-[2px] opacity-60 mt-4"></div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 py-4" style={{ background: 'var(--bg)' }}>
+      </div>
 
-          {/* Search Bar */}
-          <div className="mb-4">
-            <div className="relative max-w-lg mx-auto">
+      {/* Spacer to offset fixed header height */}
+      <div className="h-20" />
+
+      {/* Search & Filters (scroll with page) */}
+      <div className="max-w-7xl mx-auto px-4 py-2">
+        
+        {/* Search Bar */}
+        <div className="mb-3">
+          <div className="flex items-center gap-2 max-w-2xl mx-auto">
+            <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="Search menu items, tags, or categories..."
-                className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors"
+                className="w-full px-3 py-2 pr-9 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white text-black"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                🔍
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
+                  <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
             </div>
-          </div>
-          
-          {/* Category Filters */}
-          <div className="flex gap-2 justify-center flex-wrap mb-4">
             <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                selectedCategory === null
+              onClick={() => setFiltersOpen(o => !o)}
+              className="px-3 py-2 rounded-md text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black"
+            >
+              {filtersOpen ? 'Hide Filters' : 'Filters'}
+            </button>
+          </div>
+        </div>
+        
+        {/* Category Filters */}
+        <div className="flex gap-2 justify-center flex-wrap mb-4">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+              selectedCategory === null
+                ? 'text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            style={selectedCategory===null?{background:'var(--primary)'}:undefined}
+          >
+            All Categories
+          </button>
+          {allCategories.map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
+              className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                selectedCategory === category
                   ? 'text-white shadow-md'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
-              style={selectedCategory===null?{background:'var(--primary)'}:undefined}
+              style={selectedCategory===category?{background:'var(--accent)'}:undefined}
             >
-              All Categories
+              <span className="inline-flex items-center gap-2">
+                {getCategoryIcon(category)}
+                <span>{category}</span>
+              </span>
             </button>
-            {allCategories.map(category => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  selectedCategory === category
-                    ? 'text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-                style={selectedCategory===category?{background:'var(--accent)'}:undefined}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+          ))}
+        </div>
 
-          {/* Dietary Filters */}
+        {/* Dietary Filters (compact dropdown) */}
+        {filtersOpen && (
           <div className="flex gap-2 justify-center flex-wrap">
             {dietaryOptions.map(option => (
               <button
@@ -300,7 +447,7 @@ export default function MenuClient() {
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
                   selectedDietaryFilters.includes(option)
                     ? 'text-white shadow-md'
-                    : 'bg-gray-50 text-gray-600 border-gray-300 hover:border-gray-400'
+                    : 'bg-gray-50 text-gray-800 border-gray-300 hover:border-gray-400'
                 }`}
                 style={selectedDietaryFilters.includes(option)?{background:'var(--primary)', borderColor:'var(--primary)'}:undefined}
               >
@@ -310,25 +457,23 @@ export default function MenuClient() {
             {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
               <button
                 onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
-                className="px-3 py-1 rounded-full text-xs font-medium border border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="px-3 py-1 rounded-full text-xs font-medium border border-gray-300 text-black hover:bg-gray-100"
               >
                 Clear all
               </button>
             )}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: '#ffffff' }}>
         {/* Current Category Chip */}
-        {activeCategoryId && (
-          <div className="lg:col-span-12 mb-4">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
-              Browsing: {categories.find(c => c.id === activeCategoryId)?.name || 'All'}
-            </span>
-          </div>
-        )}
+        <div className="lg:col-span-12 mb-4">
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
+            Browsing: {selectedCategory || 'All'}
+          </span>
+        </div>
         {/* Category Sidebar */}
         <aside className="hidden lg:block lg:col-span-3">
           <div className="sticky top-24 lux-card rounded-xl p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)' }}>
@@ -336,7 +481,7 @@ export default function MenuClient() {
             <nav className="space-y-1">
               <button
                 onClick={() => scrollTo('top')}
-                className="w-full text-left px-3 py-2 rounded-md text-sm transition"
+                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold transition"
                 style={{ color: '#ffffff', background: '#1f1f1f' }}
               >
                 All Categories
@@ -345,10 +490,13 @@ export default function MenuClient() {
                 <button
                   key={category.id}
                   onClick={() => scrollTo(`cat-${category.id}`)}
-                  className="w-full text-left px-3 py-2 rounded-md text-sm transition"
+                  className="w-full text-left px-3 py-2 rounded-md text-sm font-bold transition"
                   style={activeCategoryId===category.id?{ color: '#0b0b0b', background: 'var(--accent)' }:{ color: '#e5e5e5', background: '#1a1a1a' }}
                 >
-                  {category.name}
+                  <span className="inline-flex items-center gap-2">
+                    {getCategoryIcon(category.name)}
+                    <span>{category.name}</span>
+                  </span>
                 </button>
               ))}
             </nav>
@@ -357,10 +505,13 @@ export default function MenuClient() {
 
         {/* Menu Grid */}
         <div className="space-y-12 lg:col-span-9" id="top">
-          {filteredCategories.map(category => (
-            <div key={category.id} id={`cat-${category.id}`} className="category-section scroll-mt-24">
+          {filteredCategories.map((category, idx) => (
+            <div key={category.id} id={`cat-${category.id}`} className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-white">{category.name}</h2>
+                <h2 className="text-2xl font-extrabold text-white font-serif tracking-widest uppercase inline-flex items-center gap-3">
+                  {getCategoryIcon(category.name)}
+                  <span>{category.name}</span>
+                </h2>
                 <div className="flex-1 ml-6 lux-divider"></div>
               </div>
               
@@ -373,6 +524,7 @@ export default function MenuClient() {
                   >
                     <div className="bg-gray-100">
                       <img 
+                        id={`img-${item.id}`}
                         src={item.imageUrl || `https://via.placeholder.com/800x480/cccccc/333333?text=${encodeURIComponent(item.name)}`}
                         alt={item.name}
                         className="w-full h-48 object-cover"
@@ -389,40 +541,60 @@ export default function MenuClient() {
                         </span>
                       </div>
                       
-                      <p className="text-gray-600 text-sm leading-relaxed mb-4">
+                      <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
                         {highlightText(item.description, searchQuery)}
                       </p>
                       
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-wrap gap-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0 flex flex-wrap gap-1">
                           {item.calories && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
                               {item.calories} cal
                             </span>
                           )}
                           {item.tags.map(tag => (
                             <span 
                               key={tag} 
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
                             >
                               {tag}
                             </span>
                           ))}
                         </div>
                         
+                        <div className="shrink-0 flex items-center gap-2">
                         <button
                           onClick={() => {
                             addToCart(item)
                             setRecentlyAddedId(item.id)
                             setCartBump(true)
                             setToast(`Added ${item.name}`)
-                            setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 1000)
+                            setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
+                            launchFlyToPlate(item)
+                            const thumb = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
+                            setPlatePile(prev => {
+                              const filtered = prev.filter(p => p.itemId !== item.id)
+                              return [...filtered.slice(-2), { itemId: item.id, src: thumb }]
+                            })
                           }}
-                          className="text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+                          className={`text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[120px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-yellow-300' : ''}`}
                           style={{background:'var(--accent)'}}
                         >
-                          {recentlyAddedId===item.id ? '✓ Added' : 'Add to Cart'}
+                          {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
                         </button>
+                        <button
+                          onClick={() => { setIsAssistantOpen(true); sendAssistantMessage(`Tell me about ${item.name}`) }}
+                          className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                          aria-label={`Ask about ${item.name}`}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+                          </svg>
+                          <span>Ask</span>
+                        </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -433,35 +605,101 @@ export default function MenuClient() {
         </div>
       </div>
 
-      {/* Floating Cart Button */}
-      <button
-        onClick={() => setIsCartOpen(true)}
-        className={`fixed bottom-6 right-6 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 z-50 flex items-center gap-2 ${cartBump ? 'animate-bump' : ''}`}
-        style={{background:'var(--accent)', color:'#0b0b0b'}}
+      {/* Floating Plate Button with hover preview */}
+      <div
+        className="fixed bottom-6 right-6 z-50"
+        onMouseEnter={() => {/* open preview on hover */}}
+        onMouseLeave={() => {/* close preview handled by CSS hover state */}}
       >
-        🛒
-        <span className="font-medium">Cart ({cartItemCount})</span>
-        {cartItemCount > 0 && (
-          <span className="font-bold">${cartTotal.toFixed(2)}</span>
-        )}
-      </button>
+        <div className="group relative">
+          <button
+            onClick={() => setIsCartOpen(true)}
+            ref={plateButtonRef}
+            className={`relative text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 flex items-center gap-2 ${cartBump ? 'animate-bump' : ''}`}
+            style={{background:'var(--accent)', color:'#0b0b0b'}}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2" />
+              <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
+            </svg>
+            <span className="font-medium">Plate ({cartItemCount})</span>
+            {cartItemCount > 0 && (
+              <span className="font-bold">${cartTotal.toFixed(2)}</span>
+            )}
+            {/* Plate pile thumbnails */}
+            {platePile.length > 0 && (
+              <div className="absolute -top-3 -right-3 flex -space-x-2 pointer-events-none">
+                {platePile.map((p, i) => (
+                  <img key={`${p.itemId}-${i}`} src={p.src} alt="" className="w-6 h-6 rounded-full border border-white object-cover shadow" />
+                ))}
+              </div>
+            )}
+          </button>
+          {/* Hover preview */}
+          {cart.length > 0 && (
+            <div className="pointer-events-none absolute right-0 bottom-full mb-2 w-72 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+              <div className="bg-white text-black rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <span className="text-sm font-semibold">Plate Preview</span>
+                  <span className="text-sm font-medium">${cartTotal.toFixed(2)}</span>
+                </div>
+                <ul className="max-h-56 overflow-auto">
+                  {cart.slice(0,3).map(ci => (
+                    <li key={ci.item.id} className="px-4 py-2 text-sm flex items-center justify-between">
+                      <span className="truncate mr-2">{ci.item.name}</span>
+                      <span className="text-gray-600">×{ci.quantity}</span>
+                    </li>
+                  ))}
+                  {cart.length > 3 && (
+                    <li className="px-4 py-2 text-xs text-gray-500">+ {cart.length - 3} more items</li>
+                  )}
+                </ul>
+                <div className="px-4 py-2 bg-gray-50 text-right">
+                  <button onClick={() => setIsCartOpen(true)} className="text-sm font-medium text-black hover:underline pointer-events-auto">Open plate</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* AI Assistant Button */}
       <button
         onClick={() => setIsAssistantOpen(true)}
         className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
         style={{background:'var(--accent)', color:'#0b0b0b'}}
+        aria-label="Open assistant"
       >
-        🤖
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+        </svg>
       </button>
 
-      {/* Cart Drawer */}
+      {/* Floating flyers for add-to-plate animation */}
+      {flyers.map(f => (
+        <img
+          key={f.key}
+          src={f.src}
+          className="fixed w-10 h-10 rounded-full object-cover z-[60] pointer-events-none transition-transform duration-700 ease-out shadow"
+          style={{
+            left: 0,
+            top: 0,
+            transform: `translate(${f.startX}px, ${f.startY}px) ${f.moved ? `translate(${f.dx}px, ${f.dy}px) scale(0.4)` : ''}`,
+            border: '2px solid white'
+          }}
+          alt=""
+        />
+      ))}
+
+      {/* Plate Drawer */}
       {isCartOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
           <div className="ml-auto w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">Your Cart</h2>
+                <h2 className="text-2xl font-bold text-black">Your Plate</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="text-gray-500 hover:text-black transition-colors"
@@ -475,7 +713,7 @@ export default function MenuClient() {
               {cart.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">
                   <div className="text-4xl mb-4">🛒</div>
-                  <p>Your cart is empty</p>
+                  <p>Your plate is empty</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -489,14 +727,14 @@ export default function MenuClient() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
-                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                            className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
                           >
                             −
                           </button>
-                          <span className="w-8 text-center font-medium">{cartItem.quantity}</span>
+                          <span className="w-8 h-8 inline-flex items-center justify-center text-center font-medium text-black">{cartItem.quantity}</span>
                           <button
                             onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
-                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                            className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
                           >
                             +
                           </button>
@@ -522,7 +760,7 @@ export default function MenuClient() {
                   </span>
                 </div>
                 <button className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200">
-                  Proceed to Checkout
+                  Proceed with Plate
                 </button>
                 <p className="text-xs text-gray-500 text-center mt-2">
                   Demo mode - No actual payment processed

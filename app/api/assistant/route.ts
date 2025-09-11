@@ -5,6 +5,7 @@ import { generate } from '@/lib/ai/model'
 import { resolveTenant } from '@/lib/tenant'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
 
 interface MenuContext {
   categories: Array<{
@@ -96,15 +97,34 @@ export async function POST(request: NextRequest) {
       filters,
     })
 
+    // Rate limit and guard
+    if (!rateLimit(tenantId)) {
+      return NextResponse.json({ ok: false, message: 'rate limited' }, { status: 429 })
+    }
+    if (circuitIsOpen(tenantId)) {
+      return NextResponse.json({ ok: false, message: 'temporarily unavailable' }, { status: 503 })
+    }
+
     // Guard if provider requires key and missing
     if ((process.env.AI_PROVIDER || 'compatible') !== 'ollama') {
-      if (!process.env.AI_API_KEY) {
+      if (!process.env.AI_API_KEY && !process.env.AI_KEYS) {
         return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
       }
     }
 
-    const text = await generate({ model: process.env.AI_MODEL, system, user })
-    return NextResponse.json({ ok: true, tenantId, text })
+    const started = Date.now()
+    try {
+      const text = await generate({ model: process.env.AI_MODEL, system, user })
+      recordSuccess(tenantId)
+      const ms = Date.now() - started
+      console.log(`[assistant] tenant=${tenantId} ok latency=${ms}ms`)
+      return NextResponse.json({ ok: true, tenantId, text })
+    } catch (e) {
+      recordFailure(tenantId)
+      const ms = Date.now() - started
+      console.warn(`[assistant] tenant=${tenantId} fail latency=${ms}ms`, e)
+      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' })
+    }
   } catch (e) {
     console.error('Assistant error:', e)
     return NextResponse.json({ ok: false, message: 'Assistant error' }, { status: 500 })

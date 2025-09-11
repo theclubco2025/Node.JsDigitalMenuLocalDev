@@ -10,7 +10,7 @@
           "description": "Oven‑toasted artisan sourdough brushed with roasted‑garlic herb butter, finished with flaky sea salt and parsley.",
           "price": 5.5,
           "tags": ["vegetarian"],
-          "imageUrl": "https://images.unsplash.com/photo-1546554137-f86b9593a222?q=80&w=1200&auto=format&fit=crop"
+          "imageUrl": "https://images.unsplash.com/photo-1625944525533-58a1f11516f7?q=80&w=1200&auto=format&fit=crop"
         },
         {
           "id": "i-salad",
@@ -64,6 +64,20 @@
           "price": 3,
           "tags": ["vegan"],
           "imageUrl": "https://images.unsplash.com/photo-1541976076758-347942db1970?q=80&w=1200&auto=format&fit=crop"
+        }
+      ]
+    },
+    {
+      "id": "c-dessert",
+      "name": "Dessert",
+      "items": [
+        {
+          "id": "i-lava",
+          "name": "Chocolate Lava Cake",
+          "description": "Warm chocolate cake with a molten center, vanilla ice cream, cocoa dust.",
+          "price": 8.5,
+          "tags": ["vegetarian"],
+          "imageUrl": "https://images.unsplash.com/photo-1606313564200-e75d5e30476e?q=80&w=1200&auto=format&fit=crop"
         }
       ]
     }
