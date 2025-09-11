@@ -1,5 +1,31 @@
 # Foundation Context (Source of Truth)
 
+## Vision
+- Multi-tenant restaurant menu SaaS with per-tenant theming and a lean AI assistant.
+- File-based data now (`data/tenants/<id>`), DB (Postgres/Prisma) later with same return shapes.
+
+## Data Model
+- categories: { id, name, items[] }
+- items: { id, name, description?, price, tags[], imageUrl? }
+
+## Theming
+- theme.json per tenant: { name?, tone?, primary, accent, radius }
+- CSS vars applied in layout: `--primary`, `--accent`, `--radius`; background/header handled separately.
+
+## Assistant
+- Single multi-tenant route at `app/api/assistant/route.ts`.
+- Uses LLaMA/OpenAI-compatible provider, guarded: returns 501 if key missing.
+
+## Onboarding Flow
+1) Intake prompt → collect public business info.
+2) Bootstrap tenant folder with stub menu & theme.
+3) Import real menu via admin or API.
+4) Pick brand variant; tweak theme.
+5) Verify on `/menu?tenant=<id>`; generate QR.
+
+## Deploy Notes
+- Vercel preferred; wildcard subdomains for tenants. Later: map `<tenant>.domain.com` → tenant resolver.
+
 This document captures minimal context for ongoing development. Keep it short; link paths instead of pasting code.
 
 ## Goals

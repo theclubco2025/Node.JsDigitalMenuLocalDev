@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { setMemoryMenu } from '@/lib/data/menu'
+import { setMemoryMenu, writeMenu } from '@/lib/data/menu'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,10 +17,8 @@ export async function POST(request: NextRequest) {
     const dir = path.join(process.cwd(), 'data', 'tenants', tenant)
     const file = path.join(dir, 'menu.json')
     try {
-      await fs.mkdir(dir, { recursive: true })
-      await fs.writeFile(file, JSON.stringify(menu, null, 2), 'utf8')
+      await writeMenu(tenant, menu)
     } catch {
-      // in-memory fallback
       setMemoryMenu(tenant, menu)
     }
 

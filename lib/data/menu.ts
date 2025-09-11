@@ -91,6 +91,18 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
   }
 }
 
+export async function writeMenu(tenant: string, menu: MenuResponse): Promise<void> {
+  const dir = path.join(process.cwd(), "data", "tenants", tenant)
+  const file = path.join(dir, "menu.json")
+  try {
+    await fs.mkdir(dir, { recursive: true })
+    await fs.writeFile(file, JSON.stringify(menu, null, 2), "utf8")
+  } catch {
+    // In environments without FS (preview, edge), fall back to memory
+    setMemoryMenu(tenant, menu)
+  }
+}
+
 // Alias requested by the new assistant API
 export async function getMenuForTenant(tenantId: string): Promise<MenuResponse> {
   // TODO: if process.env.DATABASE_URL and prisma available, fetch from DB instead (same return shape)
