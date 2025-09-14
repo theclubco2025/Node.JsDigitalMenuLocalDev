@@ -3,9 +3,9 @@ import { getMenuForTenant, filterMenuByDiet, snippet } from '@/lib/data/menu'
 import { buildPrompt } from '@/lib/ai/prompt'
 import { generate } from '@/lib/ai/model'
 import { resolveTenant } from '@/lib/tenant'
-import { promises as fs } from 'fs'
-import path from 'path'
 import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
+
+export const runtime = 'nodejs'
 
 interface MenuContext {
   categories: Array<{
@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
     const menuSnippet = snippet(filtered, 12)
 
     // Load tenant meta from theme.json if available
+    const { promises: fs } = await import('fs')
+    const path = await import('path')
     const themePath = path.join(process.cwd(), 'data', 'tenants', tenantId, 'theme.json')
     let restaurantName = 'Our Restaurant'
     let tone = 'casual'
@@ -97,17 +99,18 @@ export async function POST(request: NextRequest) {
       filters,
     })
 
-    // Rate limit and guard
+    // Rate limit and circuit breaker guards
     if (!rateLimit(tenantId)) {
-      return NextResponse.json({ ok: false, message: 'rate limited' }, { status: 429 })
+      return NextResponse.json({ ok: false, message: 'Too many requests. Please slow down.' }, { status: 429 })
     }
     if (circuitIsOpen(tenantId)) {
-      return NextResponse.json({ ok: false, message: 'temporarily unavailable' }, { status: 503 })
+      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 503 })
     }
 
-    // Guard if provider requires key and missing
+    // Guard if provider requires keys and missing
     if ((process.env.AI_PROVIDER || 'compatible') !== 'ollama') {
-      if (!process.env.AI_API_KEY && !process.env.AI_KEYS) {
+      const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').split(',').map(s=>s.trim()).filter(Boolean)
+      if (keys.length === 0) {
         return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
       }
     }
@@ -122,8 +125,15 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       recordFailure(tenantId)
       const ms = Date.now() - started
+      const msg = (e as Error)?.message || ''
       console.warn(`[assistant] tenant=${tenantId} fail latency=${ms}ms`, e)
-      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' })
+      if (msg.includes('401')) {
+        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200 })
+      }
+      if (msg.includes('404')) {
+        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200 })
+      }
+      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200 })
     }
   } catch (e) {
     console.error('Assistant error:', e)
@@ -304,10 +314,19 @@ async function generateAIResponse({
 }
 
 export async function GET() {
-  if ((process.env.AI_PROVIDER || 'compatible') !== 'ollama' && !process.env.AI_API_KEY) {
-    return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
+  try {
+    const provider = (process.env.AI_PROVIDER || 'compatible').toLowerCase()
+    if (provider !== 'ollama') {
+      const hasKey = Boolean((process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim())
+      if (!hasKey) {
+        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
+      }
+    }
+    return NextResponse.json({ ok: true })
+  } catch (e) {
+    console.error('Assistant GET error:', e)
+    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200 })
   }
-  return NextResponse.json({ ok: true })
 }
 
 function buildSystemPrompt(tenantProfile: TenantProfile, menuContext: MenuContext, customerMemory: CustomerMemory): string {

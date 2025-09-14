@@ -8,7 +8,7 @@ type GenerateArgs = {
 
 export async function generate({ model, system, user }: GenerateArgs): Promise<string> {
   const provider = (process.env.AI_PROVIDER || 'compatible').toLowerCase()
-  const chosenModel = model || process.env.AI_MODEL || 'llama-3.1-8b-instruct'
+  const chosenModel = model || process.env.AI_MODEL || 'gpt-4o-mini'
 
   if (provider === 'ollama') {
     // Local Ollama chat API
@@ -32,17 +32,19 @@ export async function generate({ model, system, user }: GenerateArgs): Promise<s
     return typeof text === 'string' ? text : ''
   }
 
-  // OpenAI-compatible chat completions with key pool + retries
+  // OpenAI-compatible chat completions with key pool + retries + timeout
   const baseUrl = (process.env.AI_BASE_URL || '').replace(/\/$/, '')
-  const keys = (process.env.AI_KEYS ?? process.env.AI_API_KEY ?? '')
+  const sanitizeKey = (k: string) => k.replace(/^['"]+|['"]+$/g, '').trim()
+  const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '')
     .split(',')
-    .map(s => s.trim())
+    .map(sanitizeKey)
     .filter(Boolean)
-  const pool = keys.length > 0 ? keys : ['']
-  const rr = (() => {
-    let i = 0
-    return () => pool[i++ % pool.length]
-  })()
+  if (keys.length === 0) {
+    throw new Error('no-keys')
+  }
+  // global round-robin cursor across requests
+  ;(globalThis as any).__ai_key_cursor = (globalThis as any).__ai_key_cursor ?? 0
+  const startCursor: number = (globalThis as any).__ai_key_cursor
   // Expect base to end with /v1 or we append it
   const completionsUrl = baseUrl.endsWith('/v1')
     ? `${baseUrl}/chat/completions`
@@ -61,27 +63,67 @@ export async function generate({ model, system, user }: GenerateArgs): Promise<s
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12_000)
   let lastErr: any
-  for (let attempt = 0; attempt < pool.length; attempt++) {
-    const apiKey = rr()
+  for (let attempt = 0; attempt < keys.length; attempt++) {
+    const apiKey = keys[(startCursor + attempt) % keys.length]
     try {
-      const res = await fetch(completionsUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-        },
-        body: payload,
-        signal: controller.signal,
-      })
-      if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
-        lastErr = new Error(`ai provider error: ${res.status}`)
-        continue
+      const modelsToTry = Array.from(new Set([
+        chosenModel,
+        'gpt-4o-mini',
+        'gpt-4o',
+        'gpt-3.5-turbo',
+      ].filter(Boolean)))
+
+      for (const modelName of modelsToTry) {
+        const body = JSON.stringify({
+          model: modelName,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user },
+          ],
+          temperature: 0.5,
+          max_tokens: 512,
+        })
+        const res = await fetch(completionsUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+            ...(process.env.OPENAI_PROJECT || process.env.AI_PROJECT
+              ? { 'OpenAI-Project': String(process.env.OPENAI_PROJECT || process.env.AI_PROJECT) }
+              : {}),
+            ...(process.env.OPENAI_ORG || process.env.AI_ORG
+              ? { 'OpenAI-Organization': String(process.env.OPENAI_ORG || process.env.AI_ORG) }
+              : {}),
+          },
+          body,
+          signal: controller.signal,
+        })
+        if (res.status === 401) {
+          // Key lacks access; trying other models won’t help much, but continue to next model once
+          lastErr = new Error(`ai provider error: 401`)
+          continue
+        }
+        if (res.status === 404) {
+          // Model not found under this key; try next fallback model
+          lastErr = new Error(`ai provider error: 404`)
+          continue
+        }
+        if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+          lastErr = new Error(`ai provider error: ${res.status}`)
+          // switch to next key
+          break
+        }
+        if (!res.ok) {
+          lastErr = new Error(`ai provider error: ${res.status}`)
+          continue
+        }
+        const data = await res.json()
+        const text = data?.choices?.[0]?.message?.content ?? ''
+        // advance cursor on success
+        ;(globalThis as any).__ai_key_cursor = ((startCursor + attempt + 1) % keys.length)
+        clearTimeout(timeout)
+        return typeof text === 'string' ? text : ''
       }
-      if (!res.ok) throw new Error(`ai provider error: ${res.status}`)
-      const data = await res.json()
-      const text = data?.choices?.[0]?.message?.content ?? ''
-      clearTimeout(timeout)
-      return typeof text === 'string' ? text : ''
     } catch (e) {
       lastErr = e
       continue

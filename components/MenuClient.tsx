@@ -160,13 +160,15 @@ export default function MenuClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tenant,
-          message: userMessage
+          tenantId: tenant,
+          query: userMessage,
+          filters: {}
         })
       })
 
       const data = await response.json()
-      setChatHistory(prev => [...prev, { role: 'assistant', message: data.response }])
+      const assistantText = data.text || data.response || data.message || 'Thanks for your question.'
+      setChatHistory(prev => [...prev, { role: 'assistant', message: assistantText }])
     } catch (error) {
       setChatHistory(prev => [...prev, { role: 'assistant', message: 'Sorry, I had trouble processing your request.' }])
     }

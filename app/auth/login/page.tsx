@@ -2,7 +2,6 @@
 "use client"
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
@@ -20,27 +19,8 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false
-      })
-
-      if (result?.error) {
-        setError('Invalid email or password')
-        return
-      }
-
-      // Get session to determine role and redirect accordingly
-      const session = await getSession()
-      if (session?.user?.role === 'SUPER_ADMIN') {
-        router.push('/admin/super')
-      } else {
-        router.push('/admin/restaurant')
-      }
-
-    } catch (error) {
-      setError('An error occurred. Please try again.')
+      // Auth temporarily disabled in this demo build to avoid dependency issues
+      setError('Login is disabled in this demo build.')
     } finally {
       setLoading(false)
     }

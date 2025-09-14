@@ -38,9 +38,10 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Menu API error:', error)
+    const detail = (error as any)?.message || String(error)
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: 'Internal server error', detail },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } }
     )
   }
 }
