@@ -17,5 +17,44 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function POST(request: NextRequest) {
+  try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json({ error: 'Theme editing requires DATABASE_URL' }, { status: 501 })
+    }
+    const tenant = resolveTenant(request.url)
+    const body = await request.json()
+    const nextTheme = {
+      primary: String(body?.primary || '').trim(),
+      accent: String(body?.accent || '').trim(),
+      radius: String(body?.radius || '').trim(),
+    }
+    if (!nextTheme.primary && !nextTheme.accent && !nextTheme.radius) {
+      return NextResponse.json({ error: 'No theme fields provided' }, { status: 400 })
+    }
+
+    const { prisma } = await import('@/lib/prisma')
+    // Upsert tenant first in case it doesn't exist yet
+    await prisma.tenant.upsert({
+      where: { slug: tenant },
+      update: {
+        settings: {
+          ...(await prisma.tenant.findUnique({ where: { slug: tenant }, select: { settings: true } })).settings,
+          theme: nextTheme,
+        } as any,
+      },
+      create: {
+        slug: tenant,
+        name: tenant,
+        settings: { theme: nextTheme } as any,
+      },
+    })
+
+    return NextResponse.json({ ok: true })
+  } catch (e) {
+    return NextResponse.json({ error: 'Failed to save theme' }, { status: 500 })
+  }
+}
+
 
 
