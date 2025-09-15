@@ -7,7 +7,11 @@ async function main() {
   console.log('🌱 Starting database seed...')
 
   // Create Super Admin user
-  const superAdminPasswordHash = await bcrypt.hash(process.env.SEED_SUPERADMIN_PASSWORD || 'change-me-superadmin', 12)
+  const superAdminPassword = process.env.SEED_SUPERADMIN_PASSWORD
+  if (!superAdminPassword) {
+    throw new Error('Missing SEED_SUPERADMIN_PASSWORD. Set it in your environment before seeding.')
+  }
+  const superAdminPasswordHash = await bcrypt.hash(superAdminPassword, 12)
   const superAdmin = await prisma.user.upsert({
     where: { email: 'admin@digitalmenusaas.com' },
     update: {},
@@ -42,7 +46,11 @@ async function main() {
   console.log('✅ Demo tenant created')
 
   // Create restaurant owner user
-  const ownerPasswordHash = await bcrypt.hash(process.env.SEED_OWNER_PASSWORD || 'change-me-owner', 12)
+  const ownerPassword = process.env.SEED_OWNER_PASSWORD
+  if (!ownerPassword) {
+    throw new Error('Missing SEED_OWNER_PASSWORD. Set it in your environment before seeding.')
+  }
+  const ownerPasswordHash = await bcrypt.hash(ownerPassword, 12)
   const restaurantOwner = await prisma.user.upsert({
     where: { email: 'owner@bellavista.com' },
     update: {},

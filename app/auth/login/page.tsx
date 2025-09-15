@@ -101,31 +101,51 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-6 space-y-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@digitalmenusaas.com')
-                  setPassword('superadmin123')
-                }}
-                className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <div className="font-medium text-gray-900">Super Admin Demo</div>
-                <div className="text-sm text-gray-500">Full system access and control</div>
-              </button>
+            {process.env.NODE_ENV !== 'production' && (
+              <div className="mt-6 space-y-3">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/auth/demo-login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'super' })
+                      })
+                      if (!res.ok) throw new Error('Demo login failed')
+                      window.location.href = '/admin'
+                    } catch (e:any) {
+                      setError(e.message || 'Demo login failed')
+                    }
+                  }}
+                  className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <div className="font-medium text-gray-900">Login as Demo Super Admin</div>
+                  <div className="text-sm text-gray-500">Dev-only shortcut using server env</div>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('owner@bellavista.com')
-                  setPassword('restaurant123')
-                }}
-                className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                <div className="font-medium text-gray-900">Restaurant Owner Demo</div>
-                <div className="text-sm text-gray-500">Limited menu management access</div>
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/auth/demo-login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'owner' })
+                      })
+                      if (!res.ok) throw new Error('Demo login failed')
+                      window.location.href = '/admin'
+                    } catch (e:any) {
+                      setError(e.message || 'Demo login failed')
+                    }
+                  }}
+                  className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <div className="font-medium text-gray-900">Login as Demo Owner</div>
+                  <div className="text-sm text-gray-500">Dev-only shortcut using server env</div>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

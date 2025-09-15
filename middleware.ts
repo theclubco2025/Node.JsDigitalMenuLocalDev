@@ -7,9 +7,11 @@ export function middleware(request: NextRequest) {
     const response = NextResponse.next()
     
     // Allow requests from any origin for the embeddable widget
-    response.headers.set('Access-Control-Allow-Origin', '*')
+    const origin = request.headers.get('origin') || '*'
+    response.headers.set('Access-Control-Allow-Origin', origin)
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
+    response.headers.set('Vary', 'Origin')
     
     return response
   }

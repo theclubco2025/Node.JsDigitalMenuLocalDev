@@ -5,6 +5,18 @@ import { setMemoryMenu, writeMenu } from '@/lib/data/menu'
 
 export async function POST(request: NextRequest) {
   try {
+    // Production gate: require ADMIN_TOKEN and matching X-Admin-Token header
+    if (process.env.NODE_ENV === 'production') {
+      const adminToken = process.env.ADMIN_TOKEN
+      if (!adminToken || adminToken.trim() === '') {
+        return NextResponse.json({ error: 'Server not configured. Set ADMIN_TOKEN env variable.' }, { status: 503 })
+      }
+      const headerToken = request.headers.get('x-admin-token') || request.headers.get('X-Admin-Token')
+      if (!headerToken || headerToken !== adminToken) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
     const { tenant, menu } = await request.json()
     if (!tenant || typeof tenant !== 'string') {
       return NextResponse.json({ error: 'Missing tenant' }, { status: 400 })

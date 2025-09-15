@@ -141,6 +141,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/*
+// Unused helpers (reference only). Commented out to unblock typecheck/build.
 async function getTenantProfile(tenantSlug: string): Promise<TenantProfile | null> {
   const tenant = await prisma.tenant.findUnique({
     where: { slug: tenantSlug },
@@ -312,6 +314,7 @@ async function generateAIResponse({
     return generateFallbackResponse()
   }
 }
+*/
 
 export async function GET() {
   try {
@@ -328,7 +331,8 @@ export async function GET() {
     return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200 })
   }
 }
-
+/*
+// Additional unused helpers (kept for future use). Commented out for build cleanliness.
 function buildSystemPrompt(tenantProfile: TenantProfile, menuContext: MenuContext, customerMemory: CustomerMemory): string {
   const brandVoiceInstructions = getBrandVoiceInstructions(tenantProfile.brandVoice)
   const menuSummary = buildMenuSummary(menuContext)
@@ -653,3 +657,4 @@ function generateFallbackResponse(): string {
   
   return fallbacks[Math.floor(Math.random() * fallbacks.length)]
 }
+*/
