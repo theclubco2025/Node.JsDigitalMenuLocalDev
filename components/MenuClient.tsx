@@ -26,21 +26,36 @@ export default function MenuClient() {
   type Flyer = { key: string; src: string; startX: number; startY: number; dx: number; dy: number; moved: boolean }
   const [flyers, setFlyers] = useState<Flyer[]>([])
 
-  // Get tenant from URL params or use default
-  const tenant = typeof window !== 'undefined' 
-    ? new URLSearchParams(window.location.search).get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo'
+  // Get tenant/admin from URL params
+  const isBrowser = typeof window !== 'undefined'
+  const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
+  const tenant = isBrowser
+    ? searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo'
     : 'demo'
+  const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
     `/api/menu?tenant=${tenant}`,
     fetcher
   )
 
+  // Admin inline edit state
+  const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
+  useEffect(() => {
+    if (!isAdmin) return
+    if (menuData) {
+      // Deep clone once when data loads or changes
+      setEditableMenu(JSON.parse(JSON.stringify(menuData)))
+    }
+  }, [isAdmin, menuData])
+
+  const baseMenu: MenuResponse | null = isAdmin ? (editableMenu || null) : (menuData || null)
+
   // Filter logic matching your Canvas app exactly (client-side now to avoid API refiring per keystroke)
   const filteredCategories = useMemo(() => {
-    if (!menuData?.categories) return []
+    if (!baseMenu?.categories) return []
     
-    return menuData.categories
+    return baseMenu.categories
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
@@ -68,7 +83,80 @@ export default function MenuClient() {
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [menuData, searchQuery, selectedCategory, selectedDietaryFilters])
+  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
+
+  const updateItemField = (categoryId: string, itemId: string, field: keyof MenuItem, value: any) => {
+    if (!editableMenu) return
+    setEditableMenu(prev => {
+      if (!prev) return prev
+      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
+      for (const cat of next.categories) {
+        if (cat.id === categoryId) {
+          const idx = cat.items.findIndex(i => i.id === itemId)
+          if (idx !== -1) {
+            ;(cat.items[idx] as any)[field] = field === 'price' ? Number(value) : value
+          }
+          break
+        }
+      }
+      return next
+    })
+  }
+
+  const saveAllEdits = async () => {
+    if (!isAdmin || !editableMenu) return
+    try {
+      const res = await fetch('/api/tenant/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant, menu: editableMenu })
+      })
+      if (!res.ok) throw new Error('Save failed')
+      setToast('Saved changes')
+    } catch (e) {
+      setToast('Error saving changes')
+    }
+  }
+
+  const addTag = (categoryId: string, itemId: string, rawTag: string) => {
+    const tag = (rawTag || '').trim()
+    if (!tag) return
+    if (!editableMenu) return
+    setEditableMenu(prev => {
+      if (!prev) return prev
+      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
+      for (const cat of next.categories) {
+        if (cat.id === categoryId) {
+          const item = cat.items.find(i => i.id === itemId)
+          if (item) {
+            const tags = (item.tags || []).slice()
+            if (!tags.includes(tag)) tags.push(tag)
+            item.tags = tags
+          }
+          break
+        }
+      }
+      return next
+    })
+  }
+
+  const removeTag = (categoryId: string, itemId: string, tag: string) => {
+    if (!editableMenu) return
+    setEditableMenu(prev => {
+      if (!prev) return prev
+      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
+      for (const cat of next.categories) {
+        if (cat.id === categoryId) {
+          const item = cat.items.find(i => i.id === itemId)
+          if (item) {
+            item.tags = (item.tags || []).filter(t => t !== tag)
+          }
+          break
+        }
+      }
+      return next
+    })
+  }
 
   const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const highlightText = (text: string | undefined, query: string) => {
@@ -371,6 +459,17 @@ export default function MenuClient() {
       {/* Spacer to offset fixed header height */}
       <div className="h-20" />
 
+      {/* Admin Edit Bar */}
+      {isAdmin && (
+        <div className="sticky top-0 z-40 bg-yellow-50 border-b border-yellow-200">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
+            <span className="text-sm text-yellow-900 font-medium">Inline Edit Mode</span>
+            <button onClick={saveAllEdits} className="px-3 py-1 rounded bg-black text-white text-sm">Save All</button>
+            <a href={`/menu?tenant=${encodeURIComponent(tenant)}`} className="text-sm text-yellow-900 underline">Exit</a>
+          </div>
+        </div>
+      )}
+
       {/* Search & Filters (scroll with page) */}
       <div className="max-w-7xl mx-auto px-4 py-2">
         
@@ -535,33 +634,97 @@ export default function MenuClient() {
                     
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-3">
-                        <h3 className="text-xl font-semibold text-black leading-tight">
-                          {highlightText(item.name, searchQuery)}
-                        </h3>
-                        <span className="text-xl font-bold text-black ml-4">
-                          ${item.price.toFixed(2)}
-                        </span>
+                        {isAdmin ? (
+                          <input
+                            className="text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
+                            value={item.name}
+                            onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
+                          />
+                        ) : (
+                          <h3 className="text-xl font-semibold text-black leading-tight">
+                            {highlightText(item.name, searchQuery)}
+                          </h3>
+                        )}
+                        {isAdmin ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="w-28 text-right text-xl font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
+                            value={Number(item.price).toString()}
+                            onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
+                          />
+                        ) : (
+                          <span className="text-xl font-bold text-black ml-4">${item.price.toFixed(2)}</span>
+                        )}
                       </div>
                       
-                      <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
-                        {highlightText(item.description, searchQuery)}
-                      </p>
+                      {isAdmin ? (
+                        <div className="space-y-2 mb-4">
+                          <textarea
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
+                            placeholder="Description"
+                            value={item.description || ''}
+                            onChange={e => updateItemField(category.id, item.id, 'description', e.target.value)}
+                          />
+                          <input
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
+                            placeholder="Image URL"
+                            value={item.imageUrl || ''}
+                            onChange={e => updateItemField(category.id, item.id, 'imageUrl', e.target.value)}
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
+                          {highlightText(item.description, searchQuery)}
+                        </p>
+                      )}
                       
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0 flex flex-wrap gap-1">
-                          {item.calories && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
-                              {item.calories} cal
-                            </span>
+                          {isAdmin ? (
+                            <>
+                              <input
+                                type="number"
+                                placeholder="cal"
+                                className="w-20 px-2 py-1 text-xs border border-gray-300 rounded text-black"
+                                value={item.calories ?? ''}
+                                onChange={e => updateItemField(category.id, item.id, 'calories', e.target.value === '' ? undefined : Number(e.target.value))}
+                              />
+                              {(item.tags || []).map(tag => (
+                                <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-700 border border-gray-300 bg-gray-100">
+                                  {tag}
+                                  <button aria-label="Remove tag" onClick={() => removeTag(category.id, item.id, tag)} className="ml-1 text-gray-500 hover:text-black">×</button>
+                                </span>
+                              ))}
+                              <input
+                                className="px-2 py-1 text-xs border border-gray-300 rounded text-black"
+                                placeholder="Add tag (Enter)"
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    const v = (e.target as HTMLInputElement).value
+                                    addTag(category.id, item.id, v)
+                                    ;(e.target as HTMLInputElement).value = ''
+                                  }
+                                }}
+                              />
+                            </>
+                          ) : (
+                            <>
+                              {item.calories && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
+                                  {item.calories} cal
+                                </span>
+                              )}
+                              {item.tags.map(tag => (
+                                <span 
+                                  key={tag} 
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </>
                           )}
-                          {item.tags.map(tag => (
-                            <span 
-                              key={tag} 
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
-                            >
-                              {tag}
-                            </span>
-                          ))}
                         </div>
                         
                         <div className="shrink-0 flex items-center gap-2">

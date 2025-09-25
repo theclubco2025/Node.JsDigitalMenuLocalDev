@@ -3,6 +3,7 @@ import { resolveTenant } from '@/lib/tenant'
 import { getTheme } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,12 +35,17 @@ export async function POST(request: NextRequest) {
     }
 
     const { prisma } = await import('@/lib/prisma')
-    // Upsert tenant first in case it doesn't exist yet
+
+    // Load existing settings (if any) to preserve non-theme keys
+    const existing = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { settings: true } })
+    const currentSettings = (existing?.settings as any) || {}
+
+    // Upsert tenant and persist theme
     await prisma.tenant.upsert({
       where: { slug: tenant },
       update: {
         settings: {
-          ...(await prisma.tenant.findUnique({ where: { slug: tenant }, select: { settings: true } })).settings,
+          ...currentSettings,
           theme: nextTheme,
         } as any,
       },
@@ -52,6 +58,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (e) {
+    const msg = (e as Error)?.message || 'Failed to save theme'
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Theme save error:', e)
+      return NextResponse.json({ error: 'Failed to save theme', detail: msg }, { status: 500 })
+    }
     return NextResponse.json({ error: 'Failed to save theme' }, { status: 500 })
   }
 }
