@@ -30,9 +30,58 @@ export default function MenuClient() {
   const isBrowser = typeof window !== 'undefined'
   const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
   const tenant = isBrowser
-    ? searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo'
-    : 'demo'
+    ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
+    : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+
+  // Tenant flags
+  const isBenes = useMemo(() => {
+    const slug = (tenant || '').toLowerCase()
+    return slug === 'benes' || slug === 'benes-draft'
+  }, [tenant])
+
+  // Tenant config (brand/theme/images)
+  const { data: cfg } = useSWR<{ brand?: any; theme?: any; images?: Record<string,string>; style?: any; copy?: any }>(`/api/tenant/config?tenant=${tenant}`, fetcher)
+  const brand = cfg?.brand || {}
+  const theme = cfg?.theme || null
+  const imageMap: Record<string,string> = cfg?.images || {}
+  const styleCfg = cfg?.style || {}
+  const copy = cfg?.copy || {}
+  const brandLogoUrl = (brand?.header?.logoUrl || brand?.logoUrl || '') as string
+  const brandName = (brand?.name || 'Menu') as string
+  const brandTagline = (brand?.tagline || '') as string
+
+  // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
+  const effectiveTheme = useMemo(() => {
+    const t: any = theme || {}
+    if (isBenes) {
+      return {
+        primary: t.primary || '#0f1e17',
+        bg: t.bg || t.primary || '#0f1e17',
+        text: t.text || '#f3f5f0',
+        ink: t.ink || '#101010',
+        card: t.card || '#ffffff',
+        muted: t.muted || '#e7e0d3',
+        accent: t.accent || '#ef4444'
+      }
+    }
+    return t
+  }, [theme, isBenes])
+
+  
+
+  // Apply theme from config
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const t = theme || {}
+    const bg = t.bg || t.primary
+    if (bg) document.body.style.setProperty('--bg', bg)
+    if (t.text) document.body.style.setProperty('--text', t.text)
+    if (t.ink) document.body.style.setProperty('--ink', t.ink)
+    if (t.card) document.body.style.setProperty('--card', t.card)
+    if (t.muted) document.body.style.setProperty('--muted', t.muted)
+    if (t.accent) document.body.style.setProperty('--accent', t.accent)
+  }, [theme])
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
     `/api/menu?tenant=${tenant}`,
@@ -74,7 +123,7 @@ export default function MenuClient() {
           // Dietary filters (must have all selected dietary tags)
           if (selectedDietaryFilters.length > 0) {
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
-              item.tags.some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
+              (item.tags || []).some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
             )
             if (!hasAllDietaryFilters) return false
           }
@@ -411,8 +460,92 @@ export default function MenuClient() {
     return () => clearTimeout(t)
   }, [toast])
 
+  const rootStyle = {
+    background: 'var(--bg)',
+    color: 'var(--text)',
+    // Inline CSS variables for instant theming
+    ['--bg' as any]: effectiveTheme?.bg,
+    ['--text' as any]: effectiveTheme?.text,
+    ['--ink' as any]: effectiveTheme?.ink,
+    ['--card' as any]: effectiveTheme?.card,
+    ['--muted' as any]: effectiveTheme?.muted,
+    ['--accent' as any]: effectiveTheme?.accent
+  } as React.CSSProperties
+
+  // Benes-specific featured picks and pairings
+  const featuredItemIds: string[] = isBenes ? [
+    'i-margherita-napoletana-14',
+    'i-fettuccine-bolognese',
+    'i-prosciutto-arugula-14'
+  ] : []
+  const pairingsById: Record<string, string> = isBenes ? {
+    'i-fettuccine-bolognese': 'Pairs with Zinfandel',
+    'i-margherita-napoletana-14': 'Pairs with Chianti',
+    'i-prosciutto-arugula-14': 'Pairs with Pinot Grigio',
+    'i-lasagna': 'Pairs with Sangiovese'
+  } : {}
+  function cardStyleForCategory(categoryName: string): React.CSSProperties {
+    if (/pizza/i.test(categoryName)) {
+      return {
+        backgroundColor: '#ffffff',
+        backgroundImage: 'radial-gradient(rgba(16,16,16,0.05) 1px, transparent 1px)',
+        backgroundSize: '8px 8px',
+        borderColor: 'rgba(0,0,0,0.06)'
+      }
+    }
+    if (/pasta/i.test(categoryName)) {
+      return {
+        background: '#fffaf2',
+        borderColor: 'rgba(185,28,28,0.12)',
+        boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
+      }
+    }
+    if (/calzone/i.test(categoryName)) {
+      return {
+        background: '#fffef8',
+        borderColor: 'rgba(0,0,0,0.08)'
+      }
+    }
+    return {}
+  }
+  function getItemBadges(item: any): string[] {
+    const badges: string[] = []
+    const name = (item?.name || '').toLowerCase()
+    const tags: string[] = item?.tags || []
+    if (tags.includes('vegan') || /vegan/.test(name)) badges.push('Vegan')
+    if (tags.includes('gf') || /gluten\s*free|gf/.test(name)) badges.push('GF')
+    if (/spicy|vesuvio|pepperoncini|diavolo/.test(name)) badges.push('Spicy')
+    if (/margherita|bolognese|prosciutto/.test(name)) badges.push('House Favorite')
+    return badges
+  }
+  function resolveFeatured() {
+    const items: Array<{ id: string; name: string; price: number; imageUrl?: string; categoryName?: string }> = []
+    if (!menuData?.categories) return items
+    const idToItem: Record<string, any> = {}
+    for (const cat of menuData.categories) {
+      for (const it of cat.items) {
+        idToItem[it.id] = { ...it, categoryName: cat.name }
+      }
+    }
+    for (const fid of featuredItemIds) {
+      if (idToItem[fid]) items.push(idToItem[fid])
+    }
+    // Fallback: pick first three if any missing
+    if (items.length < 3) {
+      for (const cat of menuData.categories) {
+        for (const it of cat.items) {
+          if (items.find(x => x.id === it.id)) continue
+          items.push({ ...it, categoryName: cat.name })
+          if (items.length >= 3) break
+        }
+        if (items.length >= 3) break
+      }
+    }
+    return items
+  }
+
   return (
-    <div className="min-h-screen lux-gradient">
+    <div className="min-h-screen" style={rootStyle}>
       {/* Loading and error states */}
       {error && (
         <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
@@ -436,35 +569,186 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Fixed Header with Logo */}
-      <div className="fixed top-0 left-0 right-0 z-50 shadow-sm" style={{ background: 'var(--header)' }}>
+      {/* Fixed Header: Benes uses centered logo background; others show title */}
+      <div
+        className="fixed top-0 left-0 right-0 z-50 shadow-sm"
+        style={isBenes ? {
+          backgroundColor: '#ffffff',
+          backgroundImage: brandLogoUrl ? `url(${brandLogoUrl})` : undefined,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: 'auto 140px'
+        } : { background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+      >
         <div
-          className="px-4 py-2"
+          className="px-4"
           style={{
-            backgroundColor: 'var(--header)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)'
+            height: isBenes ? 160 : 72,
+            borderBottom: isBenes ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'
           }}
         >
-          {/* Restaurant Header */}
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-white tracking-wide elegant-cursive">Demo Menu</h1>
-              <p className="text-gray-300 text-xs">Refined flavors. Elevated experience.</p>
+          {!isBenes && (
+            <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+              {brandLogoUrl ? (
+                <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+              )}
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italian)' }}>{brandName}</h1>
+                <p className="text-gray-200 text-xs">{brandTagline}</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Spacer to offset fixed header height */}
-      <div className="h-20" />
+      {/* Optional hero subtitle from copy */}
+      <div style={{ height: isBenes ? 160 : 80 }} />
+      {isBenes && (
+        <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
+      )}
+      {isBenes && copy?.heroSubtitle && (
+        <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
+          <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
+        </div>
+      )}
+
+      {/* Category chip scroller (Benes) */}
+      {isBenes && (
+        <div className="max-w-7xl mx-auto px-4 mb-4">
+          <div className="no-scrollbar overflow-x-auto py-2 -mx-2 px-2 flex gap-2">
+            {(menuData?.categories || []).map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.name === selectedCategory ? null : cat.name)
+                  const el = document.getElementById(`cat-${cat.id}`)
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+                className={`px-3 py-1.5 rounded-full text-sm border transition-colors whitespace-nowrap ${activeCategoryId===cat.id ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'bg-white text-black border-gray-300 hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-white'}`}
+                style={{boxShadow: activeCategoryId===cat.id ? '0 2px 12px rgba(185,28,28,0.25)' : undefined}}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Benes hero banner */}
+      {isBenes && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div
+            className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
+            style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
+          >
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.22), rgba(255,255,255,.12), rgba(185,28,28,.22))' }} />
+            {brandLogoUrl && (
+              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
+            )}
+            <div className="relative h-full flex items-center justify-between px-5">
+              <div className="max-w-lg">
+                {copy?.tagline && (
+                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#101010' }}>{copy.tagline}</div>
+                )}
+                {copy?.heroSubtitle && (
+                  <div className="text-sm md:text-base text-gray-700 mt-1">{copy.heroSubtitle}</div>
+                )}
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#128807' }} />
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)' }} />
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#b91c1c' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subtle Specials ribbon */}
+      {isBenes && (
+        <div className="max-w-7xl mx-auto px-4 mb-4">
+          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
+            Tonight’s Specials: Margherita 14", Fettuccine Bolognese, Prosciutto & Arugula
+          </div>
+        </div>
+      )}
+
+      {/* Signature Picks (Benes) */}
+      {isBenes && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
+            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {resolveFeatured().map((it) => {
+              const src = imageMap[it.id] || (it as any).imageUrl || ''
+              return (
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'#fffdf5' }}>
+                  {src && (
+                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
+                  )}
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.08), rgba(255,255,255,.04), rgba(185,28,28,.08))' }} />
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold text-white" style={{ background:'rgba(185,28,28,0.9)' }}>Most Loved</div>
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
+                        {pairingsById[it.id] && (
+                          <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
+                        )}
+                      </div>
+                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number((it as any).price).toFixed(2)}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Hero section (hidden for Benes to keep a single compact header) */}
+      {!isBenes && (
+        <div className="relative">
+          <div
+            className="w-full h-56 md:h-64 lg:h-72"
+            style={{
+              backgroundImage: firstImageUrl ? `url(${firstImageUrl})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              borderBottom: '1px solid var(--muted)'
+            }}
+          >
+            {/* Italian overlay gradient */}
+            <div className="w-full h-full" style={{
+              background: 'linear-gradient(90deg, rgba(20,83,45,0.55), rgba(255,255,255,0.25), rgba(185,28,28,0.55))'
+            }} />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center px-4">
+            <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
+              <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brand.name}</h2>
+              <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brand.tagline}</p>
+            </div>
+          </div>
+          {/* Tricolor divider bar */}
+          <div className="w-full h-1.5 flex">
+            <div className="flex-1" style={{ background: '#14532d' }} />
+            <div className="flex-1" style={{ background: '#ffffff' }} />
+            <div className="flex-1" style={{ background: '#b91c1c' }} />
+          </div>
+        </div>
+      )}
 
       {/* Admin Edit Bar */}
       {isAdmin && (
         <div className="sticky top-0 z-40 bg-yellow-50 border-b border-yellow-200">
           <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
             <span className="text-sm text-yellow-900 font-medium">Inline Edit Mode</span>
-            <button onClick={saveAllEdits} className="px-3 py-1 rounded bg-black text-white text-sm">Save All</button>
+            <button onClick={saveAllEdits} className="px-3 py-1 rounded text-sm" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>Save All</button>
             <a href={`/menu?tenant=${encodeURIComponent(tenant)}`} className="text-sm text-yellow-900 underline">Exit</a>
           </div>
         </div>
@@ -480,7 +764,8 @@ export default function MenuClient() {
               <input
                 type="text"
                 placeholder="Search menu items, tags, or categories..."
-                className="w-full px-3 py-2 pr-9 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white text-black"
+                className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
+                style={{ border: '1px solid var(--muted)' }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -493,7 +778,8 @@ export default function MenuClient() {
             </div>
             <button
               onClick={() => setFiltersOpen(o => !o)}
-              className="px-3 py-2 rounded-md text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black"
+              className="px-3 py-2 rounded-md text-sm font-medium"
+              style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
             >
               {filtersOpen ? 'Hide Filters' : 'Filters'}
             </button>
@@ -504,12 +790,8 @@ export default function MenuClient() {
         <div className="flex gap-2 justify-center flex-wrap mb-4">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-              selectedCategory === null
-                ? 'text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            style={selectedCategory===null?{background:'var(--primary)'}:undefined}
+            className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+            style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
           >
             All Categories
           </button>
@@ -517,12 +799,8 @@ export default function MenuClient() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
-              className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
-                selectedCategory === category
-                  ? 'text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              style={selectedCategory===category?{background:'var(--accent)'}:undefined}
+              className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
+              style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
             >
               <span className="inline-flex items-center gap-2">
                 {getCategoryIcon(category)}
@@ -545,12 +823,11 @@ export default function MenuClient() {
                       : [...prev, option]
                   )
                 }}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
-                  selectedDietaryFilters.includes(option)
-                    ? 'text-white shadow-md'
-                    : 'bg-gray-50 text-gray-800 border-gray-300 hover:border-gray-400'
-                }`}
-                style={selectedDietaryFilters.includes(option)?{background:'var(--primary)', borderColor:'var(--primary)'}:undefined}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
+                style={selectedDietaryFilters.includes(option)
+                  ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
+                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                }
               >
                 {option}
               </button>
@@ -558,7 +835,8 @@ export default function MenuClient() {
             {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
               <button
                 onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
-                className="px-3 py-1 rounded-full text-xs font-medium border border-gray-300 text-black hover:bg-gray-100"
+                className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
               >
                 Clear all
               </button>
@@ -568,7 +846,7 @@ export default function MenuClient() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: '#ffffff' }}>
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
         {/* Current Category Chip */}
         <div className="lg:col-span-12 mb-4">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
@@ -607,30 +885,55 @@ export default function MenuClient() {
         {/* Menu Grid */}
         <div className="space-y-12 lg:col-span-9" id="top">
           {filteredCategories.map((category, idx) => (
-            <div key={category.id} id={`cat-${category.id}`} className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}>
+            <div
+              key={category.id}
+              id={`cat-${category.id}`}
+              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}
+              style={{
+                background: 'linear-gradient(90deg, rgba(20,83,45,0.03) 0% 33.33%, rgba(255,255,255,0.03) 33.33% 66.66%, rgba(185,28,28,0.03) 66.66% 100%)',
+                borderRadius: 12,
+                padding: 12
+              }}
+            >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold text-white font-serif tracking-widest uppercase inline-flex items-center gap-3">
+                <h2 className="text-2xl font-extrabold text-white tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
-                <div className="flex-1 ml-6 lux-divider"></div>
+                <div className="flex-1 ml-6" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
+              {isBenes && copy?.categoryIntros?.[category.name] && (
+                <p className="text-gray-300 text-sm mb-4">{copy.categoryIntros[category.name]}</p>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {category.items.map(item => (
                   <div 
                     key={item.id} 
-                    className="menu-item bg-gray-50 border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                    style={{ borderRadius: 'var(--radius)' }}
+                    className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                    style={{ 
+                      borderRadius: 'var(--radius)', 
+                      background: isBenes ? '#fffdf5' : 'var(--card)', 
+                      borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
+                      boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
+                      ...cardStyleForCategory(category.name)
+                    }}
                   >
-                    <div className="bg-gray-100">
-                      <img 
-                        id={`img-${item.id}`}
-                        src={item.imageUrl || `https://via.placeholder.com/800x480/cccccc/333333?text=${encodeURIComponent(item.name)}`}
-                        alt={item.name}
-                        className="w-full h-48 object-cover"
-                      />
-                    </div>
+                    {(() => {
+                      const src = imageMap[item.id] || item.imageUrl || ''
+                      if (!src) return null
+                      return (
+                        <div className="bg-gray-100">
+                          <img 
+                            id={`img-${item.id}`}
+                            src={src}
+                            alt={item.name}
+                            className="w-full h-56 object-cover"
+                            loading="lazy" decoding="async"
+                          />
+                        </div>
+                      )
+                    })()}
                     
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-3">
@@ -641,8 +944,11 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <h3 className="text-xl font-semibold text-black leading-tight">
+                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
                             {highlightText(item.name, searchQuery)}
+                            <span className="ml-2 align-middle text-sm font-normal text-gray-500">
+                              ({typeof item.calories === 'number' ? `${item.calories} cal` : 'cal N/A'})
+                            </span>
                           </h3>
                         )}
                         {isAdmin ? (
@@ -654,9 +960,16 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4">${item.price.toFixed(2)}</span>
+                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : undefined, color: isBenes ? '#0b0b0b' : undefined }}>${item.price.toFixed(2)}</span>
                         )}
                       </div>
+                      {!isAdmin && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {getItemBadges(item).map(b => (
+                            <span key={b} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{b}</span>
+                          ))}
+                        </div>
+                      )}
                       
                       {isAdmin ? (
                         <div className="space-y-2 mb-4">
@@ -715,7 +1028,7 @@ export default function MenuClient() {
                                   {item.calories} cal
                                 </span>
                               )}
-                              {item.tags.map(tag => (
+                              {(item.tags || []).map(tag => (
                                 <span 
                                   key={tag} 
                                   className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
@@ -742,16 +1055,20 @@ export default function MenuClient() {
                               return [...filtered.slice(-2), { itemId: item.id, src: thumb }]
                             })
                           }}
-                          className={`text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[120px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-yellow-300' : ''}`}
-                          style={{background:'var(--accent)'}}
+                          className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                          style={{
+                            background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : 'var(--accent)',
+                            boxShadow: isBenes ? '0 8px 18px rgba(185,28,28,0.35)' : undefined,
+                            letterSpacing: isBenes ? 0.3 : undefined
+                          }}
                         >
                           {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
                         </button>
-                        <button
-                          onClick={() => { setIsAssistantOpen(true); sendAssistantMessage(`Tell me about ${item.name}`) }}
-                          className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
-                          aria-label={`Ask about ${item.name}`}
-                        >
+                <button
+                  onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                  className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                  aria-label={`Ask about ${item.name}`}
+                >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                             <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -768,6 +1085,14 @@ export default function MenuClient() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Nutrition/legal disclaimer */}
+      <div className="max-w-7xl mx-auto px-4 mt-10 mb-24">
+        <p className="text-xs text-gray-500 italic">
+          2,000 calories a day is used for general nutrition advice, but calorie needs vary. Calorie values are
+          estimates and may differ based on preparation or ingredient changes.
+        </p>
       </div>
 
       {/* Floating Plate Button with hover preview */}
@@ -990,13 +1315,13 @@ export default function MenuClient() {
                 <input
                   type="text"
                   placeholder="Ask about our menu..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
                   value={assistantMessage}
                   onChange={(e) => setAssistantMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
                 />
                 <button
-                  onClick={sendAssistantMessage}
+                  onClick={() => { void sendAssistantMessage() }}
                   className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
                 >
                   Send
