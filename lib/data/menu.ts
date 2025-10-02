@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { MenuResponse, MenuCategory, MenuItem } from "@/types/api";
-// Lazy DB client import to avoid crashing when Prisma isn't generated
+import type { PrismaClient } from "@prisma/client";
 
 // Simple in-memory override store (used when filesystem is unavailable)
 const memoryStore = new Map<string, MenuResponse>();
@@ -80,7 +80,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
   // If DATABASE_URL exists, prefer DB
   if (process.env.DATABASE_URL) {
     try {
-      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as any }))
+      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
       if (!prisma) throw new Error('prisma-not-ready')
       // Our Prisma schema is richer; map to MenuResponse using the latest Menu for tenant slug
       const tenantRow = await prisma.tenant.findUnique({
@@ -112,7 +112,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
         }))
         return { categories }
       }
-    } catch (e) {
+    } catch {
       // fall back to FS below
     }
   }
@@ -135,7 +135,7 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
   // If DB present, write there; else write file (fallback to memory)
   if (process.env.DATABASE_URL) {
     try {
-      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as any }))
+      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
       if (!prisma) throw new Error('prisma-not-ready')
       await prisma.$transaction(async (tx) => {
         // Ensure tenant exists
@@ -154,7 +154,7 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
                 categoryId: createdCat.id,
                 name: item.name,
                 description: item.description || '',
-                price: item.price as unknown as any,
+                price: item.price,
                 imageUrl: item.imageUrl || null,
                 calories: item.calories || null,
               }
@@ -166,7 +166,7 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
         }
       })
       return
-    } catch (e) {
+    } catch {
       // fall through to FS
     }
   }
