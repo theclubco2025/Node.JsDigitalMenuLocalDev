@@ -5,6 +5,39 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
 
+type TenantStyleFlags = {
+  flags?: Record<string, boolean>
+  navVariant?: string
+  heroVariant?: string
+  accentSecondary?: string
+  badges?: Record<string, string>
+}
+
+type TenantTheme = {
+  primary?: string
+  bg?: string
+  text?: string
+  ink?: string
+  card?: string
+  muted?: string
+  accent?: string
+}
+
+type TenantBrand = {
+  name?: string
+  tagline?: string
+  logoUrl?: string
+  header?: { logoUrl?: string }
+}
+
+type TenantConfig = {
+  brand?: TenantBrand
+  theme?: TenantTheme
+  images?: Record<string, string>
+  style?: TenantStyleFlags
+  copy?: Record<string, unknown>
+}
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function MenuClient() {
@@ -41,46 +74,45 @@ export default function MenuClient() {
   }, [tenant])
 
   // Tenant config (brand/theme/images)
-  const { data: cfg } = useSWR<{ brand?: any; theme?: any; images?: Record<string,string>; style?: any; copy?: any }>(`/api/tenant/config?tenant=${tenant}`, fetcher)
-  const brand = cfg?.brand || {}
-  const theme = cfg?.theme || null
-  const imageMap: Record<string,string> = cfg?.images || {}
-  const styleCfg = cfg?.style || {}
-  const copy = cfg?.copy || {}
-  const brandLogoUrl = (brand?.header?.logoUrl || brand?.logoUrl || '') as string
-  const brandName = (brand?.name || 'Menu') as string
-  const brandTagline = (brand?.tagline || '') as string
+  const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
+  const brand = cfg?.brand
+  const theme = cfg?.theme ?? null
+  const imageMap = cfg?.images ?? {}
+  const styleCfg = cfg?.style ?? {}
+  const copy = cfg?.copy ?? {}
+  const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
+  const brandName = brand?.name || 'Menu'
+  const brandTagline = brand?.tagline || ''
 
   // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
   const effectiveTheme = useMemo(() => {
-    const t: any = theme || {}
+    if (!theme) return null
     if (isBenes) {
       return {
-        primary: t.primary || '#0f1e17',
-        bg: t.bg || t.primary || '#0f1e17',
-        text: t.text || '#f3f5f0',
-        ink: t.ink || '#101010',
-        card: t.card || '#ffffff',
-        muted: t.muted || '#e7e0d3',
-        accent: t.accent || '#ef4444'
+        primary: theme.primary || '#0f1e17',
+        bg: theme.bg || theme.primary || '#0f1e17',
+        text: theme.text || '#f3f5f0',
+        ink: theme.ink || '#101010',
+        card: theme.card || '#ffffff',
+        muted: theme.muted || '#e7e0d3',
+        accent: theme.accent || '#ef4444'
       }
     }
-    return t
+    return theme
   }, [theme, isBenes])
 
   
 
   // Apply theme from config
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const t = theme || {}
-    const bg = t.bg || t.primary
+    if (typeof window === 'undefined' || !theme) return
+    const bg = theme.bg || theme.primary
     if (bg) document.body.style.setProperty('--bg', bg)
-    if (t.text) document.body.style.setProperty('--text', t.text)
-    if (t.ink) document.body.style.setProperty('--ink', t.ink)
-    if (t.card) document.body.style.setProperty('--card', t.card)
-    if (t.muted) document.body.style.setProperty('--muted', t.muted)
-    if (t.accent) document.body.style.setProperty('--accent', t.accent)
+    if (theme.text) document.body.style.setProperty('--text', theme.text)
+    if (theme.ink) document.body.style.setProperty('--ink', theme.ink)
+    if (theme.card) document.body.style.setProperty('--card', theme.card)
+    if (theme.muted) document.body.style.setProperty('--muted', theme.muted)
+    if (theme.accent) document.body.style.setProperty('--accent', theme.accent)
   }, [theme])
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
@@ -134,7 +166,7 @@ export default function MenuClient() {
       .filter(category => category.items.length > 0)
   }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
 
-  const updateItemField = (categoryId: string, itemId: string, field: keyof MenuItem, value: any) => {
+  const updateItemField = (categoryId: string, itemId: string, field: keyof MenuItem, value: MenuItem[keyof MenuItem]) => {
     if (!editableMenu) return
     setEditableMenu(prev => {
       if (!prev) return prev
@@ -143,7 +175,12 @@ export default function MenuClient() {
         if (cat.id === categoryId) {
           const idx = cat.items.findIndex(i => i.id === itemId)
           if (idx !== -1) {
-            ;(cat.items[idx] as any)[field] = field === 'price' ? Number(value) : value
+            const item = cat.items[idx]
+            if (field === 'price') {
+              item[field] = Number(value) as MenuItem['price']
+            } else {
+              item[field] = value as MenuItem[typeof field]
+            }
           }
           break
         }
@@ -162,7 +199,7 @@ export default function MenuClient() {
       })
       if (!res.ok) throw new Error('Save failed')
       setToast('Saved changes')
-    } catch (e) {
+    } catch (error) {
       setToast('Error saving changes')
     }
   }
@@ -178,9 +215,9 @@ export default function MenuClient() {
         if (cat.id === categoryId) {
           const item = cat.items.find(i => i.id === itemId)
           if (item) {
-            const tags = (item.tags || []).slice()
-            if (!tags.includes(tag)) tags.push(tag)
-            item.tags = tags
+            const tags = new Set(item.tags ?? [])
+            tags.add(tag)
+            item.tags = Array.from(tags)
           }
           break
         }
@@ -212,10 +249,10 @@ export default function MenuClient() {
     const safeText = text ?? ''
     if (!query) return safeText
     const parts = safeText.split(new RegExp(`(${escapeRegExp(query)})`, 'gi'))
-    return parts.map((part, i) => 
-      part.toLowerCase() === query.toLowerCase() 
-        ? <mark key={i} className="bg-yellow-200 px-1 rounded">{part}</mark>
-        : part
+    return parts.map((part, index) =>
+      part.toLowerCase() === query.toLowerCase()
+        ? <mark key={`highlight-${index}`} className="bg-yellow-200 px-1 rounded">{part}</mark>
+        : <span key={`text-${index}`}>{part}</span>
     )
   }
 
@@ -231,7 +268,7 @@ export default function MenuClient() {
     const endX = btnRect.left + btnRect.width / 2
     const endY = btnRect.top + btnRect.height / 2
     const key = `${item.id}-${Date.now()}-${Math.random()}`
-    const src = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
+            const src = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
     setFlyers(prev => [...prev, { key, src, startX, startY, dx: endX - startX, dy: endY - startY, moved: false }])
     // trigger transition on next frame
     requestAnimationFrame(() => {
@@ -275,7 +312,7 @@ export default function MenuClient() {
       // ensure plate pile has this item
       const target = cart.find(c => c.item.id === itemId)?.item
       if (target) {
-        const src = target.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(target.name)}`
+          const src = target.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(target.name)}`
         setPlatePile(prev => {
           if (prev.some(p => p.itemId === itemId)) return prev
           const filtered = prev.filter(p => p.itemId !== itemId)
@@ -460,17 +497,16 @@ export default function MenuClient() {
     return () => clearTimeout(t)
   }, [toast])
 
-  const rootStyle = {
-    background: 'var(--bg)',
-    color: 'var(--text)',
-    // Inline CSS variables for instant theming
-    ['--bg' as any]: effectiveTheme?.bg,
-    ['--text' as any]: effectiveTheme?.text,
-    ['--ink' as any]: effectiveTheme?.ink,
-    ['--card' as any]: effectiveTheme?.card,
-    ['--muted' as any]: effectiveTheme?.muted,
-    ['--accent' as any]: effectiveTheme?.accent
-  } as React.CSSProperties
+  const rootStyle: React.CSSProperties = {
+    background: effectiveTheme?.bg ?? 'var(--bg)',
+    color: effectiveTheme?.text ?? 'var(--text)',
+    '--bg': effectiveTheme?.bg,
+    '--text': effectiveTheme?.text,
+    '--ink': effectiveTheme?.ink,
+    '--card': effectiveTheme?.card,
+    '--muted': effectiveTheme?.muted,
+    '--accent': effectiveTheme?.accent,
+  }
 
   // Benes-specific featured picks and pairings
   const featuredItemIds: string[] = isBenes ? [
@@ -508,7 +544,7 @@ export default function MenuClient() {
     }
     return {}
   }
-  function getItemBadges(item: any): string[] {
+  function getItemBadges(item: MenuItem): string[] {
     const badges: string[] = []
     const name = (item?.name || '').toLowerCase()
     const tags: string[] = item?.tags || []
@@ -685,7 +721,7 @@ export default function MenuClient() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {resolveFeatured().map((it) => {
-              const src = imageMap[it.id] || (it as any).imageUrl || ''
+              const src = imageMap[it.id] || it.imageUrl || ''
               return (
                 <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'#fffdf5' }}>
                   {src && (
@@ -701,7 +737,7 @@ export default function MenuClient() {
                           <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
                         )}
                       </div>
-                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number((it as any).price).toFixed(2)}</div>
+                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number(it.price).toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -965,8 +1001,8 @@ export default function MenuClient() {
                       </div>
                       {!isAdmin && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {getItemBadges(item).map(b => (
-                            <span key={b} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{b}</span>
+                          {getItemBadges(item).map(badge => (
+                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
                           ))}
                         </div>
                       )}

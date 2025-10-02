@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { resolveTenant } from '@/lib/tenant'
 import { getTheme } from '@/lib/theme'
-import { Suspense } from 'react'
+import { type CSSProperties, Suspense } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,16 +21,17 @@ export default async function RootLayout({
   const tenant = resolveTenant(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001')
   const theme = await getTheme(tenant)
 
+  const cssVars: CSSProperties = {
+    '--primary': theme.primary,
+    '--accent': theme.accent,
+    '--radius': theme.radius,
+  } as CSSProperties
+
   return (
     <html lang="en">
       <body
         className={inter.className}
-        style={{
-          // Provide CSS variables for theme usage
-          ['--primary' as any]: theme.primary,
-          ['--accent' as any]: theme.accent,
-          ['--radius' as any]: theme.radius,
-        }}
+        style={cssVars}
       >
         {/* Client-side theme sync so URL ?tenant controls theme without reload */}
         <Suspense>
@@ -43,19 +44,16 @@ export default async function RootLayout({
 }
 
 function ThemeSync() {
-  // This is a small client component embedded in layout to sync theme
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  if (typeof window === 'undefined') return null as any
-  // Fetch theme for current URL tenant and apply CSS vars dynamically
+  if (typeof window === 'undefined') return null
+
   fetch(`/api/theme${window.location.search}`, { cache: 'no-store' })
     .then(res => res.ok ? res.json() : null)
     .then(theme => {
       if (!theme) return
-      const body = document.body as any
-      body.style.setProperty('--primary', theme.primary)
-      body.style.setProperty('--accent', theme.accent)
-      body.style.setProperty('--radius', theme.radius)
+      document.body.style.setProperty('--primary', theme.primary)
+      document.body.style.setProperty('--accent', theme.accent)
+      document.body.style.setProperty('--radius', theme.radius)
     })
     .catch(() => {})
-  return null as any
+  return null
 }

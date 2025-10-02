@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const tenant = resolveTenant(request.url)
     const theme = await getTheme(tenant)
     return NextResponse.json(theme, { headers: { 'Cache-Control': 'no-store' } })
-  } catch (e) {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to load theme' },
       { status: 500, headers: { 'Cache-Control': 'no-store' } }
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ ok: true })
-  } catch (e) {
-    const msg = (e as Error)?.message || 'Failed to save theme'
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Failed to save theme'
     if (process.env.NODE_ENV !== 'production') {
       console.error('Theme save error:', e)
       return NextResponse.json({ error: 'Failed to save theme', detail: msg }, { status: 500 })

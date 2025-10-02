@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
 import { setMemoryMenu, writeMenu } from '@/lib/data/menu'
 
 export async function POST(request: NextRequest) {
@@ -35,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ ok: true })
-  } catch (e) {
+  } catch (error) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 }

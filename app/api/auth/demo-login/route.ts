@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
     })
     return res
-  } catch (e: any) {
+  } catch (error) {
     return NextResponse.json({ error: 'Demo login failed' }, { status: 400 })
   }
 }

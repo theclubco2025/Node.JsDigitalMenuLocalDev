@@ -1,19 +1,18 @@
 
 "use client"
 
-import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { FormEvent, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/admin'
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -114,8 +113,8 @@ export default function LoginPage() {
                       })
                       if (!res.ok) throw new Error('Demo login failed')
                       window.location.href = '/admin'
-                    } catch (e:any) {
-                      setError(e.message || 'Demo login failed')
+                  } catch (error) {
+                      setError(error instanceof Error ? error.message : 'Demo login failed')
                     }
                   }}
                   className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -135,8 +134,8 @@ export default function LoginPage() {
                       })
                       if (!res.ok) throw new Error('Demo login failed')
                       window.location.href = '/admin'
-                    } catch (e:any) {
-                      setError(e.message || 'Demo login failed')
+                    } catch (error) {
+                      setError(error instanceof Error ? error.message : 'Demo login failed')
                     }
                   }}
                   className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"

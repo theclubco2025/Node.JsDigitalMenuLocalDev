@@ -7,54 +7,6 @@ import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
 
 export const runtime = 'nodejs'
 
-interface MenuContext {
-  categories: Array<{
-    id: string
-    name: string
-    items: Array<{
-      id: string
-      name: string
-      description: string
-      price: number
-      tags: string[]
-      calories?: number
-      allergens?: string[]
-      spiceLevel?: number
-    }>
-  }>
-  specials?: Array<{
-    name: string
-    description: string
-    price?: number
-  }>
-  totalItems: number
-}
-
-interface CustomerMemory {
-  visitCount: number
-  favoriteItems: string[]
-  dietaryRestrictions: string[]
-  spicePreference?: string
-  lastOrderItems?: string[]
-  priceRange?: 'budget' | 'mid' | 'premium'
-  conversationHistory: Array<{
-    role: 'user' | 'assistant'
-    content: string
-    timestamp: Date
-  }>
-}
-
-interface TenantProfile {
-  name: string
-  cuisine: string
-  brandVoice: 'upscale' | 'casual' | 'family' | 'trendy' | 'traditional'
-  specialty: string
-  priceRange: string
-  atmosphere: string
-  locationContext?: string
-}
-
-// Single multi-tenant assistant endpoint (LLaMA-ready)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
