@@ -1,13 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter, Playfair_Display, Italianno } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import { resolveTenant } from '@/lib/tenant'
 import { getTheme } from '@/lib/theme'
 import { Suspense } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
-const playfair = Playfair_Display({ subsets: ['latin'], weight: ['400','600','700'] })
-const italianno = Italianno({ subsets: ['latin'], weight: '400' })
 
 export const metadata: Metadata = {
   title: 'Digital Menu SaaS',
@@ -32,8 +30,6 @@ export default async function RootLayout({
           ['--primary' as any]: theme.primary,
           ['--accent' as any]: theme.accent,
           ['--radius' as any]: theme.radius,
-          ['--font-serif' as any]: playfair.style.fontFamily,
-          ['--font-italian' as any]: italianno.style.fontFamily,
         }}
       >
         {/* Client-side theme sync so URL ?tenant controls theme without reload */}

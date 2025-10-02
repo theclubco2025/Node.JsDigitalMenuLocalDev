@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useMemo, useEffect, useRef } from 'react'
@@ -49,19 +50,6 @@ export default function MenuClient() {
   const brandLogoUrl = (brand?.header?.logoUrl || brand?.logoUrl || '') as string
   const brandName = (brand?.name || 'Menu') as string
   const brandTagline = (brand?.tagline || '') as string
-  const styleVariant = (styleCfg?.heroVariant || '').toLowerCase()
-  const navVariant = (styleCfg?.navVariant || '').toLowerCase()
-  const features = {
-    chipScroller: navVariant === 'chipscroller',
-    signatureGrid: Boolean(styleCfg?.flags?.signatureGrid ?? (styleVariant === 'logobanner')),
-    chefNotes: Boolean(styleCfg?.flags?.chefNotes ?? true),
-    priceRibbons: Boolean(styleCfg?.flags?.priceRibbons ?? true),
-    imageBadges: Boolean(styleCfg?.flags?.imageBadges ?? true),
-    specialsRibbon: Boolean(styleCfg?.flags?.specials ?? true),
-    pairingNotes: Boolean(styleCfg?.flags?.pairings ?? true),
-    badgeText: styleCfg?.badges || {},
-    accentSecondary: styleCfg?.accentSecondary || '#b63a2b'
-  }
 
   // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
   const effectiveTheme = useMemo(() => {
@@ -80,8 +68,7 @@ export default function MenuClient() {
     return t
   }, [theme, isBenes])
 
-  const accentColor = effectiveTheme?.accent || '#a53329'
-  const accentSecondary = features.accentSecondary || '#a53329'
+  
 
   // Apply theme from config
   useEffect(() => {
@@ -476,23 +463,21 @@ export default function MenuClient() {
   const rootStyle = {
     background: 'var(--bg)',
     color: 'var(--text)',
+    // Inline CSS variables for instant theming
     ['--bg' as any]: effectiveTheme?.bg,
     ['--text' as any]: effectiveTheme?.text,
     ['--ink' as any]: effectiveTheme?.ink,
     ['--card' as any]: effectiveTheme?.card,
     ['--muted' as any]: effectiveTheme?.muted,
-    ['--accent' as any]: effectiveTheme?.accent,
-    ...(isBenes ? {
-      background: '#ffffff'
-    } : {})
+    ['--accent' as any]: effectiveTheme?.accent
   } as React.CSSProperties
 
   // Benes-specific featured picks and pairings
-  const featuredItemIds: string[] = isBenes ? (
-    Array.isArray(styleCfg?.featuredIds) && styleCfg.featuredIds.length > 0
-      ? styleCfg.featuredIds
-      : ['i-margherita-napoletana-14', 'i-fettuccine-bolognese', 'i-prosciutto-arugula-14']
-  ) : []
+  const featuredItemIds: string[] = isBenes ? [
+    'i-margherita-napoletana-14',
+    'i-fettuccine-bolognese',
+    'i-prosciutto-arugula-14'
+  ] : []
   const pairingsById: Record<string, string> = isBenes ? {
     'i-fettuccine-bolognese': 'Pairs with Zinfandel',
     'i-margherita-napoletana-14': 'Pairs with Chianti',
@@ -500,24 +485,25 @@ export default function MenuClient() {
     'i-lasagna': 'Pairs with Sangiovese'
   } : {}
   function cardStyleForCategory(categoryName: string): React.CSSProperties {
-    if (!isBenes) return {}
     if (/pizza/i.test(categoryName)) {
       return {
         backgroundColor: '#ffffff',
-        borderColor: 'rgba(164,51,41,0.10)'
+        backgroundImage: 'radial-gradient(rgba(16,16,16,0.05) 1px, transparent 1px)',
+        backgroundSize: '8px 8px',
+        borderColor: 'rgba(0,0,0,0.06)'
       }
     }
     if (/pasta/i.test(categoryName)) {
       return {
-        background: '#fffdfa',
-        borderColor: 'rgba(164,51,41,0.12)',
-        boxShadow: '0 4px 12px rgba(164,51,41,0.06)'
+        background: '#fffaf2',
+        borderColor: 'rgba(185,28,28,0.12)',
+        boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
       }
     }
-    if (/calzone|antipasti/i.test(categoryName)) {
+    if (/calzone/i.test(categoryName)) {
       return {
-        background: '#fffefb',
-        borderColor: 'rgba(0,0,0,0.06)'
+        background: '#fffef8',
+        borderColor: 'rgba(0,0,0,0.08)'
       }
     }
     return {}
@@ -557,10 +543,6 @@ export default function MenuClient() {
     }
     return items
   }
-
-  const specialsText = copy?.specials || 'Margherita 14\", Fettuccine Bolognese, Prosciutto & Arugula'
-  const badgeText = (features.badgeText?.category || copy?.badges?.category || brandName)
-  const cardAccentText = features.priceRibbons && isBenes ? '#1c2c24' : 'var(--ink)'
 
   return (
     <div className="min-h-screen" style={rootStyle}>
@@ -610,162 +592,121 @@ export default function MenuClient() {
               {brandLogoUrl ? (
                 <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
               ) : (
-            <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
               )}
-            <div className="text-center">
+              <div className="text-center">
                 <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italian)' }}>{brandName}</h1>
                 <p className="text-gray-200 text-xs">{brandTagline}</p>
+              </div>
             </div>
-          </div>
           )}
         </div>
       </div>
 
       {/* Spacer to offset fixed header height */}
-      <div style={{ height: isBenes ? 180 : 80 }} />
+      {/* Optional hero subtitle from copy */}
+      <div style={{ height: isBenes ? 160 : 80 }} />
       {isBenes && (
-        <div className="relative">
-          <div className="w-full h-1.5" style={{ background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)' }} />
-          {copy?.heroSubtitle && (
-            <div className="max-w-7xl mx-auto px-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <p className="text-sm text-gray-600 italic" style={{ fontFamily:'var(--font-serif)' }}>{copy.heroSubtitle}</p>
-                {brand?.established && (
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.3em] text-gray-500">
-                    <span className="w-8 h-px bg-gray-300" />
-                    <span>{brand.established}</span>
-                    <span className="w-8 h-px bg-gray-300" />
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+        <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
+      )}
+      {isBenes && copy?.heroSubtitle && (
+        <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
+          <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
         </div>
       )}
 
-      {/* Category chip scroller */}
-      {features.chipScroller && (
-        <div className="w-full sticky top-[160px] z-40" style={{ background:'rgba(255,255,255,0.96)', boxShadow:'0 6px 18px rgba(16,16,16,0.08)', borderBottom:'1px solid rgba(164,51,41,0.18)' }}>
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center justify-between py-3">
-              <div className="text-sm uppercase tracking-[0.28em] text-gray-500 hidden md:block">Navigate</div>
-              <div className="text-xs text-gray-500 md:hidden uppercase tracking-[0.25em]">Menu</div>
+      {/* Category chip scroller (Benes) */}
+      {isBenes && (
+        <div className="max-w-7xl mx-auto px-4 mb-4">
+          <div className="no-scrollbar overflow-x-auto py-2 -mx-2 px-2 flex gap-2">
+            {(menuData?.categories || []).map(cat => (
               <button
+                key={cat.id}
                 onClick={() => {
-                  setSelectedCategory(null)
-                  const el = document.getElementById('top')
-                  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' })
+                  setSelectedCategory(cat.name === selectedCategory ? null : cat.name)
+                  const el = document.getElementById(`cat-${cat.id}`)
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }}
-                className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500"
+                className={`px-3 py-1.5 rounded-full text-sm border transition-colors whitespace-nowrap ${activeCategoryId===cat.id ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'bg-white text-black border-gray-300 hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-white'}`}
+                style={{boxShadow: activeCategoryId===cat.id ? '0 2px 12px rgba(185,28,28,0.25)' : undefined}}
               >
-                View All
+                {cat.name}
               </button>
-            </div>
-            <div className="no-scrollbar overflow-x-auto pb-3 -mx-2 px-2 flex gap-2">
-              {(menuData?.categories || []).map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.name === selectedCategory ? null : cat.name)
-                    const el = document.getElementById(`cat-${cat.id}`)
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                  }}
-                  className={`px-4 py-1.5 rounded-full text-sm border transition-colors whitespace-nowrap font-semibold ${activeCategoryId===cat.id ? 'bg-[var(--accent)] text-black border-[var(--accent)]' : 'bg-white text-black'}`}
-                  style={{ borderColor: activeCategoryId===cat.id ? undefined : accentColor, boxShadow: activeCategoryId===cat.id ? '0 4px 12px rgba(164,51,41,0.25)' : undefined, fontFamily:'var(--font-serif)' }}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Hero banner */}
-      {styleVariant === 'logobanner' && (
+      {/* Benes hero banner */}
+      {isBenes && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div
             className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
-            style={{ borderColor: 'rgba(164,51,41,0.12)', boxShadow: '0 4px 14px rgba(16,16,16,0.06)', background:'#ffffff' }}
+            style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
           >
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.22), rgba(255,255,255,.12), rgba(185,28,28,.22))' }} />
             {brandLogoUrl && (
-              <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '180px 180px' }} />
+              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
             )}
-            <div className="relative h-full flex flex-col md:flex-row items-center justify-between px-5">
-              <div className="max-w-lg text-center md:text-left">
+            <div className="relative h-full flex items-center justify-between px-5">
+              <div className="max-w-lg">
                 {copy?.tagline && (
-                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#121212', fontFamily:'var(--font-serif)' }}>{copy.tagline}</div>
+                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#101010' }}>{copy.tagline}</div>
                 )}
                 {copy?.heroSubtitle && (
-                  <p className="text-sm text-gray-600 mt-3" style={{ fontFamily:'var(--font-serif)', letterSpacing:'0.08em' }}>{copy.heroSubtitle}</p>
+                  <div className="text-sm md:text-base text-gray-700 mt-1">{copy.heroSubtitle}</div>
                 )}
               </div>
-              <div className="hidden md:flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-gray-400">
-                <span>Verde</span>
-                <span>•</span>
-                <span>Bianco</span>
-                <span>•</span>
-                <span>Rosso</span>
+              <div className="hidden md:flex items-center gap-2">
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#128807' }} />
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)' }} />
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#b91c1c' }} />
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Specials ribbon */}
-      {features.specialsRibbon && (
+      {/* Subtle Specials ribbon */}
+      {isBenes && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
-          <div className="rounded-md px-4 py-3 text-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2" style={{ background:'#fff5f3', border:`1px solid ${accentColor}2b`, color:'#3a1f1c' }}>
-            <div>
-              <div className="text-[0.65rem] uppercase tracking-[0.26em]" style={{ color:'#5a5a5a' }}>Tonight’s Specials</div>
-              <div className="mt-1 font-semibold" style={{ fontFamily:'var(--font-serif)', color:'#2e3e38' }}>{specialsText}</div>
-            </div>
-            <button
-              className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.16em] font-semibold"
-              style={{ color: accentSecondary }}
-              onClick={() => {
-                const el = document.getElementById('top')
-                if (el) el.scrollIntoView({ behavior:'smooth', block:'start' })
-              }}
-            >
-              View Menu
-            </button>
+          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
+            Tonight’s Specials: Margherita 14", Fettuccine Bolognese, Prosciutto & Arugula
           </div>
         </div>
       )}
 
-      {/* Signature Picks */}
-      {features.signatureGrid && (
+      {/* Signature Picks (Benes) */}
+      {isBenes && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
-              <p className="text-xs text-gray-500 uppercase tracking-[0.2em]">House Favorites • Tradizione</p>
-            </div>
-            <div className="flex-1 ml-4 hidden sm:block" style={{ height: 2, background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
+            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
+            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {resolveFeatured().map((it) => {
               const src = imageMap[it.id] || (it as any).imageUrl || ''
               return (
-                <div key={it.id} className="relative rounded-xl overflow-hidden border bg-white" style={{ borderColor: `${accentColor}2b`, boxShadow: '0 6px 16px rgba(16,16,16,0.08)' }}>
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'#fffdf5' }}>
                   {src && (
                     <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
                   )}
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.08), rgba(255,255,255,.04), rgba(185,28,28,.08))' }} />
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold text-white" style={{ background:'rgba(185,28,28,0.9)' }}>Most Loved</div>
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
                         {pairingsById[it.id] && (
-                          <div className="text-xs text-gray-600 mt-0.5" style={{ fontFamily: 'var(--font-serif)' }}>{pairingsById[it.id]}</div>
+                          <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
                         )}
                       </div>
-                      <div className="text-sm font-bold px-2 py-0.5 rounded-full text-white" style={{ background:`linear-gradient(180deg, ${accentSecondary}, #8c241a)` }}>${Number((it as any).price).toFixed(2)}</div>
+                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number((it as any).price).toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
-              )}
-            )}
+              )
+            })}
           </div>
         </div>
       )}
@@ -784,7 +725,7 @@ export default function MenuClient() {
           >
             {/* Italian overlay gradient */}
             <div className="w-full h-full" style={{
-              background: 'linear-gradient(90deg, rgba(107,33,24,0.55), rgba(255,255,255,0.25), rgba(164,51,41,0.55))'
+              background: 'linear-gradient(90deg, rgba(20,83,45,0.55), rgba(255,255,255,0.25), rgba(185,28,28,0.55))'
             }} />
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
@@ -850,7 +791,7 @@ export default function MenuClient() {
           <button
             onClick={() => setSelectedCategory(null)}
             className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
-            style={selectedCategory===null?{background:accentColor, color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:`1px solid ${accentColor}` } }
+            style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
           >
             All Categories
           </button>
@@ -859,7 +800,7 @@ export default function MenuClient() {
               key={category}
               onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
               className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
-              style={selectedCategory===category?{background:accentColor, color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:`1px solid ${accentColor}` } }
+              style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
             >
               <span className="inline-flex items-center gap-2">
                 {getCategoryIcon(category)}
@@ -949,67 +890,53 @@ export default function MenuClient() {
               id={`cat-${category.id}`}
               className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}
               style={{
-                background: isBenes
-                  ? '#ffffff'
-                  : 'linear-gradient(90deg, rgba(20,83,45,0.03) 0% 33.33%, rgba(255,255,255,0.03) 33.33% 66.66%, rgba(185,28,28,0.03) 66.66% 100%)',
+                background: 'linear-gradient(90deg, rgba(20,83,45,0.03) 0% 33.33%, rgba(255,255,255,0.03) 33.33% 66.66%, rgba(185,28,28,0.03) 66.66% 100%)',
                 borderRadius: 12,
-                padding: isBenes ? 14 : 12,
-                border: isBenes ? '1px solid rgba(164,51,41,0.08)' : undefined
+                padding: 12
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  {features.chefNotes && badgeText && (
-                    <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-[0.18em]" style={{ background:`${accentSecondary}14`, color: accentSecondary, border:`1px solid ${accentSecondary}33` }}>
-                      {badgeText}
-                    </span>
-                  )}
-                  <h2 className="text-xl md:text-2xl font-semibold text-black uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', letterSpacing:'0.14em' }}>
+                <h2 className="text-2xl font-extrabold text-white tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
+                <div className="flex-1 ml-6" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
-                <div className="hidden md:block flex-1 ml-6" style={{ height: 1, background: 'linear-gradient(90deg, rgba(16,16,16,0.06), transparent)' }}></div>
-              </div>
-              {features.chefNotes && copy?.categoryIntros?.[category.name] && (
-                <div className="mb-4">
-                  <p className="text-gray-600 text-sm" style={{ fontFamily: 'var(--font-serif)' }}>{copy.categoryIntros[category.name]}</p>
-                </div>
+              {isBenes && copy?.categoryIntros?.[category.name] && (
+                <p className="text-gray-300 text-sm mb-4">{copy.categoryIntros[category.name]}</p>
               )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {category.items.map(item => (
                   <div 
                     key={item.id} 
-                    className="menu-item border rounded-lg overflow-hidden transition-all duration-200 hover:-translate-y-1 group"
-                    style={Object.assign({
-                      borderRadius: 'var(--radius)',
-                      background: isBenes ? '#ffffff' : 'var(--card)',
-                      borderColor: isBenes ? 'rgba(63,93,79,0.15)' : 'var(--muted)',
-                      boxShadow: isBenes ? '0 3px 10px rgba(16,16,16,0.04)' : undefined
-                    }, cardStyleForCategory(category.name))}
+                    className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                    style={{ 
+                      borderRadius: 'var(--radius)', 
+                      background: isBenes ? '#fffdf5' : 'var(--card)', 
+                      borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
+                      boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
+                      ...cardStyleForCategory(category.name)
+                    }}
                   >
                     {(() => {
                       const src = imageMap[item.id] || item.imageUrl || ''
                       if (!src) return null
                       return (
-                        <div className="bg-gray-50">
-                      <img 
-                        id={`img-${item.id}`}
+                        <div className="bg-gray-100">
+                          <img 
+                            id={`img-${item.id}`}
                             src={src}
-                        alt={item.name}
-                            className="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                            alt={item.name}
+                            className="w-full h-56 object-cover"
                             loading="lazy" decoding="async"
-                      />
-                          {features.imageBadges && (
-                            <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] uppercase" style={{ background: accentSecondary, color:'#fff', fontFamily:'var(--font-serif)' }}>Signature</div>
-                          )}
-                    </div>
+                          />
+                        </div>
                       )
                     })()}
                     
-                    <div className="p-5">
-                      <div className="flex justify-between items-start mb-2.5">
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-3">
                         {isAdmin ? (
                           <input
                             className="text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
@@ -1017,7 +944,7 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <h3 className="text-lg font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
                             {highlightText(item.name, searchQuery)}
                             <span className="ml-2 align-middle text-sm font-normal text-gray-500">
                               ({typeof item.calories === 'number' ? `${item.calories} cal` : 'cal N/A'})
@@ -1028,18 +955,18 @@ export default function MenuClient() {
                           <input
                             type="number"
                             step="0.01"
-                            className="w-24 text-right text-lg font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
+                            className="w-28 text-right text-xl font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
                             value={Number(item.price).toString()}
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-lg font-semibold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: features.priceRibbons && isBenes ? `${accentColor}1a` : undefined, color: cardAccentText, fontFamily:'var(--font-serif)' }}>${item.price.toFixed(2)}</span>
+                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : undefined, color: isBenes ? '#0b0b0b' : undefined }}>${item.price.toFixed(2)}</span>
                         )}
                       </div>
                       {!isAdmin && (
                         <div className="flex flex-wrap gap-1 mb-2">
                           {getItemBadges(item).map(b => (
-                            <span key={b} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border" style={{ borderColor:`${accentSecondary}33`, color: accentSecondary, background:`${accentSecondary}0d` }}>{b}</span>
+                            <span key={b} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{b}</span>
                           ))}
                         </div>
                       )}
@@ -1060,17 +987,56 @@ export default function MenuClient() {
                           />
                         </div>
                       ) : (
-                        <p className="text-gray-600 text-sm leading-relaxed mb-4" style={{ fontFamily:'var(--font-serif)' }}>
+                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
                           {highlightText(item.description, searchQuery)}
                         </p>
                       )}
                       
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0 flex flex-wrap gap-1">
-                          {!isAdmin && features.pairingNotes && pairingsById[item.id] && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs" style={{ color: accentSecondary, border:`1px solid ${accentSecondary}33`, fontFamily:'var(--font-serif)' }}>
-                              {pairingsById[item.id]}
+                          {isAdmin ? (
+                            <>
+                              <input
+                                type="number"
+                                placeholder="cal"
+                                className="w-20 px-2 py-1 text-xs border border-gray-300 rounded text-black"
+                                value={item.calories ?? ''}
+                                onChange={e => updateItemField(category.id, item.id, 'calories', e.target.value === '' ? undefined : Number(e.target.value))}
+                              />
+                              {(item.tags || []).map(tag => (
+                                <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-700 border border-gray-300 bg-gray-100">
+                                  {tag}
+                                  <button aria-label="Remove tag" onClick={() => removeTag(category.id, item.id, tag)} className="ml-1 text-gray-500 hover:text-black">×</button>
                                 </span>
+                              ))}
+                              <input
+                                className="px-2 py-1 text-xs border border-gray-300 rounded text-black"
+                                placeholder="Add tag (Enter)"
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    const v = (e.target as HTMLInputElement).value
+                                    addTag(category.id, item.id, v)
+                                    ;(e.target as HTMLInputElement).value = ''
+                                  }
+                                }}
+                              />
+                            </>
+                          ) : (
+                            <>
+                              {item.calories && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
+                                  {item.calories} cal
+                                </span>
+                              )}
+                              {(item.tags || []).map(tag => (
+                                <span 
+                                  key={tag} 
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </>
                           )}
                         </div>
                         
@@ -1089,20 +1055,20 @@ export default function MenuClient() {
                               return [...filtered.slice(-2), { itemId: item.id, src: thumb }]
                             })
                           }}
-                            className={`text-white px-3.5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[120px]`}
-                            style={{
-                              background: isBenes ? `linear-gradient(180deg, ${accentColor}, #2f423a)` : 'var(--accent)',
-                              boxShadow: isBenes ? `0 3px 10px ${accentSecondary}33` : undefined,
-                              border: recentlyAddedId===item.id ? `2px solid ${accentSecondary}66` : 'none'
-                            }}
+                          className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                          style={{
+                            background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : 'var(--accent)',
+                            boxShadow: isBenes ? '0 8px 18px rgba(185,28,28,0.35)' : undefined,
+                            letterSpacing: isBenes ? 0.3 : undefined
+                          }}
                         >
                           {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
                         </button>
-                        <button
-                            onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                          className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
-                          aria-label={`Ask about ${item.name}`}
-                        >
+                <button
+                  onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                  className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                  aria-label={`Ask about ${item.name}`}
+                >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                             <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1191,7 +1157,7 @@ export default function MenuClient() {
       <button
         onClick={() => setIsAssistantOpen(true)}
         className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
-        style={{background: accentColor, color:'#0b0b0b'}}
+        style={{background:'var(--accent)', color:'#0b0b0b'}}
         aria-label="Open assistant"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
