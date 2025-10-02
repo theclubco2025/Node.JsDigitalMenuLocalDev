@@ -53,8 +53,8 @@ export async function generate({ model, system, user }: GenerateArgs): Promise<s
     throw new Error('no-keys')
   }
   // global round-robin cursor across requests
-  ;(globalThis as any).__ai_key_cursor = (globalThis as any).__ai_key_cursor ?? 0
-  const startCursor: number = (globalThis as any).__ai_key_cursor
+  globalWithCursor.__ai_key_cursor = globalWithCursor.__ai_key_cursor ?? 0
+  const startCursor: number = globalWithCursor.__ai_key_cursor
   // Expect base to end with /v1 or we append it
   const completionsUrl = baseUrl.endsWith('/v1')
     ? `${baseUrl}/chat/completions`
