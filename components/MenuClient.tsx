@@ -1,6 +1,8 @@
 
 "use client"
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useState, useMemo, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
@@ -37,6 +39,8 @@ type TenantConfig = {
   style?: TenantStyleFlags
   copy?: Record<string, unknown>
 }
+
+type ThemeCSSVariables = React.CSSProperties & Record<'--bg' | '--text' | '--ink' | '--card' | '--muted' | '--accent', string | undefined>
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -78,8 +82,8 @@ export default function MenuClient() {
   const brand = cfg?.brand
   const theme = cfg?.theme ?? null
   const imageMap = cfg?.images ?? {}
-  const styleCfg = cfg?.style ?? {}
-  const copy = cfg?.copy ?? {}
+  const copy = cfg?.copy as Record<string, unknown> | undefined
+  const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
   const brandTagline = brand?.tagline || ''
@@ -166,7 +170,12 @@ export default function MenuClient() {
       .filter(category => category.items.length > 0)
   }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
 
-  const updateItemField = (categoryId: string, itemId: string, field: keyof MenuItem, value: MenuItem[keyof MenuItem]) => {
+  const updateItemField = (
+    categoryId: string,
+    itemId: string,
+    field: keyof MenuItem,
+    value: MenuItem[keyof MenuItem] | undefined
+  ) => {
     if (!editableMenu) return
     setEditableMenu(prev => {
       if (!prev) return prev
@@ -176,10 +185,31 @@ export default function MenuClient() {
           const idx = cat.items.findIndex(i => i.id === itemId)
           if (idx !== -1) {
             const item = cat.items[idx]
-            if (field === 'price') {
-              item[field] = Number(value) as MenuItem['price']
-            } else {
-              item[field] = value as MenuItem[typeof field]
+            switch (field) {
+              case 'price':
+                item.price = typeof value === 'number' ? value : Number(value ?? item.price)
+                break
+              case 'calories':
+                item.calories = value === undefined
+                  ? undefined
+                  : typeof value === 'number'
+                    ? value
+                    : Number(value)
+                break
+              case 'tags':
+                item.tags = Array.isArray(value) ? value : item.tags ?? []
+                break
+              case 'name':
+                item.name = value === undefined ? '' : String(value)
+                break
+              case 'description':
+                item.description = value === undefined ? undefined : String(value)
+                break
+              case 'imageUrl':
+                item.imageUrl = value === undefined ? undefined : String(value)
+                break
+              default:
+                item[field] = value as typeof item[typeof field]
             }
           }
           break
@@ -200,7 +230,8 @@ export default function MenuClient() {
       if (!res.ok) throw new Error('Save failed')
       setToast('Saved changes')
     } catch (error) {
-      setToast('Error saving changes')
+      const message = error instanceof Error ? error.message : 'Error saving changes'
+      setToast(message)
     }
   }
 
@@ -344,7 +375,8 @@ export default function MenuClient() {
       const assistantText = data.text || data.response || data.message || 'Thanks for your question.'
       setChatHistory(prev => [...prev, { role: 'assistant', message: assistantText }])
     } catch (error) {
-      setChatHistory(prev => [...prev, { role: 'assistant', message: 'Sorry, I had trouble processing your request.' }])
+      const message = error instanceof Error ? error.message : 'Sorry, I had trouble processing your request.'
+      setChatHistory(prev => [...prev, { role: 'assistant', message }])
     }
   }
 
@@ -361,8 +393,8 @@ export default function MenuClient() {
   
   // Note: avoid early returns before hooks to keep hook order stable
 
-  const categories = menuData?.categories || []
-  const allCategories = categories.map(cat => cat.name)
+  const categories = useMemo(() => menuData?.categories ?? [], [menuData])
+  const allCategories = useMemo(() => categories.map(cat => cat.name), [categories])
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase()
@@ -497,7 +529,7 @@ export default function MenuClient() {
     return () => clearTimeout(t)
   }, [toast])
 
-  const rootStyle: React.CSSProperties = {
+  const rootStyle: ThemeCSSVariables = {
     background: effectiveTheme?.bg ?? 'var(--bg)',
     color: effectiveTheme?.text ?? 'var(--text)',
     '--bg': effectiveTheme?.bg,
@@ -555,9 +587,9 @@ export default function MenuClient() {
     return badges
   }
   function resolveFeatured() {
-    const items: Array<{ id: string; name: string; price: number; imageUrl?: string; categoryName?: string }> = []
+    const items: Array<MenuItem & { categoryName?: string }> = []
     if (!menuData?.categories) return items
-    const idToItem: Record<string, any> = {}
+    const idToItem: Record<string, MenuItem & { categoryName: string }> = {}
     for (const cat of menuData.categories) {
       for (const it of cat.items) {
         idToItem[it.id] = { ...it, categoryName: cat.name }
@@ -568,13 +600,12 @@ export default function MenuClient() {
     }
     // Fallback: pick first three if any missing
     if (items.length < 3) {
-      for (const cat of menuData.categories) {
+      outer: for (const cat of menuData.categories) {
         for (const it of cat.items) {
-          if (items.find(x => x.id === it.id)) continue
+          if (items.some(existing => existing.id === it.id)) continue
           items.push({ ...it, categoryName: cat.name })
-          if (items.length >= 3) break
+          if (items.length >= 3) break outer
         }
-        if (items.length >= 3) break
       }
     }
     return items
@@ -645,7 +676,7 @@ export default function MenuClient() {
       {isBenes && (
         <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
       )}
-      {isBenes && copy?.heroSubtitle && (
+      {isBenes && typeof copy?.heroSubtitle === 'string' && (
         <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
           <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
         </div>
@@ -686,10 +717,10 @@ export default function MenuClient() {
             )}
             <div className="relative h-full flex items-center justify-between px-5">
               <div className="max-w-lg">
-                {copy?.tagline && (
+                {typeof copy?.tagline === 'string' && (
                   <div className="text-lg md:text-xl font-semibold" style={{ color: '#101010' }}>{copy.tagline}</div>
                 )}
-                {copy?.heroSubtitle && (
+                {typeof copy?.heroSubtitle === 'string' && (
                   <div className="text-sm md:text-base text-gray-700 mt-1">{copy.heroSubtitle}</div>
                 )}
               </div>
@@ -707,7 +738,7 @@ export default function MenuClient() {
       {isBenes && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
           <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
-            Tonight’s Specials: Margherita 14", Fettuccine Bolognese, Prosciutto & Arugula
+            Tonight&apos;s Specials: Margherita 14&quot;, Fettuccine Bolognese, Prosciutto &amp; Arugula
           </div>
         </div>
       )}
@@ -766,8 +797,8 @@ export default function MenuClient() {
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
-              <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brand.name}</h2>
-              <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brand.tagline}</p>
+                  <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
+                  <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
             </div>
           </div>
           {/* Tricolor divider bar */}
@@ -938,8 +969,8 @@ export default function MenuClient() {
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
-              {isBenes && copy?.categoryIntros?.[category.name] && (
-                <p className="text-gray-300 text-sm mb-4">{copy.categoryIntros[category.name]}</p>
+              {isBenes && typeof categoryIntros[category.name] === 'string' && (
+                <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
               )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -960,12 +991,13 @@ export default function MenuClient() {
                       if (!src) return null
                       return (
                         <div className="bg-gray-100">
-                          <img 
+                          <img
                             id={`img-${item.id}`}
                             src={src}
                             alt={item.name}
                             className="w-full h-56 object-cover"
-                            loading="lazy" decoding="async"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </div>
                       )
@@ -1208,6 +1240,7 @@ export default function MenuClient() {
         <img
           key={f.key}
           src={f.src}
+          alt=""
           className="fixed w-10 h-10 rounded-full object-cover z-[60] pointer-events-none transition-transform duration-700 ease-out shadow"
           style={{
             left: 0,
@@ -1215,7 +1248,6 @@ export default function MenuClient() {
             transform: `translate(${f.startX}px, ${f.startY}px) ${f.moved ? `translate(${f.dx}px, ${f.dy}px) scale(0.4)` : ''}`,
             border: '2px solid white'
           }}
-          alt=""
         />
       ))}
 
@@ -1323,9 +1355,9 @@ export default function MenuClient() {
                   <p>Start a conversation!</p>
                   <p className="text-sm mt-2">Try asking:</p>
                   <ul className="text-xs mt-2 space-y-1 text-left">
-                    <li>"What vegetarian options do you have?"</li>
-                    <li>"Is the pasta gluten-free?"</li>
-                    <li>"What's your most popular dish?"</li>
+                    <li>&quot;What vegetarian options do you have?&quot;</li>
+                    <li>&quot;Is the pasta gluten-free?&quot;</li>
+                    <li>&quot;What&apos;s your most popular dish?&quot;</li>
                   </ul>
                 </div>
               ) : (

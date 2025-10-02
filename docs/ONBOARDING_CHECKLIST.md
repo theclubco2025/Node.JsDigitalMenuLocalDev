@@ -35,3 +35,4 @@ Open the printed URL; it should land on `/menu?tenant=<id>`.
 - Set default tenant for demo/testing in `.env.local`: `NEXT_PUBLIC_DEFAULT_TENANT=<id>`
 - Commit and push.
 
+

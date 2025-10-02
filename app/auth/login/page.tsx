@@ -1,10 +1,10 @@
 
 "use client"
 
-import { FormEvent, useState } from 'react'
+import { Suspense, useState, FormEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -13,13 +13,13 @@ export default function LoginPage() {
   const callbackUrl = searchParams.get('callbackUrl') || '/admin'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    event.preventDefault()
     setLoading(true)
     setError('')
 
     try {
       // Auth temporarily disabled in this demo build to avoid dependency issues
-      setError('Login is disabled in this demo build.')
+      setError(`Login is disabled in this demo build. When enabled, you will be redirected to ${callbackUrl}.`)
     } finally {
       setLoading(false)
     }
@@ -149,5 +149,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   )
 }
