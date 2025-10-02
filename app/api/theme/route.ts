@@ -59,9 +59,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   } catch (e) {
     const msg = (e as Error)?.message || 'Failed to save theme'
+    // Dev fallback: persist theme to filesystem so UI updates even if DB is momentarily unavailable
     if (process.env.NODE_ENV !== 'production') {
-      console.error('Theme save error:', e)
-      return NextResponse.json({ error: 'Failed to save theme', detail: msg }, { status: 500 })
+      try {
+        const { promises: fs } = await import('fs')
+        const path = await import('path')
+        const dir = path.join(process.cwd(), 'data', 'tenants', tenant)
+        const file = path.join(dir, 'theme.json')
+        await fs.mkdir(dir, { recursive: true })
+        await fs.writeFile(file, JSON.stringify(nextTheme, null, 2), 'utf8')
+        console.warn('[theme] DB unavailable, wrote theme to filesystem for tenant:', tenant)
+        return NextResponse.json({ ok: true, fallback: 'fs' })
+      } catch (fsErr) {
+        console.error('Theme save error (db+fs):', e, fsErr)
+        return NextResponse.json({ error: 'Failed to save theme', detail: msg }, { status: 500 })
+      }
     }
     return NextResponse.json({ error: 'Failed to save theme' }, { status: 500 })
   }

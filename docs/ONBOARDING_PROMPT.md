@@ -12,6 +12,16 @@
   - Sources: menu links (Sirved/site/Yelp) and/or menu photos for OCR
   - Branding inputs: logo URL or homepage URL (derive palette), optional accent/font
 
+### Client QA intake (fill with the client before work starts)
+- Brand essence: 3 adjectives, signature story/dish, inspiration links/mood board
+- Visual anchors: primary/secondary logos, must-use colors, font requirements
+- Menu priorities: high-impact categories, hero items, dietary callouts, pricing quirks
+- Imagery guidance: real photos vs. illustration, plating preferences, any “never use” imagery
+- Compliance flags: local regulations, allergen/allergy copy, disclaimers beyond CA calories
+- Voice & copy: tone (e.g. rustic, modern), CTA language, hero subtitle/tagline cues
+- Operational details: promos, specials cadence, upsell targets (wine pairings, desserts)
+- Technical constraints: primary device mix, accessibility thresholds, low-bandwidth notes
+
 - Core endpoints
   - Health: GET /api/health
   - Menu read: GET /api/menu?tenant={TENANT_SLUG}
@@ -30,31 +40,40 @@
    - `images.json` (itemId → imageUrl)
    - `brand.json` (header mode/logo/links)
    - `theme.json` (colors/radius)
-3) Set theme (dev: filesystem via theme.json; prod: DB)
-   - POST http://localhost:3001/api/theme?tenant={TENANT_SLUG}-draft
-   - Body (example)
-     {
-       "primary": "#111827",
-       "accent": "#16a34a",
-       "radius": "12px"
-     }
-   - Note: Use Postman/Insomnia to avoid shell JSON escaping issues
-4) Import menu (DB-backed or FS fallback)
+   - `style.json` (hero/nav/card variants, feature flags)
+   - `copy.json` (tagline, hero subtitle, about, category intros, badge text)
+3) Synthesize creative brief from the intake:
+   - 4–5 bullets describing vibe, palette direction, typography, layout goals
+   - Do/don’t list (e.g. avoid neon, emphasize rustic textures)
+4) Apply theme + style (dev: filesystem; prod: DB)
+   - POST http://localhost:3001/api/theme?tenant={TENANT_SLUG}-draft (or write `theme.json` locally)
+   - Ensure `style.json` updates align with creative brief (hero variant, nav variant, toggles)
+5) Import menu (DB-backed or FS fallback)
    - POST http://localhost:3001/api/tenant/import
    - Body
      {
        "tenant": "{TENANT_SLUG}-draft",
        "menu": {MENU_JSON}
      }
-5) Verify reads
+6) Verify reads
    - GET http://localhost:3001/api/menu?tenant={TENANT_SLUG}-draft → JSON reflects import
-6) Inline admin edit
+7) Inline admin edit (if needed)
    - http://localhost:3001/menu?tenant={TENANT_SLUG}-draft&admin=1
-   - Make edits → Save All → confirm persisted via GET /api/menu
-7) Promote to live (3000)
+   - Adjust copy, prices, flags → Save All → confirm persisted via GET /api/menu
+8) Creative QA pass (see detailed section below)
+9) Promote to live (3000)
    - Repeat theme and import for {TENANT_SLUG} on http://localhost:3000
    - Live view: /menu?tenant={TENANT_SLUG}
    - Admin: /menu?tenant={TENANT_SLUG}&admin=1
+
+### Creative QA pass (run before handing off)
+1) **Contrast & legibility:** Check hero, chip scroller, signature grid, cards, buttons on desktop/mobile. Confirm no overlays hide text and colors meet contrast minimums.
+2) **Layout validation:** Ensure hero/nav/card choices align with brief, test long names, price pills, dietary tags, and empty-state images.
+3) **Feature verification:** Calories + disclaimer visible, pairing/badge toggles correct, cart + add-to-plate animations function.
+4) **Imagery & assets:** Confirm every referenced image exists or gracefully hides. Ensure brand/logo rendering matches instruction.
+5) **Copy & tone:** Read hero subtitle, about section, category intros, CTA language against the brief.
+6) **Admin/ops:** Run admin mode save, verify menu API reflects edits, ensure compliance/legal copy present.
+7) **QA notes:** Document issues found/resolved and any remaining risks (e.g. missing photos supplied later).
 
 ### Verification checklist
 - 3001 (test)
@@ -100,6 +119,11 @@ Required agent output (dev)
   - `node scripts/generate-qr.mjs {TENANT_SLUG} http://<LAN_IP>:3000`
   - Paste PNG URL.
 - 5 screenshots: hero, chips, two categories, one item with calories visible.
+- Creative report:
+  - Creative brief bullets + do/don’t
+  - Palette + typography selections with sources
+  - Layout & feature toggles chosen and why
+  - QA findings/resolutions + outstanding risks
 - Changelog: one paragraph describing brand/theme/style/copy/images changes.
 - PR: only `data/tenants/{TENANT_SLUG}/**` files.
 

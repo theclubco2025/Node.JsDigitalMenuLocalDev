@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import type { PrismaClient } from "@prisma/client";
 
 export type Theme = {
   primary: string;
@@ -17,11 +18,11 @@ export async function getTheme(tenant: string): Promise<Theme> {
   // Prefer DB if available
   if (process.env.DATABASE_URL) {
     try {
-      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as any }))
+      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
       if (prisma) {
         const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { settings: true } })
-        const settings = (row?.settings as any) || {}
-        const t = settings.theme || {}
+        const settings = (row?.settings as Record<string, unknown>) || {}
+        const t = (settings.theme as Partial<Theme>) || {}
         if (t && (t.primary || t.accent || t.radius)) {
           return {
             primary: t.primary || DEFAULT_THEME.primary,
