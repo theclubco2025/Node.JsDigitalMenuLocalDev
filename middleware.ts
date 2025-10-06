@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
+  // In Vercel preview, default /menu to benes-draft if no tenant param
+  if (request.nextUrl.pathname === '/menu' && !request.nextUrl.searchParams.get('tenant')) {
+    const isPreview = process.env.VERCEL_ENV === 'preview'
+    if (isPreview) {
+      const url = request.nextUrl.clone()
+      url.searchParams.set('tenant', process.env.PREVIEW_DEFAULT_TENANT || 'benes-draft')
+      return NextResponse.redirect(url)
+    }
+  }
   // Pretty path for tenant previews: /t/<slug> -> /menu?tenant=<slug>
   if (request.nextUrl.pathname.startsWith('/t/')) {
     const parts = request.nextUrl.pathname.split('/').filter(Boolean)
