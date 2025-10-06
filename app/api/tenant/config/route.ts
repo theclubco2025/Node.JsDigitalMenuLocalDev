@@ -18,34 +18,44 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const tenant = (searchParams.get('tenant') || '').trim() || 'demo'
+    const preferFSInPreview = process.env.VERCEL_ENV === 'preview'
 
-    // Prefer DB settings if available
+    // Load DB settings first (if available)
+    let dbBrand: Record<string, unknown> | null = null
+    let dbTheme: Record<string, unknown> | null = null
+    let dbImages: Record<string, unknown> | null = null
+    let dbStyle: Record<string, unknown> | null = null
+    let dbCopy: Record<string, unknown> | null = null
     if (process.env.DATABASE_URL) {
       try {
         const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
         if (prisma) {
           const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { settings: true } })
           const s = (row?.settings as Record<string, unknown>) || {}
-          const theme = (s.theme as Record<string, unknown>) || null
-          const brand = (s.brand as Record<string, unknown>) || null
-          const images = (s.images as Record<string, unknown>) || null
-          const style = (s.style as Record<string, unknown>) || null
-          const copy = (s.copy as Record<string, unknown>) || null
-          // If anything exists in DB, return it immediately
-          if (brand || theme || images || style || copy) {
-            return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
-          }
+          dbTheme = (s.theme as Record<string, unknown>) || null
+          dbBrand = (s.brand as Record<string, unknown>) || null
+          dbImages = (s.images as Record<string, unknown>) || null
+          dbStyle = (s.style as Record<string, unknown>) || null
+          dbCopy = (s.copy as Record<string, unknown>) || null
         }
       } catch {}
     }
 
     // Fallback to filesystem for dev/demo
     const base = path.join(process.cwd(), 'data', 'tenants', tenant)
-    const brand = await readJson(path.join(base, 'brand.json'))
-    const theme = await readJson(path.join(base, 'theme.json'))
-    const images = await readJson(path.join(base, 'images.json'))
-    const style = await readJson(path.join(base, 'style.json'))
-    const copy = await readJson(path.join(base, 'copy.json'))
+    const fsBrand = await readJson(path.join(base, 'brand.json'))
+    const fsTheme = await readJson(path.join(base, 'theme.json'))
+    const fsImages = await readJson(path.join(base, 'images.json'))
+    const fsStyle = await readJson(path.join(base, 'style.json'))
+    const fsCopy = await readJson(path.join(base, 'copy.json'))
+
+    // In preview, prefer filesystem (repo) over DB to make onboarding edits reflect instantly
+    const brand = preferFSInPreview ? (fsBrand ?? dbBrand) : (dbBrand ?? fsBrand)
+    const theme = preferFSInPreview ? (fsTheme ?? dbTheme) : (dbTheme ?? fsTheme)
+    const images = preferFSInPreview ? (fsImages ?? dbImages) : (dbImages ?? fsImages)
+    const style = preferFSInPreview ? (fsStyle ?? dbStyle) : (dbStyle ?? fsStyle)
+    const copy = preferFSInPreview ? (fsCopy ?? dbCopy) : (dbCopy ?? fsCopy)
+
     return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
