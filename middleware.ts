@@ -11,6 +11,16 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
   }
+  // Friendly owner admin alias: /<slug>-admin -> /menu?tenant=<slug>-draft&admin=1
+  const adminAlias = request.nextUrl.pathname.match(/^\/(.+)-admin$/)
+  if (adminAlias && adminAlias[1]) {
+    const slug = adminAlias[1]
+    const url = request.nextUrl.clone()
+    url.pathname = '/menu'
+    url.searchParams.set('tenant', `${slug}-draft`)
+    url.searchParams.set('admin', '1')
+    return NextResponse.redirect(url)
+  }
   // Pretty path for tenant previews: /t/<slug> -> /menu?tenant=<slug>
   if (request.nextUrl.pathname.startsWith('/t/')) {
     const parts = request.nextUrl.pathname.split('/').filter(Boolean)
