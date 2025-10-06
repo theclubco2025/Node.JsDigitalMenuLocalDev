@@ -70,6 +70,19 @@ export default function MenuClient() {
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+  // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
+  const [adminToken, setAdminToken] = useState<string | null>(null)
+  useEffect(() => {
+    if (!isBrowser) return
+    const urlToken = searchParams?.get('token')
+    if (urlToken && urlToken.trim() !== '') {
+      try { localStorage.setItem('adminToken', urlToken) } catch {}
+      setAdminToken(urlToken)
+    } else {
+      try { setAdminToken(localStorage.getItem('adminToken')) } catch { setAdminToken(null) }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Tenant flags
   const isBenes = useMemo(() => {
@@ -222,15 +235,24 @@ export default function MenuClient() {
   const saveAllEdits = async () => {
     if (!isAdmin || !editableMenu) return
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (adminToken && adminToken.trim() !== '') {
+        headers['X-Admin-Token'] = adminToken
+      }
       const res = await fetch('/api/tenant/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ tenant, menu: editableMenu })
       })
-      if (!res.ok) throw new Error('Save failed')
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '')
+        throw new Error(txt || 'Save failed')
+      }
       setToast('Saved changes')
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error saving changes'
+      const needsToken = typeof window !== 'undefined' && !adminToken && process.env.NODE_ENV === 'production'
+      const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL once, then Save again.' : ''
+      const message = (error instanceof Error ? error.message : 'Error saving changes') + suffix
       setToast(message)
     }
   }
