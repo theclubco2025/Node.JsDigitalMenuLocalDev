@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient, Prisma } from '@prisma/client'
 
 type TenantConfigJson = Record<string, unknown> | null
 
@@ -96,8 +96,8 @@ export async function POST(request: NextRequest) {
 
     await prisma.tenant.upsert({
       where: { slug: tenant },
-      update: { settings: merged as any },
-      create: { slug: tenant, name: tenant, settings: merged as any },
+      update: { settings: merged as Prisma.InputJsonValue },
+      create: { slug: tenant, name: tenant, settings: merged as Prisma.InputJsonValue },
     })
 
     return NextResponse.json({ ok: true })
