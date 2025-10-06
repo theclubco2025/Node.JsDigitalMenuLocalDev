@@ -96,6 +96,7 @@ export default function MenuClient() {
   const theme = cfg?.theme ?? null
   const imageMap = cfg?.images ?? {}
   const copy = cfg?.copy as Record<string, unknown> | undefined
+  const styleCfg = cfg?.style
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
@@ -136,6 +137,9 @@ export default function MenuClient() {
     `/api/menu?tenant=${tenant}`,
     fetcher
   )
+
+  // Feature toggle: allow hiding Benes hero via style.heroVariant === 'none'
+  const showBenesHero = useMemo(() => isBenes && (styleCfg?.heroVariant !== 'none'), [isBenes, styleCfg?.heroVariant])
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -698,7 +702,7 @@ export default function MenuClient() {
       {isBenes && (
         <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
       )}
-      {isBenes && typeof copy?.heroSubtitle === 'string' && (
+      {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
         <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
           <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
         </div>
@@ -727,7 +731,7 @@ export default function MenuClient() {
       )}
 
       {/* Benes hero banner */}
-      {isBenes && (
+      {showBenesHero && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div
             className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
