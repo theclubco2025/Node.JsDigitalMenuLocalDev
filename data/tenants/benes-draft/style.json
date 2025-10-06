@@ -1,5 +1,5 @@
 {
-  "heroVariant": "logoBanner",
+  "heroVariant": "none",
   "navVariant": "chipScroller",
   "motion": "subtle",
   "texture": { "vignette": false, "paper": true },
