@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getMenuForTenant, filterMenuByDiet, snippet } from '@/lib/data/menu'
 import { buildPrompt } from '@/lib/ai/prompt'
 import { generate } from '@/lib/ai/model'
