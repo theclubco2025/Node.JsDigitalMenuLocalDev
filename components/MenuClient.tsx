@@ -1006,7 +1006,6 @@ export default function MenuClient() {
               id={`cat-${category.id}`}
               className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}
               style={{
-                background: 'linear-gradient(90deg, rgba(20,83,45,0.03) 0% 33.33%, rgba(255,255,255,0.03) 33.33% 66.66%, rgba(185,28,28,0.03) 66.66% 100%)',
                 borderRadius: 12,
                 padding: 12
               }}
@@ -1044,7 +1043,7 @@ export default function MenuClient() {
                             id={`img-${item.id}`}
                             src={src}
                             alt={item.name}
-                            className="w-full h-56 object-cover"
+                            className="w-full h-48 object-cover"
                             loading="lazy"
                             decoding="async"
                           />
@@ -1063,9 +1062,9 @@ export default function MenuClient() {
                         ) : (
                           <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
                             {highlightText(item.name, searchQuery)}
-                            <span className="ml-2 align-middle text-sm font-normal text-gray-500">
-                              ({typeof item.calories === 'number' ? `${item.calories} cal` : 'cal N/A'})
-                            </span>
+                            {typeof item.calories === 'number' && (
+                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
+                            )}
                           </h3>
                         )}
                         {isAdmin ? (
@@ -1077,7 +1076,7 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : undefined, color: isBenes ? '#0b0b0b' : undefined }}>${item.price.toFixed(2)}</span>
+                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
                         )}
                       </div>
                       {!isAdmin && (
