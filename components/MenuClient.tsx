@@ -659,7 +659,7 @@ export default function MenuClient() {
                 <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
               )}
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italian)' }}>{brandName}</h1>
+                <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italiana)' }}>{brandName}</h1>
                 <p className="text-gray-200 text-xs">{brandTagline}</p>
               </div>
             </div>
