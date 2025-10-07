@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const tenant = (searchParams.get('tenant') || '').trim() || 'demo'
-    const preferFSInPreview = process.env.VERCEL_ENV === 'preview'
+    // Always prefer DB (Neon) so preview reflects live edits instantly; fallback to repo files
 
     // Load DB settings first (if available)
     let dbBrand: Record<string, unknown> | null = null
@@ -50,12 +50,11 @@ export async function GET(request: NextRequest) {
     const fsStyle = await readJson(path.join(base, 'style.json'))
     const fsCopy = await readJson(path.join(base, 'copy.json'))
 
-    // In preview, prefer filesystem (repo) over DB to make onboarding edits reflect instantly
-    const brand = preferFSInPreview ? (fsBrand ?? dbBrand) : (dbBrand ?? fsBrand)
-    const theme = preferFSInPreview ? (fsTheme ?? dbTheme) : (dbTheme ?? fsTheme)
-    const images = preferFSInPreview ? (fsImages ?? dbImages) : (dbImages ?? fsImages)
-    const style = preferFSInPreview ? (fsStyle ?? dbStyle) : (dbStyle ?? fsStyle)
-    const copy = preferFSInPreview ? (fsCopy ?? dbCopy) : (dbCopy ?? fsCopy)
+    const brand = dbBrand ?? fsBrand
+    const theme = dbTheme ?? fsTheme
+    const images = dbImages ?? fsImages
+    const style = dbStyle ?? fsStyle
+    const copy = dbCopy ?? fsCopy
 
     return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
