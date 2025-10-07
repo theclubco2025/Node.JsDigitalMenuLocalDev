@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Italiana, Lora } from 'next/font/google'
 import './globals.css'
 import { resolveTenant } from '@/lib/tenant'
 import { getTheme } from '@/lib/theme'
 import { type CSSProperties, Suspense } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
+const italiana = Italiana({ weight: '400', subsets: ['latin'] })
+const lora = Lora({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Digital Menu SaaS',
@@ -25,12 +27,13 @@ export default async function RootLayout({
     '--primary': theme.primary,
     '--accent': theme.accent,
     '--radius': theme.radius,
+    '--heading-font': italiana.style.fontFamily,
   } as CSSProperties
 
   return (
     <html lang="en">
       <body
-        className={inter.className}
+        className={`${inter.className} ${lora.className}`}
         style={cssVars}
       >
         {/* Client-side theme sync so URL ?tenant controls theme without reload */}

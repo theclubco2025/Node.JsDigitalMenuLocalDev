@@ -13,6 +13,7 @@ type TenantStyleFlags = {
   heroVariant?: string
   accentSecondary?: string
   badges?: Record<string, string>
+  texture?: { vignette?: boolean; paper?: boolean }
 }
 
 type TenantTheme = {
@@ -59,7 +60,7 @@ export default function MenuClient() {
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const plateButtonRef = useRef<HTMLButtonElement | null>(null)
-  const [platePile, setPlatePile] = useState<Array<{ itemId: string; src: string }>>([])
+  // plate pile removed with floating button
   type Flyer = { key: string; src: string; startX: number; startY: number; dx: number; dy: number; moved: boolean }
   const [flyers, setFlyers] = useState<Flyer[]>([])
 
@@ -97,7 +98,7 @@ export default function MenuClient() {
   const imageMap = cfg?.images ?? {}
   const copy = cfg?.copy as Record<string, unknown> | undefined
   const styleCfg = cfg?.style
-  const accentSecondary = (styleCfg as any)?.accentSecondary as string | undefined
+  const accentSecondary = styleCfg?.accentSecondary
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
