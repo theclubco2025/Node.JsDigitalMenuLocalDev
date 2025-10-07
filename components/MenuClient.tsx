@@ -139,9 +139,9 @@ export default function MenuClient() {
     fetcher
   )
 
-  // Feature toggle: allow hiding Benes hero via style.heroVariant === 'none'
-  const showBenesHero = useMemo(() => isBenes && (styleCfg?.heroVariant !== 'none'), [isBenes, styleCfg?.heroVariant])
-  const showSpecials = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
+  // Hide hero/specials for Benes draft per request
+  const showBenesHero = useMemo(() => (isBenes ? false : (styleCfg?.heroVariant !== 'none')), [isBenes, styleCfg?.heroVariant])
+  const showSpecials = isBenes ? false : !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
