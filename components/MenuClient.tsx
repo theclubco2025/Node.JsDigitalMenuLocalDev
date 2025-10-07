@@ -360,12 +360,26 @@ export default function MenuClient() {
         body: JSON.stringify({
           tenantId: tenant,
           query: userMessage,
-          filters: {}
+          filters: {
+            vegan: selectedDietaryFilters.includes('vegan'),
+            glutenFree: selectedDietaryFilters.includes('gluten-free'),
+            dairyFree: selectedDietaryFilters.includes('dairy-free')
+          }
         })
       })
 
-      const data = await response.json()
-      const assistantText = data.text || data.response || data.message || 'Thanks for your question.'
+      const raw = await response.text()
+      let assistantText = 'Thanks for your question.'
+      try {
+        const data = raw ? JSON.parse(raw) : null
+        if (data) {
+          assistantText = data.text || data.response || data.message || assistantText
+        } else if (!response.ok) {
+          assistantText = `Assistant error (${response.status})`
+        }
+      } catch {
+        assistantText = raw && raw.trim().length > 0 ? raw : assistantText
+      }
       setChatHistory(prev => [...prev, { role: 'assistant', message: assistantText }])
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Sorry, I had trouble processing your request.'

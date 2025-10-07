@@ -172,19 +172,19 @@ export async function POST(request: NextRequest) {
       recordSuccess(tenantId)
       const ms = Date.now() - started
       console.log(`[assistant] tenant=${tenantId} ok latency=${ms}ms`)
-      return NextResponse.json({ ok: true, tenantId, text })
+      return NextResponse.json({ ok: true, tenantId, text }, { headers: { 'Cache-Control': 'no-store' } })
     } catch (e) {
       recordFailure(tenantId)
       const ms = Date.now() - started
       const msg = (e as Error)?.message || ''
       console.warn(`[assistant] tenant=${tenantId} fail latency=${ms}ms`, e)
       if (msg.includes('401')) {
-        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200 })
+        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
       }
       if (msg.includes('404')) {
-        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200 })
+        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
       }
-      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200 })
+      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
     }
   } catch (e) {
     console.error('Assistant error:', e)
