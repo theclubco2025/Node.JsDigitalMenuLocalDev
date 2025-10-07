@@ -670,7 +670,7 @@ export default function MenuClient() {
       {/* Spacer to offset fixed header height */}
       {/* Optional hero subtitle from copy */}
       <div style={{ height: isBenes ? 160 : 80 }} />
-      {isBenes && (
+      {showBenesHero && (
         <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
       )}
       {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
@@ -721,7 +721,7 @@ export default function MenuClient() {
       )}
 
       {/* Signature Picks (Benes) */}
-      {isBenes && (
+      {false && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
