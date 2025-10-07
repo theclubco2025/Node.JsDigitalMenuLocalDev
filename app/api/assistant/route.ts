@@ -10,6 +10,17 @@ import type { MenuResponse } from '@/types/api'
 
 export const runtime = 'nodejs'
 
+function corsHeaders(origin?: string) {
+  const o = origin || '*'
+  return {
+    'Access-Control-Allow-Origin': o,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Token',
+    'Vary': 'Origin',
+    'Cache-Control': 'no-store'
+  }
+}
+
 function normalize(str: string): string {
   return (str || '').toLowerCase()
 }
@@ -172,19 +183,19 @@ export async function POST(request: NextRequest) {
       recordSuccess(tenantId)
       const ms = Date.now() - started
       console.log(`[assistant] tenant=${tenantId} ok latency=${ms}ms`)
-      return NextResponse.json({ ok: true, tenantId, text }, { headers: { 'Cache-Control': 'no-store' } })
+      return NextResponse.json({ ok: true, tenantId, text }, { headers: corsHeaders(request.headers.get('origin') || '*') })
     } catch (e) {
       recordFailure(tenantId)
       const ms = Date.now() - started
       const msg = (e as Error)?.message || ''
       console.warn(`[assistant] tenant=${tenantId} fail latency=${ms}ms`, e)
       if (msg.includes('401')) {
-        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
+        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
       }
       if (msg.includes('404')) {
-        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
+        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
       }
-      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
+      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
     }
   } catch (e) {
     console.error('Assistant error:', e)
@@ -373,24 +384,19 @@ export async function GET() {
     if (provider !== 'ollama') {
       const hasKey = Boolean((process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim())
       if (!hasKey) {
-        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
+        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501, headers: corsHeaders('*') })
       }
     }
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true }, { headers: corsHeaders('*') })
   } catch (e) {
     console.error('Assistant GET error:', e)
-    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200 })
+    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders('*') })
   }
 }
 
 // CORS preflight support to avoid 405 on OPTIONS
 export async function OPTIONS() {
-  const res = NextResponse.json({ ok: true })
-  res.headers.set('Access-Control-Allow-Origin', '*')
-  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
-  res.headers.set('Vary', 'Origin')
-  return res
+  return NextResponse.json({ ok: true }, { headers: corsHeaders('*') })
 }
 /*
 // Additional unused helpers (kept for future use). Commented out for build cleanliness.
