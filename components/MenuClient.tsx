@@ -715,27 +715,7 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Category chip scroller (Benes) */}
-      {isBenes && (
-        <div className="max-w-7xl mx-auto px-4 mb-4">
-          <div className="no-scrollbar overflow-x-auto py-2 -mx-2 px-2 flex gap-2">
-            {(menuData?.categories || []).map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setSelectedCategory(cat.name === selectedCategory ? null : cat.name)
-                  const el = document.getElementById(`cat-${cat.id}`)
-                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }}
-                className={`px-3 py-1.5 rounded-full text-sm border transition-colors whitespace-nowrap ${activeCategoryId===cat.id ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'bg-white text-black border-gray-300 hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-white'}`}
-                style={{boxShadow: activeCategoryId===cat.id ? '0 2px 12px rgba(185,28,28,0.25)' : undefined}}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Category chip scroller removed for Benes */}
 
       {/* Benes hero banner */}
       {showBenesHero && (
@@ -1217,63 +1197,7 @@ export default function MenuClient() {
         </p>
       </div>
 
-      {/* Floating Plate Button with hover preview */}
-      <div
-        className="fixed bottom-6 right-6 z-50"
-        onMouseEnter={() => {/* open preview on hover */}}
-        onMouseLeave={() => {/* close preview handled by CSS hover state */}}
-      >
-        <div className="group relative">
-          <button
-            onClick={() => setIsCartOpen(true)}
-            ref={plateButtonRef}
-            className={`relative text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 flex items-center gap-2 ${cartBump ? 'animate-bump' : ''}`}
-            style={{background:'var(--accent)', color:'#0b0b0b'}}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2" />
-              <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
-            </svg>
-            <span className="font-medium">Plate ({cartItemCount})</span>
-            {cartItemCount > 0 && (
-              <span className="font-bold">${cartTotal.toFixed(2)}</span>
-            )}
-            {/* Plate pile thumbnails */}
-            {platePile.length > 0 && (
-              <div className="absolute -top-3 -right-3 flex -space-x-2 pointer-events-none">
-                {platePile.map((p, i) => (
-                  <img key={`${p.itemId}-${i}`} src={p.src} alt="" className="w-6 h-6 rounded-full border border-white object-cover shadow" />
-                ))}
-              </div>
-            )}
-          </button>
-          {/* Hover preview */}
-          {cart.length > 0 && (
-            <div className="pointer-events-none absolute right-0 bottom-full mb-2 w-72 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
-              <div className="bg-white text-black rounded-lg shadow-xl border border-gray-200 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                  <span className="text-sm font-semibold">Plate Preview</span>
-                  <span className="text-sm font-medium">${cartTotal.toFixed(2)}</span>
-                </div>
-                <ul className="max-h-56 overflow-auto">
-                  {cart.slice(0,3).map(ci => (
-                    <li key={ci.item.id} className="px-4 py-2 text-sm flex items-center justify-between">
-                      <span className="truncate mr-2">{ci.item.name}</span>
-                      <span className="text-gray-600">×{ci.quantity}</span>
-                    </li>
-                  ))}
-                  {cart.length > 3 && (
-                    <li className="px-4 py-2 text-xs text-gray-500">+ {cart.length - 3} more items</li>
-                  )}
-                </ul>
-                <div className="px-4 py-2 bg-gray-50 text-right">
-                  <button onClick={() => setIsCartOpen(true)} className="text-sm font-medium text-black hover:underline pointer-events-auto">Open plate</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Floating Plate Button removed */}
 
       {/* AI Assistant Button */}
       <button
