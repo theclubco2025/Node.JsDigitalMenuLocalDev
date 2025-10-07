@@ -9,12 +9,13 @@ import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
 import type { MenuResponse } from '@/types/api'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 function corsHeaders(origin?: string) {
   const o = origin || '*'
   return {
     'Access-Control-Allow-Origin': o,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, HEAD',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Token',
     'Vary': 'Origin',
     'Cache-Control': 'no-store'
@@ -378,25 +379,25 @@ async function generateAIResponse({
 }
 */
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const provider = (process.env.AI_PROVIDER || 'compatible').toLowerCase()
     if (provider !== 'ollama') {
       const hasKey = Boolean((process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim())
       if (!hasKey) {
-        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501, headers: corsHeaders('*') })
+        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501, headers: corsHeaders(request.headers.get('origin') || '*') })
       }
     }
-    return NextResponse.json({ ok: true }, { headers: corsHeaders('*') })
+    return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
   } catch (e) {
     console.error('Assistant GET error:', e)
-    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders('*') })
+    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
   }
 }
 
 // CORS preflight support to avoid 405 on OPTIONS
-export async function OPTIONS() {
-  return NextResponse.json({ ok: true }, { headers: corsHeaders('*') })
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
 }
 /*
 // Additional unused helpers (kept for future use). Commented out for build cleanliness.
