@@ -5,7 +5,7 @@
   "texture": { "vignette": false, "paper": true },
   "accentSecondary": "#a53329",
   "flags": {
-    "specials": true,
+    "specials": false,
     "pairings": true,
     "signatureGrid": true,
     "chefNotes": true,

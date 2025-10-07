@@ -140,6 +140,7 @@ export default function MenuClient() {
 
   // Feature toggle: allow hiding Benes hero via style.heroVariant === 'none'
   const showBenesHero = useMemo(() => isBenes && (styleCfg?.heroVariant !== 'none'), [isBenes, styleCfg?.heroVariant])
+  const showSpecials = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -761,7 +762,7 @@ export default function MenuClient() {
       )}
 
       {/* Subtle Specials ribbon */}
-      {isBenes && (
+      {showSpecials && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
           <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
             Tonight&apos;s Specials: Margherita 14&quot;, Fettuccine Bolognese, Prosciutto &amp; Arugula
