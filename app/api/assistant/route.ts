@@ -399,6 +399,12 @@ export async function GET(request: NextRequest) {
 export async function OPTIONS(request: NextRequest) {
   return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
 }
+
+// Explicit HEAD handler to avoid 405 from HEAD checks
+export async function HEAD(request: NextRequest) {
+  const headers = corsHeaders(request.headers.get('origin') || '*')
+  return new NextResponse(null, { headers })
+}
 /*
 // Additional unused helpers (kept for future use). Commented out for build cleanliness.
 function buildSystemPrompt(tenantProfile: TenantProfile, menuContext: MenuContext, customerMemory: CustomerMemory): string {

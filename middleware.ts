@@ -7,7 +7,7 @@ export function middleware(request: NextRequest) {
     const res = NextResponse.json({ ok: true })
     const origin = request.headers.get('origin') || '*'
     res.headers.set('Access-Control-Allow-Origin', origin)
-    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
     res.headers.set('Vary', 'Origin')
     return res
@@ -49,7 +49,7 @@ export function middleware(request: NextRequest) {
     // Allow requests from any origin for the embeddable widget
     const origin = request.headers.get('origin') || '*'
     response.headers.set('Access-Control-Allow-Origin', origin)
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
     response.headers.set('Vary', 'Origin')
     
@@ -60,5 +60,10 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/t/:path*', '/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/api/:path*',
+    '/t/:path*',
+    // Exclude all Next internals and assets to avoid dev 404s
+    '/((?!_next/|favicon.ico|robots.txt|sitemap.xml).*)'
+  ],
 }
