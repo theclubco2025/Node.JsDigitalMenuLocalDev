@@ -35,7 +35,7 @@ function scoreItem(query: string, name: string, description?: string, tags?: str
 
 function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
   if (!query?.trim()) return menu
-  const scored: Array<{ catId: string; catName: string; item: any; score: number }> = []
+  const scored: Array<{ catId: string; catName: string; item: { id: string; name: string; description?: string; price: number; tags?: string[] }; score: number }> = []
   for (const c of menu.categories) {
     for (const it of c.items) {
       const s = scoreItem(query, it.name, it.description, it.tags)
@@ -44,7 +44,7 @@ function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
   }
   scored.sort((a, b) => b.score - a.score)
   const chosen = scored.slice(0, k)
-  const byCat = new Map<string, { id: string; name: string; items: typeof chosen[0]["item"][] }>()
+  const byCat = new Map<string, { id: string; name: string; items: { id: string; name: string; description?: string; price: number; tags?: string[] }[] }>()
   for (const r of chosen) {
     if (!byCat.has(r.catId)) byCat.set(r.catId, { id: r.catId, name: r.catName, items: [] })
     byCat.get(r.catId)!.items.push(r.item)
@@ -53,6 +53,7 @@ function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
   return categories.length > 0 ? { categories } : menu
 }
 
+/*
 interface MenuContext {
   categories: Array<{
     id: string
