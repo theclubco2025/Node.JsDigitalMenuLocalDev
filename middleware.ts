@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
+  // Handle CORS preflight generically for all API routes
+  if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
+    const res = NextResponse.json({ ok: true })
+    const origin = request.headers.get('origin') || '*'
+    res.headers.set('Access-Control-Allow-Origin', origin)
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
+    res.headers.set('Vary', 'Origin')
+    return res
+  }
   // In Vercel preview, default /menu to benes-draft if no tenant param
   if (request.nextUrl.pathname === '/menu' && !request.nextUrl.searchParams.get('tenant')) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
