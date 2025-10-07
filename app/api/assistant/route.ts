@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       glutenFree: !!filters.glutenFree,
       dairyFree: !!filters.dairyFree,
     })
-    const menuSnippet = snippet(filtered, 12)
+    const menuSnippet = snippet(filtered, 1000)
 
     // Load tenant meta from theme.json if available
     const { promises: fs } = await import('fs')

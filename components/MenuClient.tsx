@@ -74,7 +74,7 @@ export default function MenuClient() {
           // Dietary filters (must have all selected dietary tags)
           if (selectedDietaryFilters.length > 0) {
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
-              item.tags.some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
+              (item.tags || []).some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
             )
             if (!hasAllDietaryFilters) return false
           }
@@ -250,7 +250,11 @@ export default function MenuClient() {
         body: JSON.stringify({
           tenantId: tenant,
           query: userMessage,
-          filters: {}
+          filters: {
+            vegan: selectedDietaryFilters.includes('vegan'),
+            glutenFree: selectedDietaryFilters.includes('gluten-free'),
+            dairyFree: selectedDietaryFilters.includes('dairy-free')
+          }
         })
       })
 
@@ -715,7 +719,7 @@ export default function MenuClient() {
                                   {item.calories} cal
                                 </span>
                               )}
-                              {item.tags.map(tag => (
+                              {(item.tags || []).map(tag => (
                                 <span 
                                   key={tag} 
                                   className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
@@ -996,7 +1000,7 @@ export default function MenuClient() {
                   onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
                 />
                 <button
-                  onClick={sendAssistantMessage}
+                  onClick={() => { void sendAssistantMessage() }}
                   className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
                 >
                   Send
