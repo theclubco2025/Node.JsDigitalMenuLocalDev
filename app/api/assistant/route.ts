@@ -4,9 +4,103 @@ import { buildPrompt } from '@/lib/ai/prompt'
 import { generate } from '@/lib/ai/model'
 import { resolveTenant } from '@/lib/tenant'
 import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
+import type { MenuResponse } from '@/types/api'
 
 export const runtime = 'nodejs'
 
+function normalize(str: string): string {
+  return (str || '').toLowerCase()
+}
+
+function scoreItem(query: string, name: string, description?: string, tags?: string[]): number {
+  const q = normalize(query)
+  if (!q) return 0
+  const n = normalize(name)
+  const d = normalize(description || '')
+  const t = (tags || []).map(normalize)
+  let s = 0
+  if (n.includes(q)) s += 5
+  if (d.includes(q)) s += 3
+  if (t.some(tag => tag.includes(q))) s += 2
+  // word-level partial matches
+  const words = q.split(/\s+/).filter(Boolean)
+  for (const w of words) {
+    if (w.length < 3) continue
+    if (n.includes(w)) s += 2
+    if (d.includes(w)) s += 1
+    if (t.some(tag => tag.includes(w))) s += 1
+  }
+  return s
+}
+
+function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
+  if (!query?.trim()) return menu
+  const scored: Array<{ catId: string; catName: string; item: any; score: number }> = []
+  for (const c of menu.categories) {
+    for (const it of c.items) {
+      const s = scoreItem(query, it.name, it.description, it.tags)
+      if (s > 0) scored.push({ catId: c.id, catName: c.name, item: it, score: s })
+    }
+  }
+  scored.sort((a, b) => b.score - a.score)
+  const chosen = scored.slice(0, k)
+  const byCat = new Map<string, { id: string; name: string; items: typeof chosen[0]["item"][] }>()
+  for (const r of chosen) {
+    if (!byCat.has(r.catId)) byCat.set(r.catId, { id: r.catId, name: r.catName, items: [] })
+    byCat.get(r.catId)!.items.push(r.item)
+  }
+  const categories = Array.from(byCat.values())
+  return categories.length > 0 ? { categories } : menu
+}
+
+interface MenuContext {
+  categories: Array<{
+    id: string
+    name: string
+    items: Array<{
+      id: string
+      name: string
+      description: string
+      price: number
+      tags: string[]
+      calories?: number
+      allergens?: string[]
+      spiceLevel?: number
+    }>
+  }>
+  specials?: Array<{
+    name: string
+    description: string
+    price?: number
+  }>
+  totalItems: number
+}
+
+interface CustomerMemory {
+  visitCount: number
+  favoriteItems: string[]
+  dietaryRestrictions: string[]
+  spicePreference?: string
+  lastOrderItems?: string[]
+  priceRange?: 'budget' | 'mid' | 'premium'
+  conversationHistory: Array<{
+    role: 'user' | 'assistant'
+    content: string
+    timestamp: Date
+  }>
+}
+
+interface TenantProfile {
+  name: string
+  cuisine: string
+  brandVoice: 'upscale' | 'casual' | 'family' | 'trendy' | 'traditional'
+  specialty: string
+  priceRange: string
+  atmosphere: string
+  locationContext?: string
+}
+
+// Single multi-tenant assistant endpoint (LLaMA-ready)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -27,7 +121,9 @@ export async function POST(request: NextRequest) {
       glutenFree: !!filters.glutenFree,
       dairyFree: !!filters.dairyFree,
     })
-    const menuSnippet = snippet(filtered, 12)
+    // Retrieval: rank items by query relevance and build a focused context
+    const focused = topKMenu(filtered, query, 18)
+    const menuSnippet = snippet(focused, 1000)
 
     // Load tenant meta from theme.json if available
     const { promises: fs } = await import('fs')
