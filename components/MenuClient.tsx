@@ -771,8 +771,7 @@ export default function MenuClient() {
                   {src && (
                     <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
                   )}
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.08), rgba(255,255,255,.04), rgba(185,28,28,.08))' }} />
-                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold text-white" style={{ background:'rgba(185,28,28,0.9)' }}>Most Loved</div>
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.06), rgba(255,255,255,.02), rgba(185,28,28,.06))' }} />
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
