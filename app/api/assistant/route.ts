@@ -382,6 +382,16 @@ export async function GET() {
     return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200 })
   }
 }
+
+// CORS preflight support to avoid 405 on OPTIONS
+export async function OPTIONS() {
+  const res = NextResponse.json({ ok: true })
+  res.headers.set('Access-Control-Allow-Origin', '*')
+  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
+  res.headers.set('Vary', 'Origin')
+  return res
+}
 /*
 // Additional unused helpers (kept for future use). Commented out for build cleanliness.
 function buildSystemPrompt(tenantProfile: TenantProfile, menuContext: MenuContext, customerMemory: CustomerMemory): string {
