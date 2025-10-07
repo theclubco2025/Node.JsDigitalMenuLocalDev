@@ -97,6 +97,7 @@ export default function MenuClient() {
   const imageMap = cfg?.images ?? {}
   const copy = cfg?.copy as Record<string, unknown> | undefined
   const styleCfg = cfg?.style
+  const accentSecondary = (styleCfg as any)?.accentSecondary as string | undefined
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
@@ -566,6 +567,11 @@ export default function MenuClient() {
     '--muted': effectiveTheme?.muted,
     '--accent': effectiveTheme?.accent,
   }
+  const paperTexture = Boolean((styleCfg as any)?.texture && (styleCfg as any)?.texture.paper)
+  const containerStyle: React.CSSProperties = {
+    ...rootStyle,
+    ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
+  }
 
   // Benes-specific featured picks and pairings
   const featuredItemIds: string[] = isBenes ? [
@@ -639,7 +645,7 @@ export default function MenuClient() {
   }
 
   return (
-    <div className="min-h-screen" style={rootStyle}>
+    <div className="min-h-screen" style={containerStyle}>
       {/* Loading and error states */}
       {error && (
         <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
@@ -1011,11 +1017,11 @@ export default function MenuClient() {
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold text-white tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)' }}>
+                <h2 className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: isBenes ? '#101010' : 'var(--ink)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
-                <div className="flex-1 ml-6" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
+                <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
               {isBenes && typeof categoryIntros[category.name] === 'string' && (
                 <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
