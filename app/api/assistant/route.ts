@@ -115,6 +115,8 @@ interface TenantProfile {
   locationContext?: string
 }
 
+*/
+
 // Single multi-tenant assistant endpoint (LLaMA-ready)
 export async function POST(request: NextRequest) {
   try {
