@@ -3,7 +3,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
 
@@ -59,10 +59,9 @@ export default function MenuClient() {
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const plateButtonRef = useRef<HTMLButtonElement | null>(null)
+  // plate button removed
   // plate pile removed with floating button
-  type Flyer = { key: string; src: string; startX: number; startY: number; dx: number; dy: number; moved: boolean }
-  const [flyers, setFlyers] = useState<Flyer[]>([])
+  // fly-to-plate animation removed
 
   // Get tenant/admin from URL params
   const isBrowser = typeof window !== 'undefined'
@@ -316,29 +315,7 @@ export default function MenuClient() {
     )
   }
 
-  const launchFlyToPlate = (item: MenuItem) => {
-    if (typeof window === 'undefined') return
-    const img = document.getElementById(`img-${item.id}`) as HTMLImageElement | null
-    const plateBtn = plateButtonRef.current
-    if (!img || !plateBtn) return
-    const imgRect = img.getBoundingClientRect()
-    const btnRect = plateBtn.getBoundingClientRect()
-    const startX = imgRect.left + imgRect.width / 2
-    const startY = imgRect.top + imgRect.height / 2
-    const endX = btnRect.left + btnRect.width / 2
-    const endY = btnRect.top + btnRect.height / 2
-    const key = `${item.id}-${Date.now()}-${Math.random()}`
-            const src = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
-    setFlyers(prev => [...prev, { key, src, startX, startY, dx: endX - startX, dy: endY - startY, moved: false }])
-    // trigger transition on next frame
-    requestAnimationFrame(() => {
-      setFlyers(prev => prev.map(f => f.key === key ? { ...f, moved: true } : f))
-    })
-    // cleanup after animation
-    setTimeout(() => {
-      setFlyers(prev => prev.filter(f => f.key !== key))
-    }, 700)
-  }
+  const launchFlyToPlate = () => {}
 
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
@@ -1136,7 +1113,7 @@ export default function MenuClient() {
                             setCartBump(true)
                             setToast(`Added ${item.name}`)
                             setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
-                            launchFlyToPlate(item)
+                            launchFlyToPlate()
                             // plate pile visuals removed
                           }}
                           className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
@@ -1195,21 +1172,7 @@ export default function MenuClient() {
         </svg>
       </button>
 
-      {/* Floating flyers for add-to-plate animation */}
-      {flyers.map(f => (
-        <img
-          key={f.key}
-          src={f.src}
-          alt=""
-          className="fixed w-10 h-10 rounded-full object-cover z-[60] pointer-events-none transition-transform duration-700 ease-out shadow"
-          style={{
-            left: 0,
-            top: 0,
-            transform: `translate(${f.startX}px, ${f.startY}px) ${f.moved ? `translate(${f.dx}px, ${f.dy}px) scale(0.4)` : ''}`,
-            border: '2px solid white'
-          }}
-        />
-      ))}
+      {/* Floating flyers removed */}
 
       {/* Plate Drawer */}
       {isCartOpen && (
