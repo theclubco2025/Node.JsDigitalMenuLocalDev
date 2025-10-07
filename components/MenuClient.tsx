@@ -70,6 +70,19 @@ export default function MenuClient() {
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+  // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
+  const [adminToken, setAdminToken] = useState<string | null>(null)
+  useEffect(() => {
+    if (!isBrowser) return
+    const urlToken = searchParams?.get('token')
+    if (urlToken && urlToken.trim() !== '') {
+      try { localStorage.setItem('adminToken', urlToken) } catch {}
+      setAdminToken(urlToken)
+    } else {
+      try { setAdminToken(localStorage.getItem('adminToken')) } catch { setAdminToken(null) }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Tenant flags
   const isBenes = useMemo(() => {
@@ -83,6 +96,7 @@ export default function MenuClient() {
   const theme = cfg?.theme ?? null
   const imageMap = cfg?.images ?? {}
   const copy = cfg?.copy as Record<string, unknown> | undefined
+  const styleCfg = cfg?.style
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
@@ -123,6 +137,10 @@ export default function MenuClient() {
     `/api/menu?tenant=${tenant}`,
     fetcher
   )
+
+  // Feature toggle: allow hiding Benes hero via style.heroVariant === 'none'
+  const showBenesHero = useMemo(() => isBenes && (styleCfg?.heroVariant !== 'none'), [isBenes, styleCfg?.heroVariant])
+  const showSpecials = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -222,15 +240,24 @@ export default function MenuClient() {
   const saveAllEdits = async () => {
     if (!isAdmin || !editableMenu) return
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (adminToken && adminToken.trim() !== '') {
+        headers['X-Admin-Token'] = adminToken
+      }
       const res = await fetch('/api/tenant/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ tenant, menu: editableMenu })
       })
-      if (!res.ok) throw new Error('Save failed')
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '')
+        throw new Error(txt || 'Save failed')
+      }
       setToast('Saved changes')
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error saving changes'
+      const needsToken = typeof window !== 'undefined' && !adminToken && process.env.NODE_ENV === 'production'
+      const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL once, then Save again.' : ''
+      const message = (error instanceof Error ? error.message : 'Error saving changes') + suffix
       setToast(message)
     }
   }
@@ -676,7 +703,7 @@ export default function MenuClient() {
       {isBenes && (
         <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
       )}
-      {isBenes && typeof copy?.heroSubtitle === 'string' && (
+      {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
         <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
           <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
         </div>
@@ -705,7 +732,7 @@ export default function MenuClient() {
       )}
 
       {/* Benes hero banner */}
-      {isBenes && (
+      {showBenesHero && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div
             className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
@@ -735,7 +762,7 @@ export default function MenuClient() {
       )}
 
       {/* Subtle Specials ribbon */}
-      {isBenes && (
+      {showSpecials && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
           <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
             Tonight&apos;s Specials: Margherita 14&quot;, Fettuccine Bolognese, Prosciutto &amp; Arugula
@@ -816,6 +843,28 @@ export default function MenuClient() {
           <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
             <span className="text-sm text-yellow-900 font-medium">Inline Edit Mode</span>
             <button onClick={saveAllEdits} className="px-3 py-1 rounded text-sm" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>Save All</button>
+            {/* Publish draft → live */}
+            <button
+              onClick={async () => {
+                try {
+                  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+                  if (adminToken && adminToken.trim() !== '') headers['X-Admin-Token'] = adminToken
+                  const from = tenant.endsWith('-draft') ? tenant : `${tenant}-draft`
+                  const to = from.replace(/-draft$/, '')
+                  const res = await fetch('/api/tenant/promote', {
+                    method: 'POST', headers, body: JSON.stringify({ from, to })
+                  })
+                  if (!res.ok) throw new Error('Publish failed')
+                  setToast('Published to live')
+                } catch (e) {
+                  setToast(e instanceof Error ? e.message : 'Publish failed')
+                }
+              }}
+              className="px-3 py-1 rounded text-sm border border-yellow-300"
+              style={{ background: '#fff', color: '#7a5d00' }}
+            >
+              Publish
+            </button>
             <a href={`/menu?tenant=${encodeURIComponent(tenant)}`} className="text-sm text-yellow-900 underline">Exit</a>
           </div>
         </div>

@@ -1,0 +1,27 @@
+{
+  "heroVariant": "none",
+  "navVariant": "chipScroller",
+  "motion": "subtle",
+  "texture": { "vignette": false, "paper": true },
+  "accentSecondary": "#a53329",
+  "flags": {
+    "specials": false,
+    "pairings": true,
+    "signatureGrid": true,
+    "chefNotes": true,
+    "priceRibbons": true,
+    "imageBadges": false
+  },
+  "featuredIds": [
+    "i-margherita-napoletana-14",
+    "i-fettuccine-bolognese",
+    "i-prosciutto-arugula-14"
+  ],
+  "badges": {
+    "category": "Benes"
+  },
+  "ab": { "copy": false }
+}
+
+
+

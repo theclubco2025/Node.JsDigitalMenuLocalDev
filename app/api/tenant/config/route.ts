@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+export const dynamic = 'force-dynamic'
 import { promises as fs } from 'fs'
 import path from 'path'
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient, Prisma } from '@prisma/client'
 
 type TenantConfigJson = Record<string, unknown> | null
 
@@ -18,34 +19,43 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const tenant = (searchParams.get('tenant') || '').trim() || 'demo'
+    // Always prefer DB (Neon) so preview reflects live edits instantly; fallback to repo files
 
-    // Prefer DB settings if available
+    // Load DB settings first (if available)
+    let dbBrand: Record<string, unknown> | null = null
+    let dbTheme: Record<string, unknown> | null = null
+    let dbImages: Record<string, unknown> | null = null
+    let dbStyle: Record<string, unknown> | null = null
+    let dbCopy: Record<string, unknown> | null = null
     if (process.env.DATABASE_URL) {
       try {
         const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
         if (prisma) {
           const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { settings: true } })
           const s = (row?.settings as Record<string, unknown>) || {}
-          const theme = (s.theme as Record<string, unknown>) || null
-          const brand = (s.brand as Record<string, unknown>) || null
-          const images = (s.images as Record<string, unknown>) || null
-          const style = (s.style as Record<string, unknown>) || null
-          const copy = (s.copy as Record<string, unknown>) || null
-          // If anything exists in DB, return it immediately
-          if (brand || theme || images || style || copy) {
-            return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
-          }
+          dbTheme = (s.theme as Record<string, unknown>) || null
+          dbBrand = (s.brand as Record<string, unknown>) || null
+          dbImages = (s.images as Record<string, unknown>) || null
+          dbStyle = (s.style as Record<string, unknown>) || null
+          dbCopy = (s.copy as Record<string, unknown>) || null
         }
       } catch {}
     }
 
     // Fallback to filesystem for dev/demo
     const base = path.join(process.cwd(), 'data', 'tenants', tenant)
-    const brand = await readJson(path.join(base, 'brand.json'))
-    const theme = await readJson(path.join(base, 'theme.json'))
-    const images = await readJson(path.join(base, 'images.json'))
-    const style = await readJson(path.join(base, 'style.json'))
-    const copy = await readJson(path.join(base, 'copy.json'))
+    const fsBrand = await readJson(path.join(base, 'brand.json'))
+    const fsTheme = await readJson(path.join(base, 'theme.json'))
+    const fsImages = await readJson(path.join(base, 'images.json'))
+    const fsStyle = await readJson(path.join(base, 'style.json'))
+    const fsCopy = await readJson(path.join(base, 'copy.json'))
+
+    const brand = dbBrand ?? fsBrand
+    const theme = dbTheme ?? fsTheme
+    const images = dbImages ?? fsImages
+    const style = dbStyle ?? fsStyle
+    const copy = dbCopy ?? fsCopy
+
     return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
@@ -96,8 +106,8 @@ export async function POST(request: NextRequest) {
 
     await prisma.tenant.upsert({
       where: { slug: tenant },
-      update: { settings: merged as any },
-      create: { slug: tenant, name: tenant, settings: merged as any },
+      update: { settings: merged as Prisma.InputJsonValue },
+      create: { slug: tenant, name: tenant, settings: merged as Prisma.InputJsonValue },
     })
 
     return NextResponse.json({ ok: true })
