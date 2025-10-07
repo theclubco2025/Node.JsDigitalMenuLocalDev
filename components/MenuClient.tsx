@@ -356,8 +356,6 @@ export default function MenuClient() {
 
   const removeFromCart = (itemId: string) => {
     setCart(prev => prev.filter(cartItem => cartItem.item.id !== itemId))
-    // remove from plate pile if present
-    setPlatePile(prev => prev.filter(p => p.itemId !== itemId))
   }
 
   const updateCartQuantity = (itemId: string, quantity: number) => {
@@ -368,18 +366,7 @@ export default function MenuClient() {
     setCart(prev => prev.map(cartItem =>
       cartItem.item.id === itemId ? { ...cartItem, quantity } : cartItem
     ))
-    if (quantity === 1) {
-      // ensure plate pile has this item
-      const target = cart.find(c => c.item.id === itemId)?.item
-      if (target) {
-          const src = target.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(target.name)}`
-        setPlatePile(prev => {
-          if (prev.some(p => p.itemId === itemId)) return prev
-          const filtered = prev.filter(p => p.itemId !== itemId)
-          return [...filtered.slice(-2), { itemId, src }]
-        })
-      }
-    }
+    // no plate pile visuals anymore
   }
 
   const sendAssistantMessage = async (overrideMessage?: string) => {
@@ -410,7 +397,6 @@ export default function MenuClient() {
   }
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const dietaryOptions = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free']
   
@@ -568,7 +554,7 @@ export default function MenuClient() {
     '--muted': effectiveTheme?.muted,
     '--accent': effectiveTheme?.accent,
   }
-  const paperTexture = Boolean((styleCfg as any)?.texture && (styleCfg as any)?.texture.paper)
+  const paperTexture = Boolean(styleCfg?.texture?.paper)
   const containerStyle: React.CSSProperties = {
     ...rootStyle,
     ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
@@ -1151,11 +1137,7 @@ export default function MenuClient() {
                             setToast(`Added ${item.name}`)
                             setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
                             launchFlyToPlate(item)
-                            const thumb = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
-                            setPlatePile(prev => {
-                              const filtered = prev.filter(p => p.itemId !== item.id)
-                              return [...filtered.slice(-2), { itemId: item.id, src: thumb }]
-                            })
+                            // plate pile visuals removed
                           }}
                           className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
                           style={{
