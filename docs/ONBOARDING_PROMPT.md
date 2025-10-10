@@ -9,46 +9,39 @@
 
 - Inputs (fill before starting)
   - Tenant slug(s): {TENANT_SLUG} and optional {TENANT_SLUG}-draft
-  - Menu source: {MENU_URL} or structured items (name, description, price, tags, imageUrl, calories)
-  - Branding: primary color, accent color, border radius, logo/image URLs; or “derive from site”
+  - Sources: menu links (Sirved/site/Yelp) and/or menu photos for OCR
+  - Branding inputs: logo URL or homepage URL (derive palette), optional accent/font
 
-- Core endpoints
+- Core endpoints (data-only, no redeploy)
   - Health: GET /api/health
   - Menu read: GET /api/menu?tenant={TENANT_SLUG}
+  - Tenant config read/write: GET/POST /api/tenant/config?tenant={TENANT_SLUG}
+    - Fields: brand, images, style (heroVariant/navVariant/flags/featuredIds), copy
   - Theme read/write: GET/POST /api/theme?tenant={TENANT_SLUG}
-  - Menu import: POST /api/tenant/import
+    - Fields: primary, accent, radius (and optional text/ink/card/muted)
+  - Menu import (replace): POST /api/tenant/import
+  - Promote draft→live: POST /api/tenant/promote { from, to }
 
 - Draft → Live model
   - Simple path: use two slugs: {TENANT_SLUG}-draft for editing; {TENANT_SLUG} for live
   - Optional: add a publish flag on Menu later; until then, use the draft slug
 
-### Step-by-step (test branch first on 3001)
-1) Create/ensure tenant exists implicitly during writes
-2) Set theme (DB-backed)
-   - POST http://localhost:3001/api/theme?tenant={TENANT_SLUG}-draft
-   - Body (example)
-     {
-       "primary": "#111827",
-       "accent": "#16a34a",
-       "radius": "12px"
-     }
-   - Note: Use Postman/Insomnia to avoid shell JSON escaping issues
-3) Import menu (DB-backed)
-   - POST http://localhost:3001/api/tenant/import
-   - Body
-     {
-       "tenant": "{TENANT_SLUG}-draft",
-       "menu": {MENU_JSON}
-     }
-4) Verify reads
-   - GET http://localhost:3001/api/menu?tenant={TENANT_SLUG}-draft → JSON reflects import
-5) Inline admin edit
-   - http://localhost:3001/menu?tenant={TENANT_SLUG}-draft&admin=1
-   - Make edits → Save All → confirm persisted via GET /api/menu
-6) Promote to live (3000)
-   - Repeat theme and import for {TENANT_SLUG} on http://localhost:3000
-   - Live view: /menu?tenant={TENANT_SLUG}
-   - Admin: /menu?tenant={TENANT_SLUG}&admin=1
+### Agent-led onboarding (data-first; no repo edits)
+1) Choose slugs: `{TENANT_SLUG}-draft` for editing; `{TENANT_SLUG}` for live
+2) Prepare inputs (no local files needed):
+   - menu JSON, images map (id→url), brand (name/logoUrl/header), theme (colors/radius), style (variants/flags), copy
+3) Set theme
+   - POST /api/theme?tenant={TENANT_SLUG}-draft → { ok: true }
+4) Set config (brand/images/style/copy)
+   - POST /api/tenant/config?tenant={TENANT_SLUG}-draft → { ok: true }
+5) Import menu
+   - POST /api/tenant/import with { tenant: "{TENANT_SLUG}-draft", menu }
+6) Verify
+   - GET /api/menu?tenant={TENANT_SLUG}-draft
+   - Live preview on Vercel: /t/{TENANT_SLUG}-draft (or /menu?tenant=...)
+7) Promote to live (no redeploy)
+   - POST /api/tenant/promote with { from: "{TENANT_SLUG}-draft", to: "{TENANT_SLUG}" }
+   - Live view: /t/{TENANT_SLUG}
 
 ### Verification checklist
 - 3001 (test)
@@ -77,6 +70,36 @@
 - Draft tenant at 3001: /menu?tenant={TENANT_SLUG}-draft (on-brand)
 - Live tenant at 3000: /menu?tenant={TENANT_SLUG}
 - Short note of theme values and any asset URLs used
+
+### LAN-first preview (dev) and Vercel (prod)
+- Find LAN IP (Windows):
+  - PowerShell: `ipconfig | findstr /R "IPv4"` → pick Wi‑Fi IPv4 (e.g., 10.0.0.138)
+- Start dev bound to LAN:
+  - `npm run dev -- -p 3000 -H <LAN_IP>`
+- Optional tunnel (phone-friendly HTTPS):
+  - `npx --yes cloudflared@latest tunnel --url http://<LAN_IP>:3000 --no-autoupdate`
+  - Wait for `https://*.trycloudflare.com` URL in output.
+
+Required agent output (dev)
+- LAN URL: `http://<LAN_IP>:3000/menu?tenant={TENANT_SLUG}`
+- Tunnel URL (if started): `https://<sub>.trycloudflare.com/menu?tenant={TENANT_SLUG}`
+- QR for LAN preview:
+  - `node scripts/generate-qr.mjs {TENANT_SLUG} http://<LAN_IP>:3000`
+  - Paste PNG URL.
+- 5 screenshots: hero, chips, two categories, one item with calories visible.
+- Changelog: one paragraph describing brand/theme/style/copy/images changes.
+- PR: only `data/tenants/{TENANT_SLUG}/**` files.
+
+After deploy (prod)
+- Vercel URL: `https://<project>.vercel.app/t/{TENANT_SLUG}`
+- Update QR with Vercel base if requested:
+  - `node scripts/generate-qr.mjs {TENANT_SLUG} https://<project>.vercel.app`
+
+Guardrails
+- No edits outside `data/tenants/{TENANT_SLUG}/**` for tenant PRs.
+- Lint/typecheck must pass.
+- California disclaimer + calories visible.
+- Variants/flags driven by `style.json` (no tenant-name checks in code).
 
 ### Notes
 - One DATABASE_URL per environment; many tenants share the same DB.

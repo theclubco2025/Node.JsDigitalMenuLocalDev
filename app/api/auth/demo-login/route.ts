@@ -32,8 +32,9 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
     })
     return res
-  } catch (e: any) {
-    return NextResponse.json({ error: 'Demo login failed' }, { status: 400 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Demo login failed'
+    return NextResponse.json({ error: message }, { status: 400 })
   }
 }
 

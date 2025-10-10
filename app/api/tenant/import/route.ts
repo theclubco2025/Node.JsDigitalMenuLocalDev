@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
 import { setMemoryMenu, writeMenu } from '@/lib/data/menu'
 
 export async function POST(request: NextRequest) {
@@ -26,8 +24,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Try to persist to filesystem in dev; otherwise fall back to memory
-    const dir = path.join(process.cwd(), 'data', 'tenants', tenant)
-    const file = path.join(dir, 'menu.json')
     try {
       await writeMenu(tenant, menu)
     } catch {
@@ -35,8 +31,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ ok: true })
-  } catch (e) {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Invalid JSON'
+    return NextResponse.json({ error: message }, { status: 400 })
   }
 }
 

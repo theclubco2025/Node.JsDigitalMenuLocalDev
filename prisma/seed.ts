@@ -77,7 +77,20 @@ async function main() {
   })
 
   // Categories and items data
-  const categoriesData = [
+  type SeedItem = {
+    name: string
+    description: string
+    price: number
+    tags: string[]
+    calories?: number
+  }
+
+  type SeedCategory = {
+    name: string
+    items: SeedItem[]
+  }
+
+  const categoriesData: SeedCategory[] = [
     {
       name: 'Appetizers',
       items: [
@@ -146,7 +159,7 @@ async function main() {
           name: itemData.name,
           description: itemData.description,
           price: itemData.price,
-          calories: itemData.calories,
+          calories: itemData.calories ?? null,
           available: true
         }
       })

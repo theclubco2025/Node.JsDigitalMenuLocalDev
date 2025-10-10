@@ -1,29 +1,5 @@
 // In-memory rate limiter and circuit breaker per tenant (dev-safe)
 
-type TenantState = {
-  hits: number[] // timestamps (ms) of recent calls
-  failures: number
-  openedAt: number | null
-}
-
-const WINDOW_MS = 60_000 // 1 minute
-const LIMIT = 10 // 10/min
-const TRIP_AFTER = 3 // consecutive failures
-const OPEN_MS = 60_000 // open for 60s
-
-const state = new Map<string, TenantState>()
-
-function getState(tenantId: string): TenantState {
-  let s = state.get(tenantId)
-  if (!s) {
-    s = { hits: [], failures: 0, openedAt: null }
-    state.set(tenantId, s)
-  }
-  return s
-}
-
-// Legacy simple variant removed (conflicted). Using unified implementation below.
-
 const hits = new Map<string, { count: number; windowStart: number }>()
 const trips = new Map<string, { open: boolean; openedAt: number; failures: number }>()
 

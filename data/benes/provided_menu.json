@@ -1,0 +1,342 @@
+{
+  "menu": {
+    "meta": {
+      "source": "Transcribed from provided menu photos",
+      "notes": [
+        "All pasta is fresh made in house using an Italian Bottene pasta machine.",
+        "All pizzas are made with Caputo flour from Napoli.",
+        "Pizza sizes: 10 in / 14 in.",
+        "18% gratuity added to parties of 7 or more."
+      ]
+    },
+    "categories": [
+      {
+        "name": "Pasta",
+        "notes": [
+          "Split plate charge for all pasta (optional): $4"
+        ],
+        "items": [
+          {
+            "name": "Fettuccine Bolognese",
+            "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
+            "price": 23
+          },
+          {
+            "name": "Spaghetti and Meatballs",
+            "description": "House made meatballs, signature marinara infused with locally produced zinfandel wine, topped with asiago and basil.",
+            "price": 20
+          },
+          {
+            "name": "Chicken Fettuccine Alfredo",
+            "description": "House made alfredo sauce, sliced chicken breast, basil, parmesan.",
+            "price": 22
+          },
+          {
+            "name": "Spaghetti Bolognese",
+            "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
+            "price": 23
+          },
+          {
+            "name": "Rigatoni with Sausage",
+            "description": "Rigatoni grande, sliced Italian sausage, pomodoro sauce, topped with asiago and basil.",
+            "price": 22
+          },
+          {
+            "name": "Linguine Pesto",
+            "description": "Signature pesto, asiago, heirloom cherry tomatoes.",
+            "price": 19,
+            "modifiers": [
+              { "name": "Add chicken", "price": 5 }
+            ]
+          },
+          {
+            "name": "Linguine and Clams",
+            "description": "Fresh steamed clams, white wine garlic lemon butter sauce.",
+            "price": 23
+          },
+          {
+            "name": "Linguine and Prawns",
+            "description": "Fresh prawns sautéed in white wine garlic lemon butter sauce, with slivered zucchini and carrots.",
+            "price": 22
+          },
+          {
+            "name": "Fettuccine Vegetariano",
+            "description": "Ribbons of pasta, portobello mushrooms, ribbons of carrots and Italian squash, sautéed in olive oil and garlic, topped with asiago and basil.",
+            "price": 19
+          },
+          {
+            "name": "Spaghetti Aglio e Olio",
+            "description": "Olive oil, garlic, asiago, Italian parsley, touch of crushed red pepper.",
+            "price": 15,
+            "modifiers": [
+              { "name": "Add chicken", "price": 5 },
+              { "name": "Add portobello mushrooms", "price": 5 }
+            ]
+          },
+          {
+            "name": "Lasagna",
+            "description": "Pomodoro sauce, Italian sausage, ricotta, basil, house made lasagna noodles, topped with asiago and mozzarella.",
+            "price": 18
+          }
+        ]
+      },
+      {
+        "name": "Pizza",
+        "size_options": [
+          { "label": "10\"", "key": "10" },
+          { "label": "14\"", "key": "14" }
+        ],
+        "items": [
+          {
+            "name": "Margherita Napoletana",
+            "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
+            "prices": { "10": 17, "14": 25 },
+            "variants": [
+              {
+                "name": "With mozzarella di bufala (imported from Naples, Italy)",
+                "prices": { "10": 20, "14": 30 }
+              }
+            ]
+          },
+          {
+            "name": "Portobello Mushroom Bacon",
+            "description": "Sliced portobello mushrooms, hickory smoked bacon, mozzarella, tomato sauce.",
+            "prices": { "10": 20, "14": 30 }
+          },
+          {
+            "name": "Chicken Piccata",
+            "description": "Chicken breast, capers, garlic, mozzarella, fresh squeezed lemon, extra virgin olive oil.",
+            "prices": { "10": 20, "14": 30 }
+          },
+          {
+            "name": "Prosciutto & Arugula",
+            "description": "Thin sliced prosciutto di Parma, arugula, asiago, garlic, olive oil, cherry tomatoes (heirlooms when in season), drizzled with balsamic reduction.",
+            "prices": { "10": 22, "14": 32 }
+          },
+          {
+            "name": "Garlic and More Garlic",
+            "description": "Fresh garlic, roasted garlic cloves, mozzarella, tomato sauce.",
+            "prices": { "10": 18, "14": 26 }
+          },
+          {
+            "name": "Asiago",
+            "description": "Asiago, fresh garlic, fresh basil, tomato sauce.",
+            "prices": { "10": 15, "14": 25 }
+          },
+          {
+            "name": "Pesto",
+            "description": "Signature pesto, asiago, tomatoes (heirlooms when in season).",
+            "prices": { "10": 18, "14": 27 }
+          },
+          {
+            "name": "Cheese",
+            "description": "Mozzarella, tomato sauce.",
+            "prices": { "10": 13, "14": 22 }
+          },
+          {
+            "name": "Carnivoro",
+            "description": "Salami, pepperoni, Italian sausage, mozzarella, tomato sauce.",
+            "prices": { "10": 18, "14": 27 }
+          },
+          {
+            "name": "Chicken Alfredo",
+            "description": "Chicken breast, house made alfredo sauce, mozzarella, red onions, fresh basil.",
+            "prices": { "10": 20, "14": 30 }
+          },
+          {
+            "name": "Vegetariano",
+            "description": "Mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
+            "prices": { "10": 19, "14": 29 }
+          },
+          {
+            "name": "Pepperoni",
+            "description": "Pepperoni, mozzarella cheese, tomato sauce.",
+            "prices": { "10": 15, "14": 24 }
+          },
+          {
+            "name": "Combination",
+            "description": "Salami, pepperoni, Italian sausage, mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
+            "prices": { "10": 21, "14": 31 }
+          }
+        ]
+      },
+      {
+        "name": "Calzone",
+        "notes": ["Marinara sauce inside."],
+        "items": [
+          {
+            "name": "Bene Special",
+            "description": "Italian sausage, asiago, onions, fresh garlic, olives, basil, sauce.",
+            "price": 13
+          },
+          {
+            "name": "Polpetta",
+            "description": "Meatballs, mozzarella, asiago, garlic, sauce.",
+            "price": 13
+          },
+          {
+            "name": "Vesuvio",
+            "description": "Italian sausage, mozzarella, onions, bell peppers, garlic, crushed red pepper, sauce (spicy hot).",
+            "price": 13
+          },
+          {
+            "name": "Vegetariano",
+            "description": "Roasted portobello mushrooms, asiago, basil, onion, roasted garlic cloves, balsamic vinegar reduction, sauce.",
+            "price": 13
+          }
+        ]
+      },
+      {
+        "name": "Lunch",
+        "availability": { "start": "11:00", "end": "16:00" },
+        "subcategories": [
+          {
+            "name": "Sandwiches (available for lunch only)",
+            "notes": ["All sandwich rolls made fresh in house."],
+            "items": [
+              {
+                "name": "Italian Beef",
+                "description": "Certified Angus beef thin sliced, sautéed onions and bell peppers, au jus, horseradish sauce on the side.",
+                "price": 14
+              },
+              {
+                "name": "Portobello",
+                "description": "Marinated mushrooms, mozzarella, garlic aoli, lettuce, tomato, onion, basil, olive oil, balsamic vinegar reduction, sea salt.",
+                "price": 12
+              },
+              {
+                "name": "Meatball",
+                "description": "House made meatballs, asiago, marinara sauce.",
+                "price": 12
+              },
+              {
+                "name": "Italian Sausage",
+                "description": "Sausage, sautéed onions, bell pepper, marinara sauce.",
+                "price": 12
+              },
+              {
+                "name": "Prosciutto",
+                "description": "Prosciutto di Parma, mozzarella, basil, olive oil.",
+                "price": 14
+              },
+              {
+                "name": "Chicken Pesto",
+                "description": "Chicken breast, asiago, house made pesto, onion, romaine, tomato.",
+                "price": 12
+              },
+              {
+                "name": "Salami",
+                "description": "Molinari Toscano salami, onions, peperoncini, basil.",
+                "price": 12
+              }
+            ]
+          },
+          {
+            "name": "Lunch Specials",
+            "items": [
+              {
+                "name": "1/2 Sandwich and Cup of Soup",
+                "price": 12,
+                "notes": ["Prosciutto and Italian Beef +$2.00"]
+              },
+              {
+                "name": "1/2 Sandwich and Small Italian Salad",
+                "price": 12,
+                "notes": ["Prosciutto and Italian Beef +$2.00"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Kids Menu",
+        "notes": ["12 and under, please."],
+        "items": [
+          { "name": "Spaghetti and Meatballs", "price": 7 },
+          { "name": "Spaghetti Marinara", "price": 7 },
+          { "name": "Spaghetti and Butter", "price": 7 },
+          { "name": "Pizza by the Slice", "price": 7 }
+        ]
+      },
+      {
+        "name": "Beers",
+        "subcategories": [
+          {
+            "name": "Draught by the Pint",
+            "items": [
+              {
+                "name": "Widmer Hefeweizen",
+                "brewery": "Widmer Brothers Brewing, Portland, OR",
+                "abv": "4.9%",
+                "price": 6
+              },
+              {
+                "name": "Sculpin IPA",
+                "brewery": "Ballast Point Brewery, San Diego, CA",
+                "awards": ["2014 Gold Medal, World Beer Cup"],
+                "abv": "7.0%",
+                "price": 7.5
+              },
+              {
+                "name": "Eel River Organic IPA",
+                "brewery": "Eel River Brewing, Fortuna, CA",
+                "awards": ["2005 Gold Medal, World Championships"],
+                "abv": "7.2%",
+                "price": 6.5
+              },
+              {
+                "name": "Auburn Alehouse American River Pale Ale",
+                "brewery": "Auburn Alehouse Brewery, Auburn, CA",
+                "abv": "5.6%",
+                "price": 6
+              },
+              {
+                "name": "Moretti La Rossa",
+                "brewery": "Birra Moretti Brewery, Udine, Italy",
+                "awards": ["2007, 2010, 2011, 2012, 2014 Gold Medal, World Beer Championships"],
+                "abv": "7.2%",
+                "price": 8
+              },
+              {
+                "name": "Peroni",
+                "brewery": "Birre Peroni Industriale, Roma, Italy",
+                "notes": ["#1 beer in Italy"],
+                "abv": "5.1%",
+                "price": 6
+              },
+              {
+                "name": "Bourbon Barrel Stout",
+                "brewery": "Anderson Valley Brewing, Boonville, CA",
+                "abv": "6.9%",
+                "price": 8.5
+              },
+              {
+                "name": "Firestone 805 Blonde Ale",
+                "brewery": "Firestone Walker Brewing, Paso Robles, CA",
+                "abv": "4.7%",
+                "price": 6
+              }
+            ]
+          },
+          {
+            "name": "Bottled Beers",
+            "notes": ["Premium $4.5, Domestic $4"],
+            "items": [
+              { "name": "Coors Light", "tier": "domestic" },
+              { "name": "Bud Light", "tier": "domestic" },
+              { "name": "Widmer Omission Pale Ale (Gluten Free)", "tier": "premium" },
+              { "name": "Widmer Omission IPA (Gluten Free)", "tier": "premium" },
+              { "name": "Stella Artois", "tier": "premium" },
+              { "name": "Stella Artois Cider", "tier": "premium" },
+              { "name": "Guinness Draught — Can", "price": 5 },
+              { "name": "Clausthaler N/A Lager", "tier": "premium" },
+              { "name": "Clausthaler N/A Amber", "tier": "premium" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+
+

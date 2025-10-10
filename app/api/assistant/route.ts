@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getMenuForTenant, filterMenuByDiet, snippet } from '@/lib/data/menu'
 import { buildPrompt } from '@/lib/ai/prompt'
 import { generate } from '@/lib/ai/model'
@@ -7,7 +9,18 @@ import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
 import type { MenuResponse } from '@/types/api'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
+function corsHeaders(origin?: string) {
+  const o = origin || '*'
+  return {
+    'Access-Control-Allow-Origin': o,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, HEAD',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Token',
+    'Vary': 'Origin',
+    'Cache-Control': 'no-store'
+  }
+}
 function normalize(str: string): string {
   return (str || '').toLowerCase()
 }
@@ -35,7 +48,7 @@ function scoreItem(query: string, name: string, description?: string, tags?: str
 
 function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
   if (!query?.trim()) return menu
-  const scored: Array<{ catId: string; catName: string; item: any; score: number }> = []
+  const scored: Array<{ catId: string; catName: string; item: { id: string; name: string; description?: string; price: number; tags?: string[] }; score: number }> = []
   for (const c of menu.categories) {
     for (const it of c.items) {
       const s = scoreItem(query, it.name, it.description, it.tags)
@@ -44,7 +57,7 @@ function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
   }
   scored.sort((a, b) => b.score - a.score)
   const chosen = scored.slice(0, k)
-  const byCat = new Map<string, { id: string; name: string; items: typeof chosen[0]["item"][] }>()
+  const byCat = new Map<string, { id: string; name: string; items: { id: string; name: string; description?: string; price: number; tags?: string[] }[] }>()
   for (const r of chosen) {
     if (!byCat.has(r.catId)) byCat.set(r.catId, { id: r.catId, name: r.catName, items: [] })
     byCat.get(r.catId)!.items.push(r.item)
@@ -53,6 +66,7 @@ function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
   return categories.length > 0 ? { categories } : menu
 }
 
+/*
 interface MenuContext {
   categories: Array<{
     id: string
@@ -99,6 +113,8 @@ interface TenantProfile {
   atmosphere: string
   locationContext?: string
 }
+
+*/
 
 // Single multi-tenant assistant endpoint (LLaMA-ready)
 export async function POST(request: NextRequest) {
@@ -169,19 +185,19 @@ export async function POST(request: NextRequest) {
       recordSuccess(tenantId)
       const ms = Date.now() - started
       console.log(`[assistant] tenant=${tenantId} ok latency=${ms}ms`)
-      return NextResponse.json({ ok: true, tenantId, text })
+      return NextResponse.json({ ok: true, tenantId, text }, { headers: corsHeaders(request.headers.get('origin') || '*') })
     } catch (e) {
       recordFailure(tenantId)
       const ms = Date.now() - started
       const msg = (e as Error)?.message || ''
       console.warn(`[assistant] tenant=${tenantId} fail latency=${ms}ms`, e)
       if (msg.includes('401')) {
-        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200 })
+        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
       }
       if (msg.includes('404')) {
-        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200 })
+        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
       }
-      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200 })
+      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
     }
   } catch (e) {
     console.error('Assistant error:', e)
@@ -364,20 +380,31 @@ async function generateAIResponse({
 }
 */
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const provider = (process.env.AI_PROVIDER || 'compatible').toLowerCase()
     if (provider !== 'ollama') {
       const hasKey = Boolean((process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim())
       if (!hasKey) {
-        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
+        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501, headers: corsHeaders(request.headers.get('origin') || '*') })
       }
     }
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
   } catch (e) {
     console.error('Assistant GET error:', e)
-    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200 })
+    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
   }
+}
+
+// CORS preflight support to avoid 405 on OPTIONS
+export async function OPTIONS(request: NextRequest) {
+  return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+}
+
+// Explicit HEAD handler to avoid 405 from HEAD checks
+export async function HEAD(request: NextRequest) {
+  const headers = corsHeaders(request.headers.get('origin') || '*')
+  return new NextResponse(null, { headers })
 }
 /*
 // Additional unused helpers (kept for future use). Commented out for build cleanliness.

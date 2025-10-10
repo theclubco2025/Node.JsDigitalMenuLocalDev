@@ -1,26 +1,37 @@
 
 "use client"
 
-import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useState, FormEvent } from 'react'
+import { signIn } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/admin'
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setLoading(true)
     setError('')
 
     try {
-      // Auth temporarily disabled in this demo build to avoid dependency issues
-      setError('Login is disabled in this demo build.')
+      const tenant = (new URLSearchParams(window.location.search)).get('tenant') || ''
+      const res = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+        tenant,
+        callbackUrl
+      })
+      if (res?.error) {
+        setError('Invalid credentials or tenant')
+      } else {
+        window.location.href = callbackUrl
+      }
     } finally {
       setLoading(false)
     }
@@ -114,8 +125,8 @@ export default function LoginPage() {
                       })
                       if (!res.ok) throw new Error('Demo login failed')
                       window.location.href = '/admin'
-                    } catch (e:any) {
-                      setError(e.message || 'Demo login failed')
+                  } catch (error) {
+                      setError(error instanceof Error ? error.message : 'Demo login failed')
                     }
                   }}
                   className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -135,8 +146,8 @@ export default function LoginPage() {
                       })
                       if (!res.ok) throw new Error('Demo login failed')
                       window.location.href = '/admin'
-                    } catch (e:any) {
-                      setError(e.message || 'Demo login failed')
+                    } catch (error) {
+                      setError(error instanceof Error ? error.message : 'Demo login failed')
                     }
                   }}
                   className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
@@ -146,9 +157,32 @@ export default function LoginPage() {
                 </button>
               </div>
             )}
+            {process.env.GOOGLE_CLIENT_ID && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const tenant = (new URLSearchParams(window.location.search)).get('tenant') || ''
+                    await signIn('google', { callbackUrl, tenant })
+                  }}
+                  className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <div className="font-medium text-gray-900">Sign in with Google</div>
+                  <div className="text-sm text-gray-500">Uses project Google OAuth (optional)</div>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   )
 }

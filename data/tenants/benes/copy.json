@@ -1,0 +1,16 @@
+{
+  "tagline": "Rustic Italian, made by hand",
+  "heroSubtitle": "Fresh pasta, Napoli doughs, local wine notes",
+  "about": "House-made pasta, Caputo flour pizzas, and a cellar-friendly menu crafted in Placerville.",
+  "specials": "Margherita 14\" • Fettuccine Bolognese • Prosciutto & Arugula",
+  "categoryIntros": {
+    "Pasta": "Daily-cut ribbons, slow sauces, market herbs.",
+    "Pizza": "Napoli-style dough, 48-hour ferment, hot stone.",
+    "Calzone": "Folded, sauced inside, baked to a blister.",
+    "Lunch": "Handmade rolls, sharp flavors, quick service."
+  },
+  "badges": {
+    "category": "Benes"
+  }
+}
+

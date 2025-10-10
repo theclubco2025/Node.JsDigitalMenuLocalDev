@@ -87,6 +87,16 @@ body {
     --brand-secondary: #ffffff;
     --brand-accent: #6b7280;
   }
+  /* Ensure all inputs/textareas show black text on white for universal readability */
+  input, textarea, select {
+    color: #0b0b0b !important;
+    background-color: #ffffff;
+    caret-color: #0b0b0b;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #6b7280;
+    opacity: 1;
+  }
 }
 
 @layer components {

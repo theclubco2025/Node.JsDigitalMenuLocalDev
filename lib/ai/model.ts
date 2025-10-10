@@ -6,6 +6,16 @@ type GenerateArgs = {
   user: string
 }
 
+type ChatCompletionResponse = {
+  choices?: Array<{ message?: { content?: string } }>
+}
+
+type GlobalWithAIKeyCursor = typeof globalThis & {
+  __ai_key_cursor?: number
+}
+
+const globalWithCursor = globalThis as GlobalWithAIKeyCursor
+
 export async function generate({ model, system, user }: GenerateArgs): Promise<string> {
   const provider = (process.env.AI_PROVIDER || 'compatible').toLowerCase()
   const chosenModel = model || process.env.AI_MODEL || 'gpt-4o-mini'
@@ -43,26 +53,16 @@ export async function generate({ model, system, user }: GenerateArgs): Promise<s
     throw new Error('no-keys')
   }
   // global round-robin cursor across requests
-  ;(globalThis as any).__ai_key_cursor = (globalThis as any).__ai_key_cursor ?? 0
-  const startCursor: number = (globalThis as any).__ai_key_cursor
+  globalWithCursor.__ai_key_cursor = globalWithCursor.__ai_key_cursor ?? 0
+  const startCursor: number = globalWithCursor.__ai_key_cursor
   // Expect base to end with /v1 or we append it
   const completionsUrl = baseUrl.endsWith('/v1')
     ? `${baseUrl}/chat/completions`
     : `${baseUrl || 'https://api.openai.com/v1'}/chat/completions`
 
-  const payload = JSON.stringify({
-    model: chosenModel,
-    messages: [
-      { role: 'system', content: system },
-      { role: 'user', content: user },
-    ],
-    temperature: 0.5,
-    max_tokens: 512,
-  })
-
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12_000)
-  let lastErr: any
+  let lastErr: unknown
   for (let attempt = 0; attempt < keys.length; attempt++) {
     const apiKey = keys[(startCursor + attempt) % keys.length]
     try {
@@ -117,20 +117,21 @@ export async function generate({ model, system, user }: GenerateArgs): Promise<s
           lastErr = new Error(`ai provider error: ${res.status}`)
           continue
         }
-        const data = await res.json()
+        const data: ChatCompletionResponse = await res.json()
         const text = data?.choices?.[0]?.message?.content ?? ''
         // advance cursor on success
-        ;(globalThis as any).__ai_key_cursor = ((startCursor + attempt + 1) % keys.length)
+        globalWithCursor.__ai_key_cursor = ((startCursor + attempt + 1) % keys.length)
         clearTimeout(timeout)
         return typeof text === 'string' ? text : ''
       }
-    } catch (e) {
-      lastErr = e
+    } catch (error) {
+      lastErr = error
       continue
     }
   }
   clearTimeout(timeout)
-  throw lastErr || new Error('ai provider error')
+  if (lastErr instanceof Error) throw lastErr
+  throw new Error('ai provider error')
 }
 
 

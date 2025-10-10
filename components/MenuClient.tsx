@@ -1,9 +1,47 @@
 
 "use client"
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+/* eslint-disable @next/next/no-img-element */
+
+import { useState, useMemo, useEffect } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
+
+type TenantStyleFlags = {
+  flags?: Record<string, boolean>
+  navVariant?: string
+  heroVariant?: string
+  accentSecondary?: string
+  badges?: Record<string, string>
+  texture?: { vignette?: boolean; paper?: boolean }
+}
+
+type TenantTheme = {
+  primary?: string
+  bg?: string
+  text?: string
+  ink?: string
+  card?: string
+  muted?: string
+  accent?: string
+}
+
+type TenantBrand = {
+  name?: string
+  tagline?: string
+  logoUrl?: string
+  header?: { logoUrl?: string }
+}
+
+type TenantConfig = {
+  brand?: TenantBrand
+  theme?: TenantTheme
+  images?: Record<string, string>
+  style?: TenantStyleFlags
+  copy?: Record<string, unknown>
+}
+
+type ThemeCSSVariables = React.CSSProperties & Record<'--bg' | '--text' | '--ink' | '--card' | '--muted' | '--accent', string | undefined>
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -21,23 +59,89 @@ export default function MenuClient() {
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const plateButtonRef = useRef<HTMLButtonElement | null>(null)
-  const [platePile, setPlatePile] = useState<Array<{ itemId: string; src: string }>>([])
-  type Flyer = { key: string; src: string; startX: number; startY: number; dx: number; dy: number; moved: boolean }
-  const [flyers, setFlyers] = useState<Flyer[]>([])
+  // plate button removed
+  // plate pile removed with floating button
+  // fly-to-plate animation removed
 
   // Get tenant/admin from URL params
   const isBrowser = typeof window !== 'undefined'
   const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
   const tenant = isBrowser
-    ? searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo'
-    : 'demo'
+    ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
+    : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+  // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
+  const [adminToken, setAdminToken] = useState<string | null>(null)
+  useEffect(() => {
+    if (!isBrowser) return
+    const urlToken = searchParams?.get('token')
+    if (urlToken && urlToken.trim() !== '') {
+      try { localStorage.setItem('adminToken', urlToken) } catch {}
+      setAdminToken(urlToken)
+    } else {
+      try { setAdminToken(localStorage.getItem('adminToken')) } catch { setAdminToken(null) }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Tenant flags
+  const isBenes = useMemo(() => {
+    const slug = (tenant || '').toLowerCase()
+    return slug === 'benes' || slug === 'benes-draft'
+  }, [tenant])
+
+  // Tenant config (brand/theme/images)
+  const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
+  const brand = cfg?.brand
+  const theme = cfg?.theme ?? null
+  const imageMap = cfg?.images ?? {}
+  const copy = cfg?.copy as Record<string, unknown> | undefined
+  const styleCfg = cfg?.style
+  const accentSecondary = styleCfg?.accentSecondary
+  const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
+  const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
+  const brandName = brand?.name || 'Menu'
+  const brandTagline = brand?.tagline || ''
+
+  // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
+  const effectiveTheme = useMemo(() => {
+    if (!theme) return null
+    if (isBenes) {
+      return {
+        primary: theme.primary || '#0f1e17',
+        bg: theme.bg || theme.primary || '#0f1e17',
+        text: theme.text || '#f3f5f0',
+        ink: theme.ink || '#101010',
+        card: theme.card || '#ffffff',
+        muted: theme.muted || '#e7e0d3',
+        accent: theme.accent || '#ef4444'
+      }
+    }
+    return theme
+  }, [theme, isBenes])
+
+  
+
+  // Apply theme from config
+  useEffect(() => {
+    if (typeof window === 'undefined' || !theme) return
+    const bg = theme.bg || theme.primary
+    if (bg) document.body.style.setProperty('--bg', bg)
+    if (theme.text) document.body.style.setProperty('--text', theme.text)
+    if (theme.ink) document.body.style.setProperty('--ink', theme.ink)
+    if (theme.card) document.body.style.setProperty('--card', theme.card)
+    if (theme.muted) document.body.style.setProperty('--muted', theme.muted)
+    if (theme.accent) document.body.style.setProperty('--accent', theme.accent)
+  }, [theme])
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
     `/api/menu?tenant=${tenant}`,
     fetcher
   )
+
+  // Hide hero/specials for Benes draft per request
+  const showBenesHero = useMemo(() => (isBenes ? false : (styleCfg?.heroVariant !== 'none')), [isBenes, styleCfg?.heroVariant])
+  const showSpecials = isBenes ? false : !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -85,7 +189,12 @@ export default function MenuClient() {
       .filter(category => category.items.length > 0)
   }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
 
-  const updateItemField = (categoryId: string, itemId: string, field: keyof MenuItem, value: any) => {
+  const updateItemField = (
+    categoryId: string,
+    itemId: string,
+    field: keyof MenuItem,
+    value: MenuItem[keyof MenuItem] | undefined
+  ) => {
     if (!editableMenu) return
     setEditableMenu(prev => {
       if (!prev) return prev
@@ -94,7 +203,33 @@ export default function MenuClient() {
         if (cat.id === categoryId) {
           const idx = cat.items.findIndex(i => i.id === itemId)
           if (idx !== -1) {
-            ;(cat.items[idx] as any)[field] = field === 'price' ? Number(value) : value
+            const item = cat.items[idx]
+            switch (field) {
+              case 'price':
+                item.price = typeof value === 'number' ? value : Number(value ?? item.price)
+                break
+              case 'calories':
+                item.calories = value === undefined
+                  ? undefined
+                  : typeof value === 'number'
+                    ? value
+                    : Number(value)
+                break
+              case 'tags':
+                item.tags = Array.isArray(value) ? value : item.tags ?? []
+                break
+              case 'name':
+                item.name = value === undefined ? '' : String(value)
+                break
+              case 'description':
+                item.description = value === undefined ? undefined : String(value)
+                break
+              case 'imageUrl':
+                item.imageUrl = value === undefined ? undefined : String(value)
+                break
+              default:
+                item[field] = value as typeof item[typeof field]
+            }
           }
           break
         }
@@ -106,15 +241,25 @@ export default function MenuClient() {
   const saveAllEdits = async () => {
     if (!isAdmin || !editableMenu) return
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (adminToken && adminToken.trim() !== '') {
+        headers['X-Admin-Token'] = adminToken
+      }
       const res = await fetch('/api/tenant/import', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ tenant, menu: editableMenu })
       })
-      if (!res.ok) throw new Error('Save failed')
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '')
+        throw new Error(txt || 'Save failed')
+      }
       setToast('Saved changes')
-    } catch (e) {
-      setToast('Error saving changes')
+    } catch (error) {
+      const needsToken = typeof window !== 'undefined' && !adminToken && process.env.NODE_ENV === 'production'
+      const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL once, then Save again.' : ''
+      const message = (error instanceof Error ? error.message : 'Error saving changes') + suffix
+      setToast(message)
     }
   }
 
@@ -129,9 +274,9 @@ export default function MenuClient() {
         if (cat.id === categoryId) {
           const item = cat.items.find(i => i.id === itemId)
           if (item) {
-            const tags = (item.tags || []).slice()
-            if (!tags.includes(tag)) tags.push(tag)
-            item.tags = tags
+            const tags = new Set(item.tags ?? [])
+            tags.add(tag)
+            item.tags = Array.from(tags)
           }
           break
         }
@@ -163,36 +308,14 @@ export default function MenuClient() {
     const safeText = text ?? ''
     if (!query) return safeText
     const parts = safeText.split(new RegExp(`(${escapeRegExp(query)})`, 'gi'))
-    return parts.map((part, i) => 
-      part.toLowerCase() === query.toLowerCase() 
-        ? <mark key={i} className="bg-yellow-200 px-1 rounded">{part}</mark>
-        : part
+    return parts.map((part, index) =>
+      part.toLowerCase() === query.toLowerCase()
+        ? <mark key={`highlight-${index}`} className="bg-yellow-200 px-1 rounded">{part}</mark>
+        : <span key={`text-${index}`}>{part}</span>
     )
   }
 
-  const launchFlyToPlate = (item: MenuItem) => {
-    if (typeof window === 'undefined') return
-    const img = document.getElementById(`img-${item.id}`) as HTMLImageElement | null
-    const plateBtn = plateButtonRef.current
-    if (!img || !plateBtn) return
-    const imgRect = img.getBoundingClientRect()
-    const btnRect = plateBtn.getBoundingClientRect()
-    const startX = imgRect.left + imgRect.width / 2
-    const startY = imgRect.top + imgRect.height / 2
-    const endX = btnRect.left + btnRect.width / 2
-    const endY = btnRect.top + btnRect.height / 2
-    const key = `${item.id}-${Date.now()}-${Math.random()}`
-    const src = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
-    setFlyers(prev => [...prev, { key, src, startX, startY, dx: endX - startX, dy: endY - startY, moved: false }])
-    // trigger transition on next frame
-    requestAnimationFrame(() => {
-      setFlyers(prev => prev.map(f => f.key === key ? { ...f, moved: true } : f))
-    })
-    // cleanup after animation
-    setTimeout(() => {
-      setFlyers(prev => prev.filter(f => f.key !== key))
-    }, 700)
-  }
+  const launchFlyToPlate = () => {}
 
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
@@ -210,8 +333,6 @@ export default function MenuClient() {
 
   const removeFromCart = (itemId: string) => {
     setCart(prev => prev.filter(cartItem => cartItem.item.id !== itemId))
-    // remove from plate pile if present
-    setPlatePile(prev => prev.filter(p => p.itemId !== itemId))
   }
 
   const updateCartQuantity = (itemId: string, quantity: number) => {
@@ -222,18 +343,7 @@ export default function MenuClient() {
     setCart(prev => prev.map(cartItem =>
       cartItem.item.id === itemId ? { ...cartItem, quantity } : cartItem
     ))
-    if (quantity === 1) {
-      // ensure plate pile has this item
-      const target = cart.find(c => c.item.id === itemId)?.item
-      if (target) {
-        const src = target.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(target.name)}`
-        setPlatePile(prev => {
-          if (prev.some(p => p.itemId === itemId)) return prev
-          const filtered = prev.filter(p => p.itemId !== itemId)
-          return [...filtered.slice(-2), { itemId, src }]
-        })
-      }
-    }
+    // no plate pile visuals anymore
   }
 
   const sendAssistantMessage = async (overrideMessage?: string) => {
@@ -258,16 +368,26 @@ export default function MenuClient() {
         })
       })
 
-      const data = await response.json()
-      const assistantText = data.text || data.response || data.message || 'Thanks for your question.'
+      const raw = await response.text()
+      let assistantText = 'Thanks for your question.'
+      try {
+        const data = raw ? JSON.parse(raw) : null
+        if (data) {
+          assistantText = data.text || data.response || data.message || assistantText
+        } else if (!response.ok) {
+          assistantText = `Assistant error (${response.status})`
+        }
+      } catch {
+        assistantText = raw && raw.trim().length > 0 ? raw : assistantText
+      }
       setChatHistory(prev => [...prev, { role: 'assistant', message: assistantText }])
     } catch (error) {
-      setChatHistory(prev => [...prev, { role: 'assistant', message: 'Sorry, I had trouble processing your request.' }])
+      const message = error instanceof Error ? error.message : 'Sorry, I had trouble processing your request.'
+      setChatHistory(prev => [...prev, { role: 'assistant', message }])
     }
   }
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const dietaryOptions = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free']
   
@@ -279,8 +399,8 @@ export default function MenuClient() {
   
   // Note: avoid early returns before hooks to keep hook order stable
 
-  const categories = menuData?.categories || []
-  const allCategories = categories.map(cat => cat.name)
+  const categories = useMemo(() => menuData?.categories ?? [], [menuData])
+  const allCategories = useMemo(() => categories.map(cat => cat.name), [categories])
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase()
@@ -415,8 +535,95 @@ export default function MenuClient() {
     return () => clearTimeout(t)
   }, [toast])
 
+  const rootStyle: ThemeCSSVariables = {
+    background: effectiveTheme?.bg ?? 'var(--bg)',
+    color: effectiveTheme?.text ?? 'var(--text)',
+    '--bg': effectiveTheme?.bg,
+    '--text': effectiveTheme?.text,
+    '--ink': effectiveTheme?.ink,
+    '--card': effectiveTheme?.card,
+    '--muted': effectiveTheme?.muted,
+    '--accent': effectiveTheme?.accent,
+  }
+  const paperTexture = Boolean(styleCfg?.texture?.paper)
+  const containerStyle: React.CSSProperties = {
+    ...rootStyle,
+    ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
+  }
+
+  // Benes-specific featured picks and pairings
+  const featuredItemIds: string[] = isBenes ? [
+    'i-margherita-napoletana-14',
+    'i-fettuccine-bolognese',
+    'i-prosciutto-arugula-14'
+  ] : []
+  const pairingsById: Record<string, string> = isBenes ? {
+    'i-fettuccine-bolognese': 'Pairs with Zinfandel',
+    'i-margherita-napoletana-14': 'Pairs with Chianti',
+    'i-prosciutto-arugula-14': 'Pairs with Pinot Grigio',
+    'i-lasagna': 'Pairs with Sangiovese'
+  } : {}
+  function cardStyleForCategory(categoryName: string): React.CSSProperties {
+    if (/pizza/i.test(categoryName)) {
+      return {
+        backgroundColor: '#ffffff',
+        backgroundImage: 'radial-gradient(rgba(16,16,16,0.05) 1px, transparent 1px)',
+        backgroundSize: '8px 8px',
+        borderColor: 'rgba(0,0,0,0.06)'
+      }
+    }
+    if (/pasta/i.test(categoryName)) {
+      return {
+        background: '#fffaf2',
+        borderColor: 'rgba(185,28,28,0.12)',
+        boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
+      }
+    }
+    if (/calzone/i.test(categoryName)) {
+      return {
+        background: '#fffef8',
+        borderColor: 'rgba(0,0,0,0.08)'
+      }
+    }
+    return {}
+  }
+  function getItemBadges(item: MenuItem): string[] {
+    const badges: string[] = []
+    const name = (item?.name || '').toLowerCase()
+    const tags: string[] = item?.tags || []
+    if (tags.includes('vegan') || /vegan/.test(name)) badges.push('Vegan')
+    if (tags.includes('gf') || /gluten\s*free|gf/.test(name)) badges.push('GF')
+    if (/spicy|vesuvio|pepperoncini|diavolo/.test(name)) badges.push('Spicy')
+    if (/margherita|bolognese|prosciutto/.test(name)) badges.push('House Favorite')
+    return badges
+  }
+  function resolveFeatured() {
+    const items: Array<MenuItem & { categoryName?: string }> = []
+    if (!menuData?.categories) return items
+    const idToItem: Record<string, MenuItem & { categoryName: string }> = {}
+    for (const cat of menuData.categories) {
+      for (const it of cat.items) {
+        idToItem[it.id] = { ...it, categoryName: cat.name }
+      }
+    }
+    for (const fid of featuredItemIds) {
+      if (idToItem[fid]) items.push(idToItem[fid])
+    }
+    // Fallback: pick first three if any missing
+    if (items.length < 3) {
+      outer: for (const cat of menuData.categories) {
+        for (const it of cat.items) {
+          if (items.some(existing => existing.id === it.id)) continue
+          items.push({ ...it, categoryName: cat.name })
+          if (items.length >= 3) break outer
+        }
+      }
+    }
+    return items
+  }
+
   return (
-    <div className="min-h-screen lux-gradient">
+    <div className="min-h-screen" style={containerStyle}>
       {/* Loading and error states */}
       {error && (
         <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
@@ -440,35 +647,187 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Fixed Header with Logo */}
-      <div className="fixed top-0 left-0 right-0 z-50 shadow-sm" style={{ background: 'var(--header)' }}>
+      {/* Fixed Header: Benes uses centered logo background; others show title */}
+      <div
+        className="fixed top-0 left-0 right-0 z-50 shadow-sm"
+        style={isBenes ? {
+          backgroundColor: '#ffffff',
+          backgroundImage: brandLogoUrl ? `url(${brandLogoUrl})` : undefined,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: 'auto 140px'
+        } : { background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+      >
         <div
-          className="px-4 py-2"
+          className="px-4"
           style={{
-            backgroundColor: 'var(--header)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)'
+            height: isBenes ? 160 : 72,
+            borderBottom: isBenes ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'
           }}
         >
-          {/* Restaurant Header */}
-          <div className="max-w-7xl mx-auto flex items-center justify-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-white tracking-wide elegant-cursive">Demo Menu</h1>
-              <p className="text-gray-300 text-xs">Refined flavors. Elevated experience.</p>
+          {!isBenes && (
+            <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+              {brandLogoUrl ? (
+                <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+              )}
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italiana)' }}>{brandName}</h1>
+                <p className="text-gray-200 text-xs">{brandTagline}</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Spacer to offset fixed header height */}
-      <div className="h-20" />
+      {/* Optional hero subtitle from copy */}
+      <div style={{ height: isBenes ? 160 : 80 }} />
+      {showBenesHero && (
+        <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
+      )}
+      {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
+        <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
+          <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
+        </div>
+      )}
+
+      {/* Category chip scroller removed for Benes */}
+
+      {/* Benes hero banner */}
+      {showBenesHero && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div
+            className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
+            style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
+          >
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.22), rgba(255,255,255,.12), rgba(185,28,28,.22))' }} />
+            {brandLogoUrl && (
+              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
+            )}
+            <div className="relative h-full flex items-center justify-between px-5">
+              <div className="max-w-lg">
+                {typeof copy?.tagline === 'string' && (
+                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#101010' }}>{copy.tagline}</div>
+                )}
+                {typeof copy?.heroSubtitle === 'string' && (
+                  <div className="text-sm md:text-base text-gray-700 mt-1">{copy.heroSubtitle}</div>
+                )}
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#128807' }} />
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)' }} />
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#b91c1c' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subtle Specials ribbon */}
+      {showSpecials && (
+        <div className="max-w-7xl mx-auto px-4 mb-4">
+          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
+            Tonight&apos;s Specials: Margherita 14&quot;, Fettuccine Bolognese, Prosciutto &amp; Arugula
+          </div>
+        </div>
+      )}
+
+      {/* Signature Picks (Benes) */}
+      {false && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
+            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {resolveFeatured().map((it) => {
+              const src = imageMap[it.id] || it.imageUrl || ''
+              return (
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'#fffdf5' }}>
+                  {src && (
+                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
+                  )}
+                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.06), rgba(255,255,255,.02), rgba(185,28,28,.06))' }} />
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
+                        {pairingsById[it.id] && (
+                          <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
+                        )}
+                      </div>
+                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number(it.price).toFixed(2)}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Hero section (hidden for Benes to keep a single compact header) */}
+      {!isBenes && (
+        <div className="relative">
+          <div
+            className="w-full h-56 md:h-64 lg:h-72"
+            style={{
+              backgroundImage: firstImageUrl ? `url(${firstImageUrl})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              borderBottom: '1px solid var(--muted)'
+            }}
+          >
+            {/* Italian overlay gradient */}
+            <div className="w-full h-full" style={{
+              background: 'linear-gradient(90deg, rgba(20,83,45,0.55), rgba(255,255,255,0.25), rgba(185,28,28,0.55))'
+            }} />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center px-4">
+            <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
+                  <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
+                  <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
+            </div>
+          </div>
+          {/* Tricolor divider bar */}
+          <div className="w-full h-1.5 flex">
+            <div className="flex-1" style={{ background: '#14532d' }} />
+            <div className="flex-1" style={{ background: '#ffffff' }} />
+            <div className="flex-1" style={{ background: '#b91c1c' }} />
+          </div>
+        </div>
+      )}
 
       {/* Admin Edit Bar */}
       {isAdmin && (
         <div className="sticky top-0 z-40 bg-yellow-50 border-b border-yellow-200">
           <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
             <span className="text-sm text-yellow-900 font-medium">Inline Edit Mode</span>
-            <button onClick={saveAllEdits} className="px-3 py-1 rounded bg-black text-white text-sm">Save All</button>
+            <button onClick={saveAllEdits} className="px-3 py-1 rounded text-sm" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>Save All</button>
+            {/* Publish draft → live */}
+            <button
+              onClick={async () => {
+                try {
+                  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+                  if (adminToken && adminToken.trim() !== '') headers['X-Admin-Token'] = adminToken
+                  const from = tenant.endsWith('-draft') ? tenant : `${tenant}-draft`
+                  const to = from.replace(/-draft$/, '')
+                  const res = await fetch('/api/tenant/promote', {
+                    method: 'POST', headers, body: JSON.stringify({ from, to })
+                  })
+                  if (!res.ok) throw new Error('Publish failed')
+                  setToast('Published to live')
+                } catch (e) {
+                  setToast(e instanceof Error ? e.message : 'Publish failed')
+                }
+              }}
+              className="px-3 py-1 rounded text-sm border border-yellow-300"
+              style={{ background: '#fff', color: '#7a5d00' }}
+            >
+              Publish
+            </button>
             <a href={`/menu?tenant=${encodeURIComponent(tenant)}`} className="text-sm text-yellow-900 underline">Exit</a>
           </div>
         </div>
@@ -484,7 +843,8 @@ export default function MenuClient() {
               <input
                 type="text"
                 placeholder="Search menu items, tags, or categories..."
-                className="w-full px-3 py-2 pr-9 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white text-black"
+                className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
+                style={{ border: '1px solid var(--muted)' }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -497,7 +857,8 @@ export default function MenuClient() {
             </div>
             <button
               onClick={() => setFiltersOpen(o => !o)}
-              className="px-3 py-2 rounded-md text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black"
+              className="px-3 py-2 rounded-md text-sm font-medium"
+              style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
             >
               {filtersOpen ? 'Hide Filters' : 'Filters'}
             </button>
@@ -508,12 +869,8 @@ export default function MenuClient() {
         <div className="flex gap-2 justify-center flex-wrap mb-4">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-              selectedCategory === null
-                ? 'text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            style={selectedCategory===null?{background:'var(--primary)'}:undefined}
+            className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+            style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
           >
             All Categories
           </button>
@@ -521,12 +878,8 @@ export default function MenuClient() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
-              className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
-                selectedCategory === category
-                  ? 'text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              style={selectedCategory===category?{background:'var(--accent)'}:undefined}
+              className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
+              style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
             >
               <span className="inline-flex items-center gap-2">
                 {getCategoryIcon(category)}
@@ -549,12 +902,11 @@ export default function MenuClient() {
                       : [...prev, option]
                   )
                 }}
-                className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-200 ${
-                  selectedDietaryFilters.includes(option)
-                    ? 'text-white shadow-md'
-                    : 'bg-gray-50 text-gray-800 border-gray-300 hover:border-gray-400'
-                }`}
-                style={selectedDietaryFilters.includes(option)?{background:'var(--primary)', borderColor:'var(--primary)'}:undefined}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
+                style={selectedDietaryFilters.includes(option)
+                  ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
+                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                }
               >
                 {option}
               </button>
@@ -562,7 +914,8 @@ export default function MenuClient() {
             {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
               <button
                 onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
-                className="px-3 py-1 rounded-full text-xs font-medium border border-gray-300 text-black hover:bg-gray-100"
+                className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
               >
                 Clear all
               </button>
@@ -572,7 +925,7 @@ export default function MenuClient() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: '#ffffff' }}>
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
         {/* Current Category Chip */}
         <div className="lg:col-span-12 mb-4">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
@@ -611,30 +964,55 @@ export default function MenuClient() {
         {/* Menu Grid */}
         <div className="space-y-12 lg:col-span-9" id="top">
           {filteredCategories.map((category, idx) => (
-            <div key={category.id} id={`cat-${category.id}`} className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}>
+            <div
+              key={category.id}
+              id={`cat-${category.id}`}
+              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}
+              style={{
+                borderRadius: 12,
+                padding: 12
+              }}
+            >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold text-white font-serif tracking-widest uppercase inline-flex items-center gap-3">
+                <h2 className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: isBenes ? '#101010' : 'var(--ink)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
-                <div className="flex-1 ml-6 lux-divider"></div>
+                <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
+              {isBenes && typeof categoryIntros[category.name] === 'string' && (
+                <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {category.items.map(item => (
                   <div 
                     key={item.id} 
-                    className="menu-item bg-gray-50 border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-                    style={{ borderRadius: 'var(--radius)' }}
+                    className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                    style={{ 
+                      borderRadius: 'var(--radius)', 
+                      background: isBenes ? '#fffdf5' : 'var(--card)', 
+                      borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
+                      boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
+                      ...cardStyleForCategory(category.name)
+                    }}
                   >
-                    <div className="bg-gray-100">
-                      <img 
-                        id={`img-${item.id}`}
-                        src={item.imageUrl || `https://via.placeholder.com/800x480/cccccc/333333?text=${encodeURIComponent(item.name)}`}
-                        alt={item.name}
-                        className="w-full h-48 object-cover"
-                      />
-                    </div>
+                    {(() => {
+                      const src = imageMap[item.id] || item.imageUrl || ''
+                      if (!src) return null
+                      return (
+                        <div className="bg-gray-100">
+                          <img
+                            id={`img-${item.id}`}
+                            src={src}
+                            alt={item.name}
+                            className="w-full h-48 object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                      )
+                    })()}
                     
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-3">
@@ -645,8 +1023,11 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <h3 className="text-xl font-semibold text-black leading-tight">
+                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
                             {highlightText(item.name, searchQuery)}
+                            {typeof item.calories === 'number' && (
+                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
+                            )}
                           </h3>
                         )}
                         {isAdmin ? (
@@ -658,9 +1039,16 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4">${item.price.toFixed(2)}</span>
+                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
                         )}
                       </div>
+                      {!isAdmin && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {getItemBadges(item).map(badge => (
+                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
+                          ))}
+                        </div>
+                      )}
                       
                       {isAdmin ? (
                         <div className="space-y-2 mb-4">
@@ -739,23 +1127,23 @@ export default function MenuClient() {
                             setCartBump(true)
                             setToast(`Added ${item.name}`)
                             setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
-                            launchFlyToPlate(item)
-                            const thumb = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
-                            setPlatePile(prev => {
-                              const filtered = prev.filter(p => p.itemId !== item.id)
-                              return [...filtered.slice(-2), { itemId: item.id, src: thumb }]
-                            })
+                            launchFlyToPlate()
+                            // plate pile visuals removed
                           }}
-                          className={`text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[120px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-yellow-300' : ''}`}
-                          style={{background:'var(--accent)'}}
+                          className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                          style={{
+                            background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : 'var(--accent)',
+                            boxShadow: isBenes ? '0 8px 18px rgba(185,28,28,0.35)' : undefined,
+                            letterSpacing: isBenes ? 0.3 : undefined
+                          }}
                         >
                           {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
                         </button>
-                        <button
-                          onClick={() => { setIsAssistantOpen(true); sendAssistantMessage(`Tell me about ${item.name}`) }}
-                          className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
-                          aria-label={`Ask about ${item.name}`}
-                        >
+                <button
+                  onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                  className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                  aria-label={`Ask about ${item.name}`}
+                >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                             <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -774,63 +1162,15 @@ export default function MenuClient() {
         </div>
       </div>
 
-      {/* Floating Plate Button with hover preview */}
-      <div
-        className="fixed bottom-6 right-6 z-50"
-        onMouseEnter={() => {/* open preview on hover */}}
-        onMouseLeave={() => {/* close preview handled by CSS hover state */}}
-      >
-        <div className="group relative">
-          <button
-            onClick={() => setIsCartOpen(true)}
-            ref={plateButtonRef}
-            className={`relative text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 flex items-center gap-2 ${cartBump ? 'animate-bump' : ''}`}
-            style={{background:'var(--accent)', color:'#0b0b0b'}}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2" />
-              <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
-            </svg>
-            <span className="font-medium">Plate ({cartItemCount})</span>
-            {cartItemCount > 0 && (
-              <span className="font-bold">${cartTotal.toFixed(2)}</span>
-            )}
-            {/* Plate pile thumbnails */}
-            {platePile.length > 0 && (
-              <div className="absolute -top-3 -right-3 flex -space-x-2 pointer-events-none">
-                {platePile.map((p, i) => (
-                  <img key={`${p.itemId}-${i}`} src={p.src} alt="" className="w-6 h-6 rounded-full border border-white object-cover shadow" />
-                ))}
-              </div>
-            )}
-          </button>
-          {/* Hover preview */}
-          {cart.length > 0 && (
-            <div className="pointer-events-none absolute right-0 bottom-full mb-2 w-72 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
-              <div className="bg-white text-black rounded-lg shadow-xl border border-gray-200 overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                  <span className="text-sm font-semibold">Plate Preview</span>
-                  <span className="text-sm font-medium">${cartTotal.toFixed(2)}</span>
-                </div>
-                <ul className="max-h-56 overflow-auto">
-                  {cart.slice(0,3).map(ci => (
-                    <li key={ci.item.id} className="px-4 py-2 text-sm flex items-center justify-between">
-                      <span className="truncate mr-2">{ci.item.name}</span>
-                      <span className="text-gray-600">×{ci.quantity}</span>
-                    </li>
-                  ))}
-                  {cart.length > 3 && (
-                    <li className="px-4 py-2 text-xs text-gray-500">+ {cart.length - 3} more items</li>
-                  )}
-                </ul>
-                <div className="px-4 py-2 bg-gray-50 text-right">
-                  <button onClick={() => setIsCartOpen(true)} className="text-sm font-medium text-black hover:underline pointer-events-auto">Open plate</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Nutrition/legal disclaimer */}
+      <div className="max-w-7xl mx-auto px-4 mt-10 mb-24">
+        <p className="text-xs text-gray-500 italic">
+          2,000 calories a day is used for general nutrition advice, but calorie needs vary. Calorie values are
+          estimates and may differ based on preparation or ingredient changes.
+        </p>
       </div>
+
+      {/* Floating Plate Button removed */}
 
       {/* AI Assistant Button */}
       <button
@@ -846,21 +1186,7 @@ export default function MenuClient() {
         </svg>
       </button>
 
-      {/* Floating flyers for add-to-plate animation */}
-      {flyers.map(f => (
-        <img
-          key={f.key}
-          src={f.src}
-          className="fixed w-10 h-10 rounded-full object-cover z-[60] pointer-events-none transition-transform duration-700 ease-out shadow"
-          style={{
-            left: 0,
-            top: 0,
-            transform: `translate(${f.startX}px, ${f.startY}px) ${f.moved ? `translate(${f.dx}px, ${f.dy}px) scale(0.4)` : ''}`,
-            border: '2px solid white'
-          }}
-          alt=""
-        />
-      ))}
+      {/* Floating flyers removed */}
 
       {/* Plate Drawer */}
       {isCartOpen && (
@@ -966,9 +1292,9 @@ export default function MenuClient() {
                   <p>Start a conversation!</p>
                   <p className="text-sm mt-2">Try asking:</p>
                   <ul className="text-xs mt-2 space-y-1 text-left">
-                    <li>"What vegetarian options do you have?"</li>
-                    <li>"Is the pasta gluten-free?"</li>
-                    <li>"What's your most popular dish?"</li>
+                    <li>&quot;What vegetarian options do you have?&quot;</li>
+                    <li>&quot;Is the pasta gluten-free?&quot;</li>
+                    <li>&quot;What&apos;s your most popular dish?&quot;</li>
                   </ul>
                 </div>
               ) : (
@@ -994,7 +1320,7 @@ export default function MenuClient() {
                 <input
                   type="text"
                   placeholder="Ask about our menu..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
                   value={assistantMessage}
                   onChange={(e) => setAssistantMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}

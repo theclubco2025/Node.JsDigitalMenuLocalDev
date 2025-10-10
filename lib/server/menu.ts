@@ -15,7 +15,7 @@ const STUB: MenuResponse = {
     ]}
   ]
 };
-export async function get_menu({ tenant, q }: { tenant?: string; q?: string }): Promise<MenuResponse> {
+export async function get_menu({ q }: { tenant?: string; q?: string }): Promise<MenuResponse> {
   if (!q?.trim()) return STUB;
   const needle = q.toLowerCase();
   const filtered = STUB.categories.map(c => ({
