@@ -208,7 +208,7 @@
           "id": "malted-caramel-pudding",
           "name": "Malted Caramel Pudding",
           "description": "House-made pudding, graham crumble, brûléed bananas, banana-maple whipped cream",
-          "price": 0,
+          "price": null,
           "diet": [],
           "allergens": ["dairy", "gluten"]
         }
