@@ -85,10 +85,7 @@ export default function MenuClient() {
   }, [])
 
   // Tenant flags
-  const isBenes = useMemo(() => {
-    const slug = (tenant || '').toLowerCase()
-    return slug === 'benes' || slug === 'benes-draft'
-  }, [tenant])
+  const isBenes = false
 
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
@@ -104,21 +101,7 @@ export default function MenuClient() {
   const brandTagline = brand?.tagline || ''
 
   // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
-  const effectiveTheme = useMemo(() => {
-    if (!theme) return null
-    if (isBenes) {
-      return {
-        primary: theme.primary || '#0f1e17',
-        bg: theme.bg || theme.primary || '#0f1e17',
-        text: theme.text || '#f3f5f0',
-        ink: theme.ink || '#101010',
-        card: theme.card || '#ffffff',
-        muted: theme.muted || '#e7e0d3',
-        accent: theme.accent || '#ef4444'
-      }
-    }
-    return theme
-  }, [theme, isBenes])
+  const effectiveTheme = useMemo(() => theme ?? null, [theme])
 
   
 
@@ -140,8 +123,8 @@ export default function MenuClient() {
   )
 
   // Hide hero/specials for Benes draft per request
-  const showBenesHero = useMemo(() => (isBenes ? false : (styleCfg?.heroVariant !== 'none')), [isBenes, styleCfg?.heroVariant])
-  const showSpecials = isBenes ? false : !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
+  const showBenesHero = useMemo(() => styleCfg?.heroVariant !== 'none', [styleCfg?.heroVariant])
+  const showSpecials = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -700,26 +683,22 @@ export default function MenuClient() {
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div
             className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
-            style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
+            style={{ borderColor: 'rgba(0,0,0,0.08)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
           >
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.22), rgba(255,255,255,.12), rgba(185,28,28,.22))' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(196,167,106,.18), rgba(255,255,255,.10), rgba(196,167,106,.18))' }} />
             {brandLogoUrl && (
               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
             )}
             <div className="relative h-full flex items-center justify-between px-5">
               <div className="max-w-lg">
                 {typeof copy?.tagline === 'string' && (
-                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#101010' }}>{copy.tagline}</div>
+                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#FFFFFF' }}>{copy.tagline}</div>
                 )}
                 {typeof copy?.heroSubtitle === 'string' && (
-                  <div className="text-sm md:text-base text-gray-700 mt-1">{copy.heroSubtitle}</div>
+                  <div className="text-sm md:text-base text-gray-100 mt-1">{copy.heroSubtitle}</div>
                 )}
               </div>
-              <div className="hidden md:flex items-center gap-2">
-                <span className="inline-block w-2 h-8 rounded" style={{ background: '#128807' }} />
-                <span className="inline-block w-2 h-8 rounded" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)' }} />
-                <span className="inline-block w-2 h-8 rounded" style={{ background: '#b91c1c' }} />
-              </div>
+              <div className="hidden md:flex items-center gap-2" />
             </div>
           </div>
         </div>
@@ -728,8 +707,8 @@ export default function MenuClient() {
       {/* Subtle Specials ribbon */}
       {showSpecials && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
-          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
-            Tonight&apos;s Specials: Margherita 14&quot;, Fettuccine Bolognese, Prosciutto &amp; Arugula
+          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(196,167,106,0.10), rgba(255,255,255,0))', border:'1px solid rgba(196,167,106,0.28)', color:'#101010' }}>
+            {typeof copy?.specials === 'string' ? copy.specials : "Tonight's Specials are available — ask your server."}
           </div>
         </div>
       )}
