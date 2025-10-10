@@ -98,7 +98,6 @@ export default function MenuClient() {
   const copy = cfg?.copy as Record<string, unknown> | undefined
   const styleCfg = cfg?.style
   const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
-  const navVariant = (styleCfg?.navVariant || 'sticky').toLowerCase()
   const accentSecondary = styleCfg?.accentSecondary || undefined
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
