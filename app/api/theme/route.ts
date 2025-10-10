@@ -24,13 +24,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Theme editing requires DATABASE_URL' }, { status: 501 })
     }
     const tenant = resolveTenant(request.url)
-    const body = await request.json()
-    const nextTheme = {
-      primary: String(body?.primary || '').trim(),
-      accent: String(body?.accent || '').trim(),
-      radius: String(body?.radius || '').trim(),
+    const body = await request.json().catch(() => ({}))
+
+    // Normalize radius: accept number (px) or string (ensure px when numeric)
+    const rawRadius = body?.radius
+    let radius: string = ''
+    if (typeof rawRadius === 'number' && Number.isFinite(rawRadius)) {
+      radius = `${rawRadius}px`
+    } else if (typeof rawRadius === 'string') {
+      const trimmed = rawRadius.trim()
+      radius = /^\d+(\.\d+)?$/.test(trimmed) ? `${trimmed}px` : trimmed
     }
-    if (!nextTheme.primary && !nextTheme.accent && !nextTheme.radius) {
+
+    const nextTheme: Record<string, string> = {}
+    const assign = (k: string) => {
+      const v = typeof body?.[k] === 'string' ? String(body[k]).trim() : ''
+      if (v) nextTheme[k] = v
+    }
+    assign('primary')
+    assign('accent')
+    assign('bg')
+    assign('text')
+    assign('ink')
+    assign('card')
+    assign('muted')
+    if (radius) nextTheme.radius = radius
+
+    if (Object.keys(nextTheme).length === 0) {
       return NextResponse.json({ error: 'No theme fields provided' }, { status: 400 })
     }
 
@@ -46,7 +66,10 @@ export async function POST(request: NextRequest) {
       update: {
         settings: {
           ...currentSettings,
-          theme: nextTheme,
+          theme: {
+            ...(currentSettings as Record<string, unknown>)?.['theme'] as Record<string, unknown> || {},
+            ...nextTheme,
+          },
         },
       },
       create: {
