@@ -2,13 +2,19 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // In Vercel preview, default /menu to benes-draft if no tenant param
+  // In preview, if no tenant provided, derive it from host (-git-<branch>-)
   if (request.nextUrl.pathname === '/menu' && !request.nextUrl.searchParams.get('tenant')) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     if (isPreview) {
       const url = request.nextUrl.clone()
-      url.searchParams.set('tenant', process.env.PREVIEW_DEFAULT_TENANT || 'benes-draft')
-      return NextResponse.redirect(url)
+      const host = request.headers.get('host') || ''
+      const m = host.match(/-git-([a-z0-9-]+)-/i)
+      const fromHost = (m?.[1] || '').toLowerCase()
+      const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
+      if (candidate) {
+        url.searchParams.set('tenant', candidate)
+        return NextResponse.redirect(url)
+      }
     }
   }
   // Friendly owner admin alias: /<slug>-admin -> /menu?tenant=<slug>-draft&admin=1
