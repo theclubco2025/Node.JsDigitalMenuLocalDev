@@ -512,13 +512,18 @@ export default function MenuClient() {
   }
 
   const firstImageUrl = useMemo(() => {
+    // Prefer any configured image if items lack imageUrl in DB
+    const fromConfig = Object.values(imageMap || {})[0]
+    if (typeof fromConfig === 'string' && fromConfig) return fromConfig
     for (const cat of categories) {
       for (const item of cat.items) {
         if (item.imageUrl) return item.imageUrl
+        const mapped = imageMap[item.id]
+        if (mapped) return mapped
       }
     }
     return null
-  }, [categories])
+  }, [categories, imageMap])
 
   // Scroll spy to highlight active category
   useEffect(() => {
@@ -1016,22 +1021,23 @@ export default function MenuClient() {
             <div
               key={category.id}
               id={`cat-${category.id}`}
-              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}
+              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t' : ''}`}
               style={{
-                background: 'linear-gradient(90deg, rgba(20,83,45,0.03) 0% 33.33%, rgba(255,255,255,0.03) 33.33% 66.66%, rgba(185,28,28,0.03) 66.66% 100%)',
+                background: isBenes ? 'linear-gradient(90deg, rgba(20,83,45,0.03), rgba(255,255,255,0.03), rgba(185,28,28,0.03))' : 'var(--card)',
+                borderColor: 'var(--muted)',
                 borderRadius: 12,
                 padding: 12
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold text-white tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)' }}>
+                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
-              {isBenes && typeof categoryIntros[category.name] === 'string' && (
-                <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
+              {typeof categoryIntros[category.name] === 'string' && (
+                <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
               )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
