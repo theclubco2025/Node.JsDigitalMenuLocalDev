@@ -9,7 +9,8 @@
 - Generate slug `<slug>-draft`. Seed menu/theme/images/style/copy in Neon (or import via `/api/tenant/import`).
 
 2) Live edit in preview
-- Open `/menu?tenant=<slug>-draft&admin=1&token=YOUR_ADMIN_TOKEN`.
+- Open `/menu?tenant=<slug>-draft&admin=1`.
+- Sign in (NextAuth) as the tenant owner to Save without a token, or append `&token=YOUR_ADMIN_TOKEN` for super edits.
 - Make edits inline, click Save (writes to Neon). Refresh to verify.
 
 3) Verify assistant
