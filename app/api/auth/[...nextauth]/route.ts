@@ -1,21 +1,20 @@
 // Keeping placeholder; demo login uses a separate dev-only route. This file remains minimal.
-import NextAuth from 'next-auth'
+import NextAuth, { type NextAuthOptions, type Session } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import { prisma } from '@/lib/prisma'
 import { compare } from 'bcryptjs'
+import type { JWT } from 'next-auth/jwt'
 
-function tenantFromRequest(req: Request): string | null {
-  try {
-    const url = new URL(req.url)
-    const t = (url.searchParams.get('tenant') || '').trim().toLowerCase()
-    return t && /^[a-z0-9\-]+$/.test(t) ? t : null
-  } catch {
-    return null
-  }
+type AppUser = {
+  id: string
+  email: string
+  name: string
+  tenantId?: string | null
+  role: 'SUPER_ADMIN' | 'RESTAURANT_OWNER'
 }
 
-export const authOptions = {
+const authOptions: NextAuthOptions = {
   session: { strategy: 'jwt' as const },
   providers: [
     Credentials({
@@ -34,7 +33,8 @@ export const authOptions = {
         }
         const ok = await compare(password, user.passwordHash)
         if (!ok) return null
-        return { id: user.id, email: user.email, name: user.name, tenantId: user.tenantId, role: user.role }
+        const result: AppUser = { id: user.id, email: user.email, name: user.name, tenantId: user.tenantId, role: user.role }
+        return result
       }
     }),
     // Optional Google per-tenant via environment; can be extended to DB-stored client IDs
@@ -47,29 +47,37 @@ export const authOptions = {
     ] : [])
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session, account, profile, }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.userId = (user as any).id
-        token.tenantId = (user as any).tenantId || null
-        token.role = (user as any).role
+        const u = user as unknown as { id?: unknown; tenantId?: unknown; role?: unknown }
+        const t = token as unknown as Record<string, unknown>
+        if (typeof u.id === 'string') t.userId = u.id
+        if (typeof u.tenantId === 'string' || u.tenantId === null) t.tenantId = u.tenantId ?? null
+        if (typeof u.role === 'string') t.role = u.role
       }
-      if (trigger === 'update' && session?.tenantId) {
-        token.tenantId = session.tenantId as any
+      if (trigger === 'update' && session) {
+        const s = session as Record<string, unknown>
+        if (Object.prototype.hasOwnProperty.call(s, 'tenantId')) {
+          const t = token as unknown as Record<string, unknown>
+          t.tenantId = s.tenantId
+        }
       }
       return token
     },
     async session({ session, token }) {
-      ;(session as any).userId = (token as any).userId
-      ;(session as any).tenantId = (token as any).tenantId
-      ;(session as any).role = (token as any).role
+      const t = token as unknown as Record<string, unknown>
+      const s = session as unknown as Record<string, unknown>
+      s.userId = t.userId
+      s.tenantId = t.tenantId
+      s.role = t.role
       return session
     }
   }
 }
 
-const handler = async (req: Request, ctx: any) => {
+const handler = async (req: Request, ctx: unknown) => {
   // Optionally gate Google provider per-tenant later by reading tenant settings
-  return NextAuth(authOptions as any)(req, ctx)
+  return (NextAuth(authOptions) as unknown as (req: Request, ctx?: unknown) => Promise<Response>)(req, ctx)
 }
 
 export { handler as GET, handler as POST }
