@@ -1,10 +1,9 @@
 // Keeping placeholder; demo login uses a separate dev-only route. This file remains minimal.
-import NextAuth, { type NextAuthOptions, type Session } from 'next-auth'
+import NextAuth, { type NextAuthOptions } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 import { prisma } from '@/lib/prisma'
 import { compare } from 'bcryptjs'
-import type { JWT } from 'next-auth/jwt'
 
 type AppUser = {
   id: string
