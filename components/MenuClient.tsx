@@ -758,7 +758,7 @@ export default function MenuClient() {
                           <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
                         )}
                       </div>
-                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number(it.price).toFixed(2)}</div>
+                  <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number(it.price ?? 0).toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -1039,7 +1039,7 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${Number(item.price ?? 0).toFixed(2)}</span>
                         )}
                       </div>
                       {!isAdmin && (
@@ -1216,7 +1216,7 @@ export default function MenuClient() {
                     <div key={cartItem.item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex-1">
                         <h4 className="font-medium text-black">{cartItem.item.name}</h4>
-                        <p className="text-sm text-gray-600">${cartItem.item.price.toFixed(2)} each</p>
+                <p className="text-sm text-gray-600">${Number(cartItem.item.price ?? 0).toFixed(2)} each</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
@@ -1236,7 +1236,7 @@ export default function MenuClient() {
                         </div>
                         <div className="text-right">
                           <div className="font-bold text-black">
-                            ${(cartItem.item.price * cartItem.quantity).toFixed(2)}
+                            ${(Number(cartItem.item.price ?? 0) * cartItem.quantity).toFixed(2)}
                           </div>
                         </div>
                       </div>
@@ -1251,7 +1251,7 @@ export default function MenuClient() {
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-xl font-semibold text-black">Total:</span>
                   <span className="text-2xl font-bold text-black">
-                    ${cartTotal.toFixed(2)}
+                  ${Number(cartTotal ?? 0).toFixed(2)}
                   </span>
                 </div>
                 <button className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200">
