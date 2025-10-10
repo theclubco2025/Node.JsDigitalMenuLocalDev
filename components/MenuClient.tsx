@@ -644,8 +644,8 @@ export default function MenuClient() {
         <div
           className="px-4"
           style={{
-            height: isBenes ? 160 : 72,
-            borderBottom: isBenes ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'
+            height: 72,
+            borderBottom: '1px solid rgba(255,255,255,0.08)'
           }}
         >
           {!isBenes && (
@@ -668,7 +668,7 @@ export default function MenuClient() {
       {/* Optional hero subtitle from copy */}
       <div style={{ height: isBenes ? 160 : 80 }} />
       {showBenesHero && (
-        <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
+        <div className="w-full" style={{height:6, background:'linear-gradient(90deg, var(--accent), #ffffff, var(--accent))'}} />
       )}
       {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
         <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
@@ -685,7 +685,7 @@ export default function MenuClient() {
             className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
             style={{ borderColor: 'rgba(0,0,0,0.08)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
           >
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(196,167,106,.18), rgba(255,255,255,.10), rgba(196,167,106,.18))' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))', opacity: 0.22 }} />
             {brandLogoUrl && (
               <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
             )}
@@ -737,7 +737,7 @@ export default function MenuClient() {
                           <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
                         )}
                       </div>
-                  <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number(it.price ?? 0).toFixed(2)}</div>
+                  <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'var(--accent)' }}>${Number(it.price ?? 0).toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -767,14 +767,14 @@ export default function MenuClient() {
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
                   <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
-                  <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
+              <p className="text-xs md:text-sm" style={{ color: 'var(--accent)' }}>{brandTagline}</p>
             </div>
           </div>
           {/* Tricolor divider bar */}
           <div className="w-full h-1.5 flex">
             <div className="flex-1" style={{ background: '#14532d' }} />
             <div className="flex-1" style={{ background: '#ffffff' }} />
-            <div className="flex-1" style={{ background: '#b91c1c' }} />
+            <div className="flex-1" style={{ background: 'var(--accent)' }} />
           </div>
         </div>
       )}
@@ -1111,7 +1111,7 @@ export default function MenuClient() {
                           }}
                           className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
                           style={{
-                            background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : 'var(--accent)',
+                            background: 'var(--accent)',
                             boxShadow: isBenes ? '0 8px 18px rgba(185,28,28,0.35)' : undefined,
                             letterSpacing: isBenes ? 0.3 : undefined
                           }}
