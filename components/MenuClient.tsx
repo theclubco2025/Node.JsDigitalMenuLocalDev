@@ -759,10 +759,7 @@ export default function MenuClient() {
               borderBottom: '1px solid var(--muted)'
             }}
           >
-            {/* Italian overlay gradient */}
-            <div className="w-full h-full" style={{
-              background: 'linear-gradient(90deg, rgba(20,83,45,0.55), rgba(255,255,255,0.25), rgba(185,28,28,0.55))'
-            }} />
+            <div className="w-full h-full" style={{ background: 'linear-gradient(90deg, rgba(30,30,30,0.45), rgba(196,167,106,0.20), rgba(30,30,30,0.45))' }} />
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
@@ -770,12 +767,7 @@ export default function MenuClient() {
               <p className="text-xs md:text-sm" style={{ color: 'var(--accent)' }}>{brandTagline}</p>
             </div>
           </div>
-          {/* Tricolor divider bar */}
-          <div className="w-full h-1.5 flex">
-            <div className="flex-1" style={{ background: '#14532d' }} />
-            <div className="flex-1" style={{ background: '#ffffff' }} />
-            <div className="flex-1" style={{ background: 'var(--accent)' }} />
-          </div>
+          <div className="w-full h-1.5" style={{ background: 'var(--accent)' }} />
         </div>
       )}
 
@@ -1327,3 +1319,4 @@ export default function MenuClient() {
     </div>
   )
 }
+
