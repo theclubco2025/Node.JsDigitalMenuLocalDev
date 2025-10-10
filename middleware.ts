@@ -12,13 +12,18 @@ export function middleware(request: NextRequest) {
     res.headers.set('Vary', 'Origin')
     return res
   }
-  // In Vercel preview, default /menu to benes-draft if no tenant param
+  // In Vercel preview, if no tenant is provided, use the branch name as default slug when it looks like a tenant
   if (request.nextUrl.pathname === '/menu' && !request.nextUrl.searchParams.get('tenant')) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
-    if (isPreview) {
-      const url = request.nextUrl.clone()
-      url.searchParams.set('tenant', process.env.PREVIEW_DEFAULT_TENANT || 'benes-draft')
-      return NextResponse.redirect(url)
+    const branch = process.env.VERCEL_GIT_COMMIT_REF || ''
+    if (isPreview && branch) {
+      // e.g., independent-draft → tenant=independent-draft
+      const candidate = branch.trim().toLowerCase()
+      if (candidate.includes('-draft') || candidate.includes('-preview') || candidate.length > 0) {
+        const url = request.nextUrl.clone()
+        url.searchParams.set('tenant', candidate)
+        return NextResponse.redirect(url)
+      }
     }
   }
   // Friendly owner admin alias: /<slug>-admin -> /menu?tenant=<slug>-draft&admin=1
