@@ -97,6 +97,9 @@ export default function MenuClient() {
   const imageMap = cfg?.images ?? {}
   const copy = cfg?.copy as Record<string, unknown> | undefined
   const styleCfg = cfg?.style
+  const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
+  const navVariant = (styleCfg?.navVariant || 'sticky').toLowerCase()
+  const accentSecondary = styleCfg?.accentSecondary || undefined
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
@@ -806,7 +809,7 @@ export default function MenuClient() {
       )}
 
       {/* Hero section (hidden for Benes to keep a single compact header) */}
-      {!isBenes && (
+      {!isBenes && heroVariant !== 'none' && (
         <div className="relative">
           <div
             className="w-full h-56 md:h-64 lg:h-72"
@@ -817,10 +820,20 @@ export default function MenuClient() {
               borderBottom: '1px solid var(--muted)'
             }}
           >
-            {/* Italian overlay gradient */}
+            {/* Overlay tuned by tenant style (non-Benes) */}
             <div className="w-full h-full" style={{
-              background: 'linear-gradient(90deg, rgba(20,83,45,0.55), rgba(255,255,255,0.25), rgba(185,28,28,0.55))'
+              background: 'linear-gradient(90deg, rgba(0,0,0,0.28), rgba(255,255,255,0.14), rgba(0,0,0,0.28))'
             }} />
+            {heroVariant === 'logo' && brandLogoUrl && (
+              <div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: `url(${brandLogoUrl})`,
+                  backgroundRepeat: 'repeat',
+                  backgroundSize: '160px 160px'
+                }}
+              />
+            )}
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
@@ -830,9 +843,9 @@ export default function MenuClient() {
           </div>
           {/* Tricolor divider bar */}
           <div className="w-full h-1.5 flex">
-            <div className="flex-1" style={{ background: '#14532d' }} />
+            <div className="flex-1" style={{ background: 'var(--accent)' }} />
             <div className="flex-1" style={{ background: '#ffffff' }} />
-            <div className="flex-1" style={{ background: '#b91c1c' }} />
+            <div className="flex-1" style={{ background: accentSecondary || 'var(--accent)' }} />
           </div>
         </div>
       )}
