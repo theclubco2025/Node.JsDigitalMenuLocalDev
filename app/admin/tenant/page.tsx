@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 
-export default function TenantAdminPage() {
-  // Redirect admin users to the customer view with inline edit mode enabled
-  const defaultTenant = process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo'
-  redirect(`/menu?tenant=${encodeURIComponent(defaultTenant)}&admin=1`)
+export default function TenantAdminPage({ searchParams }: { searchParams?: { tenant?: string; token?: string } }) {
+  const tenant = (searchParams?.tenant || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo').trim()
+  const token = searchParams?.token?.trim()
+  const target = `/menu?tenant=${encodeURIComponent(tenant)}&admin=1${token ? `&token=${encodeURIComponent(token)}` : ''}`
+  redirect(target)
 }

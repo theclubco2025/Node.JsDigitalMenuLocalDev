@@ -26,9 +26,11 @@ export function middleware(request: NextRequest) {
   if (adminAlias && adminAlias[1]) {
     const slug = adminAlias[1]
     const url = request.nextUrl.clone()
+    const token = url.searchParams.get('token') || ''
     url.pathname = '/menu'
     url.searchParams.set('tenant', `${slug}-draft`)
     url.searchParams.set('admin', '1')
+    if (token) url.searchParams.set('token', token)
     return NextResponse.redirect(url)
   }
   // Pretty path for tenant previews: /t/<slug> -> /menu?tenant=<slug>
