@@ -2,6 +2,7 @@
 "use client"
 
 import { Suspense, useState, FormEvent } from 'react'
+import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 
 function LoginContent() {
@@ -18,8 +19,19 @@ function LoginContent() {
     setError('')
 
     try {
-      // Auth temporarily disabled in this demo build to avoid dependency issues
-      setError(`Login is disabled in this demo build. When enabled, you will be redirected to ${callbackUrl}.`)
+      const tenant = (new URLSearchParams(window.location.search)).get('tenant') || ''
+      const res = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+        tenant,
+        callbackUrl
+      })
+      if (res?.error) {
+        setError('Invalid credentials or tenant')
+      } else {
+        window.location.href = callbackUrl
+      }
     } finally {
       setLoading(false)
     }
@@ -142,6 +154,21 @@ function LoginContent() {
                 >
                   <div className="font-medium text-gray-900">Login as Demo Owner</div>
                   <div className="text-sm text-gray-500">Dev-only shortcut using server env</div>
+                </button>
+              </div>
+            )}
+            {process.env.GOOGLE_CLIENT_ID && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const tenant = (new URLSearchParams(window.location.search)).get('tenant') || ''
+                    await signIn('google', { callbackUrl, tenant })
+                  }}
+                  className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <div className="font-medium text-gray-900">Sign in with Google</div>
+                  <div className="text-sm text-gray-500">Uses project Google OAuth (optional)</div>
                 </button>
               </div>
             )}
