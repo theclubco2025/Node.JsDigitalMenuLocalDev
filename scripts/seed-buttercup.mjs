@@ -86,13 +86,37 @@ async function main() {
   let r = await httpPost(`/api/theme?tenant=${encodeURIComponent(tenant)}`, themePayload, cookie)
   console.log('theme status:', r.status)
 
+  const imagesMap = {
+    'original-hangtown-fry': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/hangtown-fry.jpg',
+    'chicken-wings': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/chicken-wings.jpg',
+    'south-of-the-border-quesadilla': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/quesadilla.jpg',
+    'tempura-zucchini': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/tempura-zucchini.jpg',
+    'beer-battered-onion-rings': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/onion-rings.jpg',
+    'mozzarella-sticks': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/mozzarella-sticks.jpg',
+    'triple-coronary-bypass-burger': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/triple-bypass-burger.jpg',
+    'old-fashioned-texas-chili-size': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/chili-size.jpg',
+    'just-a-basic-burger': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/basic-burger.jpg',
+    'sourdough-cheese-burger': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/sourdough-burger.jpg',
+    'patty-melt': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/patty-melt.jpg',
+    'monte-cristo': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/monte-cristo.jpg',
+    'chicken-fried-steak': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/chicken-fried-steak.jpg',
+    'slow-roast-bbq-ribs': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/bbq-ribs.jpg',
+    'meatloaf-and-gravy': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/meatloaf.jpg',
+    'grilled-beef-liver-onions': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/liver-onions.jpg',
+    'chicken-parmesan': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/chicken-parmesan.jpg',
+    'buttercrunch-ice-cream-pie': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/buttercrunch-pie.jpg',
+    'apple-dumpling-supreme': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/apple-dumpling.jpg',
+    'old-fashioned-hot-fudge-sundae': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/hot-fudge-sundae.jpg',
+    'mississippi-mud-pie': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/mississippi-mud-pie.jpg'
+  }
+
   const configPayload = {
     brand: {
       name: 'Buttercup Pantry Restaurant & Bakery',
       logoUrl: 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/logo-clean.png',
       headerMode: 'logo',
     },
-    images: {},
+    images: imagesMap,
     style: {
       heroVariant: 'logo',
       navVariant: 'sticky',
@@ -222,29 +246,7 @@ async function main() {
           ],
         },
       ],
-      images: {
-        'original-hangtown-fry': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/hangtown-fry.jpg',
-        'chicken-wings': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/chicken-wings.jpg',
-        'south-of-the-border-quesadilla': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/quesadilla.jpg',
-        'tempura-zucchini': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/tempura-zucchini.jpg',
-        'beer-battered-onion-rings': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/onion-rings.jpg',
-        'mozzarella-sticks': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/mozzarella-sticks.jpg',
-        'triple-coronary-bypass-burger': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/triple-bypass-burger.jpg',
-        'old-fashioned-texas-chili-size': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/chili-size.jpg',
-        'just-a-basic-burger': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/basic-burger.jpg',
-        'sourdough-cheese-burger': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/sourdough-burger.jpg',
-        'patty-melt': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/patty-melt.jpg',
-        'monte-cristo': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/monte-cristo.jpg',
-        'chicken-fried-steak': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/chicken-fried-steak.jpg',
-        'slow-roast-bbq-ribs': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/bbq-ribs.jpg',
-        'meatloaf-and-gravy': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/meatloaf.jpg',
-        'grilled-beef-liver-onions': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/liver-onions.jpg',
-        'chicken-parmesan': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/chicken-parmesan.jpg',
-        'buttercrunch-ice-cream-pie': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/buttercrunch-pie.jpg',
-        'apple-dumpling-supreme': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/apple-dumpling.jpg',
-        'old-fashioned-hot-fudge-sundae': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/hot-fudge-sundae.jpg',
-        'mississippi-mud-pie': 'https://raw.githubusercontent.com/theclubco2025/assets/main/buttercup/items/mississippi-mud-pie.jpg'
-      },
+      images: imagesMap,
       featuredIds: ['original-hangtown-fry', 'buttercrunch-ice-cream-pie', 'monte-cristo'],
     },
   }
