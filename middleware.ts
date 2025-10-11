@@ -3,6 +3,22 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   // In preview, if no tenant provided, derive it from host (-git-<branch>-)
+  if (request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
+    const isPreview = process.env.VERCEL_ENV === 'preview'
+    if (isPreview) {
+      const url = request.nextUrl.clone()
+      const host = request.headers.get('host') || ''
+      const m = host.match(/-git-([a-z0-9-]+)-/i)
+      const fromHost = (m?.[1] || '').toLowerCase()
+      const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
+      if (candidate) {
+        url.pathname = '/menu'
+        url.searchParams.set('tenant', candidate)
+        return NextResponse.redirect(url)
+      }
+    }
+  }
+  // In preview, if no tenant provided, derive it from host (-git-<branch>-)
   if (request.nextUrl.pathname === '/menu' && !request.nextUrl.searchParams.get('tenant')) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     if (isPreview) {
@@ -56,5 +72,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/t/:path*', '/menu'],
+  matcher: ['/', '/api/:path*', '/t/:path*', '/menu'],
 }
