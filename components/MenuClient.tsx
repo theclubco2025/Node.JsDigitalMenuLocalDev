@@ -115,6 +115,7 @@ export default function MenuClient() {
     if (theme.card) document.body.style.setProperty('--card', theme.card)
     if (theme.muted) document.body.style.setProperty('--muted', theme.muted)
     if (theme.accent) document.body.style.setProperty('--accent', theme.accent)
+    if (theme.primary) document.body.style.setProperty('--primary', theme.primary)
   }, [theme])
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(

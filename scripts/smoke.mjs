@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Quick smoke test for a base URL and tenant slug
-// Usage: node scripts/smoke.mjs --slug <slug> --base <BASE_URL>
+// Usage: node scripts/smoke.mjs --slug <slug> --base <BASE_URL> [--bypass <TOKEN>]
 
 function parseArgs() {
   const args = process.argv.slice(2)
@@ -14,7 +14,7 @@ function parseArgs() {
 }
 
 async function main() {
-  const { slug, base } = parseArgs()
+  const { slug, base, bypass } = parseArgs()
   if (!slug || !base) {
     console.error('Usage: node scripts/smoke.mjs --slug <slug> --base <BASE_URL>')
     process.exit(1)
@@ -26,9 +26,10 @@ async function main() {
     `${baseUrl}/api/theme?tenant=${encodeURIComponent(slug)}`,
     `${baseUrl}/menu?tenant=${encodeURIComponent(slug)}`
   ]
+  const headers = bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : undefined
   for (const u of urls) {
     try {
-      const r = await fetch(u)
+      const r = await fetch(u, { headers })
       console.log(r.status, u)
     } catch (e) {
       console.log('ERR', u, e?.message || e)

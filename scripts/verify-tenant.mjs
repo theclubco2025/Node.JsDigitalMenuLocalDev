@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Verify that a tenant's config is reachable on a given base
-// Usage: node scripts/verify-tenant.mjs --slug <slug> --base <BASE_URL>
+// Usage: node scripts/verify-tenant.mjs --slug <slug> --base <BASE_URL> [--bypass <TOKEN>]
 
 function parseArgs() {
   const args = process.argv.slice(2)
@@ -14,7 +14,7 @@ function parseArgs() {
 }
 
 async function main() {
-  const { slug, base } = parseArgs()
+  const { slug, base, bypass } = parseArgs()
   if (!slug || !base) {
     console.error('Usage: node scripts/verify-tenant.mjs --slug <slug> --base <BASE_URL>')
     process.exit(1)
@@ -25,8 +25,9 @@ async function main() {
     `${baseUrl}/api/tenant/config?tenant=${encodeURIComponent(slug)}`,
     `${baseUrl}/api/theme?tenant=${encodeURIComponent(slug)}`
   ]
+  const headers = bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : undefined
   for (const url of endpoints) {
-    const res = await fetch(url)
+    const res = await fetch(url, { headers })
     const ok = res.ok
     let body = null
     try { body = await res.json() } catch { body = await res.text() }

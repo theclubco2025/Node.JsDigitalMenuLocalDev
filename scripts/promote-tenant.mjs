@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Promote draft → live on a given base URL
-// Usage: node scripts/promote-tenant.mjs --from <slug-draft> --to <slug> --admin <ADMIN_TOKEN> --base <BASE_URL>
+// Usage: node scripts/promote-tenant.mjs --from <slug-draft> --to <slug> --admin <ADMIN_TOKEN> --base <BASE_URL> [--bypass <TOKEN>]
 
 function parseArgs() {
   const args = process.argv.slice(2)
@@ -14,13 +14,13 @@ function parseArgs() {
 }
 
 async function main() {
-  const { from, to, admin, base } = parseArgs()
+  const { from, to, admin, base, bypass } = parseArgs()
   if (!from || !to || !admin || !base) {
     console.error('Usage: node scripts/promote-tenant.mjs --from <slug-draft> --to <slug> --admin <ADMIN_TOKEN> --base <BASE_URL>')
     process.exit(1)
   }
   const baseUrl = base.replace(/\/$/, '')
-  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': admin }
+  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': admin, ...(bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : {}) }
   const res = await fetch(`${baseUrl}/api/tenant/promote`, { method: 'POST', headers, body: JSON.stringify({ from, to }) })
   const text = await res.text().catch(() => '')
   console.log('Promote:', res.status, text)

@@ -29,6 +29,7 @@ async function main() {
 
   const baseUrl = base.replace(/\/$/, '')
   const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': admin }
+  const cookieHeader = bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : {}
 
   // Optionally set bypass cookie for Vercel deployment protection
   if (bypass) {
@@ -54,7 +55,7 @@ async function main() {
   // Theme (optional)
   if (theme) {
     const res = await fetch(`${baseUrl}/api/theme?tenant=${encodeURIComponent(slug)}`, {
-      method: 'POST', headers, body: JSON.stringify(theme)
+      method: 'POST', headers: { ...headers, ...cookieHeader }, body: JSON.stringify(theme)
     })
     console.log('Theme:', res.status, await res.text().catch(() => ''))
   } else {
@@ -66,7 +67,7 @@ async function main() {
   const hasConfig = Object.values(configPayload).some(v => v && typeof v === 'object')
   if (hasConfig) {
     const res = await fetch(`${baseUrl}/api/tenant/config?tenant=${encodeURIComponent(slug)}`, {
-      method: 'POST', headers, body: JSON.stringify(configPayload)
+      method: 'POST', headers: { ...headers, ...cookieHeader }, body: JSON.stringify(configPayload)
     })
     console.log('Config:', res.status, await res.text().catch(() => ''))
   } else {
@@ -76,7 +77,7 @@ async function main() {
   // Menu (optional)
   if (menu) {
     const res = await fetch(`${baseUrl}/api/tenant/import`, {
-      method: 'POST', headers, body: JSON.stringify({ tenant: slug, menu })
+      method: 'POST', headers: { ...headers, ...cookieHeader }, body: JSON.stringify({ tenant: slug, menu })
     })
     console.log('Menu:', res.status, await res.text().catch(() => ''))
   } else {
