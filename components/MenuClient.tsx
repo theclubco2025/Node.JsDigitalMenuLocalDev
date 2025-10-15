@@ -33,12 +33,20 @@ type TenantBrand = {
   header?: { logoUrl?: string }
 }
 
+type TenantCopy = {
+  featuredIds?: string[]
+  categoryIntros?: Record<string, string>
+  heroSubtitle?: string
+  tagline?: string
+  specials?: string | boolean
+}
+
 type TenantConfig = {
   brand?: TenantBrand
   theme?: TenantTheme
   images?: Record<string, string>
   style?: TenantStyleFlags
-  copy?: Record<string, unknown>
+  copy?: TenantCopy
 }
 
 type ThemeCSSVariables = React.CSSProperties & Record<'--bg' | '--text' | '--ink' | '--card' | '--muted' | '--accent', string | undefined>
@@ -85,12 +93,12 @@ export default function MenuClient() {
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
   const brand = cfg?.brand
   const theme = cfg?.theme ?? null
-  const imageMap = cfg?.images ?? {}
-  const copy = cfg?.copy as Record<string, unknown> | undefined
+  const imageMap = useMemo(() => cfg?.images ?? {}, [cfg?.images])
+  const copy = cfg?.copy as TenantCopy | undefined
   const styleCfg = cfg?.style
   const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
   const accentSecondary = styleCfg?.accentSecondary || undefined
-  const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
+  const categoryIntros: Record<string, string | undefined> = copy?.categoryIntros ?? {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
   const brandTagline = brand?.tagline || ''
@@ -526,8 +534,7 @@ export default function MenuClient() {
   }
 
   // Featured picks come from config copy.style.flags/featuredIds or fallback later
-  const featuredItemIds: string[] = Array.isArray((copy as any)?.featuredIds) ? ((copy as any).featuredIds as string[]) : []
-  const pairingsById: Record<string, string> = {}
+  const featuredItemIds: string[] = copy?.featuredIds ?? []
   function cardStyleForCategory(categoryName: string): React.CSSProperties {
     if (/pizza/i.test(categoryName)) {
       return {
@@ -738,10 +745,15 @@ export default function MenuClient() {
                   const res = await fetch('/api/tenant/promote', {
                     method: 'POST', headers, body: JSON.stringify({ from, to })
                   })
-                  if (!res.ok) throw new Error('Publish failed')
+                  if (!res.ok) {
+                    const detail = await res.text().catch(() => '')
+                    throw new Error(detail || `Publish failed (${res.status})`)
+                  }
                   setToast('Published to live')
                 } catch (e) {
-                  setToast(e instanceof Error ? e.message : 'Publish failed')
+                  const needsToken = typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && !adminToken
+                  const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL and retry.' : ''
+                  setToast((e instanceof Error ? e.message : 'Publish failed') + suffix)
                 }
               }}
               className="px-3 py-1 rounded text-sm border border-yellow-300"

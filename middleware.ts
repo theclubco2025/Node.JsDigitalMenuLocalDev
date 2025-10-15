@@ -86,7 +86,7 @@ export function middleware(request: NextRequest) {
     const origin = request.headers.get('origin') || '*'
     response.headers.set('Access-Control-Allow-Origin', origin)
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token, x-admin-token')
     response.headers.set('Vary', 'Origin')
     return response
   }

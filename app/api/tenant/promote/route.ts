@@ -16,8 +16,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({})) as { from?: string; to?: string }
-    const from = (body.from || '').trim()
-    const to = (body.to || '').trim()
+    const params = request.nextUrl.searchParams
+    const from = ((body.from ?? params.get('from') ?? '') as string).trim()
+    const to = ((body.to ?? params.get('to') ?? '') as string).trim()
     if (!from || !to) return NextResponse.json({ error: 'Missing from/to' }, { status: 400 })
 
     const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
