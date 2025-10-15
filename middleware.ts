@@ -68,6 +68,18 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
   }
+  // Production path alias: '/<slug>' -> '/menu?tenant=<slug>' (single segment, non-reserved)
+  const pathOnly = request.nextUrl.pathname.split('/').filter(Boolean)
+  if (
+    pathOnly.length === 1 &&
+    !['api', 't', 'menu', '_next', 'favicon.ico', 'robots.txt', 'sitemap.xml'].includes(pathOnly[0])
+  ) {
+    const slug = pathOnly[0]
+    const url = request.nextUrl.clone()
+    url.pathname = '/menu'
+    url.searchParams.set('tenant', slug)
+    return NextResponse.redirect(url)
+  }
   // Add CORS headers for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const response = NextResponse.next()
@@ -82,5 +94,10 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/api/:path*', '/t/:path*', '/menu'],
+  matcher: [
+    '/api/:path*',
+    '/t/:path*',
+    // Exclude Next internals and static assets; match everything else including '/' and '/menu'
+    '/((?!_next/|favicon.ico|robots.txt|sitemap.xml).*)'
+  ],
 }
