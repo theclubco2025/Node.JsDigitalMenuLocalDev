@@ -50,11 +50,15 @@ export async function GET(request: NextRequest) {
     const fsStyle = await readJson(path.join(base, 'style.json'))
     const fsCopy = await readJson(path.join(base, 'copy.json'))
 
-    const brand = dbBrand ?? fsBrand
-    const theme = dbTheme ?? fsTheme
-    const images = dbImages ?? fsImages
-    const style = dbStyle ?? fsStyle
-    const copy = dbCopy ?? fsCopy
+    const isNonEmpty = (obj: unknown) => !!(obj && typeof obj === 'object' && Object.keys(obj as Record<string, unknown>).length > 0)
+    const hasName = (obj: unknown) => !!(obj && typeof (obj as Record<string, unknown>)['name'] === 'string' && ((obj as Record<string, unknown>)['name'] as string).trim() !== '')
+
+    // Prefer DB only when it actually contains meaningful values; otherwise fall back to FS
+    const brand = (hasName(dbBrand) ? dbBrand : null) ?? fsBrand
+    const theme = (isNonEmpty(dbTheme) ? dbTheme : null) ?? fsTheme
+    const images = (isNonEmpty(dbImages) ? dbImages : null) ?? fsImages
+    const style = (isNonEmpty(dbStyle) ? dbStyle : null) ?? fsStyle
+    const copy = (isNonEmpty(dbCopy) ? dbCopy : null) ?? fsCopy
 
     return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
