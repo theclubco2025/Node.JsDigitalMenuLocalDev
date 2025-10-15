@@ -18,17 +18,19 @@ export function middleware(request: NextRequest) {
       }
     }
   }
-  // In preview, if no tenant provided, derive it from host (-git-<branch>-)
-  if (request.nextUrl.pathname === '/menu' && !request.nextUrl.searchParams.get('tenant')) {
+  // In preview, ALWAYS normalize /menu to the branch slug tenant, even if a wrong tenant query is present
+  if (request.nextUrl.pathname === '/menu') {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     if (isPreview) {
       const url = request.nextUrl.clone()
       const host = request.headers.get('host') || ''
+      const fromEnv = (process.env.VERCEL_GIT_COMMIT_REF || '').toLowerCase()
       const m = host.match(/-git-([a-z0-9-]+)-/i)
       const fromHost = (m?.[1] || '').toLowerCase()
-      const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
-      if (candidate) {
-        url.searchParams.set('tenant', candidate)
+      const desiredTenant = fromEnv || fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
+      const currentTenant = (url.searchParams.get('tenant') || '').toLowerCase()
+      if (desiredTenant && currentTenant !== desiredTenant) {
+        url.searchParams.set('tenant', desiredTenant)
         return NextResponse.redirect(url)
       }
     }
