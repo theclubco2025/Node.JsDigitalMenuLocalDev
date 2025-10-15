@@ -12,11 +12,11 @@ export function middleware(request: NextRequest) {
     res.headers.set('Vary', 'Origin')
     return res
   }
-  // In preview, if no tenant provided, derive it from host (-git-<branch>-)
+  // Default / to benes in production; in preview derive tenant from host/branch
   if (request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
+    const url = request.nextUrl.clone()
     if (isPreview) {
-      const url = request.nextUrl.clone()
       const host = request.headers.get('host') || ''
       const m = host.match(/-git-([a-z0-9-]+)-/i)
       const fromHost = (m?.[1] || '').toLowerCase()
@@ -26,6 +26,10 @@ export function middleware(request: NextRequest) {
         url.searchParams.set('tenant', candidate)
         return NextResponse.redirect(url)
       }
+    } else {
+      url.pathname = '/menu'
+      url.searchParams.set('tenant', 'benes')
+      return NextResponse.redirect(url)
     }
   }
   // In preview, ALWAYS normalize /menu to the branch slug tenant, even if a wrong tenant query is present

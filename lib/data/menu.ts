@@ -122,12 +122,14 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
     const buf = await fs.readFile(filePath, "utf8");
     const json = JSON.parse(buf);
     // Basic shape validation
-    if (!json || !Array.isArray(json.categories)) return STUB;
+    if (!json || !Array.isArray(json.categories)) {
+      return tenant === 'demo' ? STUB : { categories: [] };
+    }
     return json as MenuResponse;
   } catch {
-    // Fallback to in-memory override if present; otherwise stub
+    // Fallback to in-memory override if present; otherwise avoid stub for non-demo tenants
     if (memoryStore.has(tenant)) return memoryStore.get(tenant)!;
-    return STUB;
+    return tenant === 'demo' ? STUB : { categories: [] };
   }
 }
 
