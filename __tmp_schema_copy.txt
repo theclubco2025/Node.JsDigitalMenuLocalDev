@@ -1,0 +1,149 @@
+﻿generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Menu {
+  id          String         @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  categories  MenuCategory[]
+
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("menus")
+}
+
+model MenuCategory {
+  id           String      @id @default(cuid())
+  menuId       String
+  name         String
+  description  String?
+  displayOrder Int         @default(0)
+  createdAt    DateTime    @default(now())
+
+  menu         Menu        @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  items        MenuItem[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id          String         @id @default(cuid())
+  categoryId  String
+  name        String
+  description String
+  price       Float
+  imageUrl    String?
+  available   Boolean        @default(true)
+  calories    Int?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  category    MenuCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags        MenuItemTag[]
+
+  @@map("menu_items")
+}
+
+model MenuItemTag {
+  id       String   @id @default(cuid())
+  itemId   String
+  tag      String
+
+  item     MenuItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, tag])
+  @@map("menu_item_tags")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String?
+  role         Role      @default(RESTAURANT_OWNER)
+  tenantId     String?
+  createdAt    DateTime  @default(now())
+  lastLogin    DateTime?
+
+  tenant       Tenant?   @relation(fields: [tenantId], references: [id])
+
+  @@map("users")
+}
+
+model Tenant {
+  id                    String        @id @default(cuid())
+  slug                  String        @unique
+  name                  String
+  domain                String?
+  plan                  Plan          @default(BASIC)
+  status                TenantStatus  @default(TRIAL)
+  monthlyRevenue        Float         @default(0)
+
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean       @default(false)
+  trialEnd              DateTime?
+
+  settings              Json?
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  users                 User[]
+  menus                 Menu[]
+  sessions              CustomerSession[]
+
+  @@map("tenants")
+}
+
+model CustomerSession {
+  id                  String                 @id @default(cuid())
+  tenantId            String
+  customerFingerprint String
+  preferences         Json
+  lastVisit           DateTime               @default(now())
+
+  tenant              Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  conversationHistory ConversationMessage[]
+
+  @@index([tenantId, customerFingerprint])
+}
+
+model ConversationMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      String
+  message   String
+  timestamp DateTime @default(now())
+
+  session   CustomerSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  SUPER_ADMIN
+  RESTAURANT_OWNER
+}
+
+enum Plan {
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+  CANCELED
+}

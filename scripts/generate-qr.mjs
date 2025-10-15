@@ -5,7 +5,8 @@ if (!tenantId) {
   console.error('Usage: node scripts/generate-qr.mjs <tenantId> [baseUrl]')
   process.exit(1)
 }
-const target = `${baseUrl.replace(/\/$/, '')}/menu?tenant=${encodeURIComponent(tenantId)}`
+// Path-first live URL format: /t/<slug>
+const target = `${baseUrl.replace(/\/$/, '')}/t/${encodeURIComponent(tenantId)}`
 const pngUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(target)}`
 console.log(pngUrl)
 

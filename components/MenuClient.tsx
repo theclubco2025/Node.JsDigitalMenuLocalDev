@@ -59,9 +59,6 @@ export default function MenuClient() {
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  // plate button removed
-  // plate pile removed with floating button
-  // fly-to-plate animation removed
 
   // Get tenant/admin from URL params
   const isBrowser = typeof window !== 'undefined'
@@ -84,12 +81,6 @@ export default function MenuClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Tenant flags
-  const isBenes = useMemo(() => {
-    const slug = (tenant || '').toLowerCase()
-    return slug === 'benes' || slug === 'benes-draft'
-  }, [tenant])
-
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
   const brand = cfg?.brand
@@ -97,30 +88,15 @@ export default function MenuClient() {
   const imageMap = cfg?.images ?? {}
   const copy = cfg?.copy as Record<string, unknown> | undefined
   const styleCfg = cfg?.style
-  const accentSecondary = styleCfg?.accentSecondary
+  const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
+  const accentSecondary = styleCfg?.accentSecondary || undefined
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
   const brandTagline = brand?.tagline || ''
 
-  // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
-  const effectiveTheme = useMemo(() => {
-    if (!theme) return null
-    if (isBenes) {
-      return {
-        primary: theme.primary || '#0f1e17',
-        bg: theme.bg || theme.primary || '#0f1e17',
-        text: theme.text || '#f3f5f0',
-        ink: theme.ink || '#101010',
-        card: theme.card || '#ffffff',
-        muted: theme.muted || '#e7e0d3',
-        accent: theme.accent || '#ef4444'
-      }
-    }
-    return theme
-  }, [theme, isBenes])
-
-  
+  // Ensure themed CSS variables exist on first paint
+  const effectiveTheme = useMemo(() => theme ?? null, [theme])
 
   // Apply theme from config
   useEffect(() => {
@@ -132,6 +108,7 @@ export default function MenuClient() {
     if (theme.card) document.body.style.setProperty('--card', theme.card)
     if (theme.muted) document.body.style.setProperty('--muted', theme.muted)
     if (theme.accent) document.body.style.setProperty('--accent', theme.accent)
+    if (theme.primary) document.body.style.setProperty('--primary', theme.primary)
   }, [theme])
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
@@ -139,9 +116,8 @@ export default function MenuClient() {
     fetcher
   )
 
-  // Hide hero/specials for Benes draft per request
-  const showBenesHero = useMemo(() => (isBenes ? false : (styleCfg?.heroVariant !== 'none')), [isBenes, styleCfg?.heroVariant])
-  const showSpecials = isBenes ? false : !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
+  const showSpecials = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
+  const showSignatureGrid = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).signatureGrid)
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -158,14 +134,12 @@ export default function MenuClient() {
   // Filter logic matching your Canvas app exactly (client-side now to avoid API refiring per keystroke)
   const filteredCategories = useMemo(() => {
     if (!baseMenu?.categories) return []
-    
     return baseMenu.categories
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
           // Category filter
           if (selectedCategory && category.name !== selectedCategory) return false
-          
           // Search filter (name and description)
           if (searchQuery) {
             const searchLower = searchQuery.toLowerCase()
@@ -174,7 +148,6 @@ export default function MenuClient() {
             const matchesTags = (item.tags || []).some(tag => tag.toLowerCase().includes(searchLower))
             if (!matchesName && !matchesDescription && !matchesTags) return false
           }
-          
           // Dietary filters (must have all selected dietary tags)
           if (selectedDietaryFilters.length > 0) {
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
@@ -182,7 +155,6 @@ export default function MenuClient() {
             )
             if (!hasAllDietaryFilters) return false
           }
-          
           return true
         })
       }))
@@ -315,8 +287,6 @@ export default function MenuClient() {
     )
   }
 
-  const launchFlyToPlate = () => {}
-
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
       const existing = prev.find(cartItem => cartItem.item.id === item.id)
@@ -343,7 +313,6 @@ export default function MenuClient() {
     setCart(prev => prev.map(cartItem =>
       cartItem.item.id === itemId ? { ...cartItem, quantity } : cartItem
     ))
-    // no plate pile visuals anymore
   }
 
   const sendAssistantMessage = async (overrideMessage?: string) => {
@@ -489,13 +458,18 @@ export default function MenuClient() {
   }
 
   const firstImageUrl = useMemo(() => {
+    // Prefer any configured image if items lack imageUrl in DB
+    const fromConfig = Object.values(imageMap || {})[0]
+    if (typeof fromConfig === 'string' && fromConfig) return fromConfig
     for (const cat of categories) {
       for (const item of cat.items) {
         if (item.imageUrl) return item.imageUrl
+        const mapped = imageMap[item.id]
+        if (mapped) return mapped
       }
     }
     return null
-  }, [categories])
+  }, [categories, imageMap])
 
   // Scroll spy to highlight active category
   useEffect(() => {
@@ -551,18 +525,9 @@ export default function MenuClient() {
     ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
   }
 
-  // Benes-specific featured picks and pairings
-  const featuredItemIds: string[] = isBenes ? [
-    'i-margherita-napoletana-14',
-    'i-fettuccine-bolognese',
-    'i-prosciutto-arugula-14'
-  ] : []
-  const pairingsById: Record<string, string> = isBenes ? {
-    'i-fettuccine-bolognese': 'Pairs with Zinfandel',
-    'i-margherita-napoletana-14': 'Pairs with Chianti',
-    'i-prosciutto-arugula-14': 'Pairs with Pinot Grigio',
-    'i-lasagna': 'Pairs with Sangiovese'
-  } : {}
+  // Featured picks come from config copy.style.flags/featuredIds or fallback later
+  const featuredItemIds: string[] = Array.isArray((copy as any)?.featuredIds) ? ((copy as any).featuredIds as string[]) : []
+  const pairingsById: Record<string, string> = {}
   function cardStyleForCategory(categoryName: string): React.CSSProperties {
     if (/pizza/i.test(categoryName)) {
       return {
@@ -647,83 +612,35 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Fixed Header: Benes uses centered logo background; others show title */}
+      {/* Fixed Header */}
       <div
         className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-        style={isBenes ? {
-          backgroundColor: '#ffffff',
-          backgroundImage: brandLogoUrl ? `url(${brandLogoUrl})` : undefined,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          backgroundSize: 'auto 140px'
-        } : { background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+        style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
       >
         <div
           className="px-4"
-          style={{
-            height: isBenes ? 160 : 72,
-            borderBottom: isBenes ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'
-          }}
+          style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
         >
-          {!isBenes && (
-            <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-              {brandLogoUrl ? (
-                <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-              )}
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italiana)' }}>{brandName}</h1>
-                <p className="text-gray-200 text-xs">{brandTagline}</p>
-              </div>
+          <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+            {brandLogoUrl ? (
+              <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+            )}
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italian)' }}>{brandName}</h1>
+              <p className="text-gray-200 text-xs">{brandTagline}</p>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
       {/* Spacer to offset fixed header height */}
-      {/* Optional hero subtitle from copy */}
-      <div style={{ height: isBenes ? 160 : 80 }} />
-      {showBenesHero && (
-        <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
-      )}
-      {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
-        <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
-          <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
-        </div>
-      )}
+      <div style={{ height: 80 }} />
 
-      {/* Category chip scroller removed for Benes */}
+      {/* Category chip scroller (optional - enable via future flag) */}
 
-      {/* Benes hero banner */}
-      {showBenesHero && (
-        <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div
-            className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
-            style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
-          >
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.22), rgba(255,255,255,.12), rgba(185,28,28,.22))' }} />
-            {brandLogoUrl && (
-              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
-            )}
-            <div className="relative h-full flex items-center justify-between px-5">
-              <div className="max-w-lg">
-                {typeof copy?.tagline === 'string' && (
-                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#101010' }}>{copy.tagline}</div>
-                )}
-                {typeof copy?.heroSubtitle === 'string' && (
-                  <div className="text-sm md:text-base text-gray-700 mt-1">{copy.heroSubtitle}</div>
-                )}
-              </div>
-              <div className="hidden md:flex items-center gap-2">
-                <span className="inline-block w-2 h-8 rounded" style={{ background: '#128807' }} />
-                <span className="inline-block w-2 h-8 rounded" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)' }} />
-                <span className="inline-block w-2 h-8 rounded" style={{ background: '#b91c1c' }} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* No special-case banner */}
 
       {/* Subtle Specials ribbon */}
       {showSpecials && (
@@ -734,8 +651,8 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Signature Picks (Benes) */}
-      {false && (
+      {/* Signature Picks (data-flagged) */}
+      {showSignatureGrid && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
@@ -745,20 +662,18 @@ export default function MenuClient() {
             {resolveFeatured().map((it) => {
               const src = imageMap[it.id] || it.imageUrl || ''
               return (
-                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'#fffdf5' }}>
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
                   {src && (
                     <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
                   )}
-                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.06), rgba(255,255,255,.02), rgba(185,28,28,.06))' }} />
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold text-white" style={{ background:'rgba(0,0,0,0.7)' }}>Most Loved</div>
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
-                        {pairingsById[it.id] && (
-                          <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
-                        )}
+                        {/* optional pairing copy can be added via copy data */}
                       </div>
-                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number(it.price).toFixed(2)}</div>
+                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'var(--accent)' }}>${Number(it.price).toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -768,8 +683,8 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Hero section (hidden for Benes to keep a single compact header) */}
-      {!isBenes && (
+      {/* Hero section (variant-driven) */}
+      {heroVariant !== 'none' && (
         <div className="relative">
           <div
             className="w-full h-56 md:h-64 lg:h-72"
@@ -780,10 +695,20 @@ export default function MenuClient() {
               borderBottom: '1px solid var(--muted)'
             }}
           >
-            {/* Italian overlay gradient */}
+            {/* Overlay tuned by tenant style */}
             <div className="w-full h-full" style={{
-              background: 'linear-gradient(90deg, rgba(20,83,45,0.55), rgba(255,255,255,0.25), rgba(185,28,28,0.55))'
+              background: 'linear-gradient(90deg, rgba(0,0,0,0.28), rgba(255,255,255,0.14), rgba(0,0,0,0.28))'
             }} />
+            {heroVariant === 'logo' && brandLogoUrl && (
+              <div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: `url(${brandLogoUrl})`,
+                  backgroundRepeat: 'repeat',
+                  backgroundSize: '160px 160px'
+                }}
+              />
+            )}
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
@@ -791,12 +716,8 @@ export default function MenuClient() {
                   <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
             </div>
           </div>
-          {/* Tricolor divider bar */}
-          <div className="w-full h-1.5 flex">
-            <div className="flex-1" style={{ background: '#14532d' }} />
-            <div className="flex-1" style={{ background: '#ffffff' }} />
-            <div className="flex-1" style={{ background: '#b91c1c' }} />
-          </div>
+            {/* Divider */}
+            <div className="w-full h-1.5" style={{ background: 'var(--muted)' }} />
         </div>
       )}
 
@@ -835,7 +756,6 @@ export default function MenuClient() {
 
       {/* Search & Filters (scroll with page) */}
       <div className="max-w-7xl mx-auto px-4 py-2">
-        
         {/* Search Bar */}
         <div className="mb-3">
           <div className="flex items-center gap-2 max-w-2xl mx-auto">
@@ -967,21 +887,23 @@ export default function MenuClient() {
             <div
               key={category.id}
               id={`cat-${category.id}`}
-              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}
+              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t' : ''}`}
               style={{
+                background: 'var(--card)',
+                borderColor: 'var(--muted)',
                 borderRadius: 12,
                 padding: 12
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: isBenes ? '#101010' : 'var(--ink)' }}>
+                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
-              {isBenes && typeof categoryIntros[category.name] === 'string' && (
-                <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
+              {typeof categoryIntros[category.name] === 'string' && (
+                <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
               )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -991,9 +913,8 @@ export default function MenuClient() {
                     className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
                     style={{ 
                       borderRadius: 'var(--radius)', 
-                      background: isBenes ? '#fffdf5' : 'var(--card)', 
-                      borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
-                      boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
+                      background: 'var(--card)', 
+                      borderColor: 'var(--muted)',
                       ...cardStyleForCategory(category.name)
                     }}
                   >
@@ -1127,15 +1048,9 @@ export default function MenuClient() {
                             setCartBump(true)
                             setToast(`Added ${item.name}`)
                             setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
-                            launchFlyToPlate()
-                            // plate pile visuals removed
                           }}
                           className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
-                          style={{
-                            background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : 'var(--accent)',
-                            boxShadow: isBenes ? '0 8px 18px rgba(185,28,28,0.35)' : undefined,
-                            letterSpacing: isBenes ? 0.3 : undefined
-                          }}
+                          style={{ background: 'var(--accent)' }}
                         >
                           {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
                         </button>
@@ -1170,8 +1085,6 @@ export default function MenuClient() {
         </p>
       </div>
 
-      {/* Floating Plate Button removed */}
-
       {/* AI Assistant Button */}
       <button
         onClick={() => setIsAssistantOpen(true)}
@@ -1185,8 +1098,6 @@ export default function MenuClient() {
           <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
         </svg>
       </button>
-
-      {/* Floating flyers removed */}
 
       {/* Plate Drawer */}
       {isCartOpen && (
