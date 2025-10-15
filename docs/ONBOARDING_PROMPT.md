@@ -37,8 +37,8 @@
 5) Import menu
    - POST /api/tenant/import with { tenant: "{TENANT_SLUG}-draft", menu }
 6) Verify
-   - GET /api/menu?tenant={TENANT_SLUG}-draft
-   - Live preview on Vercel: /t/{TENANT_SLUG}-draft (or /menu?tenant=...)
+  - GET /api/menu?tenant={TENANT_SLUG}-draft
+  - Live preview on Vercel: open preview host + /menu (tenant auto-derived); pretty path `/t/{TENANT_SLUG}-draft` also supported
 7) Promote to live (no redeploy)
    - POST /api/tenant/promote with { from: "{TENANT_SLUG}-draft", to: "{TENANT_SLUG}" }
    - Live view: /t/{TENANT_SLUG}
@@ -91,9 +91,9 @@ Required agent output (dev)
 - PR: only `data/tenants/{TENANT_SLUG}/**` files.
 
 After deploy (prod)
-- Vercel URL: `https://<project>.vercel.app/t/{TENANT_SLUG}`
-- Update QR with Vercel base if requested:
-  - `node scripts/generate-qr.mjs {TENANT_SLUG} https://<project>.vercel.app`
+- Path-first live URL: `https://tccmenus.com/t/{TENANT_SLUG}`
+- Update QR with production domain (if requested):
+  - `node scripts/generate-qr.mjs {TENANT_SLUG} https://tccmenus.com`
 
 Guardrails
 - No edits outside `data/tenants/{TENANT_SLUG}/**` for tenant PRs.

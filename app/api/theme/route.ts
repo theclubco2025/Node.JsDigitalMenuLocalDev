@@ -21,6 +21,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Protect write in production with X-Admin-Token
+    if (process.env.NODE_ENV === 'production') {
+      const adminToken = process.env.ADMIN_TOKEN
+      const headerToken = request.headers.get('x-admin-token') || request.headers.get('X-Admin-Token')
+      if (!adminToken || !headerToken || headerToken !== adminToken) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ error: 'Theme editing requires DATABASE_URL' }, { status: 501 })
     }

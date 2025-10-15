@@ -1,3 +1,21 @@
+### Onboarding Checklist (Path-first; fast)
+
+1) Choose slug (short): `<slug>`; draft branch: `<slug>-draft`.
+2) Push draft branch; open preview `/menu` (tenant auto-derived).
+3) Seed draft:
+   - `node scripts/seed-tenant.mjs --slug <slug>-draft --admin <ADMIN_TOKEN> --bypass <TOKEN?> --base https://<preview-host>`
+4) Verify:
+   - `node scripts/verify-tenant.mjs --slug <slug>-draft --base https://<preview-host>` and refresh page.
+5) Approve → Promote:
+   - `node scripts/promote-tenant.mjs --from <slug>-draft --to <slug> --admin <ADMIN_TOKEN> --base https://<preview-host>`
+6) Live QR (stable):
+   - `node scripts/generate-qr.mjs <slug> https://tccmenus.com`
+
+Notes
+- Never use preview URLs for QR codes.
+- Data edits do not require redeploys; refresh to see changes.
+- Code changes redeploy without altering the live path.
+
 # Onboarding Checklist (≤ 60 minutes)
 
 1) Create tenant id
