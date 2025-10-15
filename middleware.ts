@@ -2,17 +2,21 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // In preview, if no tenant provided, derive it from host (-git-<branch>-)
-  if (request.nextUrl.pathname === '/menu' && !request.nextUrl.searchParams.get('tenant')) {
-    const isPreview = process.env.VERCEL_ENV === 'preview'
-    if (isPreview) {
+  // In preview, normalize tenant to branch name (from env) for both '/' and '/menu'
+  const isPreview = process.env.VERCEL_ENV === 'preview'
+  const branchRef = (process.env.VERCEL_GIT_COMMIT_REF || '').toLowerCase()
+  if (isPreview && branchRef) {
+    if (request.nextUrl.pathname === '/') {
       const url = request.nextUrl.clone()
-      const host = request.headers.get('host') || ''
-      const m = host.match(/-git-([a-z0-9-]+)-/i)
-      const fromHost = (m?.[1] || '').toLowerCase()
-      const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
-      if (candidate) {
-        url.searchParams.set('tenant', candidate)
+      url.pathname = '/menu'
+      url.searchParams.set('tenant', branchRef)
+      return NextResponse.redirect(url)
+    }
+    if (request.nextUrl.pathname === '/menu') {
+      const url = request.nextUrl.clone()
+      const currentTenant = (url.searchParams.get('tenant') || '').toLowerCase()
+      if (currentTenant !== branchRef) {
+        url.searchParams.set('tenant', branchRef)
         return NextResponse.redirect(url)
       }
     }
