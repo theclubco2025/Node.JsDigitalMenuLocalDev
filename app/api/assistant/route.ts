@@ -179,8 +179,8 @@ export async function POST(request: NextRequest) {
         const preview = topKMenu(filtered, query, 6)
         const previewSnippet = snippet(preview, 24)
         const msg = previewSnippet && previewSnippet.trim().length > 0
-          ? `Here are some items that match your query:\n${previewSnippet}`
-          : 'Our assistant is initializing. Try asking about a dish or ingredient.'
+          ? `Here are some items that match your question:\n${previewSnippet}`
+          : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
         return NextResponse.json({ ok: true, tenantId, text: msg }, { headers: corsHeaders(request.headers.get('origin') || '*') })
       }
     }

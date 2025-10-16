@@ -313,9 +313,20 @@ export function snippet(menu: MenuResponse, limit = 12): string {
   const lines: string[] = []
   for (const cat of menu.categories) {
     for (const item of cat.items) {
+      const parts: string[] = []
+      parts.push(item.name)
+      if (item.description && item.description.trim().length > 0) {
+        parts.push(item.description.trim())
+      }
+      const tags = (item.tags || []).filter(Boolean)
+      if (tags.length > 0) {
+        parts.push(`Tags: ${tags.join(', ')}`)
+      }
       const price = typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : ''
-      const tags = (item.tags || []).join(', ')
-      lines.push(`${item.name} — ${tags}${price ? ` — ${price}` : ''}`.trim())
+      if (price) {
+        parts.push(price)
+      }
+      lines.push(parts.join(' • '))
       if (lines.length >= limit) return lines.join('\n')
     }
   }

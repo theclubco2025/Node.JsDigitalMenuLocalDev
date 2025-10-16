@@ -9,7 +9,9 @@
           "name": "Fettuccine Bolognese",
           "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 23,
-          "tags": [],
+          "diet": ["contains meat"],
+          "allergens": ["dairy", "gluten"],
+          "tags": ["hearty", "signature"],
           "imageUrl": ""
         },
         {
@@ -17,7 +19,9 @@
           "name": "Spaghetti and Meatballs",
           "description": "House made meatballs, signature marinara infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 20,
-          "tags": [],
+          "diet": ["contains meat"],
+          "allergens": ["gluten", "dairy"],
+          "tags": ["classic"],
           "imageUrl": ""
         },
         {
@@ -25,7 +29,9 @@
           "name": "Chicken Fettuccine Alfredo",
           "description": "House made alfredo sauce, sliced chicken breast, basil, parmesan.",
           "price": 22,
-          "tags": [],
+          "diet": ["contains meat"],
+          "allergens": ["dairy", "gluten"],
+          "tags": ["creamy"],
           "imageUrl": ""
         },
         {
@@ -33,7 +39,9 @@
           "name": "Spaghetti Bolognese",
           "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 23,
-          "tags": [],
+          "diet": ["contains meat"],
+          "allergens": ["gluten", "dairy"],
+          "tags": ["signature"],
           "imageUrl": ""
         },
         {
@@ -41,7 +49,9 @@
           "name": "Rigatoni with Sausage",
           "description": "Rigatoni grande, sliced Italian sausage, pomodoro sauce, topped with asiago and basil.",
           "price": 22,
-          "tags": [],
+          "diet": ["contains meat"],
+          "allergens": ["gluten", "dairy"],
+          "tags": ["spicy"],
           "imageUrl": ""
         },
         {
@@ -49,7 +59,9 @@
           "name": "Linguine Pesto",
           "description": "Signature pesto, asiago, heirloom cherry tomatoes.",
           "price": 19,
-          "tags": [],
+          "diet": ["vegetarian"],
+          "allergens": ["dairy", "gluten"],
+          "tags": ["herbaceous"],
           "imageUrl": ""
         },
         {
@@ -57,7 +69,9 @@
           "name": "Linguine and Clams",
           "description": "Fresh steamed clams, white wine garlic lemon butter sauce.",
           "price": 23,
-          "tags": [],
+          "diet": ["contains seafood"],
+          "allergens": ["shellfish", "gluten", "dairy"],
+          "tags": ["seafood"],
           "imageUrl": ""
         },
         {
@@ -65,7 +79,9 @@
           "name": "Linguine and Prawns",
           "description": "Fresh prawns sautéed in white wine garlic lemon butter sauce, with slivered zucchini and carrots.",
           "price": 22,
-          "tags": [],
+          "diet": ["contains seafood"],
+          "allergens": ["shellfish", "gluten", "dairy"],
+          "tags": ["seafood"],
           "imageUrl": ""
         },
         {
@@ -73,7 +89,9 @@
           "name": "Fettuccine Vegetariano",
           "description": "Ribbons of pasta, portobello mushrooms, ribbons of carrots and Italian squash, sautéed in olive oil and garlic, topped with asiago and basil.",
           "price": 19,
-          "tags": [],
+          "diet": ["vegetarian"],
+          "allergens": ["gluten", "dairy"],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
@@ -81,7 +99,9 @@
           "name": "Spaghetti Aglio e Olio",
           "description": "Olive oil, garlic, asiago, Italian parsley, touch of crushed red pepper.",
           "price": 15,
-          "tags": [],
+          "diet": ["vegetarian"],
+          "allergens": ["gluten", "dairy"],
+          "tags": ["classic"],
           "imageUrl": ""
         },
         {
@@ -89,7 +109,9 @@
           "name": "Lasagna",
           "description": "Pomodoro sauce, Italian sausage, ricotta, basil, house made lasagna noodles, topped with asiago and mozzarella.",
           "price": 18,
-          "tags": [],
+          "diet": ["contains meat"],
+          "allergens": ["gluten", "dairy"],
+          "tags": ["baked"],
           "imageUrl": ""
         }
       ]
