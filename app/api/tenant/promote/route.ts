@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json({ ok: true, fsFallback: true })
-      } catch (e) {
+      } catch {
         return NextResponse.json({ error: 'Source tenant not found' }, { status: 404 })
       }
     }

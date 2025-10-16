@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const tenant = (searchParams.get('tenant') || '').trim() || 'demo'
+    const fallbackTenant = `${tenant}-draft`
     // Always prefer DB (Neon) so preview reflects live edits instantly; fallback to repo files
 
     // Load DB settings first (if available)
@@ -27,6 +28,13 @@ export async function GET(request: NextRequest) {
     let dbImages: Record<string, unknown> | null = null
     let dbStyle: Record<string, unknown> | null = null
     let dbCopy: Record<string, unknown> | null = null
+
+    // Fallback (draft) DB settings
+    let fbDbBrand: Record<string, unknown> | null = null
+    let fbDbTheme: Record<string, unknown> | null = null
+    let fbDbImages: Record<string, unknown> | null = null
+    let fbDbStyle: Record<string, unknown> | null = null
+    let fbDbCopy: Record<string, unknown> | null = null
     if (process.env.DATABASE_URL) {
       try {
         const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
@@ -38,6 +46,17 @@ export async function GET(request: NextRequest) {
           dbImages = (s.images as Record<string, unknown>) || null
           dbStyle = (s.style as Record<string, unknown>) || null
           dbCopy = (s.copy as Record<string, unknown>) || null
+
+          // If any are missing, try draft tenant as fallback (DB)
+          if (!dbBrand || !dbTheme || !dbImages || !dbStyle || !dbCopy) {
+            const fbRow = await prisma.tenant.findUnique({ where: { slug: fallbackTenant }, select: { settings: true } })
+            const fs = (fbRow?.settings as Record<string, unknown>) || {}
+            fbDbTheme = (fs.theme as Record<string, unknown>) || null
+            fbDbBrand = (fs.brand as Record<string, unknown>) || null
+            fbDbImages = (fs.images as Record<string, unknown>) || null
+            fbDbStyle = (fs.style as Record<string, unknown>) || null
+            fbDbCopy = (fs.copy as Record<string, unknown>) || null
+          }
         }
       } catch {}
     }
@@ -50,15 +69,43 @@ export async function GET(request: NextRequest) {
     const fsStyle = await readJson(path.join(base, 'style.json'))
     const fsCopy = await readJson(path.join(base, 'copy.json'))
 
+    // Filesystem fallback from draft tenant
+    const fbBase = path.join(process.cwd(), 'data', 'tenants', fallbackTenant)
+    const fbFsBrand = await readJson(path.join(fbBase, 'brand.json'))
+    const fbFsTheme = await readJson(path.join(fbBase, 'theme.json'))
+    const fbFsImages = await readJson(path.join(fbBase, 'images.json'))
+    const fbFsStyle = await readJson(path.join(fbBase, 'style.json'))
+    const fbFsCopy = await readJson(path.join(fbBase, 'copy.json'))
+
     const isNonEmpty = (obj: unknown) => !!(obj && typeof obj === 'object' && Object.keys(obj as Record<string, unknown>).length > 0)
     const hasName = (obj: unknown) => !!(obj && typeof (obj as Record<string, unknown>)['name'] === 'string' && ((obj as Record<string, unknown>)['name'] as string).trim() !== '')
 
     // Prefer DB only when it actually contains meaningful values; otherwise fall back to FS
-    const brand = (hasName(dbBrand) ? dbBrand : null) ?? fsBrand
-    const theme = (isNonEmpty(dbTheme) ? dbTheme : null) ?? fsTheme
-    const images = (isNonEmpty(dbImages) ? dbImages : null) ?? fsImages
-    const style = (isNonEmpty(dbStyle) ? dbStyle : null) ?? fsStyle
-    const copy = (isNonEmpty(dbCopy) ? dbCopy : null) ?? fsCopy
+    // Prefer live DB when non-empty, then live FS; if still missing, fall back to draft (DB then FS)
+    const brand = (hasName(dbBrand) ? dbBrand : null)
+      ?? (hasName(fsBrand) ? fsBrand : null)
+      ?? (hasName(fbDbBrand) ? fbDbBrand : null)
+      ?? fbFsBrand
+
+    const theme = (isNonEmpty(dbTheme) ? dbTheme : null)
+      ?? (isNonEmpty(fsTheme) ? fsTheme : null)
+      ?? (isNonEmpty(fbDbTheme) ? fbDbTheme : null)
+      ?? fbFsTheme
+
+    const images = (isNonEmpty(dbImages) ? dbImages : null)
+      ?? (isNonEmpty(fsImages) ? fsImages : null)
+      ?? (isNonEmpty(fbDbImages) ? fbDbImages : null)
+      ?? fbFsImages
+
+    const style = (isNonEmpty(dbStyle) ? dbStyle : null)
+      ?? (isNonEmpty(fsStyle) ? fsStyle : null)
+      ?? (isNonEmpty(fbDbStyle) ? fbDbStyle : null)
+      ?? fbFsStyle
+
+    const copy = (isNonEmpty(dbCopy) ? dbCopy : null)
+      ?? (isNonEmpty(fsCopy) ? fsCopy : null)
+      ?? (isNonEmpty(fbDbCopy) ? fbDbCopy : null)
+      ?? fbFsCopy
 
     return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {

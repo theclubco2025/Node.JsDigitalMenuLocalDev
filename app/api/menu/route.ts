@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         }
       : menu
 
-    if (!filtered) {
+    if (!filtered || !Array.isArray(filtered.categories)) {
       return NextResponse.json(
         { error: 'Menu not found for the specified tenant' },
         { status: 404 }
