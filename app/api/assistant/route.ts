@@ -171,11 +171,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 503 })
     }
 
-    // Guard if provider requires keys and missing
+    // Guard if provider requires keys and missing; enable local fallback when allowed
     if ((process.env.AI_PROVIDER || 'compatible') !== 'ollama') {
       const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').split(',').map(s=>s.trim()).filter(Boolean)
       if (keys.length === 0) {
-        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501 })
+        // Fallback: simple retrieval-only answer when no keys (returns top-k menu items)
+        const preview = topKMenu(filtered, query, 6)
+        const previewSnippet = snippet(preview, 24)
+        const msg = previewSnippet && previewSnippet.trim().length > 0
+          ? `Here are some items that match your query:\n${previewSnippet}`
+          : 'Our assistant is initializing. Try asking about a dish or ingredient.'
+        return NextResponse.json({ ok: true, tenantId, text: msg }, { headers: corsHeaders(request.headers.get('origin') || '*') })
       }
     }
 
@@ -385,9 +391,8 @@ export async function GET(request: NextRequest) {
     const provider = (process.env.AI_PROVIDER || 'compatible').toLowerCase()
     if (provider !== 'ollama') {
       const hasKey = Boolean((process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim())
-      if (!hasKey) {
-        return NextResponse.json({ ok: false, message: 'Assistant disabled in dev' }, { status: 501, headers: corsHeaders(request.headers.get('origin') || '*') })
-      }
+      // When missing keys, expose that assistant is in fallback (enabled) mode
+      if (!hasKey) return NextResponse.json({ ok: true, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
     }
     return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
   } catch (e) {

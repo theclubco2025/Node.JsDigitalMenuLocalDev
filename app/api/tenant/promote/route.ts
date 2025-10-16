@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { PrismaClient, Prisma } from '@prisma/client'
+import { promises as fs } from 'fs'
+import path from 'path'
+import { writeMenu } from '@/lib/data/menu'
+import type { MenuResponse } from '@/types/api'
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +30,55 @@ export async function POST(request: NextRequest) {
 
     // Load source tenant and latest menu
     const srcTenant = await prisma.tenant.findUnique({ where: { slug: from } })
-    if (!srcTenant) return NextResponse.json({ error: 'Source tenant not found' }, { status: 404 })
+    if (!srcTenant) {
+      // FS fallback: copy from data/tenants/<from> when DB tenant missing
+      try {
+        const base = path.join(process.cwd(), 'data', 'tenants', from)
+        const safeRead = async (fname: string) => {
+          try {
+            const buf = await fs.readFile(path.join(base, fname), 'utf8')
+            return JSON.parse(buf)
+          } catch {
+            return null
+          }
+        }
+        const [brand, images, style, copy, theme, menu] = await Promise.all([
+          safeRead('brand.json'),
+          safeRead('images.json'),
+          safeRead('style.json'),
+          safeRead('copy.json'),
+          safeRead('theme.json'),
+          safeRead('menu.json'),
+        ])
+        // Upsert target settings (merge all available keys)
+        await prisma.tenant.upsert({
+          where: { slug: to },
+          update: { name: to, settings: ({
+            ...(brand ? { brand } : {}),
+            ...(images ? { images } : {}),
+            ...(style ? { style } : {}),
+            ...(copy ? { copy } : {}),
+            ...(theme ? { theme } : {}),
+          } as Prisma.InputJsonValue) },
+          create: { slug: to, name: to, settings: ({
+            ...(brand ? { brand } : {}),
+            ...(images ? { images } : {}),
+            ...(style ? { style } : {}),
+            ...(copy ? { copy } : {}),
+            ...(theme ? { theme } : {}),
+          } as Prisma.InputJsonValue) },
+        })
+
+        // Persist menu if present (via shared writer → DB when available)
+        if (menu && typeof menu === 'object' && Array.isArray(menu.categories)) {
+          await writeMenu(to, menu as unknown as MenuResponse)
+        }
+
+        return NextResponse.json({ ok: true, fsFallback: true })
+      } catch (e) {
+        return NextResponse.json({ error: 'Source tenant not found' }, { status: 404 })
+      }
+    }
 
     const srcMenus = await prisma.menu.findMany({
       where: { tenantId: srcTenant.id },
