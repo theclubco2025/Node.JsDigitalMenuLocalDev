@@ -76,7 +76,80 @@ const STUB: MenuResponse = {
   ],
 };
 
+type RawMenu = {
+  categories?: Array<{
+    id?: string;
+    name?: string;
+    items?: RawMenuItem[];
+  }>;
+};
+
+type RawMenuItem = Partial<MenuItem> & {
+  diet?: string[];
+  allergens?: string[];
+  badges?: string[];
+};
+
+function toArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (typeof value === "string" && value.trim().length > 0) return [value];
+  return [];
+}
+
+function normalizeItem(raw: RawMenuItem): MenuItem & {
+  diet?: string[];
+  allergens?: string[];
+  badges?: string[];
+} {
+  const diet = toArray(raw.diet);
+  const allergens = toArray(raw.allergens);
+  const badges = toArray(raw.badges);
+  const existingTags = toArray(raw.tags);
+
+  const tagSet = new Set<string>();
+  for (const tag of [...existingTags, ...diet, ...allergens]) {
+    tagSet.add(String(tag).trim());
+  }
+
+  const priceValue = typeof raw.price === "number" ? raw.price : Number(raw.price ?? 0);
+
+  const item: MenuItem & {
+    diet?: string[];
+    allergens?: string[];
+    badges?: string[];
+  } = {
+    id: String(raw.id ?? ""),
+    name: String(raw.name ?? ""),
+    description: raw.description ?? "",
+    price: Number.isFinite(priceValue) ? priceValue : 0,
+    tags: Array.from(tagSet).filter(Boolean),
+    calories: typeof raw.calories === "number" ? raw.calories : undefined,
+    imageUrl: raw.imageUrl || undefined,
+  };
+
+  if (diet.length) item.diet = diet;
+  if (allergens.length) item.allergens = allergens;
+  if (badges.length) item.badges = badges;
+
+  return item;
+}
+
+function normalizeMenu(raw: RawMenu | null | undefined): MenuResponse {
+  if (!raw?.categories || !Array.isArray(raw.categories)) {
+    return { categories: [] };
+  }
+
+  const categories: MenuCategory[] = raw.categories.map(cat => ({
+    id: String(cat?.id ?? cat?.name ?? ""),
+    name: String(cat?.name ?? ""),
+    items: Array.isArray(cat?.items) ? cat!.items!.map(normalizeItem) : [],
+  }));
+
+  return { categories };
+}
+
 export async function readMenu(tenant: string): Promise<MenuResponse> {
+  const fallbackTenant = tenant.endsWith('-draft') ? tenant : `${tenant}-draft`
   // If DATABASE_URL exists, prefer DB
   if (process.env.DATABASE_URL) {
     try {
@@ -95,22 +168,38 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
           }
         }
       })
-      const menu = tenantRow?.menus?.[0]
+      let menu = tenantRow?.menus?.[0]
+      // If no live menu, try draft tenant as fallback
+      if (!menu && fallbackTenant !== tenant) {
+        const fbRow = await prisma.tenant.findUnique({
+          where: { slug: fallbackTenant },
+          include: {
+            menus: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              include: { categories: { include: { items: { include: { tags: true } } } } }
+            }
+          }
+        })
+        menu = fbRow?.menus?.[0]
+      }
       if (menu) {
-        const categories: MenuCategory[] = menu.categories.map(c => ({
-          id: c.id,
-          name: c.name,
-          items: c.items.map(i => ({
-            id: i.id,
-            name: i.name,
-            description: i.description || '',
-            price: Number(i.price),
-            tags: i.tags.map(t => t.tag),
-            imageUrl: i.imageUrl || undefined,
-            calories: i.calories || undefined,
-          }))
-        }))
-        return { categories }
+        const dbMenu: RawMenu = {
+          categories: menu.categories.map(c => ({
+            id: c.id,
+            name: c.name,
+            items: c.items.map(i => ({
+              id: i.id,
+              name: i.name,
+              description: i.description || '',
+              price: Number(i.price),
+              tags: i.tags.map(t => t.tag),
+              imageUrl: i.imageUrl || undefined,
+              calories: i.calories || undefined,
+            })),
+          })),
+        };
+        return normalizeMenu(dbMenu);
       }
     } catch {
       // fall back to FS below
@@ -118,22 +207,35 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
   }
   try {
     // Prefer filesystem so edits reflect immediately
-    const filePath = path.join(process.cwd(), "data", "tenants", tenant, "menu.json");
-    const buf = await fs.readFile(filePath, "utf8");
-    const json = JSON.parse(buf);
-    // Basic shape validation
-    if (!json || !Array.isArray(json.categories)) {
-      return tenant === 'demo' ? STUB : { categories: [] };
+    const base = path.join(process.cwd(), "data", "tenants")
+    const tryRead = async (slug: string): Promise<MenuResponse | null> => {
+      try {
+        const buf = await fs.readFile(path.join(base, slug, "menu.json"), "utf8")
+        const json = JSON.parse(buf)
+        if (!json || !Array.isArray(json.categories)) return null
+        return normalizeMenu(json)
+      } catch {
+        return null
+      }
     }
-    return json as MenuResponse;
+    const live = await tryRead(tenant)
+    if (live) return live
+    if (fallbackTenant !== tenant) {
+      const draft = await tryRead(fallbackTenant)
+      if (draft) return draft
+    }
+    // no FS data
+    return tenant === 'demo' ? STUB : { categories: [] };
   } catch {
     // Fallback to in-memory override if present; otherwise avoid stub for non-demo tenants
     if (memoryStore.has(tenant)) return memoryStore.get(tenant)!;
+    if (fallbackTenant !== tenant && memoryStore.has(fallbackTenant)) return memoryStore.get(fallbackTenant)!;
     return tenant === 'demo' ? STUB : { categories: [] };
   }
 }
 
 export async function writeMenu(tenant: string, menu: MenuResponse): Promise<void> {
+  const normalized = normalizeMenu(menu as unknown as RawMenu)
   // If DB present, write there; else write file (fallback to memory)
   if (process.env.DATABASE_URL) {
     try {
@@ -148,7 +250,7 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
         })
         // Create a new Menu and replace categories/items
         const newMenu = await tx.menu.create({ data: { tenantId: tenantRow.id, name: `${tenant} menu` } })
-        for (const cat of menu.categories) {
+        for (const cat of normalized.categories) {
           const createdCat = await tx.menuCategory.create({ data: { menuId: newMenu.id, name: cat.name } })
           for (const item of cat.items) {
             const createdItem = await tx.menuItem.create({
@@ -176,9 +278,9 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
   const file = path.join(dir, "menu.json")
   try {
     await fs.mkdir(dir, { recursive: true })
-    await fs.writeFile(file, JSON.stringify(menu, null, 2), "utf8")
+    await fs.writeFile(file, JSON.stringify(normalized, null, 2), "utf8")
   } catch {
-    setMemoryMenu(tenant, menu)
+    setMemoryMenu(tenant, normalized)
   }
 }
 

@@ -10,6 +10,7 @@ Digital Menu SaaS – Fail Log and Resolutions
 - SOP:
   - Ensure data/tenants/<slug>-draft/*.json are committed.
   - Use /t/<slug> or /<slug> path to verify rendering.
+  - `lib/data/menu.ts` now normalizes `diet`/`allergens` arrays into tags so the assistant fallback returns accurate dietary matches (seed via scripts/seed-tenant.mjs after editing draft JSON).
 
 2) Promote draft → live fails with “Source tenant not found”
 - Symptom: POST /api/tenant/promote returns 404 Source tenant not found.
@@ -38,5 +39,6 @@ Digital Menu SaaS – Fail Log and Resolutions
 - Symptom: 501 DATABASE_URL required on production writes.
 - SOP:
   - In Vercel → Project → Settings → Environment Variables, set DATABASE_URL + ADMIN_TOKEN for Production and Preview. Re-deploy.
+  - Set shared secrets (DATABASE_URL, ADMIN_TOKEN, AI keys) to “All Environments” so Production and Preview stay in sync; keep dev-only overrides in .env.local.
 
 
