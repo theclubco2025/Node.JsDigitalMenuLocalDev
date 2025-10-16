@@ -176,35 +176,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 503 })
     }
 
-    // Guard if provider requires keys and missing; enable local fallback when allowed
-    if ((process.env.AI_PROVIDER || 'compatible') !== 'ollama') {
-      const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').split(',').map(s=>s.trim()).filter(Boolean)
-      if (keys.length === 0) {
-        // Fallback: simple retrieval-only answer when no keys (returns top-k menu items)
-        return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
-      }
-    }
-
-    const started = Date.now()
-    try {
-      const text = await generate({ model: process.env.AI_MODEL, system, user })
-      recordSuccess(tenantId)
-      const ms = Date.now() - started
-      console.log(`[assistant] tenant=${tenantId} ok latency=${ms}ms`)
-      return NextResponse.json({ ok: true, tenantId, text }, { headers: corsHeaders(request.headers.get('origin') || '*') })
-    } catch (e) {
-      recordFailure(tenantId)
-      const ms = Date.now() - started
-      const msg = (e as Error)?.message || ''
-      console.warn(`[assistant] tenant=${tenantId} fail latency=${ms}ms`, e)
-      if (msg.includes('401')) {
-        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
-      }
-      if (msg.includes('404')) {
-        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
-      }
-      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
-    }
+    return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
   } catch (e) {
     console.error('Assistant error:', e)
     return NextResponse.json({ ok: false, message: 'Assistant error' }, { status: 500 })
