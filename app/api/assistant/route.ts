@@ -140,6 +140,11 @@ export async function POST(request: NextRequest) {
     // Retrieval: rank items by query relevance and build a focused context
     const focused = topKMenu(filtered, query, 18)
     const menuSnippet = snippet(focused, 1000)
+    const preview = topKMenu(filtered, query, 6)
+    const previewSnippet = snippet(preview, 24)
+    const fallbackText = previewSnippet && previewSnippet.trim().length > 0
+      ? `Here are some items that match your question:\n${previewSnippet}`
+      : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
 
     // Load tenant meta from theme.json if available
     const { promises: fs } = await import('fs')
@@ -176,12 +181,7 @@ export async function POST(request: NextRequest) {
       const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').split(',').map(s=>s.trim()).filter(Boolean)
       if (keys.length === 0) {
         // Fallback: simple retrieval-only answer when no keys (returns top-k menu items)
-        const preview = topKMenu(filtered, query, 6)
-        const previewSnippet = snippet(preview, 24)
-        const msg = previewSnippet && previewSnippet.trim().length > 0
-          ? `Here are some items that match your question:\n${previewSnippet}`
-          : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
-        return NextResponse.json({ ok: true, tenantId, text: msg }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+        return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
       }
     }
 
