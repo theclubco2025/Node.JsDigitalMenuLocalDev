@@ -145,10 +145,6 @@ export async function POST(request: NextRequest) {
     const fallbackText = previewSnippet && previewSnippet.trim().length > 0
       ? `Here are some items that match your question:\n${previewSnippet}`
       : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
-    const fallbackResponse = NextResponse.json(
-      { ok: true, tenantId, text: fallbackText, fallback: true },
-      { headers: corsHeaders(request.headers.get('origin') || '*') }
-    )
 
     // Load tenant meta from theme.json if available
     const { promises: fs } = await import('fs')
@@ -182,12 +178,10 @@ export async function POST(request: NextRequest) {
 
     // Guard if provider requires keys and missing; enable local fallback when allowed
     if ((process.env.AI_PROVIDER || 'compatible') !== 'ollama') {
-      const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '')
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean)
+      const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').split(',').map(s=>s.trim()).filter(Boolean)
       if (keys.length === 0) {
-        return fallbackResponse
+        // Fallback: simple retrieval-only answer when no keys (returns top-k menu items)
+        return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
       }
     }
 
@@ -204,22 +198,16 @@ export async function POST(request: NextRequest) {
       const msg = (e as Error)?.message || ''
       console.warn(`[assistant] tenant=${tenantId} fail latency=${ms}ms`, e)
       if (msg.includes('401')) {
-        return NextResponse.json(
-          { ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' },
-          { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') }
-        )
+        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
       }
       if (msg.includes('404')) {
-        return NextResponse.json(
-          { ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' },
-          { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') }
-        )
+        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
       }
-      return fallbackResponse
+      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
     }
   } catch (e) {
     console.error('Assistant error:', e)
-    return fallbackResponse
+    return NextResponse.json({ ok: false, message: 'Assistant error' }, { status: 500 })
   }
 }
 
