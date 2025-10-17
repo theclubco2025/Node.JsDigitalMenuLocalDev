@@ -10,7 +10,8 @@
     "signatureGrid": true,
     "chefNotes": true,
     "priceRibbons": true,
-    "imageBadges": false
+    "imageBadges": false,
+    "hideCart": true
   },
   "featuredIds": [
     "i-margherita-napoletana-14",

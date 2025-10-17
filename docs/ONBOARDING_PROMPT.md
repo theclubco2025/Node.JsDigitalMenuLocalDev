@@ -1,107 +1,53 @@
-### Tenant Onboarding Prompt (Reusable for every client)
+### Onboarding Agent Prompt (use for every client)
 
-- Goal: Onboard a new tenant using the existing app as the foundation. Keep backend features intact; personalize frontend (theme, assets, copy) and import the client’s menu. Persist all data to Neon Postgres. Use draft first, then promote to live.
+You are the onboarding agent for `<BUSINESS_NAME>`. Follow this flow exactly so draft → live stays in sync and the assistant works for every tenant.
 
-- Environment
-  - Dev Main: http://localhost:3000 (Neon main branch)
-  - Dev Test: http://localhost:3001 (Neon test branch)
-  - Database: Neon Postgres (one database per environment; many tenants). Do NOT create per-client DBs/URLs.
+#### 0. Inputs (fill before starting)
+- Tenant slugs: `<slug>-draft` (draft) and `<slug>` (live)
+- Client questionnaire responses (brand voice, specials, imagery, AI tone)
+- Final menu JSON (items with diet/allergen tags), logos, hero images
 
-- Inputs (fill before starting)
-  - Tenant slug(s): {TENANT_SLUG} and optional {TENANT_SLUG}-draft
-  - Sources: menu links (Sirved/site/Yelp) and/or menu photos for OCR
-  - Branding inputs: logo URL or homepage URL (derive palette), optional accent/font
+#### 1. Prep draft data (`data/tenants/<slug>-draft/`)
+- Update `brand.json`, `style.json`, `copy.json`, `menu.json` with the client’s answers.
+- Add any feature flags (e.g. `"flags": { "hideCart": true, "emailCapture": true }`).
+- Ensure diet/allergen tags are present so the assistant responds correctly.
 
-- Core endpoints (data-only, no redeploy)
-  - Health: GET /api/health
-  - Menu read: GET /api/menu?tenant={TENANT_SLUG}
-  - Tenant config read/write: GET/POST /api/tenant/config?tenant={TENANT_SLUG}
-    - Fields: brand, images, style (heroVariant/navVariant/flags/featuredIds), copy
-  - Theme read/write: GET/POST /api/theme?tenant={TENANT_SLUG}
-    - Fields: primary, accent, radius (and optional text/ink/card/muted)
-  - Menu import (replace): POST /api/tenant/import
-  - Promote draft→live: POST /api/tenant/promote { from, to }
+#### 2. Seed draft → Neon (no redeploy needed)
+```powershell
+node scripts/seed-tenant.mjs --slug <slug>-draft --admin 22582811 --base https://tccmenus.com
+```
+- Verify: `GET https://tccmenus.com/api/menu?tenant=<slug>-draft`
+- Preview: Vercel draft URL or `/t/<slug>-draft`
 
-- Draft → Live model
-  - Simple path: use two slugs: {TENANT_SLUG}-draft for editing; {TENANT_SLUG} for live
-  - Optional: add a publish flag on Menu later; until then, use the draft slug
+#### 3. Promote draft to live (exact copy)
+```powershell
+node scripts/seed-tenant.mjs --slug <slug> --admin 22582811 --base https://tccmenus.com
+```
+- Verify: `GET https://tccmenus.com/api/menu?tenant=<slug>`
+- Live path-first URL: `https://tccmenus.com/t/<slug>`
 
-### Agent-led onboarding (data-first; no repo edits)
-1) Choose slugs: `{TENANT_SLUG}-draft` for editing; `{TENANT_SLUG}` for live
-2) Prepare inputs (no local files needed):
-   - menu JSON, images map (id→url), brand (name/logoUrl/header), theme (colors/radius), style (variants/flags), copy
-3) Set theme
-   - POST /api/theme?tenant={TENANT_SLUG}-draft → { ok: true }
-4) Set config (brand/images/style/copy)
-   - POST /api/tenant/config?tenant={TENANT_SLUG}-draft → { ok: true }
-5) Import menu
-   - POST /api/tenant/import with { tenant: "{TENANT_SLUG}-draft", menu }
-6) Verify
-  - GET /api/menu?tenant={TENANT_SLUG}-draft
-  - Live preview on Vercel: open preview host + /menu (tenant auto-derived); pretty path `/t/{TENANT_SLUG}-draft` also supported
-7) Promote to live (no redeploy)
-   - POST /api/tenant/promote with { from: "{TENANT_SLUG}-draft", to: "{TENANT_SLUG}" }
-   - Live view: /t/{TENANT_SLUG}
+#### 4. Assistant checks (fallback first)
+- `GET https://tccmenus.com/api/assistant` → `{ ok: true }` (or `{ ok: true, fallback: true }`)
+- `POST https://tccmenus.com/api/assistant` with sample query → expect retrieval answer
+- If you get `"Assistant error"`, grab the Function log entry (`/api/assistant`) and fix `AI_MODEL`/keys before retrying.
 
-### Verification checklist
-- 3001 (test)
-  - GET /api/health → ok
-  - POST /api/theme?tenant={TENANT_SLUG}-draft → { ok: true }
-  - POST /api/tenant/import (draft) → { ok: true }
-  - GET /api/menu?tenant={TENANT_SLUG}-draft → includes items/categories
-  - Admin Save All on /menu?tenant={TENANT_SLUG}-draft&admin=1 persists to DB
-- 3000 (main) repeat with {TENANT_SLUG}
+#### 5. Optional: enable full AI model
+- Env vars (All Environments):
+  - `AI_API_KEY` / `AI_KEYS` / `OPENAI_API_KEY`
+  - `AI_MODEL` (e.g. `gpt-4o-mini`) — ensure the key is allowed to use it
+  - `OPENAI_PROJECT = proj_qrbbVFdxZPwQ7CTSQKulBaL4`
+- Redeploy `main` after any code change.
+- Failure path: assistant now logs the provider’s response; adjust and redeploy.
 
-### Security (prod)
-- POST /api/tenant/import requires header X-Admin-Token: {ADMIN_TOKEN}
-- CORS allows Content-Type, Authorization, X-Admin-Token
+#### 6. Final checklist
+- `https://tccmenus.com` defaults to Benes (fallback tenant)
+- `https://tccmenus.com/<slug>` matches the draft exactly (logo, hero, flags)
+- Assistant answers menu questions without unexpected diet warnings
+- QR codes stay the same; no new build needed after seeding data
 
-### Data model (summary)
-- Tenant (slug, name, settings)
-- Menu → MenuCategory → MenuItem → MenuItemTag
-- Theme stored in Tenant.settings.theme
+#### 7. Documentation / logging
+- Update `docs/FAIL_LOG.md` if a new issue/solution appears
+- Note any new feature flags or schema additions for future agents
 
-### Commands (reference)
-- Start main: npm run dev -- -p 3000
-- Start test (with Neon test branch DATABASE_URL): npm run dev -- -p 3001
-- Prisma Studio (DB inspect): npx prisma studio
-
-### Deliverables
-- Draft tenant at 3001: /menu?tenant={TENANT_SLUG}-draft (on-brand)
-- Live tenant at 3000: /menu?tenant={TENANT_SLUG}
-- Short note of theme values and any asset URLs used
-
-### LAN-first preview (dev) and Vercel (prod)
-- Find LAN IP (Windows):
-  - PowerShell: `ipconfig | findstr /R "IPv4"` → pick Wi‑Fi IPv4 (e.g., 10.0.0.138)
-- Start dev bound to LAN:
-  - `npm run dev -- -p 3000 -H <LAN_IP>`
-- Optional tunnel (phone-friendly HTTPS):
-  - `npx --yes cloudflared@latest tunnel --url http://<LAN_IP>:3000 --no-autoupdate`
-  - Wait for `https://*.trycloudflare.com` URL in output.
-
-Required agent output (dev)
-- LAN URL: `http://<LAN_IP>:3000/menu?tenant={TENANT_SLUG}`
-- Tunnel URL (if started): `https://<sub>.trycloudflare.com/menu?tenant={TENANT_SLUG}`
-- QR for LAN preview:
-  - `node scripts/generate-qr.mjs {TENANT_SLUG} http://<LAN_IP>:3000`
-  - Paste PNG URL.
-- 5 screenshots: hero, chips, two categories, one item with calories visible.
-- Changelog: one paragraph describing brand/theme/style/copy/images changes.
-- PR: only `data/tenants/{TENANT_SLUG}/**` files.
-
-After deploy (prod)
-- Path-first live URL: `https://tccmenus.com/t/{TENANT_SLUG}`
-- Update QR with production domain (if requested):
-  - `node scripts/generate-qr.mjs {TENANT_SLUG} https://tccmenus.com`
-
-Guardrails
-- No edits outside `data/tenants/{TENANT_SLUG}/**` for tenant PRs.
-- Lint/typecheck must pass.
-- California disclaimer + calories visible.
-- Variants/flags driven by `style.json` (no tenant-name checks in code).
-
-### Notes
-- One DATABASE_URL per environment; many tenants share the same DB.
-- Occasional pooled connection “closed” logs from Neon are normal; retries succeed.
+That’s it. Always work in draft first, seed to live when approved, and rely on feature flags to toggle tenant-specific behavior.
 

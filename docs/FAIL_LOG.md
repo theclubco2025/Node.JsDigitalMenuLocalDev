@@ -10,7 +10,8 @@ Digital Menu SaaS – Fail Log and Resolutions
 - SOP:
   - Ensure data/tenants/<slug>-draft/*.json are committed.
   - Use /t/<slug> or /<slug> path to verify rendering.
-  - `lib/data/menu.ts` normalizes `diet`/`allergens` into tags so fallback answers respect dietary filters. If those fields are missing, the assistant only echoes basic descriptions—add them to draft JSON before seeding.
+- `lib/data/menu.ts` normalizes `diet`/`allergens` into tags so fallback answers respect dietary filters. If those fields are missing, the assistant only echoes basic descriptions—add them to draft JSON before seeding.
+- Optional UI toggles (e.g. `hideCart`, `emailCapture`, `walkthroughEnabled`) live in `style.flags`; components read them dynamically per tenant.
 
 2) Promote draft → live fails with “Source tenant not found”
 - Symptom: POST /api/tenant/promote returns 404 Source tenant not found.

@@ -125,8 +125,10 @@ export default function MenuClient() {
   )
 
   const specialsText = typeof copy?.specials === 'string' ? copy.specials : ''
-  const showSpecials = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials && specialsText)
-  const showSignatureGrid = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).signatureGrid)
+  const flags = (styleCfg?.flags ?? {}) as Record<string, boolean>
+  const showSpecials = Boolean(flags.specials && specialsText)
+  const showSignatureGrid = Boolean(flags.signatureGrid)
+  const hideCart = Boolean(flags.hideCart)
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -1054,31 +1056,33 @@ export default function MenuClient() {
                         </div>
                         
                         <div className="shrink-0 flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            addToCart(item)
-                            setRecentlyAddedId(item.id)
-                            setCartBump(true)
-                            setToast(`Added ${item.name}`)
-                            setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
-                          }}
-                          className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
-                          style={{ background: 'var(--accent)' }}
-                        >
-                          {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
-                        </button>
-                <button
-                  onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                  className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
-                  aria-label={`Ask about ${item.name}`}
-                >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
-                          </svg>
-                          <span>Ask</span>
-                        </button>
+                          {!hideCart && (
+                            <button
+                              onClick={() => {
+                                addToCart(item)
+                                setRecentlyAddedId(item.id)
+                                setCartBump(true)
+                                setToast(`Added ${item.name}`)
+                                setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
+                              }}
+                              className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                              style={{ background: 'var(--accent)' }}
+                            >
+                              {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                            className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                            aria-label={`Ask about ${item.name}`}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                              <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+                            </svg>
+                            <span>Ask</span>
+                          </button>
                         </div>
                       </div>
                     </div>
