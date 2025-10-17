@@ -70,7 +70,7 @@ export async function generate({ model, system, user }: GenerateArgs): Promise<s
         chosenModel,
         'gpt-4o-mini',
         'gpt-4o',
-        'gpt-3.5-turbo',
+        'gpt-3.5-turbo-0125',
       ].filter(Boolean)))
 
       for (const modelName of modelsToTry) {
