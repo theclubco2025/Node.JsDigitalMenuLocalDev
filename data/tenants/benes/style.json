@@ -1,16 +1,17 @@
 {
-  "heroVariant": "logoBanner",
+  "heroVariant": "none",
   "navVariant": "chipScroller",
   "motion": "subtle",
   "texture": { "vignette": false, "paper": true },
   "accentSecondary": "#a53329",
   "flags": {
-    "specials": true,
+    "specials": false,
     "pairings": true,
     "signatureGrid": true,
     "chefNotes": true,
     "priceRibbons": true,
-    "imageBadges": false
+    "imageBadges": false,
+    "hideCart": true
   },
   "featuredIds": [
     "i-margherita-napoletana-14",
@@ -22,4 +23,6 @@
   },
   "ab": { "copy": false }
 }
+
+
 
