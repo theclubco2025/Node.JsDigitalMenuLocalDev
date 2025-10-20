@@ -12,8 +12,9 @@ export function middleware(request: NextRequest) {
     res.headers.set('Vary', 'Origin')
     return res
   }
-  // Default / to benes in production; in preview derive tenant from host/branch
-  if (request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
+  const landingMode = process.env.NEXT_PUBLIC_LANDING_MODE === '1'
+
+  if (!landingMode && request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     const url = request.nextUrl.clone()
     if (isPreview) {
@@ -33,7 +34,7 @@ export function middleware(request: NextRequest) {
     }
   }
   // In preview, ALWAYS normalize /menu to the branch slug tenant, even if a wrong tenant query is present
-  if (request.nextUrl.pathname === '/menu') {
+  if (request.nextUrl.pathname === '/menu' && !landingMode) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     if (isPreview) {
       const url = request.nextUrl.clone()
