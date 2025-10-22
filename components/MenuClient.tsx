@@ -1077,7 +1077,7 @@ export default function MenuClient() {
                               <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                               <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
                             </svg>
-                            <span>Ask</span>
+                            <span>Ask AI</span>
                           </button>
                         </div>
                       </div>
