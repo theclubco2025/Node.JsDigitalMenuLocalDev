@@ -110,7 +110,7 @@ export default function Landing() {
                 <img
                   src={LANDING.logo}
                   alt="TCC Solutions"
-                  className="h-24 w-auto"
+                  className="h-28 w-auto md:h-32"
                 />
               </div>
               <div className="mt-4 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-700">
