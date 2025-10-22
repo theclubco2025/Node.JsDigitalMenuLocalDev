@@ -677,14 +677,22 @@ export default function MenuClient() {
                   {src && (
                     <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
                   )}
-                  {flags.signatureGrid && tenant !== 'demo' && (
-                    <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-900 shadow-sm">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      <span className="text-xs uppercase tracking-wide text-neutral-900">Signature Picks</span>
-                    </span>
-                  )}
+                {flags.signatureGrid && tenant === 'demo' && (
+                  <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-900 shadow-sm">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className="text-xs uppercase tracking-wide text-neutral-900">Signature Picks</span>
+                  </span>
+                )}
+                {flags.signatureGrid && tenant !== 'demo' && (
+                  <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-neutral-900 shadow-sm">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className="text-xs uppercase tracking-wide text-neutral-900">Signature Picks</span>
+                  </span>
+                )}
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
