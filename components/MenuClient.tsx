@@ -100,7 +100,7 @@ export default function MenuClient() {
   const accentSecondary = styleCfg?.accentSecondary || undefined
   const categoryIntros: Record<string, string | undefined> = copy?.categoryIntros ?? {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
-  const brandName = brand?.name || 'Menu'
+  const brandName = (brand?.name || 'Menu').replace(/benes/gi, 'Demo')
   const brandTagline = brand?.tagline || ''
 
   // Ensure themed CSS variables exist on first paint
@@ -149,6 +149,7 @@ export default function MenuClient() {
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
+          if (typeof item.price === 'number' && item.price <= 0) return false
           // Category filter
           if (selectedCategory && category.name !== selectedCategory) return false
           // Search filter (name and description)
@@ -683,7 +684,9 @@ export default function MenuClient() {
                         <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
                         {/* optional pairing copy can be added via copy data */}
                       </div>
-                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'var(--accent)' }}>${Number(it.price).toFixed(2)}</div>
+                      {typeof it.price === 'number' && it.price > 0 && (
+                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
+                      )}
                     </div>
                   </div>
                 </div>
