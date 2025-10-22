@@ -540,14 +540,6 @@ export default function MenuClient() {
   // Featured picks come from config copy.style.flags/featuredIds or fallback later
   const featuredItemIds: string[] = copy?.featuredIds ?? []
   function cardStyleForCategory(categoryName: string): React.CSSProperties {
-    if (/pizza/i.test(categoryName)) {
-      return {
-        backgroundColor: '#ffffff',
-        backgroundImage: 'radial-gradient(rgba(16,16,16,0.05) 1px, transparent 1px)',
-        backgroundSize: '8px 8px',
-        borderColor: 'rgba(0,0,0,0.06)'
-      }
-    }
     if (/pasta/i.test(categoryName)) {
       return {
         background: '#fffaf2',
@@ -555,13 +547,10 @@ export default function MenuClient() {
         boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
       }
     }
-    if (/calzone/i.test(categoryName)) {
-      return {
-        background: '#fffef8',
-        borderColor: 'rgba(0,0,0,0.08)'
-      }
+    return {
+      background: '#ffffff',
+      borderColor: 'rgba(0,0,0,0.08)'
     }
-    return {}
   }
   function getItemBadges(item: MenuItem): string[] {
     const badges: string[] = []
