@@ -1,8 +1,10 @@
 {
-  "name": "Monochrome Bistro",
-  "tone": "upscale",
-  "primary": "#0b0b0b",
-  "accent": "#d4af37",
+  "primary": "#101f16",
+  "text": "#f4f6f2",
+  "ink": "#121816",
+  "card": "#ffffff",
+  "muted": "#e6e1d7",
+  "accent": "#b44b39",
   "radius": "12px"
 }
 
