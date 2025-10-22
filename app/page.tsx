@@ -1,14 +1,14 @@
+
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 
 const LANDING = {
   calendlyUrl: 'https://calendly.com/theclubco/tccmenus-demo',
   primaryCtaLabel: 'Book Demo',
   priceMonthly: 150,
-  priceDisclaimer: 'From $150/month. One-time onboarding based on menu size (never exceeds $400). No POS overhaul. QR-ready in days.',
-  logoHorizontal: '/assets/tcc-logo-horizontal.jpg',
-  logoStacked: '/assets/tcc-logo-stacked.jpg',
+  priceDisclaimer: 'From $150/month. One-time onboarding based on menu size. No POS overhaul. QR-ready in days.',
+  logo: '/assets/tcc-logo-horizontal.jpg',
   qrDemo: '/assets/tcc-demo-qr.jpg',
   features: [
     {
@@ -48,23 +48,6 @@ const LANDING = {
       blurb: 'Highlights limited items, sells out cleanly, and avoids “Do you still have…?”',
     },
   ],
-  testimonials: [
-    {
-      quote: 'We went live in two days. Guests found what they wanted faster and our average ticket climbed the first week.',
-      name: 'Maria G.',
-      role: 'Owner, Oak & Ember',
-    },
-    {
-      quote: 'I update specials in under a minute. The assistant even nudges popular add-ons we always forgot to mention.',
-      name: 'DeShawn P.',
-      role: 'GM, River Street Cafe',
-    },
-    {
-      quote: 'No POS overhaul. It just worked from a QR on the table. Support is fast and friendly.',
-      name: 'Lena K.',
-      role: 'Bar Manager, The Brass Fox',
-    },
-  ],
   faqs: [
     {
       q: 'Do I have to replace my POS?',
@@ -90,8 +73,6 @@ const LANDING = {
 }
 
 export default function Landing() {
-  const [showAltLogo, setShowAltLogo] = useState(false)
-
   return (
     <main className="bg-white text-neutral-900">
       <section className="relative overflow-hidden">
@@ -114,12 +95,6 @@ export default function Landing() {
               >
                 {LANDING.primaryCtaLabel}
               </a>
-              <button
-                onClick={() => setShowAltLogo((prev) => !prev)}
-                className="inline-flex items-center rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-neutral-800 hover:border-neutral-400"
-              >
-                Toggle Logo
-              </button>
               <a
                 href="/demo"
                 className="inline-flex items-center rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-neutral-800 hover:border-neutral-400"
@@ -133,7 +108,7 @@ export default function Landing() {
             <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-center">
                 <img
-                  src={showAltLogo ? LANDING.logoStacked : LANDING.logoHorizontal}
+                  src={LANDING.logo}
                   alt="TCC Solutions"
                   className="h-24 w-auto"
                 />
@@ -167,7 +142,13 @@ export default function Landing() {
           </div>
           <ul className="grid gap-4 sm:grid-cols-2 md:col-span-3">
             {LANDING.features.map((feature) => (
-              <li key={feature.title} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+              <li
+                key={feature.title}
+                className="relative rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"
+              >
+                <span className="absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-600">
+                  ✓
+                </span>
                 <h3 className="font-medium">{feature.title}</h3>
                 <p className="mt-1 text-sm text-neutral-600">{feature.body}</p>
               </li>
@@ -188,26 +169,12 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <h2 className="text-2xl font-semibold tracking-tight">What operators say</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {LANDING.testimonials.map((t) => (
-            <figure key={t.name} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <blockquote className="text-neutral-800">“{t.quote}”</blockquote>
-              <figcaption className="mt-3 text-sm text-neutral-600">
-                <span className="font-medium">{t.name}</span> — {t.role}
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </section>
-
       <section className="mx-auto max-w-6xl px-4 py-12" id="pricing">
         <div className="grid items-center gap-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:grid-cols-2">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">Simple pricing</h2>
             <p className="mt-2 text-neutral-700">
-              Month-to-month. Cancel anytime. Onboarding is a one-time fee based on menu size (never exceeds $400).
+              Month-to-month. Cancel anytime. Onboarding is a one-time fee based on menu size.
             </p>
           </div>
           <div className="rounded-2xl border border-neutral-200 p-6">
