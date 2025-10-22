@@ -8,7 +8,7 @@ const LANDING = {
   primaryCtaLabel: 'Book Demo',
   priceMonthly: 150,
   priceDisclaimer: 'From $150/month. One-time onboarding based on menu size. No POS overhaul. QR-ready in days.',
-  logo: '/assets/tcc-logo-horizontal.jpg',
+  logo: '/assets/tcc-logo-horizontal.png',
   qrDemo: '/assets/tcc-demo-qr.jpg',
   features: [
     {
