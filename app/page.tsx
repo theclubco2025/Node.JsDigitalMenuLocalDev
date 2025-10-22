@@ -4,7 +4,7 @@
 import React from 'react'
 
 const LANDING = {
-  calendlyUrl: 'https://calendly.com/theclubco/tccmenus-demo',
+  calendlyUrl: 'https://calendly.com/adennis-tccmenus/menu-demo',
   primaryCtaLabel: 'Book Demo',
   priceMonthly: 150,
   priceDisclaimer: 'From $150/month. One-time onboarding based on menu size. No POS overhaul. QR-ready in days.',
@@ -182,7 +182,7 @@ export default function Landing() {
               ${LANDING.priceMonthly}
               <span className="align-super text-lg">/mo</span>
             </div>
-            <p className="mt-1 text-sm text-neutral-500">From $150/month (most start here)</p>
+            <p className="mt-1 text-sm text-neutral-500">Flexible pricing tailored to your menu size.</p>
             <a
               href={LANDING.calendlyUrl}
               target="_blank"
