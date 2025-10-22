@@ -13,12 +13,21 @@ export function middleware(request: NextRequest) {
     return res
   }
   const landingMode = process.env.NEXT_PUBLIC_LANDING_MODE === '1'
+  const host = request.headers.get('host') || ''
+  const branchFromHost = host.match(/-git-([a-z0-9-]+)-/i)?.[1]?.toLowerCase() || ''
+  const branch = (process.env.VERCEL_GIT_COMMIT_REF || branchFromHost || '').toLowerCase()
+
+  if (branch === 'demo-preview' && request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/menu'
+    url.searchParams.set('tenant', 'demo')
+    return NextResponse.redirect(url)
+  }
 
   if (!landingMode && request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     const url = request.nextUrl.clone()
     if (isPreview) {
-      const host = request.headers.get('host') || ''
       const m = host.match(/-git-([a-z0-9-]+)-/i)
       const fromHost = (m?.[1] || '').toLowerCase()
       const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
@@ -38,11 +47,14 @@ export function middleware(request: NextRequest) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     if (isPreview) {
       const url = request.nextUrl.clone()
-      const host = request.headers.get('host') || ''
       const fromEnv = (process.env.VERCEL_GIT_COMMIT_REF || '').toLowerCase()
       const m = host.match(/-git-([a-z0-9-]+)-/i)
       const fromHost = (m?.[1] || '').toLowerCase()
       const desiredTenant = fromEnv || fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
+      if (branch === 'demo-preview') {
+        url.searchParams.set('tenant', 'demo')
+        return NextResponse.redirect(url)
+      }
       const currentTenant = (url.searchParams.get('tenant') || '').toLowerCase()
       if (desiredTenant && currentTenant !== desiredTenant) {
         url.searchParams.set('tenant', desiredTenant)
