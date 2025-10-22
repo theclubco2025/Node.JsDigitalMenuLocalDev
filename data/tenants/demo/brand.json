@@ -1,14 +1,12 @@
 {
-  "name": "Bene Ristorante Italiano",
+  "name": "Demo Dining Room",
   "header": {
     "mode": "logo-only",
     "height": 160,
-    "logoUrl": "https://images.sirved.com/ChIJ6zV1WbRQmoARSGI2WKjzzh4/xBX974yvfb.png",
+    "logoUrl": "https://tccmenus.com/assets/tcc-logo-horizontal.png",
     "background": "#ffffff"
   },
-  "links": {
-    "yelp": "https://www.yelp.com/biz/bene-ristorante-italiano-placerville"
-  }
+  "links": {}
 }
 
 

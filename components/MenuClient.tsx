@@ -100,7 +100,7 @@ export default function MenuClient() {
   const accentSecondary = styleCfg?.accentSecondary || undefined
   const categoryIntros: Record<string, string | undefined> = copy?.categoryIntros ?? {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
-  const brandName = (brand?.name || 'Menu').replace(/benes/gi, 'Demo')
+  const brandName = tenant === 'demo' ? 'Demo Menu Experience' : (brand?.name || 'Menu')
   const brandTagline = brand?.tagline || ''
 
   // Ensure themed CSS variables exist on first paint
