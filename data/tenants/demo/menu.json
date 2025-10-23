@@ -9,7 +9,7 @@
           "name": "Fettuccine Bolognese",
           "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 23,
-          "tags": ["vegetarian"],
+          "tags": ["vegetarian", "gluten-free"],
           "imageUrl": ""
         },
         {
@@ -17,7 +17,7 @@
           "name": "Spaghetti and Meatballs",
           "description": "House made meatballs, signature marinara infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 20,
-          "tags": ["vegetarian"],
+          "tags": ["vegetarian", "gluten-free"],
           "imageUrl": ""
         },
         {
@@ -65,7 +65,7 @@
           "name": "Linguine and Prawns",
           "description": "Fresh prawns sautéed in white wine garlic lemon butter sauce, with slivered zucchini and carrots.",
           "price": 22,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
@@ -73,7 +73,7 @@
           "name": "Fettuccine Vegetariano",
           "description": "Ribbons of pasta, portobello mushrooms, ribbons of carrots and Italian squash, sautéed in olive oil and garlic, topped with asiago and basil.",
           "price": 19,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
@@ -81,7 +81,7 @@
           "name": "Spaghetti Aglio e Olio",
           "description": "Olive oil, garlic, asiago, Italian parsley, touch of crushed red pepper.",
           "price": 15,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
@@ -89,7 +89,7 @@
           "name": "Lasagna",
           "description": "Pomodoro sauce, Italian sausage, ricotta, basil, house made lasagna noodles, topped with asiago and mozzarella.",
           "price": 18,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         }
       ]
@@ -103,7 +103,7 @@
           "name": "Margherita Napoletana 10\"",
           "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
           "price": 17,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
@@ -111,7 +111,7 @@
           "name": "Margherita Napoletana 14\"",
           "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
           "price": 25,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
