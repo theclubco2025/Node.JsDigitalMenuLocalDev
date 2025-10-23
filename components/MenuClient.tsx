@@ -674,11 +674,11 @@ export default function MenuClient() {
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: '"Playfair Display", var(--font-serif)', color:'#101010' }}>{it.name}</div>
                         {/* optional pairing copy can be added via copy data */}
                       </div>
                       {typeof it.price === 'number' && it.price > 0 && (
-                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
+                        <div className="text-sm font-semibold text-neutral-900" style={{ color:'#101010' }}>${it.price.toFixed(2)}</div>
                       )}
                     </div>
                   </div>
@@ -971,7 +971,7 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                          <span className="text-xl font-semibold" style={{ color:'#101010' }}>${item.price.toFixed(2)}</span>
                         )}
                       </div>
                       {!isAdmin && (
@@ -1077,7 +1077,7 @@ export default function MenuClient() {
                               <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                               <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
                             </svg>
-                            <span>Ask AI</span>
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background:'#b91c1c', color:'#ffffff' }}>Ask AI</span>
                           </button>
                         </div>
                       </div>
