@@ -100,7 +100,7 @@ export default function MenuClient() {
   const accentSecondary = styleCfg?.accentSecondary || undefined
   const categoryIntros: Record<string, string | undefined> = copy?.categoryIntros ?? {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
-  const brandName = brand?.name || 'Menu'
+  const brandName = tenant === 'demo' ? 'Demo Menu Experience' : (brand?.name || 'Menu')
   const brandTagline = brand?.tagline || ''
 
   // Ensure themed CSS variables exist on first paint
@@ -149,6 +149,7 @@ export default function MenuClient() {
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
+          if (typeof item.price === 'number' && item.price <= 0) return false
           // Category filter
           if (selectedCategory && category.name !== selectedCategory) return false
           // Search filter (name and description)
@@ -539,14 +540,6 @@ export default function MenuClient() {
   // Featured picks come from config copy.style.flags/featuredIds or fallback later
   const featuredItemIds: string[] = copy?.featuredIds ?? []
   function cardStyleForCategory(categoryName: string): React.CSSProperties {
-    if (/pizza/i.test(categoryName)) {
-      return {
-        backgroundColor: '#ffffff',
-        backgroundImage: 'radial-gradient(rgba(16,16,16,0.05) 1px, transparent 1px)',
-        backgroundSize: '8px 8px',
-        borderColor: 'rgba(0,0,0,0.06)'
-      }
-    }
     if (/pasta/i.test(categoryName)) {
       return {
         background: '#fffaf2',
@@ -554,13 +547,10 @@ export default function MenuClient() {
         boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
       }
     }
-    if (/calzone/i.test(categoryName)) {
-      return {
-        background: '#fffef8',
-        borderColor: 'rgba(0,0,0,0.08)'
-      }
+    return {
+      background: '#ffffff',
+      borderColor: 'rgba(0,0,0,0.08)'
     }
-    return {}
   }
   function getItemBadges(item: MenuItem): string[] {
     const badges: string[] = []
@@ -664,8 +654,13 @@ export default function MenuClient() {
       {/* Signature Picks (data-flagged) */}
       {showSignatureGrid && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
+          <div className="flex items-center mb-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
+            </div>
             <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -676,14 +671,15 @@ export default function MenuClient() {
                   {src && (
                     <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
                   )}
-                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold text-white" style={{ background:'rgba(0,0,0,0.7)' }}>Most Loved</div>
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
                         {/* optional pairing copy can be added via copy data */}
                       </div>
-                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'var(--accent)' }}>${Number(it.price).toFixed(2)}</div>
+                      {typeof it.price === 'number' && it.price > 0 && (
+                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1081,7 +1077,7 @@ export default function MenuClient() {
                               <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                               <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
                             </svg>
-                            <span>Ask</span>
+                            <span>Ask AI</span>
                           </button>
                         </div>
                       </div>
