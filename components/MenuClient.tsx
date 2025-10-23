@@ -67,6 +67,7 @@ export default function MenuClient() {
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [showDemoAcknowledgement, setShowDemoAcknowledgement] = useState(false)
 
   // Get tenant/admin from URL params
   const isBrowser = typeof window !== 'undefined'
@@ -123,6 +124,32 @@ export default function MenuClient() {
     `/api/menu?tenant=${tenant}`,
     fetcher
   )
+
+  useEffect(() => {
+    if (!isBrowser) return
+    if (tenant === 'demo') {
+      let acknowledged = false
+      try {
+        acknowledged = localStorage.getItem('demoAcknowledged') === '1'
+      } catch {}
+      setShowDemoAcknowledgement(!acknowledged)
+    } else {
+      setShowDemoAcknowledgement(false)
+    }
+  }, [isBrowser, tenant])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (tenant === 'demo' && showDemoAcknowledgement) {
+      const previous = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = previous
+      }
+    }
+    document.body.style.overflow = ''
+    return () => {}
+  }, [showDemoAcknowledgement, tenant])
 
   const specialsText = typeof copy?.specials === 'string' ? copy.specials : ''
   const flags = (styleCfg?.flags ?? {}) as Record<string, boolean>
@@ -592,7 +619,8 @@ export default function MenuClient() {
   }
 
   return (
-    <div className="min-h-screen" style={containerStyle}>
+    <>
+      <div className="min-h-screen" style={containerStyle}>
       {/* Loading and error states */}
       {error && (
         <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
@@ -1288,6 +1316,33 @@ export default function MenuClient() {
           {toast}
         </div>
       )}
-    </div>
+      </div>
+
+      {isDemoTenant && showDemoAcknowledgement && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4">
+          <div className="absolute inset-0 backdrop-blur-sm" style={{ background: 'linear-gradient(120deg, rgba(0,0,0,0.65), rgba(31,41,55,0.7))' }} />
+          <div className="relative max-w-lg w-full bg-white rounded-3xl shadow-2xl p-8 text-center space-y-4 border border-black/10" style={{ fontFamily: sansFont }}>
+            <h2 className="text-2xl font-semibold text-gray-900">Demo Experience Reminder</h2>
+            <p className="text-sm text-gray-600 leading-6">
+              This is a live demonstration. Your restaurant’s menu will be customized with your branding,
+              items, layout, and even the personality of your personal AI assistant.
+            </p>
+            <p className="text-sm text-gray-600 leading-6">
+              Explore the demo to see what’s possible, then imagine it tailored precisely to your business.
+            </p>
+            <button
+              onClick={() => {
+                setShowDemoAcknowledgement(false)
+                try { localStorage.setItem('demoAcknowledged', '1') } catch {}
+              }}
+              className="mt-2 inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-semibold text-white shadow-lg transition-all"
+              style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.95), rgba(34,197,94,0.95))' }}
+            >
+              Got it — explore the demo
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
