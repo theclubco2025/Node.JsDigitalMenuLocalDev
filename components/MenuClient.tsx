@@ -534,6 +534,7 @@ export default function MenuClient() {
   const paperTexture = Boolean(styleCfg?.texture?.paper)
   const containerStyle: React.CSSProperties = {
     ...rootStyle,
+    fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive',
     ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
   }
 
