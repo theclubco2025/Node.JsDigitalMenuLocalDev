@@ -557,7 +557,9 @@ export default function MenuClient() {
     const name = (item?.name || '').toLowerCase()
     const tags: string[] = item?.tags || []
     if (tags.includes('vegan') || /vegan/.test(name)) badges.push('Vegan')
-    if (tags.includes('gf') || /gluten\s*free|gf/.test(name)) badges.push('GF')
+    if (tags.includes('vegetarian') || /vegetarian/.test(name)) badges.push('Vegetarian')
+    if (tags.includes('gf') || tags.includes('gluten-free') || /gluten\s*free|gf/.test(name)) badges.push('GF')
+    if (tags.includes('dairy-free') || /dairy\s*free/.test(name)) badges.push('Dairy-Free')
     if (/spicy|vesuvio|pepperoncini|diavolo/.test(name)) badges.push('Spicy')
     if (/margherita|bolognese|prosciutto/.test(name)) badges.push('House Favorite')
     return badges
