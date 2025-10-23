@@ -532,28 +532,29 @@ export default function MenuClient() {
     '--accent': effectiveTheme?.accent,
   }
   const paperTexture = Boolean(styleCfg?.texture?.paper)
-  const cursiveFont = 'var(--font-cursive)'
-  const sansFont = 'var(--font-sans)'
+  const cursiveFont = '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive'
+  const sansFont = '"Inter", "Helvetica Neue", Arial, sans-serif'
+  const isDemoTenant = tenant === 'demo'
   const containerStyle: React.CSSProperties = {
     ...rootStyle,
-    fontFamily: cursiveFont,
     ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
+    ...(isDemoTenant ? { fontFamily: cursiveFont } : {}),
   }
 
   // Featured picks come from config copy.style.flags/featuredIds or fallback later
   const featuredItemIds: string[] = copy?.featuredIds ?? []
   function cardStyleForCategory(categoryName: string): React.CSSProperties {
-    if (/pasta/i.test(categoryName)) {
-      return {
-        background: '#fffaf2',
-        borderColor: 'rgba(185,28,28,0.12)',
-        boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
-      }
-    }
-    return {
+    const base: React.CSSProperties = {
       background: '#ffffff',
       borderColor: 'rgba(0,0,0,0.08)'
     }
+    if (!isDemoTenant && /pasta/i.test(categoryName)) {
+      return {
+        ...base,
+        borderColor: 'rgba(185,28,28,0.12)'
+      }
+    }
+    return base
   }
   function getItemBadges(item: MenuItem): string[] {
     const badges: string[] = []
@@ -618,7 +619,7 @@ export default function MenuClient() {
       {/* Fixed Header */}
       <div
         className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-        style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))', fontFamily: cursiveFont }}
+        style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))', ...(isDemoTenant ? { fontFamily: cursiveFont } : {}) }}
       >
         <div
           className="px-4"
@@ -780,7 +781,7 @@ export default function MenuClient() {
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search menu items, tags, or categories..."
                 className="w-full bg-white/80 border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300"
-                style={{ fontFamily: sansFont }}
+                style={isDemoTenant ? { fontFamily: sansFont } : undefined}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -910,7 +911,7 @@ export default function MenuClient() {
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: cursiveFont }}>
+                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={isDemoTenant ? { fontFamily: cursiveFont, color: 'var(--ink)' } : { color: 'var(--ink)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
@@ -958,10 +959,10 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <h3 className="text-xl font-semibold text-black leading-tight">
+                          <h3 className="text-xl font-semibold text-black leading-tight" style={isDemoTenant ? { fontFamily: cursiveFont } : undefined}>
                             {highlightText(item.name, searchQuery)}
                             {typeof item.calories === 'number' && (
-                              <span className="ml-2 align-middle text-sm font-normal text-gray-500" style={{ fontFamily: sansFont }}>{item.calories} cal</span>
+                              <span className="ml-2 align-middle text-sm font-normal text-gray-500" style={isDemoTenant ? { fontFamily: sansFont } : undefined}>{item.calories} cal</span>
                             )}
                           </h3>
                         )}
@@ -980,7 +981,7 @@ export default function MenuClient() {
                       {!isAdmin && (
                         <div className="flex flex-wrap gap-1 mb-2">
                           {getItemBadges(item).map(badge => (
-                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280', fontFamily: sansFont }}>{badge}</span>
+                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280', ...(isDemoTenant ? { fontFamily: sansFont } : {}) }}>{badge}</span>
                           ))}
                         </div>
                       )}
@@ -1001,12 +1002,12 @@ export default function MenuClient() {
                           />
                         </div>
                       ) : (
-                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4" style={{ fontFamily: sansFont }}>
+                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4" style={isDemoTenant ? { fontFamily: sansFont } : undefined}>
                           {highlightText(item.description, searchQuery)}
                         </p>
                       )}
                       
-                      <div className="flex items-center justify-between gap-3" style={{ fontFamily: sansFont }}>
+                      <div className="flex items-center justify-between gap-3" style={isDemoTenant ? { fontFamily: sansFont } : undefined}>
                         <div className="flex-1 min-w-0 flex flex-wrap gap-1">
                           {isAdmin ? (
                             <>
@@ -1038,7 +1039,7 @@ export default function MenuClient() {
                           ) : (
                             <>
                               {item.calories && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent" style={{ fontFamily: sansFont }}>
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent" style={isDemoTenant ? { fontFamily: sansFont } : undefined}>
                                   {item.calories} cal
                                 </span>
                               )}
@@ -1046,7 +1047,7 @@ export default function MenuClient() {
                                 <span 
                                   key={tag} 
                                   className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
-                                  style={{ fontFamily: sansFont }}
+                                  style={isDemoTenant ? { fontFamily: sansFont } : undefined}
                                 >
                                   {tag}
                                 </span>
