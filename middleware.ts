@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
     res.headers.set('Vary', 'Origin')
     return res
   }
-  const landingMode = process.env.NEXT_PUBLIC_LANDING_MODE === '1'
+  const landingMode = process.env.NEXT_PUBLIC_LANDING_MODE !== '0'
   const host = request.headers.get('host') || ''
   const branchFromHost = host.match(/-git-([a-z0-9-]+)-/i)?.[1]?.toLowerCase() || ''
   const branch = (process.env.VERCEL_GIT_COMMIT_REF || branchFromHost || '').toLowerCase()
