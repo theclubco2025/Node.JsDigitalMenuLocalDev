@@ -907,7 +907,7 @@ export default function MenuClient() {
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+                <h2 className="text-2xl font-extrabold tracking-widest inline-flex items-center gap-3" style={{ fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive', color: 'var(--ink)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
@@ -955,7 +955,7 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive' }}>
                             {highlightText(item.name, searchQuery)}
                             {typeof item.calories === 'number' && (
                               <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
