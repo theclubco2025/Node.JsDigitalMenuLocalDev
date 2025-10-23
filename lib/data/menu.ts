@@ -212,8 +212,11 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
       try {
         const buf = await fs.readFile(path.join(base, slug, "menu.json"), "utf8")
         const json = JSON.parse(buf)
-        if (!json || !Array.isArray(json.categories)) return null
-        return normalizeMenu(json)
+        const payload = json && typeof json === "object" && "menu" in json && json.menu
+          ? json.menu
+          : json
+        if (!payload || !Array.isArray((payload as RawMenu).categories)) return null
+        return normalizeMenu(payload as RawMenu)
       } catch {
         return null
       }
