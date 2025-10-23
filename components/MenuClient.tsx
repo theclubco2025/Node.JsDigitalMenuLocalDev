@@ -532,9 +532,11 @@ export default function MenuClient() {
     '--accent': effectiveTheme?.accent,
   }
   const paperTexture = Boolean(styleCfg?.texture?.paper)
+  const cursiveFont = '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive'
+  const sansFont = '"Inter", "Helvetica Neue", Arial, sans-serif'
   const containerStyle: React.CSSProperties = {
     ...rootStyle,
-    fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive',
+    fontFamily: sansFont,
     ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
   }
 
@@ -612,656 +614,656 @@ export default function MenuClient() {
         </div>
       )}
       {!error && !isLoading && (
-        <>
-      {/* Fixed Header */}
-      <div
-        className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-        style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
-      >
-        <div
-          className="px-4"
-          style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-            {brandLogoUrl ? (
-              <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-            )}
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italian)' }}>{brandName}</h1>
-              <p className="text-gray-200 text-xs">{brandTagline}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Spacer to offset fixed header height */}
-      <div style={{ height: 80 }} />
-
-      {/* Category chip scroller (optional - enable via future flag) */}
-
-      {/* No special-case banner */}
-
-      {/* Subtle Specials ribbon */}
-      {showSpecials && (
-        <div className="max-w-7xl mx-auto px-4 mb-4">
-          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
-            {specialsText}
-          </div>
-        </div>
-      )}
-
-      {/* Signature Picks (data-flagged) */}
-      {showSignatureGrid && (
-        <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex items-center mb-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
-            </div>
-            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {resolveFeatured().map((it) => {
-              const src = imageMap[it.id] || it.imageUrl || ''
-              return (
-                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
-                  {src && (
-                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
-                  )}
-                  <div className="p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="text-sm font-semibold" style={{ fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive', color:'#101010' }}>{it.name}</div>
-                        {/* optional pairing copy can be added via copy data */}
-                      </div>
-                      {typeof it.price === 'number' && it.price > 0 && (
-                        <div className="text-sm font-semibold text-neutral-900" style={{ color:'#101010' }}>${it.price.toFixed(2)}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Hero section (variant-driven) */}
-      {heroVariant !== 'none' && (
-        <div className="relative">
+        <div>
+          {/* Fixed Header */}
           <div
-            className="w-full h-56 md:h-64 lg:h-72"
-            style={{
-              backgroundImage: firstImageUrl ? `url(${firstImageUrl})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              borderBottom: '1px solid var(--muted)'
-            }}
+            className="fixed top-0 left-0 right-0 z-50 shadow-sm"
+            style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
           >
-            {/* Overlay tuned by tenant style */}
-            <div className="w-full h-full" style={{
-              background: 'linear-gradient(90deg, rgba(0,0,0,0.28), rgba(255,255,255,0.14), rgba(0,0,0,0.28))'
-            }} />
-            {heroVariant === 'logo' && brandLogoUrl && (
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage: `url(${brandLogoUrl})`,
-                  backgroundRepeat: 'repeat',
-                  backgroundSize: '160px 160px'
-                }}
-              />
-            )}
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center px-4">
-            <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
-                  <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
-                  <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
-            </div>
-          </div>
-            {/* Divider */}
-            <div className="w-full h-1.5" style={{ background: 'var(--muted)' }} />
-        </div>
-      )}
-
-      {/* Admin Edit Bar */}
-      {isAdmin && (
-        <div className="sticky top-0 z-40 bg-yellow-50 border-b border-yellow-200">
-          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
-            <span className="text-sm text-yellow-900 font-medium">Inline Edit Mode</span>
-            <button onClick={saveAllEdits} className="px-3 py-1 rounded text-sm" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>Save All</button>
-            {/* Publish draft → live */}
-            <button
-              onClick={async () => {
-                try {
-                  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-                  if (adminToken && adminToken.trim() !== '') headers['X-Admin-Token'] = adminToken
-                  const from = tenant.endsWith('-draft') ? tenant : `${tenant}-draft`
-                  const to = from.replace(/-draft$/, '')
-                  const res = await fetch('/api/tenant/promote', {
-                    method: 'POST', headers, body: JSON.stringify({ from, to })
-                  })
-                  if (!res.ok) {
-                    const detail = await res.text().catch(() => '')
-                    throw new Error(detail || `Publish failed (${res.status})`)
-                  }
-                  setToast('Published to live')
-                } catch (e) {
-                  const needsToken = typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && !adminToken
-                  const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL and retry.' : ''
-                  setToast((e instanceof Error ? e.message : 'Publish failed') + suffix)
-                }
-              }}
-              className="px-3 py-1 rounded text-sm border border-yellow-300"
-              style={{ background: '#fff', color: '#7a5d00' }}
+            <div
+              className="px-4"
+              style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
             >
-              Publish
-            </button>
-            <a href={`/menu?tenant=${encodeURIComponent(tenant)}`} className="text-sm text-yellow-900 underline">Exit</a>
-          </div>
-        </div>
-      )}
-
-      {/* Search & Filters (scroll with page) */}
-      <div className="max-w-7xl mx-auto px-4 py-2">
-        {/* Search Bar */}
-        <div className="mb-3">
-          <div className="flex items-center gap-2 max-w-2xl mx-auto">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search menu items, tags, or categories..."
-                className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
-                style={{ border: '1px solid var(--muted)' }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
-                  <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+              <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+                {brandLogoUrl ? (
+                  <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+                )}
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italian)' }}>{brandName}</h1>
+                  <p className="text-gray-200 text-xs">{brandTagline}</p>
+                </div>
               </div>
             </div>
-            <button
-              onClick={() => setFiltersOpen(o => !o)}
-              className="px-3 py-2 rounded-md text-sm font-medium"
-              style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
-            >
-              {filtersOpen ? 'Hide Filters' : 'Filters'}
-            </button>
           </div>
-        </div>
-        
-        {/* Category Filters */}
-        <div className="flex gap-2 justify-center flex-wrap mb-4">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
-            style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
-          >
-            All Categories
-          </button>
-          {allCategories.map(category => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
-              className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
-              style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
-            >
-              <span className="inline-flex items-center gap-2">
-                {getCategoryIcon(category)}
-                <span>{category}</span>
-              </span>
-            </button>
-          ))}
-        </div>
 
-        {/* Dietary Filters (compact dropdown) */}
-        {filtersOpen && (
-          <div className="flex gap-2 justify-center flex-wrap">
-            {dietaryOptions.map(option => (
-              <button
-                key={option}
-                onClick={() => {
-                  setSelectedDietaryFilters(prev => 
-                    prev.includes(option)
-                      ? prev.filter(f => f !== option)
-                      : [...prev, option]
+          {/* Spacer to offset fixed header height */}
+          <div style={{ height: 80 }} />
+
+          {/* Category chip scroller (optional - enable via future flag) */}
+
+          {/* No special-case banner */}
+
+          {/* Subtle Specials ribbon */}
+          {showSpecials && (
+            <div className="max-w-7xl mx-auto px-4 mb-4">
+              <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
+                {specialsText}
+              </div>
+            </div>
+          )}
+
+          {/* Signature Picks (data-flagged) */}
+          {showSignatureGrid && (
+            <div className="max-w-7xl mx-auto px-4 mb-6">
+              <div className="flex items-center mb-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
+                </div>
+                <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {resolveFeatured().map((it) => {
+                  const src = imageMap[it.id] || it.imageUrl || ''
+                  return (
+                    <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
+                      {src && (
+                        <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
+                      )}
+                      <div className="p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="text-sm font-semibold" style={{ fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive', color:'#101010' }}>{it.name}</div>
+                            {/* optional pairing copy can be added via copy data */}
+                          </div>
+                          {typeof it.price === 'number' && it.price > 0 && (
+                            <div className="text-sm font-semibold text-neutral-900" style={{ color:'#101010' }}>${it.price.toFixed(2)}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   )
-                }}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
-                style={selectedDietaryFilters.includes(option)
-                  ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
-                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
-                }
-              >
-                {option}
-              </button>
-            ))}
-            {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
-              <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
-                className="px-3 py-1 rounded-full text-xs font-medium"
-                style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+                })}
+              </div>
+            </div>
+          )}
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
-        {/* Current Category Chip */}
-        <div className="lg:col-span-12 mb-4">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
-            Browsing: {selectedCategory || 'All'}
-          </span>
-        </div>
-        {/* Category Sidebar */}
-        <aside className="hidden lg:block lg:col-span-3">
-          <div className="sticky top-24 lux-card rounded-xl p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)' }}>
-            <h3 className="text-sm font-semibold text-gray-200 mb-3">Categories</h3>
-            <nav className="space-y-1">
+          {/* Hero section (variant-driven) */}
+          {heroVariant !== 'none' && (
+            <div className="relative">
+              <div
+                className="w-full h-56 md:h-64 lg:h-72"
+                style={{
+                  backgroundImage: firstImageUrl ? `url(${firstImageUrl})` : undefined,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  borderBottom: '1px solid var(--muted)'
+                }}
+              >
+                {/* Overlay tuned by tenant style */}
+                <div className="w-full h-full" style={{
+                  background: 'linear-gradient(90deg, rgba(0,0,0,0.28), rgba(255,255,255,0.14), rgba(0,0,0,0.28))'
+                }} />
+                {heroVariant === 'logo' && brandLogoUrl && (
+                  <div
+                    className="absolute inset-0 opacity-10"
+                    style={{
+                      backgroundImage: `url(${brandLogoUrl})`,
+                      backgroundRepeat: 'repeat',
+                      backgroundSize: '160px 160px'
+                    }}
+                  />
+                )}
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center px-4">
+                <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
+                      <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
+                      <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
+                </div>
+              </div>
+                {/* Divider */}
+                <div className="w-full h-1.5" style={{ background: 'var(--muted)' }} />
+            </div>
+          )}
+
+          {/* Admin Edit Bar */}
+          {isAdmin && (
+            <div className="sticky top-0 z-40 bg-yellow-50 border-b border-yellow-200">
+              <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-3">
+                <span className="text-sm text-yellow-900 font-medium">Inline Edit Mode</span>
+                <button onClick={saveAllEdits} className="px-3 py-1 rounded text-sm" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>Save All</button>
+                {/* Publish draft → live */}
+                <button
+                  onClick={async () => {
+                    try {
+                      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+                      if (adminToken && adminToken.trim() !== '') headers['X-Admin-Token'] = adminToken
+                      const from = tenant.endsWith('-draft') ? tenant : `${tenant}-draft`
+                      const to = from.replace(/-draft$/, '')
+                      const res = await fetch('/api/tenant/promote', {
+                        method: 'POST', headers, body: JSON.stringify({ from, to })
+                      })
+                      if (!res.ok) {
+                        const detail = await res.text().catch(() => '')
+                        throw new Error(detail || `Publish failed (${res.status})`)
+                      }
+                      setToast('Published to live')
+                    } catch (e) {
+                      const needsToken = typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && !adminToken
+                      const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL and retry.' : ''
+                      setToast((e instanceof Error ? e.message : 'Publish failed') + suffix)
+                    }
+                  }}
+                  className="px-3 py-1 rounded text-sm border border-yellow-300"
+                  style={{ background: '#fff', color: '#7a5d00' }}
+                >
+                  Publish
+                </button>
+                <a href={`/menu?tenant=${encodeURIComponent(tenant)}`} className="text-sm text-yellow-900 underline">Exit</a>
+              </div>
+            </div>
+          )}
+
+          {/* Search & Filters (scroll with page) */}
+          <div className="max-w-7xl mx-auto px-4 py-2">
+            {/* Search Bar */}
+            <div className="mb-3">
+              <div className="flex items-center gap-2 max-w-2xl mx-auto">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search menu items, tags, or categories..."
+                    className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
+                    style={{ border: '1px solid var(--muted)' }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
+                      <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setFiltersOpen(o => !o)}
+                  className="px-3 py-2 rounded-md text-sm font-medium"
+                  style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+                >
+                  {filtersOpen ? 'Hide Filters' : 'Filters'}
+                </button>
+              </div>
+            </div>
+            
+            {/* Category Filters */}
+            <div className="flex gap-2 justify-center flex-wrap mb-4">
               <button
-                onClick={() => scrollTo('top')}
-                className="w-full text-left px-3 py-2 rounded-md text-sm font-bold transition"
-                style={{ color: '#ffffff', background: '#1f1f1f' }}
+                onClick={() => setSelectedCategory(null)}
+                className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+                style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
               >
                 All Categories
               </button>
-              {filteredCategories.map(category => (
+              {allCategories.map(category => (
                 <button
-                  key={category.id}
-                  onClick={() => scrollTo(`cat-${category.id}`)}
-                  className="w-full text-left px-3 py-2 rounded-md text-sm font-bold transition"
-                  style={activeCategoryId===category.id?{ color: '#0b0b0b', background: 'var(--accent)' }:{ color: '#e5e5e5', background: '#1a1a1a' }}
+                  key={category}
+                  onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
+                  className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
+                  style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
                 >
                   <span className="inline-flex items-center gap-2">
-                    {getCategoryIcon(category.name)}
-                    <span>{category.name}</span>
+                    {getCategoryIcon(category)}
+                    <span>{category}</span>
                   </span>
                 </button>
               ))}
-            </nav>
-          </div>
-        </aside>
+            </div>
 
-        {/* Menu Grid */}
-        <div className="space-y-12 lg:col-span-9" id="top">
-          {filteredCategories.map((category, idx) => (
-            <div
-              key={category.id}
-              id={`cat-${category.id}`}
-              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t' : ''}`}
-              style={{
-                background: 'var(--card)',
-                borderColor: 'var(--muted)',
-                borderRadius: 12,
-                padding: 12
-              }}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold tracking-widest inline-flex items-center gap-3" style={{ fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive', color: 'var(--ink)' }}>
-                  {getCategoryIcon(category.name)}
-                  <span>{category.name}</span>
-                </h2>
-                <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
-              </div>
-              {typeof categoryIntros[category.name] === 'string' && (
-                <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {category.items.map(item => (
-                  <div 
-                    key={item.id} 
-                    className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                    style={{ 
-                      borderRadius: 'var(--radius)', 
-                      background: 'var(--card)', 
-                      borderColor: 'var(--muted)',
-                      ...cardStyleForCategory(category.name)
-                    }}
-                  >
-                    {(() => {
-                      const src = imageMap[item.id] || item.imageUrl || ''
-                      if (!src) return null
-                      return (
-                        <div className="bg-gray-100">
-                          <img
-                            id={`img-${item.id}`}
-                            src={src}
-                            alt={item.name}
-                            className="w-full h-48 object-cover"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        </div>
+            {/* Dietary Filters (compact dropdown) */}
+            {filtersOpen && (
+              <div className="flex gap-2 justify-center flex-wrap">
+                {dietaryOptions.map(option => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setSelectedDietaryFilters(prev => 
+                        prev.includes(option)
+                          ? prev.filter(f => f !== option)
+                          : [...prev, option]
                       )
-                    })()}
-                    
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-3">
-                        {isAdmin ? (
-                          <input
-                            className="text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
-                            value={item.name}
-                            onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
-                          />
-                        ) : (
-                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive' }}>
-                            {highlightText(item.name, searchQuery)}
-                            {typeof item.calories === 'number' && (
-                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
-                            )}
-                          </h3>
-                        )}
-                        {isAdmin ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="w-28 text-right text-xl font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
-                            value={Number(item.price).toString()}
-                            onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
-                          />
-                        ) : (
-                          <span className="text-xl font-semibold" style={{ color:'#101010' }}>${item.price.toFixed(2)}</span>
-                        )}
-                      </div>
-                      {!isAdmin && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {getItemBadges(item).map(badge => (
-                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {isAdmin ? (
-                        <div className="space-y-2 mb-4">
-                          <textarea
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
-                            placeholder="Description"
-                            value={item.description || ''}
-                            onChange={e => updateItemField(category.id, item.id, 'description', e.target.value)}
-                          />
-                          <input
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
-                            placeholder="Image URL"
-                            value={item.imageUrl || ''}
-                            onChange={e => updateItemField(category.id, item.id, 'imageUrl', e.target.value)}
-                          />
-                        </div>
-                      ) : (
-                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
-                          {highlightText(item.description, searchQuery)}
-                        </p>
-                      )}
-                      
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0 flex flex-wrap gap-1">
-                          {isAdmin ? (
-                            <>
-                              <input
-                                type="number"
-                                placeholder="cal"
-                                className="w-20 px-2 py-1 text-xs border border-gray-300 rounded text-black"
-                                value={item.calories ?? ''}
-                                onChange={e => updateItemField(category.id, item.id, 'calories', e.target.value === '' ? undefined : Number(e.target.value))}
-                              />
-                              {(item.tags || []).map(tag => (
-                                <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-700 border border-gray-300 bg-gray-100">
-                                  {tag}
-                                  <button aria-label="Remove tag" onClick={() => removeTag(category.id, item.id, tag)} className="ml-1 text-gray-500 hover:text-black">×</button>
-                                </span>
-                              ))}
-                              <input
-                                className="px-2 py-1 text-xs border border-gray-300 rounded text-black"
-                                placeholder="Add tag (Enter)"
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') {
-                                    const v = (e.target as HTMLInputElement).value
-                                    addTag(category.id, item.id, v)
-                                    ;(e.target as HTMLInputElement).value = ''
-                                  }
-                                }}
-                              />
-                            </>
-                          ) : (
-                            <>
-                              {item.calories && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
-                                  {item.calories} cal
-                                </span>
-                              )}
-                              {(item.tags || []).map(tag => (
-                                <span 
-                                  key={tag} 
-                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </>
-                          )}
-                        </div>
-                        
-                        <div className="shrink-0 flex items-center gap-2">
-                          {!hideCart && (
-                            <button
-                              onClick={() => {
-                                addToCart(item)
-                                setRecentlyAddedId(item.id)
-                                setCartBump(true)
-                                setToast(`Added ${item.name}`)
-                                setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
-                              }}
-                              className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
-                              style={{ background: 'var(--accent)' }}
-                            >
-                              {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
-                            </button>
-                          )}
-                          <button
-                            onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                            className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
-                            aria-label={`Ask about ${item.name}`}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                              <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
-                            </svg>
-                            <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background:'#b91c1c', color:'#ffffff' }}>Ask AI</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
+                    style={selectedDietaryFilters.includes(option)
+                      ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
+                      : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                    }
+                  >
+                    {option}
+                  </button>
                 ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Nutrition/legal disclaimer */}
-      <div className="max-w-7xl mx-auto px-4 mt-10 mb-24">
-        <p className="text-xs text-gray-500 italic">
-          2,000 calories a day is used for general nutrition advice, but calorie needs vary. Calorie values are
-          estimates and may differ based on preparation or ingredient changes.
-        </p>
-      </div>
-
-      {/* AI Assistant Button */}
-      <button
-        onClick={() => setIsAssistantOpen(true)}
-        className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
-        style={{background:'var(--accent)', color:'#0b0b0b'}}
-        aria-label="Open assistant"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
-        </svg>
-      </button>
-
-      {/* Plate Drawer */}
-      {isCartOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="ml-auto w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">Your Plate</h2>
-                <button
-                  onClick={() => setIsCartOpen(false)}
-                  className="text-gray-500 hover:text-black transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-6">
-              {cart.length === 0 ? (
-                <div className="text-center text-gray-500 mt-8">
-                  <div className="text-4xl mb-4">🛒</div>
-                  <p>Your plate is empty</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {cart.map(cartItem => (
-                    <div key={cartItem.item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-black">{cartItem.item.name}</h4>
-                        <p className="text-sm text-gray-600">${cartItem.item.price.toFixed(2)} each</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
-                            className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
-                          >
-                            −
-                          </button>
-                          <span className="w-8 h-8 inline-flex items-center justify-center text-center font-medium text-black">{cartItem.quantity}</span>
-                          <button
-                            onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
-                            className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-black">
-                            ${(cartItem.item.price * cartItem.quantity).toFixed(2)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {cart.length > 0 && (
-              <div className="p-6 border-t border-gray-200 bg-gray-50">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-xl font-semibold text-black">Total:</span>
-                  <span className="text-2xl font-bold text-black">
-                    ${cartTotal.toFixed(2)}
-                  </span>
-                </div>
-                <button className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200">
-                  Proceed with Plate
-                </button>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  Demo mode - No actual payment processed
-                </p>
+                {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
+                  <button
+                    onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
+                    className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+                  >
+                    Clear all
+                  </button>
+                )}
               </div>
             )}
           </div>
-        </div>
-      )}
 
-      {/* AI Assistant Drawer */}
-      {isAssistantOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
-                <button
-                  onClick={() => setIsAssistantOpen(false)}
-                  className="text-gray-500 hover:text-black transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-sm text-gray-600 mt-2">
-                Ask about ingredients, allergens, or recommendations
-              </p>
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
+            {/* Current Category Chip */}
+            <div className="lg:col-span-12 mb-4">
+              <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
+                Browsing: {selectedCategory || 'All'}
+              </span>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-6">
-              {chatHistory.length === 0 ? (
-                <div className="text-center text-gray-500 mt-8">
-                  <div className="text-4xl mb-4">🤖</div>
-                  <p>Start a conversation!</p>
-                  <p className="text-sm mt-2">Try asking:</p>
-                  <ul className="text-xs mt-2 space-y-1 text-left">
-                    <li>&quot;What vegetarian options do you have?&quot;</li>
-                    <li>&quot;Is the pasta gluten-free?&quot;</li>
-                    <li>&quot;What&apos;s your most popular dish?&quot;</li>
-                  </ul>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {chatHistory.map((msg, i) => (
-                    <div key={i} className={`p-3 rounded-lg ${
-                      msg.role === 'user' 
-                        ? 'bg-gray-100 text-black ml-8' 
-                        : 'bg-black text-white mr-8'
-                    }`}>
-                      <div className="font-medium text-xs mb-1 opacity-70">
-                        {msg.role === 'user' ? 'You' : 'Assistant'}
-                      </div>
-                      <div className="text-sm">{msg.message}</div>
-                    </div>
+            {/* Category Sidebar */}
+            <aside className="hidden lg:block lg:col-span-3">
+              <div className="sticky top-24 lux-card rounded-xl p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)' }}>
+                <h3 className="text-sm font-semibold text-gray-200 mb-3">Categories</h3>
+                <nav className="space-y-1">
+                  <button
+                    onClick={() => scrollTo('top')}
+                    className="w-full text-left px-3 py-2 rounded-md text-sm font-bold transition"
+                    style={{ color: '#ffffff', background: '#1f1f1f' }}
+                  >
+                    All Categories
+                  </button>
+                  {filteredCategories.map(category => (
+                    <button
+                      key={category.id}
+                      onClick={() => scrollTo(`cat-${category.id}`)}
+                      className="w-full text-left px-3 py-2 rounded-md text-sm font-bold transition"
+                      style={activeCategoryId===category.id?{ color: '#0b0b0b', background: 'var(--accent)' }:{ color: '#e5e5e5', background: '#1a1a1a' }}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        {getCategoryIcon(category.name)}
+                        <span>{category.name}</span>
+                      </span>
+                    </button>
                   ))}
-                </div>
-              )}
-            </div>
-            
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Ask about our menu..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
-                  value={assistantMessage}
-                  onChange={(e) => setAssistantMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
-                />
-                <button
-                  onClick={() => { void sendAssistantMessage() }}
-                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-                >
-                  Send
-                </button>
+                </nav>
               </div>
+            </aside>
+
+            {/* Menu Grid */}
+            <div className="space-y-12 lg:col-span-9" id="top">
+              {filteredCategories.map((category, idx) => (
+                <div
+                  key={category.id}
+                  id={`cat-${category.id}`}
+                  className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t' : ''}`}
+                  style={{
+                    background: 'var(--card)',
+                    borderColor: 'var(--muted)',
+                    borderRadius: 12,
+                    padding: 12
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-extrabold tracking-widest inline-flex items-center gap-3" style={{ fontFamily: cursiveFont, letterSpacing: '0.12em', color: 'var(--ink)' }}>
+                      {getCategoryIcon(category.name)}
+                      <span>{category.name}</span>
+                    </h2>
+                    <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
+                  </div>
+                  {typeof categoryIntros[category.name] === 'string' && (
+                    <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {category.items.map(item => (
+                      <div 
+                        key={item.id} 
+                        className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                        style={{ 
+                          borderRadius: 'var(--radius)', 
+                          background: 'var(--card)', 
+                          borderColor: 'var(--muted)',
+                          ...cardStyleForCategory(category.name)
+                        }}
+                      >
+                        {(() => {
+                          const src = imageMap[item.id] || item.imageUrl || ''
+                          if (!src) return null
+                          return (
+                            <div className="bg-gray-100">
+                              <img
+                                id={`img-${item.id}`}
+                                src={src}
+                                alt={item.name}
+                                className="w-full h-48 object-cover"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
+                          )
+                        })()}
+                        
+                        <div className="p-6">
+                          <div className="flex justify-between items-start mb-3">
+                            {isAdmin ? (
+                              <input
+                                className="text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
+                                value={item.name}
+                                onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
+                              />
+                            ) : (
+                              <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: cursiveFont }}>
+                                {highlightText(item.name, searchQuery)}
+                                {typeof item.calories === 'number' && (
+                                  <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
+                                )}
+                              </h3>
+                            )}
+                            {isAdmin ? (
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="w-28 text-right text-xl font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
+                                value={Number(item.price).toString()}
+                                onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
+                              />
+                            ) : (
+                              <span className="text-xl font-semibold" style={{ color:'#27272a', fontFamily: sansFont }>${item.price.toFixed(2)}</span>
+                            )}
+                          </div>
+                          {!isAdmin && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {getItemBadges(item).map(badge => (
+                                <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {isAdmin ? (
+                            <div className="space-y-2 mb-4">
+                              <textarea
+                                className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
+                                placeholder="Description"
+                                value={item.description || ''}
+                                onChange={e => updateItemField(category.id, item.id, 'description', e.target.value)}
+                              />
+                              <input
+                                className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
+                                placeholder="Image URL"
+                                value={item.imageUrl || ''}
+                                onChange={e => updateItemField(category.id, item.id, 'imageUrl', e.target.value)}
+                              />
+                            </div>
+                          ) : (
+                            <p className="text-gray-600 text-sm leading-snug mb-4" style={{ fontFamily: sansFont, color:'#4b5563' }}>
+                              {highlightText(item.description, searchQuery)}
+                            </p>
+                          )}
+                          
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1 min-w-0 flex flex-wrap gap-1">
+                              {isAdmin ? (
+                                <>
+                                  <input
+                                    type="number"
+                                    placeholder="cal"
+                                    className="w-20 px-2 py-1 text-xs border border-gray-300 rounded text-black"
+                                    value={item.calories ?? ''}
+                                    onChange={e => updateItemField(category.id, item.id, 'calories', e.target.value === '' ? undefined : Number(e.target.value))}
+                                  />
+                                  {(item.tags || []).map(tag => (
+                                    <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-700 border border-gray-300 bg-gray-100">
+                                      {tag}
+                                      <button aria-label="Remove tag" onClick={() => removeTag(category.id, item.id, tag)} className="ml-1 text-gray-500 hover:text-black">×</button>
+                                    </span>
+                                  ))}
+                                  <input
+                                    className="px-2 py-1 text-xs border border-gray-300 rounded text-black"
+                                    placeholder="Add tag (Enter)"
+                                    onKeyDown={e => {
+                                      if (e.key === 'Enter') {
+                                        const v = (e.target as HTMLInputElement).value
+                                        addTag(category.id, item.id, v)
+                                        ;(e.target as HTMLInputElement).value = ''
+                                      }
+                                    }}
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  {item.calories && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
+                                      {item.calories} cal
+                                    </span>
+                                  )}
+                                  {(item.tags || []).map(tag => (
+                                    <span 
+                                      key={tag} 
+                                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+                            
+                            <div className="shrink-0 flex items-center gap-2">
+                              {!hideCart && (
+                                <button
+                                  onClick={() => {
+                                    addToCart(item)
+                                    setRecentlyAddedId(item.id)
+                                    setCartBump(true)
+                                    setToast(`Added ${item.name}`)
+                                    setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
+                                  }}
+                                  className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                                  style={{ background: 'var(--accent)' }}
+                                >
+                                  {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                                className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                                aria-label={`Ask about ${item.name}`}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+                                </svg>
+                                <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ background:'#b91c1c', color:'#ffffff' }}>Ask AI</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+
+          {/* Nutrition/legal disclaimer */}
+          <div className="max-w-7xl mx-auto px-4 mt-10 mb-24">
+            <p className="text-xs text-gray-500 italic">
+              2,000 calories a day is used for general nutrition advice, but calorie needs vary. Calorie values are
+              estimates and may differ based on preparation or ingredient changes.
+            </p>
+          </div>
+
+          {/* AI Assistant Button */}
+          <button
+            onClick={() => setIsAssistantOpen(true)}
+            className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
+            style={{background:'var(--accent)', color:'#0b0b0b'}}
+            aria-label="Open assistant"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+            </svg>
+          </button>
+
+          {/* Plate Drawer */}
+          {isCartOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
+              <div className="ml-auto w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-black">Your Plate</h2>
+                    <button
+                      onClick={() => setIsCartOpen(false)}
+                      className="text-gray-500 hover:text-black transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-6">
+                  {cart.length === 0 ? (
+                    <div className="text-center text-gray-500 mt-8">
+                      <div className="text-4xl mb-4">🛒</div>
+                      <p>Your plate is empty</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {cart.map(cartItem => (
+                        <div key={cartItem.item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-black">{cartItem.item.name}</h4>
+                            <p className="text-sm text-gray-600">${cartItem.item.price.toFixed(2)} each</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
+                                className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
+                              >
+                                −
+                              </button>
+                              <span className="w-8 h-8 inline-flex items-center justify-center text-center font-medium text-black">{cartItem.quantity}</span>
+                              <button
+                                onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
+                                className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-black">
+                                ${(cartItem.item.price * cartItem.quantity).toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {cart.length > 0 && (
+                  <div className="p-6 border-t border-gray-200 bg-gray-50">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-xl font-semibold text-black">Total:</span>
+                      <span className="text-2xl font-bold text-black">
+                        ${cartTotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <button className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200">
+                      Proceed with Plate
+                    </button>
+                    <p className="text-xs text-gray-500 text-center mt-2">
+                      Demo mode - No actual payment processed
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* AI Assistant Drawer */}
+          {isAssistantOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
+              <div className="w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
+                    <button
+                      onClick={() => setIsAssistantOpen(false)}
+                      className="text-gray-500 hover:text-black transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Ask about ingredients, allergens, or recommendations
+                  </p>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-6">
+                  {chatHistory.length === 0 ? (
+                    <div className="text-center text-gray-500 mt-8">
+                      <div className="text-4xl mb-4">🤖</div>
+                      <p>Start a conversation!</p>
+                      <p className="text-sm mt-2">Try asking:</p>
+                      <ul className="text-xs mt-2 space-y-1 text-left">
+                        <li>&quot;What vegetarian options do you have?&quot;</li>
+                        <li>&quot;Is the pasta gluten-free?&quot;</li>
+                        <li>&quot;What&apos;s your most popular dish?&quot;</li>
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {chatHistory.map((msg, i) => (
+                        <div key={i} className={`p-3 rounded-lg ${
+                          msg.role === 'user' 
+                            ? 'bg-gray-100 text-black ml-8' 
+                            : 'bg-black text-white mr-8'
+                        }`}>
+                          <div className="font-medium text-xs mb-1 opacity-70">
+                            {msg.role === 'user' ? 'You' : 'Assistant'}
+                          </div>
+                          <div className="text-sm">{msg.message}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-6 border-t border-gray-200 bg-gray-50">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ask about our menu..."
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
+                      value={assistantMessage}
+                      onChange={(e) => setAssistantMessage(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
+                    />
+                    <button
+                      onClick={() => { void sendAssistantMessage() }}
+                      className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                    >
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      </>
       )}
 
       {/* Toast */}
