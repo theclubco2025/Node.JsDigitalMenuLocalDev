@@ -618,7 +618,7 @@ export default function MenuClient() {
       {/* Fixed Header */}
       <div
         className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-        style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+        style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))', fontFamily: cursiveFont }}
       >
         <div
           className="px-4"
@@ -776,11 +776,11 @@ export default function MenuClient() {
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="Search menu items, tags, or categories..."
-                className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
-                style={{ border: '1px solid var(--muted)' }}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search menu items, tags, or categories..."
+                className="w-full bg-white/80 border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                style={{ fontFamily: sansFont }}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -910,7 +910,7 @@ export default function MenuClient() {
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: cursiveFont }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
@@ -1006,7 +1006,7 @@ export default function MenuClient() {
                         </p>
                       )}
                       
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center justify-between gap-3" style={{ fontFamily: sansFont }}>
                         <div className="flex-1 min-w-0 flex flex-wrap gap-1">
                           {isAdmin ? (
                             <>
