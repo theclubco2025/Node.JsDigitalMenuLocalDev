@@ -674,7 +674,7 @@ export default function MenuClient() {
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <div className="text-sm font-semibold" style={{ fontFamily: '"Playfair Display", var(--font-serif)', color:'#101010' }}>{it.name}</div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: '"Playfair Display", "Lucida Handwriting", "Snell Roundhand", cursive', color:'#101010' }}>{it.name}</div>
                         {/* optional pairing copy can be added via copy data */}
                       </div>
                       {typeof it.price === 'number' && it.price > 0 && (
