@@ -658,12 +658,12 @@ export default function MenuClient() {
       {/* Signature Picks (data-flagged) */}
       {showSignatureGrid && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex items-center mb-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+              <div className="flex items-center mb-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)', ...(isDemoTenant ? { fontFamily: cursiveFont } : {}) }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
+                  <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: isDemoTenant ? cursiveFont : 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
             </div>
             <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
           </div>
@@ -975,7 +975,7 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                          <span className="text-xl font-semibold text-black" style={isDemoTenant ? { color: '#27272a', fontFamily: sansFont } : {}}>${item.price.toFixed(2)}</span>
                         )}
                       </div>
                       {!isAdmin && (
