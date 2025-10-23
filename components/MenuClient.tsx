@@ -532,8 +532,11 @@ export default function MenuClient() {
     '--accent': effectiveTheme?.accent,
   }
   const paperTexture = Boolean(styleCfg?.texture?.paper)
+  const cursiveFont = 'var(--font-cursive)'
+  const sansFont = 'var(--font-sans)'
   const containerStyle: React.CSSProperties = {
     ...rootStyle,
+    fontFamily: cursiveFont,
     ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
   }
 
@@ -955,10 +958,10 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+                          <h3 className="text-xl font-semibold text-black leading-tight">
                             {highlightText(item.name, searchQuery)}
                             {typeof item.calories === 'number' && (
-                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
+                              <span className="ml-2 align-middle text-sm font-normal text-gray-500" style={{ fontFamily: sansFont }}>{item.calories} cal</span>
                             )}
                           </h3>
                         )}
@@ -977,7 +980,7 @@ export default function MenuClient() {
                       {!isAdmin && (
                         <div className="flex flex-wrap gap-1 mb-2">
                           {getItemBadges(item).map(badge => (
-                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
+                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280', fontFamily: sansFont }}>{badge}</span>
                           ))}
                         </div>
                       )}
@@ -998,7 +1001,7 @@ export default function MenuClient() {
                           />
                         </div>
                       ) : (
-                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
+                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4" style={{ fontFamily: sansFont }}>
                           {highlightText(item.description, searchQuery)}
                         </p>
                       )}
@@ -1035,7 +1038,7 @@ export default function MenuClient() {
                           ) : (
                             <>
                               {item.calories && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent" style={{ fontFamily: sansFont }}>
                                   {item.calories} cal
                                 </span>
                               )}
@@ -1043,6 +1046,7 @@ export default function MenuClient() {
                                 <span 
                                   key={tag} 
                                   className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
+                                  style={{ fontFamily: sansFont }}
                                 >
                                   {tag}
                                 </span>
