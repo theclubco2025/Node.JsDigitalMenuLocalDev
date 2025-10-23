@@ -975,7 +975,21 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-semibold text-black" style={isDemoTenant ? { color: '#27272a', fontFamily: sansFont } : {}}>${item.price.toFixed(2)}</span>
+                          <div className="flex flex-col items-end ml-4">
+                            <span className="text-xl font-semibold text-black" style={isDemoTenant ? { color: '#27272a', fontFamily: sansFont } : {}}>${item.price.toFixed(2)}</span>
+                            {isDemoTenant && (
+                              <span
+                                className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.15em]"
+                                style={{
+                                  background: 'linear-gradient(135deg, rgba(4,106,56,0.85), rgba(255,255,255,0.85), rgba(200,16,46,0.85))',
+                                  color: '#111827',
+                                  fontFamily: cursiveFont,
+                                }}
+                              >
+                                {category.name}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                       {!isAdmin && (
