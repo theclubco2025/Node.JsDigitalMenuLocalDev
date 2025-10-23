@@ -541,18 +541,8 @@ export default function MenuClient() {
 
   // Featured picks come from config copy.style.flags/featuredIds or fallback later
   const featuredItemIds: string[] = copy?.featuredIds ?? []
-  function cardStyleForCategory(categoryName: string): React.CSSProperties {
-    const base: React.CSSProperties = {
-      background: '#ffffff',
-      borderColor: 'rgba(0,0,0,0.08)'
-    }
-    if (/pasta/i.test(categoryName)) {
-      return {
-        ...base,
-        borderColor: 'rgba(185,28,28,0.12)'
-      }
-    }
-    return base
+  function cardStyleForCategory(): React.CSSProperties {
+    return {}
   }
   function getItemBadges(item: MenuItem): string[] {
     const badges: string[] = []
