@@ -161,7 +161,9 @@ export default function MenuClient() {
             if (!matchesName && !matchesDescription && !matchesTags) return false
           }
           // Dietary filters (must have all selected dietary tags)
+          const hasTags = (item.tags || []).length > 0
           if (selectedDietaryFilters.length > 0) {
+            if (!hasTags) return false
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
               (item.tags || []).some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
             )
@@ -540,17 +542,17 @@ export default function MenuClient() {
   // Featured picks come from config copy.style.flags/featuredIds or fallback later
   const featuredItemIds: string[] = copy?.featuredIds ?? []
   function cardStyleForCategory(categoryName: string): React.CSSProperties {
-    if (/pasta/i.test(categoryName)) {
-      return {
-        background: '#fffaf2',
-        borderColor: 'rgba(185,28,28,0.12)',
-        boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
-      }
-    }
-    return {
+    const base: React.CSSProperties = {
       background: '#ffffff',
       borderColor: 'rgba(0,0,0,0.08)'
     }
+    if (/pasta/i.test(categoryName)) {
+      return {
+        ...base,
+        borderColor: 'rgba(185,28,28,0.12)'
+      }
+    }
+    return base
   }
   function getItemBadges(item: MenuItem): string[] {
     const badges: string[] = []
@@ -1274,3 +1276,4 @@ export default function MenuClient() {
     </div>
   )
 }
+
