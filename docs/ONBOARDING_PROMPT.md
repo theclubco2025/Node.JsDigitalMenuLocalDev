@@ -21,10 +21,18 @@ node scripts/seed-tenant.mjs --slug <slug>-draft --admin 22582811 --base https:/
 
 #### 3. Promote draft to live (exact copy)
 ```powershell
-node scripts/seed-tenant.mjs --slug <slug> --admin 22582811 --base https://tccmenus.com
+node scripts/promote-tenant.mjs --from <slug>-draft --to <slug> --admin 22582811 --base https://tccmenus.com
 ```
 - Verify: `GET https://tccmenus.com/api/menu?tenant=<slug>`
 - Live path-first URL: `https://tccmenus.com/t/<slug>`
+
+#### 4. Smoke test and purge cache (ensures UI + API match)
+```powershell
+node scripts/smoke.mjs --slug <slug> --base https://tccmenus.com
+node scripts/deploy-tenants.mjs --base https://tccmenus.com --admin 22582811 --slugs <slug>
+```
+- `smoke.mjs` checks `/api/menu`, `/api/tenant/config`, `/api/theme`, and `/menu`
+- `deploy-tenants.mjs` promotes + smokes + cache busts (use for batch updates, e.g. `--slugs benes,independent`)
 
 #### 4. Assistant checks (fallback first)
 - `GET https://tccmenus.com/api/assistant` → `{ ok: true }` (or `{ ok: true, fallback: true }`)

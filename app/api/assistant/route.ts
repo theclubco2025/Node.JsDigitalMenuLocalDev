@@ -46,8 +46,8 @@ function scoreItem(query: string, name: string, description?: string, tags?: str
   return s
 }
 
-function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
-  if (!query?.trim()) return menu
+function getTopMatches(menu: MenuResponse, query: string, k: number): Array<{ catId: string; catName: string; item: { id: string; name: string; description?: string; price: number; tags?: string[] }; score: number }> {
+  if (!query?.trim()) return []
   const scored: Array<{ catId: string; catName: string; item: { id: string; name: string; description?: string; price: number; tags?: string[] }; score: number }> = []
   for (const c of menu.categories) {
     for (const it of c.items) {
@@ -56,14 +56,42 @@ function topKMenu(menu: MenuResponse, query: string, k: number): MenuResponse {
     }
   }
   scored.sort((a, b) => b.score - a.score)
-  const chosen = scored.slice(0, k)
-  const byCat = new Map<string, { id: string; name: string; items: { id: string; name: string; description?: string; price: number; tags?: string[] }[] }>()
-  for (const r of chosen) {
+  return scored.slice(0, k)
+}
+
+function matchesToMenu(matches: ReturnType<typeof getTopMatches>, fallback: MenuResponse): MenuResponse {
+  const byCat = new Map<string, { id: string; name: string; items: typeof matches[number]['item'][] }>()
+  for (const r of matches) {
     if (!byCat.has(r.catId)) byCat.set(r.catId, { id: r.catId, name: r.catName, items: [] })
     byCat.get(r.catId)!.items.push(r.item)
   }
   const categories = Array.from(byCat.values())
-  return categories.length > 0 ? { categories } : menu
+  return categories.length > 0 ? { categories } : fallback
+}
+
+function formatPrice(price?: number): string {
+  if (price == null || Number.isNaN(price)) return ''
+  return `$${Number(price).toFixed(2)}`
+}
+
+function buildFallback(matches: ReturnType<typeof getTopMatches>, query: string): string {
+  if (!matches.length) {
+    return `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
+  }
+  const q = normalize(query)
+  const exact = matches.find(m => {
+    const name = normalize(m.item.name)
+    return name.includes(q) || q.includes(name)
+  }) || matches[0]
+  const desc = exact.item.description?.trim()
+  const price = formatPrice(exact.item.price)
+  const pricePart = price ? ` It's priced at ${price}.` : ''
+  const base = `${exact.item.name}${desc ? `: ${desc}` : '.'}${pricePart}`.trim()
+  const others = matches.filter(m => m !== exact).slice(0, 3)
+  if (!others.length) return base
+  const otherText = others.map(m => `${m.item.name}${formatPrice(m.item.price) ? ` (${formatPrice(m.item.price)})` : ''}`).join(', ')
+  return `${base}
+Other matches: ${otherText}.`
 }
 
 /*
@@ -137,13 +165,13 @@ export async function POST(request: NextRequest) {
       glutenFree: !!filters.glutenFree,
       dairyFree: !!filters.dairyFree,
     })
-    // Retrieval: rank items by query relevance and build a focused context
-    const focused = topKMenu(filtered, query, 18)
+    const matches = getTopMatches(filtered, query, 18)
+    const focused = matchesToMenu(matches, filtered)
     const menuSnippet = snippet(focused, 1000)
-    const preview = topKMenu(filtered, query, 6)
+    const preview = matchesToMenu(matches.slice(0, 6), filtered)
     const previewSnippet = snippet(preview, 24)
     const fallbackText = previewSnippet && previewSnippet.trim().length > 0
-      ? `Here are some items that match your question:\n${previewSnippet}`
+      ? buildFallback(matches.slice(0, 4), query)
       : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
 
     // Load tenant meta from theme.json if available
