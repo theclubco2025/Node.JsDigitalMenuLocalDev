@@ -12,13 +12,19 @@ export function middleware(request: NextRequest) {
     res.headers.set('Vary', 'Origin')
     return res
   }
-  // Default landing: render marketing page unless a tenant is explicitly requested
+  // Default landing: render marketing page unless a tenant is explicitly requested or landing mode disabled
   if (request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
+    const landingDisabled = process.env.NEXT_PUBLIC_LANDING_MODE === '0'
     const isPreview = process.env.VERCEL_ENV === 'preview'
-    if (!isPreview) {
+    if (!landingDisabled && !isPreview) {
       return NextResponse.next()
     }
     const url = request.nextUrl.clone()
+    if (landingDisabled && !isPreview) {
+      url.pathname = '/menu'
+      url.searchParams.set('tenant', 'benes')
+      return NextResponse.redirect(url)
+    }
     const host = request.headers.get('host') || ''
     const m = host.match(/-git-([a-z0-9-]+)-/i)
     const fromHost = (m?.[1] || '').toLowerCase()
