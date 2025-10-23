@@ -979,11 +979,11 @@ export default function MenuClient() {
                             <span className="text-xl font-semibold text-black" style={isDemoTenant ? { color: '#27272a', fontFamily: sansFont } : {}}>${item.price.toFixed(2)}</span>
                             {isDemoTenant && (
                               <span
-                                className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-[0.15em]"
+                                className="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em]"
                                 style={{
-                                  background: 'linear-gradient(135deg, rgba(4,106,56,0.85), rgba(255,255,255,0.85), rgba(200,16,46,0.85))',
-                                  color: '#111827',
-                                  fontFamily: cursiveFont,
+                                  background: 'linear-gradient(135deg, rgba(4,106,56,0.9), rgba(255,255,255,0.95), rgba(200,16,46,0.9))',
+                                  color: '#0b0b0b',
+                                  fontFamily: sansFont,
                                 }}
                               >
                                 {category.name}
