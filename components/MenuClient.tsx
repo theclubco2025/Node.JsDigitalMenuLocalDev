@@ -920,7 +920,7 @@ export default function MenuClient() {
                       borderRadius: 'var(--radius)', 
                       background: 'var(--card)', 
                       borderColor: 'var(--muted)',
-                      ...cardStyleForCategory(category.name)
+                      ...cardStyleForCategory()
                     }}
                   >
                     {(() => {

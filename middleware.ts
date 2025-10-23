@@ -12,23 +12,20 @@ export function middleware(request: NextRequest) {
     res.headers.set('Vary', 'Origin')
     return res
   }
-  // Default / to benes in production; in preview derive tenant from host/branch
+  // Default landing: render marketing page unless a tenant is explicitly requested
   if (request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
+    if (!isPreview) {
+      return NextResponse.next()
+    }
     const url = request.nextUrl.clone()
-    if (isPreview) {
-      const host = request.headers.get('host') || ''
-      const m = host.match(/-git-([a-z0-9-]+)-/i)
-      const fromHost = (m?.[1] || '').toLowerCase()
-      const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
-      if (candidate) {
-        url.pathname = '/menu'
-        url.searchParams.set('tenant', candidate)
-        return NextResponse.redirect(url)
-      }
-    } else {
+    const host = request.headers.get('host') || ''
+    const m = host.match(/-git-([a-z0-9-]+)-/i)
+    const fromHost = (m?.[1] || '').toLowerCase()
+    const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
+    if (candidate) {
       url.pathname = '/menu'
-      url.searchParams.set('tenant', 'benes')
+      url.searchParams.set('tenant', candidate)
       return NextResponse.redirect(url)
     }
   }
