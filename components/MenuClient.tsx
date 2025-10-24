@@ -689,8 +689,8 @@ export default function MenuClient() {
         <div className="max-w-7xl mx-auto px-4 mb-6">
               <div className="flex items-center mb-3">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)', ...(isDemoTenant ? { fontFamily: cursiveFont } : {}) }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#facc15" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#facc15" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
                   <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: isDemoTenant ? cursiveFont : 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
             </div>
