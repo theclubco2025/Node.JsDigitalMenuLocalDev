@@ -1,8 +1,8 @@
 {
-  "i-spaghetti-and-meatballs": "/assets/demo-pasta.jpg",
-  "i-margherita-napoletana-14": "/assets/demo-pizza.jpg",
-  "i-vegetariano": "/assets/demo-calzone.jpg",
-  "i-sculpin-ipa": "/assets/demo-beverage.jpg"
+  "category:c-pasta": "/assets/demo-pasta.jpg",
+  "category:c-pizza": "/assets/demo-pizza.jpg",
+  "category:c-calzone": "/assets/demo-calzone.jpg",
+  "category:c-beers": "/assets/demo-beverage.jpg"
 }
 
 

@@ -940,10 +940,25 @@ export default function MenuClient() {
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={isDemoTenant ? { fontFamily: cursiveFont, color: 'var(--ink)' } : { color: 'var(--ink)' }}>
-                  {getCategoryIcon(category.name)}
-                  <span>{category.name}</span>
-                </h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={isDemoTenant ? { fontFamily: cursiveFont, color: 'var(--ink)' } : { color: 'var(--ink)' }}>
+                    {getCategoryIcon(category.name)}
+                    <span>{category.name}</span>
+                  </h2>
+                  {(() => {
+                    const categoryImage = imageMap[`category:${category.id}`]
+                    if (!categoryImage) return null
+                    return (
+                      <img
+                        src={categoryImage}
+                        alt={`${category.name} hero`}
+                        className="hidden sm:block h-14 w-14 rounded-full object-cover border border-neutral-200"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )
+                  })()}
+                </div>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
               {typeof categoryIntros[category.name] === 'string' && (

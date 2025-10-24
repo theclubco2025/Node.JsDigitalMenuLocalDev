@@ -21,7 +21,7 @@
             "nut-free",
             "signature"
           ],
-          "imageUrl": "/assets/demo-pasta.jpg"
+          "imageUrl": ""
         },
         {
           "id": "i-spaghetti-and-meatballs",
@@ -39,7 +39,7 @@
             "classic",
             "nut-free"
           ],
-          "imageUrl": "/assets/demo-pizza.jpg"
+          "imageUrl": ""
         },
         {
           "id": "i-chicken-fettuccine-alfredo",
@@ -57,7 +57,7 @@
             "creamy",
             "nut-free"
           ],
-          "imageUrl": "/assets/demo-calzone.jpg"
+          "imageUrl": ""
         },
         {
           "id": "i-spaghetti-bolognese",
@@ -75,7 +75,7 @@
             "nut-free",
             "signature"
           ],
-          "imageUrl": "/assets/demo-beverage.jpg"
+          "imageUrl": ""
         },
         {
           "id": "i-rigatoni-with-sausage",
