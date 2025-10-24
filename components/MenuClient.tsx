@@ -952,7 +952,7 @@ export default function MenuClient() {
                       <img
                         src={categoryImage}
                         alt={`${category.name} hero`}
-                        className="hidden sm:block h-14 w-14 rounded-full object-cover border border-neutral-200"
+                        className="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border border-neutral-200"
                         loading="lazy"
                         decoding="async"
                       />
