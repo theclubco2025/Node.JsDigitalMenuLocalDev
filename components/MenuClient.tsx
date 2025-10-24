@@ -1282,9 +1282,9 @@ export default function MenuClient() {
                   <p className="font-medium text-gray-700">Welcome to your table guide.</p>
                   <p className="text-sm mt-2">Try asking:</p>
                   <ul className="text-xs mt-3 space-y-1 text-left inline-block bg-white/80 px-4 py-3 rounded-2xl shadow-sm border border-gray-200">
-                    <li>• "Show me gluten-free pasta."</li>
-                    <li>• "What pairs with the Prosciutto & Arugula pizza?"</li>
-                    <li>• "Is the Linguine Pesto vegetarian friendly?"</li>
+                    <li>• &ldquo;Show me gluten-free pasta.&rdquo;</li>
+                    <li>• &ldquo;What pairs with the Prosciutto &amp; Arugula pizza?&rdquo;</li>
+                    <li>• &ldquo;Is the Linguine Pesto vegetarian friendly?&rdquo;</li>
                   </ul>
                 </div>
               ) : (

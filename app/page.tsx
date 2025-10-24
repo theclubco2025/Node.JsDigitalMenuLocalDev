@@ -111,6 +111,8 @@ export default function Landing() {
                   src={LANDING.logo}
                   alt="TCC Solutions"
                   className="w-full max-w-xs md:max-w-sm"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <div className="mt-4 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-700">
@@ -121,6 +123,8 @@ export default function Landing() {
                       src={LANDING.qrDemo}
                       alt="Demo menu QR"
                       className="h-full w-full rounded-md object-contain"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   <div className="text-xs text-neutral-500">tccmenus.com/demo</div>
