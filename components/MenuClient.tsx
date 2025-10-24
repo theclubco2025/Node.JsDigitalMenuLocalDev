@@ -201,6 +201,17 @@ export default function MenuClient() {
       .filter(category => category.items.length > 0)
   }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
 
+  const searchResults = useMemo(() => {
+    if (!searchQuery) return []
+    const matches: Array<{ item: MenuItem; categoryId: string; categoryName: string }> = []
+    for (const category of filteredCategories) {
+      for (const item of category.items) {
+        matches.push({ item, categoryId: category.id, categoryName: category.name })
+      }
+    }
+    return matches.slice(0, 8)
+  }, [filteredCategories, searchQuery])
+
   const updateItemField = (
     categoryId: string,
     itemId: string,
@@ -818,6 +829,47 @@ export default function MenuClient() {
                   <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
+              {searchResults.length > 0 && (
+                <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-gray-200 bg-white shadow-xl z-20 max-h-80 overflow-y-auto">
+                  <div className="px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-gray-400">Matching Items</div>
+                  <ul className="divide-y divide-gray-100">
+                    {searchResults.map(result => (
+                      <li key={result.item.id}>
+                        <button
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-start gap-3"
+                          onClick={() => {
+                            setSelectedCategory(result.categoryName)
+                            scrollTo(`cat-${result.categoryId}`)
+                            setSearchQuery(result.item.name)
+                          }}
+                        >
+                          <span className="text-xs font-semibold text-gray-400 uppercase tracking-[0.3em] min-w-[80px]">
+                            {result.categoryName}
+                          </span>
+                          <span className="flex-1">
+                            <span className="block text-sm font-semibold text-gray-900">{result.item.name}</span>
+                            {result.item.description ? (
+                              <span className="block text-xs text-gray-500 line-clamp-2">{result.item.description}</span>
+                            ) : null}
+                            {Array.isArray(result.item.tags) && result.item.tags.length > 0 && (
+                              <span className="mt-1 flex flex-wrap gap-1">
+                                {result.item.tags.slice(0, 3).map(tag => (
+                                  <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border border-gray-200 text-gray-500">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </span>
+                            )}
+                          </span>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-gray-400">
+                            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             <button
               onClick={() => setFiltersOpen(o => !o)}
