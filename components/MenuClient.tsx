@@ -76,7 +76,7 @@ export default function MenuClient() {
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
-  const demoAcknowledgeKey = 'demoAcknowledged_v2'
+  const demoAcknowledgeKey = 'demoAcknowledged_v3'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
   useEffect(() => {
