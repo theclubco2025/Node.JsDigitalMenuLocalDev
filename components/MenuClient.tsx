@@ -76,6 +76,7 @@ export default function MenuClient() {
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+  const demoAcknowledgeKey = 'demoAcknowledged_v2'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
   useEffect(() => {
@@ -130,13 +131,13 @@ export default function MenuClient() {
     if (tenant === 'demo') {
       let acknowledged = false
       try {
-        acknowledged = localStorage.getItem('demoAcknowledged') === '1'
+        acknowledged = localStorage.getItem(demoAcknowledgeKey) === '1'
       } catch {}
       setShowDemoAcknowledgement(!acknowledged)
     } else {
       setShowDemoAcknowledgement(false)
     }
-  }, [isBrowser, tenant])
+  }, [demoAcknowledgeKey, isBrowser, tenant])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1333,7 +1334,7 @@ export default function MenuClient() {
             <button
               onClick={() => {
                 setShowDemoAcknowledgement(false)
-                try { localStorage.setItem('demoAcknowledged', '1') } catch {}
+                try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
               }}
               className="mt-2 inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-semibold text-white shadow-lg transition-all"
               style={{ background: 'linear-gradient(135deg, rgba(220,38,38,0.95), rgba(34,197,94,0.95))' }}
