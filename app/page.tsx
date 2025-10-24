@@ -114,7 +114,7 @@ export default function Landing() {
                 />
               </div>
               <div className="mt-4 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-700">
-                <p className="font-medium">Scan a live demo QR or watch a 60-second walkthrough.</p>
+                <p className="font-medium">Scan the live demo QR to see it in action.</p>
                 <div className="mt-3 flex items-center gap-4">
                   <div className="grid h-28 w-28 place-items-center rounded-md border border-dashed border-neutral-300 text-neutral-400">
                     <img
