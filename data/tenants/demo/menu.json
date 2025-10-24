@@ -9,9 +9,18 @@
           "name": "Fettuccine Bolognese",
           "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 23,
-          "diet": ["contains meat"],
-          "allergens": ["dairy", "gluten"],
-          "tags": ["hearty", "signature"],
+          "diet": [
+            "contains meat"
+          ],
+          "allergens": [
+            "dairy",
+            "gluten"
+          ],
+          "tags": [
+            "hearty",
+            "nut-free",
+            "signature"
+          ],
           "imageUrl": ""
         },
         {
@@ -19,9 +28,17 @@
           "name": "Spaghetti and Meatballs",
           "description": "House made meatballs, signature marinara infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 20,
-          "diet": ["contains meat"],
-          "allergens": ["gluten", "dairy"],
-          "tags": ["classic"],
+          "diet": [
+            "contains meat"
+          ],
+          "allergens": [
+            "gluten",
+            "dairy"
+          ],
+          "tags": [
+            "classic",
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -29,9 +46,17 @@
           "name": "Chicken Fettuccine Alfredo",
           "description": "House made alfredo sauce, sliced chicken breast, basil, parmesan.",
           "price": 22,
-          "diet": ["contains meat"],
-          "allergens": ["dairy", "gluten"],
-          "tags": ["creamy"],
+          "diet": [
+            "contains meat"
+          ],
+          "allergens": [
+            "dairy",
+            "gluten"
+          ],
+          "tags": [
+            "creamy",
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -39,9 +64,17 @@
           "name": "Spaghetti Bolognese",
           "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 23,
-          "diet": ["contains meat"],
-          "allergens": ["gluten", "dairy"],
-          "tags": ["signature"],
+          "diet": [
+            "contains meat"
+          ],
+          "allergens": [
+            "gluten",
+            "dairy"
+          ],
+          "tags": [
+            "nut-free",
+            "signature"
+          ],
           "imageUrl": ""
         },
         {
@@ -49,9 +82,17 @@
           "name": "Rigatoni with Sausage",
           "description": "Rigatoni grande, sliced Italian sausage, pomodoro sauce, topped with asiago and basil.",
           "price": 22,
-          "diet": ["contains meat"],
-          "allergens": ["gluten", "dairy"],
-          "tags": ["spicy"],
+          "diet": [
+            "contains meat"
+          ],
+          "allergens": [
+            "gluten",
+            "dairy"
+          ],
+          "tags": [
+            "nut-free",
+            "spicy"
+          ],
           "imageUrl": ""
         },
         {
@@ -59,9 +100,17 @@
           "name": "Linguine Pesto",
           "description": "Signature pesto, asiago, heirloom cherry tomatoes.",
           "price": 19,
-          "diet": ["vegetarian"],
-          "allergens": ["dairy", "gluten"],
-          "tags": ["herbaceous"],
+          "diet": [
+            "vegetarian"
+          ],
+          "allergens": [
+            "dairy",
+            "gluten"
+          ],
+          "tags": [
+            "herbaceous",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -69,29 +118,55 @@
           "name": "Linguine and Clams",
           "description": "Fresh steamed clams, white wine garlic lemon butter sauce.",
           "price": 23,
-          "diet": ["contains seafood"],
-          "allergens": ["shellfish", "gluten", "dairy"],
-          "tags": ["seafood"],
+          "diet": [
+            "contains seafood"
+          ],
+          "allergens": [
+            "shellfish",
+            "gluten",
+            "dairy"
+          ],
+          "tags": [
+            "nut-free",
+            "seafood"
+          ],
           "imageUrl": ""
         },
         {
           "id": "i-linguine-and-prawns",
           "name": "Linguine and Prawns",
-          "description": "Fresh prawns sautéed in white wine garlic lemon butter sauce, with slivered zucchini and carrots.",
+          "description": "Fresh prawns saut\u00c3\u00a9ed in white wine garlic lemon butter sauce, with slivered zucchini and carrots.",
           "price": 22,
-          "diet": ["contains seafood"],
-          "allergens": ["shellfish", "gluten", "dairy"],
-          "tags": ["seafood"],
+          "diet": [
+            "contains seafood"
+          ],
+          "allergens": [
+            "shellfish",
+            "gluten",
+            "dairy"
+          ],
+          "tags": [
+            "nut-free",
+            "seafood"
+          ],
           "imageUrl": ""
         },
         {
           "id": "i-fettuccine-vegetariano",
           "name": "Fettuccine Vegetariano",
-          "description": "Ribbons of pasta, portobello mushrooms, ribbons of carrots and Italian squash, sautéed in olive oil and garlic, topped with asiago and basil.",
+          "description": "Ribbons of pasta, portobello mushrooms, ribbons of carrots and Italian squash, saut\u00c3\u00a9ed in olive oil and garlic, topped with asiago and basil.",
           "price": 19,
-          "diet": ["vegetarian"],
-          "allergens": ["gluten", "dairy"],
-          "tags": ["vegetarian"],
+          "diet": [
+            "vegetarian"
+          ],
+          "allergens": [
+            "gluten",
+            "dairy"
+          ],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -99,9 +174,21 @@
           "name": "Spaghetti Aglio e Olio",
           "description": "Olive oil, garlic, asiago, Italian parsley, touch of crushed red pepper.",
           "price": 15,
-          "diet": ["vegetarian"],
-          "allergens": ["gluten", "dairy"],
-          "tags": ["classic"],
+          "diet": [
+            "vegetarian"
+          ],
+          "allergens": [
+            "gluten",
+            "dairy"
+          ],
+          "tags": [
+            "classic",
+            "dairy-free",
+            "gluten-free",
+            "nut-free",
+            "vegan",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -109,9 +196,17 @@
           "name": "Lasagna",
           "description": "Pomodoro sauce, Italian sausage, ricotta, basil, house made lasagna noodles, topped with asiago and mozzarella.",
           "price": 18,
-          "diet": ["contains meat"],
-          "allergens": ["gluten", "dairy"],
-          "tags": ["baked"],
+          "diet": [
+            "contains meat"
+          ],
+          "allergens": [
+            "gluten",
+            "dairy"
+          ],
+          "tags": [
+            "baked",
+            "nut-free"
+          ],
           "imageUrl": ""
         }
       ]
@@ -125,7 +220,10 @@
           "name": "Margherita Napoletana 10\"",
           "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
           "price": 17,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -133,7 +231,10 @@
           "name": "Margherita Napoletana 14\"",
           "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
           "price": 25,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -141,7 +242,10 @@
           "name": "Margherita Napoletana With mozzarella di bufala (imported from Naples, Italy) 10\"",
           "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
           "price": 20,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -149,7 +253,10 @@
           "name": "Margherita Napoletana With mozzarella di bufala (imported from Naples, Italy) 14\"",
           "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
           "price": 30,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -157,7 +264,9 @@
           "name": "Portobello Mushroom Bacon 10\"",
           "description": "Sliced portobello mushrooms, hickory smoked bacon, mozzarella, tomato sauce.",
           "price": 20,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -165,7 +274,9 @@
           "name": "Portobello Mushroom Bacon 14\"",
           "description": "Sliced portobello mushrooms, hickory smoked bacon, mozzarella, tomato sauce.",
           "price": 30,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -173,7 +284,9 @@
           "name": "Chicken Piccata 10\"",
           "description": "Chicken breast, capers, garlic, mozzarella, fresh squeezed lemon, extra virgin olive oil.",
           "price": 20,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -181,7 +294,9 @@
           "name": "Chicken Piccata 14\"",
           "description": "Chicken breast, capers, garlic, mozzarella, fresh squeezed lemon, extra virgin olive oil.",
           "price": 30,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -189,7 +304,9 @@
           "name": "Prosciutto & Arugula 10\"",
           "description": "Thin sliced prosciutto di Parma, arugula, asiago, garlic, olive oil, cherry tomatoes (heirlooms when in season), drizzled with balsamic reduction.",
           "price": 22,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -197,7 +314,9 @@
           "name": "Prosciutto & Arugula 14\"",
           "description": "Thin sliced prosciutto di Parma, arugula, asiago, garlic, olive oil, cherry tomatoes (heirlooms when in season), drizzled with balsamic reduction.",
           "price": 32,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -205,7 +324,10 @@
           "name": "Garlic and More Garlic 10\"",
           "description": "Fresh garlic, roasted garlic cloves, mozzarella, tomato sauce.",
           "price": 18,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -213,7 +335,10 @@
           "name": "Garlic and More Garlic 14\"",
           "description": "Fresh garlic, roasted garlic cloves, mozzarella, tomato sauce.",
           "price": 26,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -221,7 +346,10 @@
           "name": "Asiago 10\"",
           "description": "Asiago, fresh garlic, fresh basil, tomato sauce.",
           "price": 15,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -229,7 +357,10 @@
           "name": "Asiago 14\"",
           "description": "Asiago, fresh garlic, fresh basil, tomato sauce.",
           "price": 25,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -237,7 +368,9 @@
           "name": "Pesto 10\"",
           "description": "Signature pesto, asiago, tomatoes (heirlooms when in season).",
           "price": 18,
-          "tags": [],
+          "tags": [
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -245,7 +378,9 @@
           "name": "Pesto 14\"",
           "description": "Signature pesto, asiago, tomatoes (heirlooms when in season).",
           "price": 27,
-          "tags": [],
+          "tags": [
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -253,7 +388,10 @@
           "name": "Cheese 10\"",
           "description": "Mozzarella, tomato sauce.",
           "price": 13,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -261,7 +399,10 @@
           "name": "Cheese 14\"",
           "description": "Mozzarella, tomato sauce.",
           "price": 22,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -269,7 +410,9 @@
           "name": "Carnivoro 10\"",
           "description": "Salami, pepperoni, Italian sausage, mozzarella, tomato sauce.",
           "price": 18,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -277,7 +420,9 @@
           "name": "Carnivoro 14\"",
           "description": "Salami, pepperoni, Italian sausage, mozzarella, tomato sauce.",
           "price": 27,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -285,7 +430,9 @@
           "name": "Chicken Alfredo 10\"",
           "description": "Chicken breast, house made alfredo sauce, mozzarella, red onions, fresh basil.",
           "price": 20,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -293,7 +440,9 @@
           "name": "Chicken Alfredo 14\"",
           "description": "Chicken breast, house made alfredo sauce, mozzarella, red onions, fresh basil.",
           "price": 30,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -301,7 +450,10 @@
           "name": "Vegetariano 10\"",
           "description": "Mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
           "price": 19,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -309,7 +461,10 @@
           "name": "Vegetariano 14\"",
           "description": "Mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
           "price": 29,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -317,7 +472,9 @@
           "name": "Pepperoni 10\"",
           "description": "Pepperoni, mozzarella cheese, tomato sauce.",
           "price": 15,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -325,7 +482,9 @@
           "name": "Pepperoni 14\"",
           "description": "Pepperoni, mozzarella cheese, tomato sauce.",
           "price": 24,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -333,7 +492,9 @@
           "name": "Combination 10\"",
           "description": "Salami, pepperoni, Italian sausage, mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
           "price": 21,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -341,7 +502,9 @@
           "name": "Combination 14\"",
           "description": "Salami, pepperoni, Italian sausage, mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
           "price": 31,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         }
       ]
@@ -355,7 +518,9 @@
           "name": "Bene Special",
           "description": "Italian sausage, asiago, onions, fresh garlic, olives, basil, sauce.",
           "price": 13,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -363,7 +528,9 @@
           "name": "Polpetta",
           "description": "Meatballs, mozzarella, asiago, garlic, sauce.",
           "price": 13,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -371,7 +538,9 @@
           "name": "Vesuvio",
           "description": "Italian sausage, mozzarella, onions, bell peppers, garlic, crushed red pepper, sauce (spicy hot).",
           "price": 13,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -379,7 +548,10 @@
           "name": "Vegetariano",
           "description": "Roasted portobello mushrooms, asiago, basil, onion, roasted garlic cloves, balsamic vinegar reduction, sauce.",
           "price": 13,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         }
       ]
@@ -391,9 +563,12 @@
         {
           "id": "i-italian-beef",
           "name": "Italian Beef",
-          "description": "Certified Angus beef thin sliced, sautéed onions and bell peppers, au jus, horseradish sauce on the side.",
+          "description": "Certified Angus beef thin sliced, saut\u00c3\u00a9ed onions and bell peppers, au jus, horseradish sauce on the side.",
           "price": 14,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -401,7 +576,10 @@
           "name": "Portobello",
           "description": "Marinated mushrooms, mozzarella, garlic aoli, lettuce, tomato, onion, basil, olive oil, balsamic vinegar reduction, sea salt.",
           "price": 12,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -409,15 +587,19 @@
           "name": "Meatball",
           "description": "House made meatballs, asiago, marinara sauce.",
           "price": 12,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
           "id": "i-italian-sausage",
           "name": "Italian Sausage",
-          "description": "Sausage, sautéed onions, bell pepper, marinara sauce.",
+          "description": "Sausage, saut\u00c3\u00a9ed onions, bell pepper, marinara sauce.",
           "price": 12,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -425,7 +607,9 @@
           "name": "Prosciutto",
           "description": "Prosciutto di Parma, mozzarella, basil, olive oil.",
           "price": 14,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -441,7 +625,9 @@
           "name": "Salami",
           "description": "Molinari Toscano salami, onions, peperoncini, basil.",
           "price": 12,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -449,7 +635,9 @@
           "name": "1/2 Sandwich and Cup of Soup",
           "description": "",
           "price": 12,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -457,7 +645,10 @@
           "name": "1/2 Sandwich and Small Italian Salad",
           "description": "",
           "price": 12,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         }
       ]
@@ -471,7 +662,9 @@
           "name": "Spaghetti and Meatballs",
           "description": "",
           "price": 7,
-          "tags": [],
+          "tags": [
+            "nut-free"
+          ],
           "imageUrl": ""
         },
         {
@@ -479,7 +672,10 @@
           "name": "Spaghetti Marinara",
           "description": "",
           "price": 7,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -487,7 +683,10 @@
           "name": "Spaghetti and Butter",
           "description": "",
           "price": 7,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         },
         {
@@ -495,7 +694,10 @@
           "name": "Pizza by the Slice",
           "description": "",
           "price": 7,
-          "tags": [],
+          "tags": [
+            "nut-free",
+            "vegetarian"
+          ],
           "imageUrl": ""
         }
       ]
@@ -509,7 +711,11 @@
           "name": "Widmer Hefeweizen",
           "description": "",
           "price": 6,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -517,7 +723,11 @@
           "name": "Sculpin IPA",
           "description": "",
           "price": 7.5,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -525,7 +735,11 @@
           "name": "Eel River Organic IPA",
           "description": "",
           "price": 6.5,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -533,7 +747,11 @@
           "name": "Auburn Alehouse American River Pale Ale",
           "description": "",
           "price": 6,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -541,7 +759,11 @@
           "name": "Moretti La Rossa",
           "description": "",
           "price": 8,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -549,7 +771,11 @@
           "name": "Peroni",
           "description": "",
           "price": 6,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -557,7 +783,11 @@
           "name": "Bourbon Barrel Stout",
           "description": "",
           "price": 8.5,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -565,7 +795,11 @@
           "name": "Firestone 805 Blonde Ale",
           "description": "",
           "price": 6,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -573,7 +807,11 @@
           "name": "Coors Light",
           "description": "",
           "price": 0,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -581,7 +819,11 @@
           "name": "Bud Light",
           "description": "",
           "price": 0,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -589,7 +831,12 @@
           "name": "Widmer Omission Pale Ale (Gluten Free)",
           "description": "",
           "price": 0,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "gluten-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -597,7 +844,12 @@
           "name": "Widmer Omission IPA (Gluten Free)",
           "description": "",
           "price": 0,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "gluten-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -605,7 +857,11 @@
           "name": "Stella Artois",
           "description": "",
           "price": 0,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -613,15 +869,23 @@
           "name": "Stella Artois Cider",
           "description": "",
           "price": 0,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
           "id": "i-guinness-draught-can",
-          "name": "Guinness Draught — Can",
+          "name": "Guinness Draught \u00e2\u20ac\u201d Can",
           "description": "",
           "price": 5,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -629,7 +893,12 @@
           "name": "Clausthaler N/A Lager",
           "description": "",
           "price": 0,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "gluten-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         },
         {
@@ -637,7 +906,12 @@
           "name": "Clausthaler N/A Amber",
           "description": "",
           "price": 0,
-          "tags": [],
+          "tags": [
+            "dairy-free",
+            "gluten-free",
+            "nut-free",
+            "vegan"
+          ],
           "imageUrl": ""
         }
       ]
