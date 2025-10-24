@@ -809,7 +809,7 @@ export default function MenuClient() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search menu items, tags, or categories..."
-                className="w-full bg-white/80 border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                className="w-full bg-white/80 border border-gray-200 rounded-full px-4 py-2 text-base md:text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-300"
                 style={isDemoTenant ? { fontFamily: sansFont } : undefined}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
@@ -1255,69 +1255,88 @@ export default function MenuClient() {
 
       {/* AI Assistant Drawer */}
       {isAssistantOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex">
+          <div className="w-full max-w-md md:max-w-lg bg-gray-50 h-full shadow-2xl flex flex-col rounded-none md:rounded-l-3xl overflow-hidden">
+            <div className="p-6 border-b border-gray-200 bg-white">
+              <div className="flex justify-between items-start gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.35em] text-gray-400 mb-1">Interactive Guide</p>
+                  <h2 className="text-2xl font-bold text-black">Concierge Assistant</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Ask for allergen info, pairings, chef notes, or curated recommendations.
+                  </p>
+                </div>
                 <button
                   onClick={() => setIsAssistantOpen(false)}
-                  className="text-gray-500 hover:text-black transition-colors"
+                  className="text-gray-400 hover:text-black transition-colors rounded-full p-2"
+                  aria-label="Close assistant"
                 >
                   ✕
                 </button>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
-                Ask about ingredients, allergens, or recommendations
-              </p>
             </div>
-            
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {chatHistory.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">
-                  <div className="text-4xl mb-4">🤖</div>
-                  <p>Start a conversation!</p>
+                  <div className="text-5xl mb-4">🍽️</div>
+                  <p className="font-medium text-gray-700">Welcome to your table guide.</p>
                   <p className="text-sm mt-2">Try asking:</p>
-                  <ul className="text-xs mt-2 space-y-1 text-left">
-                    <li>&quot;What vegetarian options do you have?&quot;</li>
-                    <li>&quot;Is the pasta gluten-free?&quot;</li>
-                    <li>&quot;What&apos;s your most popular dish?&quot;</li>
+                  <ul className="text-xs mt-3 space-y-1 text-left inline-block bg-white/80 px-4 py-3 rounded-2xl shadow-sm border border-gray-200">
+                    <li>• "Show me gluten-free pasta."</li>
+                    <li>• "What pairs with the Prosciutto & Arugula pizza?"</li>
+                    <li>• "Is the Linguine Pesto vegetarian friendly?"</li>
                   </ul>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {chatHistory.map((msg, i) => (
-                    <div key={i} className={`p-3 rounded-lg ${
-                      msg.role === 'user' 
-                        ? 'bg-gray-100 text-black ml-8' 
-                        : 'bg-black text-white mr-8'
-                    }`}>
-                      <div className="font-medium text-xs mb-1 opacity-70">
-                        {msg.role === 'user' ? 'You' : 'Assistant'}
+                    <div
+                      key={i}
+                      className={`relative p-4 rounded-2xl max-w-[85%] ${
+                        msg.role === 'user'
+                          ? 'ml-auto bg-white border border-rose-100 text-gray-800 shadow-sm'
+                          : 'bg-neutral-900 text-white shadow-lg'
+                      }`}
+                    >
+                      <div className="text-[10px] uppercase tracking-[0.3em] opacity-60 mb-2">
+                        {msg.role === 'user' ? 'Guest' : 'Concierge'}
                       </div>
-                      <div className="text-sm">{msg.message}</div>
+                      <div className="text-sm leading-relaxed whitespace-pre-line">{msg.message}</div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-            
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Ask about our menu..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
-                  value={assistantMessage}
-                  onChange={(e) => setAssistantMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
-                />
-                <button
-                  onClick={() => { void sendAssistantMessage() }}
-                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
-                >
-                  Send
-                </button>
+            <div className="p-6 border-t border-gray-200 bg-white">
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3 shadow-inner">
+                <div className="flex flex-col gap-3">
+                  <textarea
+                    placeholder="Ask about our menu..."
+                    className="min-h-[54px] resize-none px-3 py-2 text-base md:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-neutral-900 focus:outline-none text-gray-800 placeholder-gray-400 bg-white"
+                    value={assistantMessage}
+                    onChange={(e) => setAssistantMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        void sendAssistantMessage()
+                      }
+                    }}
+                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-gray-400">
+                      Ask about allergens, ingredients, stories
+                    </span>
+                    <button
+                      onClick={() => { void sendAssistantMessage() }}
+                      className="inline-flex items-center gap-2 bg-neutral-900 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm hover:bg-neutral-800 transition-colors"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 11L21 3L13 21L11 13L3 11Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      Send
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
