@@ -946,7 +946,7 @@ export default function MenuClient() {
                     <span>{category.name}</span>
                   </h2>
                   {(() => {
-                    const categoryImage = imageMap[`category:${category.id}`]
+                    const categoryImage = imageMap[`category:${category.id}`] || imageMap[`category:${category.name}`]
                     if (!categoryImage) return null
                     return (
                       <img

@@ -1,8 +1,12 @@
 {
   "category:c-pasta": "/assets/demo-pasta.jpg",
+  "category:Pasta": "/assets/demo-pasta.jpg",
   "category:c-pizza": "/assets/demo-pizza.jpg",
+  "category:Pizza": "/assets/demo-pizza.jpg",
   "category:c-calzone": "/assets/demo-calzone.jpg",
-  "category:c-beers": "/assets/demo-beverage.jpg"
+  "category:Calzone": "/assets/demo-calzone.jpg",
+  "category:c-beers": "/assets/demo-beverage.jpg",
+  "category:Beers": "/assets/demo-beverage.jpg"
 }
 
 
