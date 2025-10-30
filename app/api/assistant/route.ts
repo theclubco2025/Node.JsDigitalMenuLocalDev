@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { getMenuForTenant, filterMenuByDiet, snippet } from '@/lib/data/menu'
 import { buildPrompt } from '@/lib/ai/prompt'
+import { enforce as enforceGuardrails, refusalMessage, SCOPE_NOTE } from '@/lib/ai/guardrails'
 import { generate } from '@/lib/ai/model'
 import { resolveTenant } from '@/lib/tenant'
 import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
@@ -170,9 +171,24 @@ export async function POST(request: NextRequest) {
     const menuSnippet = snippet(focused, 1000)
     const preview = matchesToMenu(matches.slice(0, 6), filtered)
     const previewSnippet = snippet(preview, 24)
-    const fallbackText = previewSnippet && previewSnippet.trim().length > 0
+    const contextAvailable = Boolean(previewSnippet && previewSnippet.trim().length > 0)
+    const fallbackText = contextAvailable
       ? buildFallback(matches.slice(0, 4), query)
       : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
+
+    const guardrail = enforceGuardrails(query, contextAvailable)
+    if (!guardrail.allow) {
+      return NextResponse.json(
+        {
+          ok: true,
+          tenantId,
+          text: refusalMessage(),
+          scopeNote: SCOPE_NOTE,
+          reason: guardrail.reason,
+        },
+        { headers: corsHeaders(request.headers.get('origin') || '*') }
+      )
+    }
 
     // Load tenant meta from theme.json if available
     const { promises: fs } = await import('fs')
@@ -209,7 +225,7 @@ export async function POST(request: NextRequest) {
       const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').split(',').map(s=>s.trim()).filter(Boolean)
       if (keys.length === 0) {
         // Fallback: simple retrieval-only answer when no keys (returns top-k menu items)
-        return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+        return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true, scopeNote: SCOPE_NOTE }, { headers: corsHeaders(request.headers.get('origin') || '*') })
       }
     }
 
@@ -219,7 +235,7 @@ export async function POST(request: NextRequest) {
       recordSuccess(tenantId)
       const ms = Date.now() - started
       console.log(`[assistant] tenant=${tenantId} ok latency=${ms}ms`)
-      return NextResponse.json({ ok: true, tenantId, text }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+      return NextResponse.json({ ok: true, tenantId, text, scopeNote: SCOPE_NOTE }, { headers: corsHeaders(request.headers.get('origin') || '*') })
     } catch (e) {
       recordFailure(tenantId)
       const ms = Date.now() - started
@@ -420,9 +436,9 @@ export async function GET(request: NextRequest) {
     if (provider !== 'ollama') {
       const hasKey = Boolean((process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim())
       // When missing keys, expose that assistant is in fallback (enabled) mode
-      if (!hasKey) return NextResponse.json({ ok: true, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+      if (!hasKey) return NextResponse.json({ ok: true, fallback: true, scopeNote: SCOPE_NOTE }, { headers: corsHeaders(request.headers.get('origin') || '*') })
     }
-    return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+    return NextResponse.json({ ok: true, scopeNote: SCOPE_NOTE }, { headers: corsHeaders(request.headers.get('origin') || '*') })
   } catch (e) {
     console.error('Assistant GET error:', e)
     return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })

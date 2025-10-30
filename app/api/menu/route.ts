@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q') || undefined
 
     const menu = await readMenu(tenant)
+    const includeUnavailable = (searchParams.get('includeUnavailable') || '').trim() === '1'
 
     // simple filter on q
     const filtered = q?.trim()
@@ -27,14 +28,25 @@ export async function GET(request: NextRequest) {
         }
       : menu
 
-    if (!filtered || !Array.isArray(filtered.categories)) {
+    const sanitized = includeUnavailable
+      ? filtered
+      : {
+          categories: filtered.categories
+            .map(category => ({
+              ...category,
+              items: category.items.filter(item => item.available !== false),
+            }))
+            .filter(category => category.items.length > 0),
+        }
+
+    if (!sanitized || !Array.isArray(sanitized.categories)) {
       return NextResponse.json(
         { error: 'Menu not found for the specified tenant' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json(filtered, { headers: { 'Cache-Control': 'no-store' } })
+    return NextResponse.json(sanitized, { headers: { 'Cache-Control': 'no-store' } })
 
   } catch (error) {
     console.error('Menu API error:', error)

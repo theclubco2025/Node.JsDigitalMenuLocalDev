@@ -231,6 +231,17 @@ export default function MenuClient() {
               case 'price':
                 item.price = typeof value === 'number' ? value : Number(value ?? item.price)
                 break
+              case 'priceCents':
+                item.priceCents = typeof value === 'number'
+                  ? Math.max(0, Math.round(value))
+                  : Math.max(0, Math.round(Number(value ?? item.priceCents ?? 0)))
+                if (item.priceCents !== undefined) {
+                  item.price = item.priceCents / 100
+                }
+                break
+              case 'available':
+                item.available = Boolean(value)
+                break
               case 'calories':
                 item.calories = value === undefined
                   ? undefined
@@ -238,8 +249,17 @@ export default function MenuClient() {
                     ? value
                     : Number(value)
                 break
+              case 'kcal':
+                item.kcal = value === undefined
+                  ? undefined
+                  : typeof value === 'number'
+                    ? value
+                    : Number(value)
+                break
               case 'tags':
-                item.tags = Array.isArray(value) ? value : item.tags ?? []
+                item.tags = Array.isArray(value)
+                  ? (value as string[])
+                  : (item.tags ?? [])
                 break
               case 'name':
                 item.name = value === undefined ? '' : String(value)
@@ -250,8 +270,6 @@ export default function MenuClient() {
               case 'imageUrl':
                 item.imageUrl = value === undefined ? undefined : String(value)
                 break
-              default:
-                item[field] = value as typeof item[typeof field]
             }
           }
           break

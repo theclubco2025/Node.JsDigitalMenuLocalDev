@@ -3,9 +3,19 @@ export type MenuItem = {
   name: string;
   description?: string;
   price: number;
+  priceCents?: number;
   tags?: string[];
   calories?: number;
+  kcal?: number;
   imageUrl?: string;
+  available?: boolean;
+  allergens?: string[];
+  modifiers?: Array<{
+    id: string;
+    name: string;
+    type: string;
+    options?: unknown;
+  }>;
 };
 export type MenuCategory={id:string;name:string;items:MenuItem[]};
 export type MenuResponse={categories:MenuCategory[]};

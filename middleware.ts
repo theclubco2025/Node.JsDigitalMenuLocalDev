@@ -100,8 +100,13 @@ export function middleware(request: NextRequest) {
   // Add CORS headers for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const response = NextResponse.next()
-    const origin = request.headers.get('origin') || '*'
-    response.headers.set('Access-Control-Allow-Origin', origin)
+    const origin = request.headers.get('origin') || undefined
+    const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/')
+    if (origin) {
+      response.headers.set('Access-Control-Allow-Origin', origin)
+    } else if (!isAdminApi) {
+      response.headers.set('Access-Control-Allow-Origin', '*')
+    }
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token, x-admin-token')
     response.headers.set('Vary', 'Origin')

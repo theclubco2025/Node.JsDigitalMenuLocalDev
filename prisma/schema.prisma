@@ -42,14 +42,19 @@ model MenuItem {
   name        String
   description String
   price       Float
+  priceCents  Int           @default(0)
   imageUrl    String?
   available   Boolean       @default(true)
   calories    Int?
+  kcal        Int?
+  tagLabels   String[]    @default([])
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   
   category    MenuCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   tags        MenuItemTag[]
+  modifiers   ItemModifier[]
+  allergens   ItemAllergen[]
   
   @@map("menu_items")
 }
@@ -105,8 +110,78 @@ model Tenant {
   // Relations
   users                 User[]
   menus                 Menu[]
+  modifiers             Modifier[]
+  allergens             Allergen[]
+  editLogs              EditLog[]
   
   @@map("tenants")
+}
+
+model Modifier {
+  id         String   @id @default(cuid())
+  tenantId   String
+  name       String
+  type       String
+  options    Json
+  createdAt  DateTime @default(now())
+
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items      ItemModifier[]
+
+  @@map("modifiers")
+}
+
+model ItemModifier {
+  id          String    @id @default(cuid())
+  itemId      String
+  modifierId  String
+
+  item        MenuItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  modifier    Modifier  @relation(fields: [modifierId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, modifierId])
+  @@map("item_modifiers")
+}
+
+model Allergen {
+  id        String   @id @default(cuid())
+  tenantId  String
+  code      String
+  label     String
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items     ItemAllergen[]
+
+  @@unique([tenantId, code])
+  @@map("allergens")
+}
+
+model ItemAllergen {
+  id         String    @id @default(cuid())
+  itemId     String
+  allergenId String
+
+  item       MenuItem  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  allergen   Allergen  @relation(fields: [allergenId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, allergenId])
+  @@map("item_allergens")
+}
+
+model EditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String?
+  entity    String
+  entityId  String
+  action    String
+  diff      Json
+  createdAt DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, entity, entityId])
+  @@map("edit_logs")
 }
 
 enum Role {

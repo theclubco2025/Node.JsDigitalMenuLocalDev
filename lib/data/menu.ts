@@ -84,10 +84,21 @@ type RawMenu = {
   }>;
 };
 
+type RawModifier = {
+  id?: string;
+  name: string;
+  type?: string;
+  options?: unknown;
+};
+
 type RawMenuItem = Partial<MenuItem> & {
   diet?: string[];
   allergens?: string[];
   badges?: string[];
+  priceCents?: number;
+  available?: boolean;
+  kcal?: number;
+  modifiers?: RawModifier[];
 };
 
 function toArray(value: unknown): string[] {
@@ -112,6 +123,10 @@ function normalizeItem(raw: RawMenuItem): MenuItem & {
   }
 
   const priceValue = typeof raw.price === "number" ? raw.price : Number(raw.price ?? 0);
+  const priceCentsValue = typeof raw.priceCents === "number" ? raw.priceCents : Math.round((Number.isFinite(priceValue) ? priceValue : 0) * 100);
+  const available = raw.available !== undefined ? Boolean(raw.available) : true;
+  const kcal = typeof raw.kcal === "number" ? raw.kcal : (typeof raw.calories === "number" ? raw.calories : undefined);
+  const modifiers = Array.isArray(raw.modifiers) ? raw.modifiers : [];
 
   const item: MenuItem & {
     diet?: string[];
@@ -121,10 +136,20 @@ function normalizeItem(raw: RawMenuItem): MenuItem & {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? ""),
     description: raw.description ?? "",
-    price: Number.isFinite(priceValue) ? priceValue : 0,
+    price: Number.isFinite(priceValue) ? priceValue : Number.isFinite(priceCentsValue) ? priceCentsValue / 100 : 0,
+    priceCents: Number.isFinite(priceCentsValue) ? priceCentsValue : undefined,
     tags: Array.from(tagSet).filter(Boolean),
     calories: typeof raw.calories === "number" ? raw.calories : undefined,
+    kcal,
+    available,
     imageUrl: raw.imageUrl || undefined,
+    allergens,
+    modifiers: modifiers.map(mod => ({
+      id: mod.id ?? '',
+      name: mod.name,
+      type: mod.type ?? 'choice',
+      options: mod.options,
+    })),
   };
 
   if (diet.length) item.diet = diet;
@@ -163,7 +188,17 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
             orderBy: { createdAt: 'desc' },
             take: 1,
             include: {
-              categories: { include: { items: { include: { tags: true } } } }
+              categories: {
+                include: {
+                  items: {
+                    include: {
+                      tags: true,
+                      modifiers: { include: { modifier: true } },
+                      allergens: { include: { allergen: true } },
+                    }
+                  }
+                }
+              }
             }
           }
         }
@@ -177,7 +212,19 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
             menus: {
               orderBy: { createdAt: 'desc' },
               take: 1,
-              include: { categories: { include: { items: { include: { tags: true } } } } }
+              include: {
+                categories: {
+                  include: {
+                    items: {
+                      include: {
+                        tags: true,
+                        modifiers: { include: { modifier: true } },
+                        allergens: { include: { allergen: true } },
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         })
@@ -193,9 +240,19 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
               name: i.name,
               description: i.description || '',
               price: Number(i.price),
-              tags: i.tags.map(t => t.tag),
+              priceCents: typeof i.priceCents === 'number' ? i.priceCents : undefined,
+              available: i.available,
+              tags: Array.from(new Set([...(i.tagLabels || []), ...i.tags.map(t => t.tag)])),
               imageUrl: i.imageUrl || undefined,
               calories: i.calories || undefined,
+              kcal: i.kcal || i.calories || undefined,
+              modifiers: i.modifiers.map(m => ({
+                id: m.modifier.id,
+                name: m.modifier.name,
+                type: m.modifier.type,
+                options: m.modifier.options,
+              })),
+              allergens: i.allergens.map(a => a.allergen.label || a.allergen.code),
             })),
           })),
         };
@@ -262,8 +319,12 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
                 name: item.name,
                 description: item.description || '',
                 price: item.price,
+                priceCents: typeof item.priceCents === 'number' ? item.priceCents : Math.round((item.price || 0) * 100),
                 imageUrl: item.imageUrl || null,
                 calories: item.calories || null,
+                kcal: item.kcal || item.calories || null,
+                available: item.available ?? true,
+                tagLabels: item.tags || [],
               }
             })
             for (const tag of item.tags || []) {

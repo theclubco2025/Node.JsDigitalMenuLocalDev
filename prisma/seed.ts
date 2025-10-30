@@ -76,6 +76,14 @@ async function main() {
     }
   })
 
+  // Reset menu data to keep seed idempotent
+  await prisma.itemModifier.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
+  await prisma.itemAllergen.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
+  await prisma.menuItemTag.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
+  await prisma.menuCategory.deleteMany({ where: { menuId: menu.id } })
+  await prisma.modifier.deleteMany({ where: { tenantId: tenant.id } })
+  await prisma.allergen.deleteMany({ where: { tenantId: tenant.id } })
+
   // Categories and items data
   type SeedItem = {
     name: string
@@ -83,6 +91,7 @@ async function main() {
     price: number
     tags: string[]
     calories?: number
+    imageUrl?: string
   }
 
   type SeedCategory = {
@@ -143,6 +152,7 @@ async function main() {
   ]
 
   // Create categories and items
+  const createdItems = new Map<string, { id: string }>()
   for (const categoryData of categoriesData) {
     const category = await prisma.menuCategory.create({
       data: {
@@ -159,12 +169,17 @@ async function main() {
           name: itemData.name,
           description: itemData.description,
           price: itemData.price,
+          priceCents: Math.round(itemData.price * 100),
           calories: itemData.calories ?? null,
-          available: true
+          kcal: itemData.calories ?? null,
+          available: true,
+          imageUrl: itemData.imageUrl ?? null,
+          tagLabels: itemData.tags,
         }
       })
 
-      // Create tags
+      createdItems.set(itemData.name, { id: item.id })
+
       for (const tagName of itemData.tags) {
         await prisma.menuItemTag.create({
           data: {
@@ -174,6 +189,72 @@ async function main() {
         })
       }
     }
+  }
+
+  // Seed allergens and item associations
+  const dairyAllergen = await prisma.allergen.upsert({
+    where: { tenantId_code: { tenantId: tenant.id, code: 'DAIRY' } },
+    update: { label: 'Contains Dairy' },
+    create: { tenantId: tenant.id, code: 'DAIRY', label: 'Contains Dairy' }
+  })
+
+  const shellfishAllergen = await prisma.allergen.upsert({
+    where: { tenantId_code: { tenantId: tenant.id, code: 'SHELLFISH' } },
+    update: { label: 'Contains Shellfish' },
+    create: { tenantId: tenant.id, code: 'SHELLFISH', label: 'Contains Shellfish' }
+  })
+
+  const burrata = createdItems.get('Burrata Caprese')
+  if (burrata) {
+    await prisma.itemAllergen.create({
+      data: {
+        itemId: burrata.id,
+        allergenId: dairyAllergen.id,
+      }
+    })
+  }
+
+  const seafoodLinguine = createdItems.get('Seafood Linguine')
+  if (seafoodLinguine) {
+    await prisma.itemAllergen.create({
+      data: {
+        itemId: seafoodLinguine.id,
+        allergenId: shellfishAllergen.id,
+      }
+    })
+  }
+
+  // Seed modifiers and link to a featured item
+  const pizzaSizeModifier = await prisma.modifier.upsert({
+    where: { id: 'monochrome-size' },
+    update: {
+      options: [
+        { label: 'Standard', priceCentsDelta: 0 },
+        { label: 'Large (+$3)', priceCentsDelta: 300 },
+      ]
+    },
+    create: {
+      id: 'monochrome-size',
+      tenantId: tenant.id,
+      name: 'Pizza Size',
+      type: 'size',
+      options: [
+        { label: 'Standard', priceCentsDelta: 0 },
+        { label: 'Large (+$3)', priceCentsDelta: 300 },
+      ],
+    }
+  })
+
+  const margherita = createdItems.get('Margherita')
+  if (margherita) {
+    await prisma.itemModifier.upsert({
+      where: { itemId_modifierId: { itemId: margherita.id, modifierId: pizzaSizeModifier.id } },
+      update: {},
+      create: {
+        itemId: margherita.id,
+        modifierId: pizzaSizeModifier.id,
+      }
+    })
   }
 
   console.log('✅ Menu data seeded')
