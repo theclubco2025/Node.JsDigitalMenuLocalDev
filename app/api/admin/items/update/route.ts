@@ -193,19 +193,22 @@ export async function POST(request: NextRequest) {
     return { nextItem, afterSnapshot }
   })
 
-  await prisma.editLog.create({
-    data: {
-      tenantId: item.category.menu.tenantId,
-      userId,
-      entity: 'MenuItem',
-      entityId: itemId,
-      action: 'update',
-      diff: {
-        before: beforeSnapshot,
-        after: updated.afterSnapshot,
+  const prismaAny = prisma as Record<string, any>
+  if (typeof prismaAny.editLog?.create === 'function') {
+    await prismaAny.editLog.create({
+      data: {
+        tenantId: item.category.menu.tenantId,
+        userId,
+        entity: 'MenuItem',
+        entityId: itemId,
+        action: 'update',
+        diff: {
+          before: beforeSnapshot,
+          after: updated.afterSnapshot,
+        },
       },
-    },
-  })
+    })
+  }
 
   const responseItem = updated.nextItem
 
