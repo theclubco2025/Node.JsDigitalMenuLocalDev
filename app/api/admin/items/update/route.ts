@@ -162,7 +162,6 @@ export async function POST(request: NextRequest) {
     if (updates.available !== undefined) itemUpdateData.available = updates.available
     if (updates.imageUrl !== undefined) itemUpdateData.imageUrl = updates.imageUrl
     if (updates.kcal !== undefined) {
-      itemUpdateData.kcal = updates.kcal
       itemUpdateData.calories = updates.kcal
     }
     if (updates.tags !== undefined) itemUpdateData.tagLabels = updates.tags
