@@ -145,8 +145,8 @@ export async function POST(request: NextRequest) {
     priceCents: (item as unknown as { priceCents?: number }).priceCents ?? currentPriceCents,
     available: item.available,
     imageUrl: item.imageUrl,
-    kcal: item.kcal,
-    tagLabels: item.tagLabels,
+    kcal: (item as unknown as { kcal?: number; calories?: number }).kcal ?? item.calories ?? null,
+    tagLabels: (item as unknown as { tagLabels?: string[] }).tagLabels ?? [],
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -195,8 +195,8 @@ export async function POST(request: NextRequest) {
             priceCents: nextPriceCents,
             available: nextItem.available,
             imageUrl: nextItem.imageUrl,
-            kcal: nextItem.kcal,
-            tagLabels: updates.tags !== undefined ? updates.tags : nextItem.tagLabels,
+            kcal: (nextItem as unknown as { kcal?: number; calories?: number }).kcal ?? nextItem.calories ?? null,
+            tagLabels: updates.tags !== undefined ? updates.tags : ((nextItem as unknown as { tagLabels?: string[] }).tagLabels ?? []),
           },
         },
       },
@@ -215,8 +215,8 @@ export async function POST(request: NextRequest) {
       priceCents: (updated as unknown as { priceCents?: number }).priceCents ?? Math.round(updated.price * 100),
       available: updated.available,
       imageUrl: updated.imageUrl ?? undefined,
-      kcal: updated.kcal ?? undefined,
-      tags: updates.tags ?? updated.tagLabels ?? [],
+      kcal: (updated as unknown as { kcal?: number; calories?: number }).kcal ?? updated.calories ?? undefined,
+      tags: updates.tags ?? ((updated as unknown as { tagLabels?: string[] }).tagLabels ?? []),
     },
     scopeNote: SCOPE_NOTE,
   })
