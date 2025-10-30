@@ -186,7 +186,21 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
         allergens: { include: { allergen: true } },
       }
 
-      type PrismaMenuItemWithExtras = Prisma.MenuItemGetPayload<{ include: typeof itemInclude }>
+      type MenuItemRow = {
+        id: string
+        name: string
+        description: string | null
+        price: Prisma.Decimal | number
+        priceCents?: number | null
+        available?: boolean | null
+        tagLabels?: string[] | null
+        tags: { tag: string }[]
+        imageUrl?: string | null
+        calories?: number | null
+        kcal?: number | null
+        modifiers?: Array<{ modifier: { id: string; name: string; type: string; options: unknown } }> | null
+        allergens?: Array<{ allergen: { label: string | null; code: string } }> | null
+      }
 
       const tenantRow = await prisma.tenant.findUnique({
         where: { slug: tenant },
@@ -198,7 +212,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
               categories: {
                 include: {
                   items: {
-                    include: itemInclude,
+                    include: itemInclude as unknown as Prisma.MenuItemInclude,
                   },
                 }
               }
@@ -219,7 +233,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
                 categories: {
                   include: {
                     items: {
-                      include: itemInclude,
+                      include: itemInclude as unknown as Prisma.MenuItemInclude,
                     },
                   }
                 }
@@ -234,10 +248,10 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
           categories: menu.categories.map(c => ({
             id: c.id,
             name: c.name,
-            items: c.items.map(i => {
-              const item = i as unknown as PrismaMenuItemWithExtras
+            items: c.items.map(rawItem => {
+              const item = rawItem as unknown as MenuItemRow
 
-              const modifierList = Array.isArray(item.modifiers)
+              const modifiers = Array.isArray(item.modifiers)
                 ? item.modifiers.map(m => ({
                     id: m.modifier.id,
                     name: m.modifier.name,
@@ -246,23 +260,25 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
                   }))
                 : []
 
-              const allergenList = Array.isArray(item.allergens)
+              const allergens = Array.isArray(item.allergens)
                 ? item.allergens.map(a => a.allergen.label || a.allergen.code)
                 : []
+
+              const priceNumber = typeof item.price === 'number' ? item.price : Number(item.price)
 
               return {
                 id: item.id,
                 name: item.name,
                 description: item.description || '',
-                price: Number(item.price),
+                price: priceNumber,
                 priceCents: typeof item.priceCents === 'number' ? item.priceCents : undefined,
                 available: item.available ?? true,
                 tags: Array.from(new Set([...(item.tagLabels || []), ...item.tags.map(t => t.tag)])),
                 imageUrl: item.imageUrl || undefined,
                 calories: item.calories || undefined,
                 kcal: item.kcal || item.calories || undefined,
-                modifiers: modifierList,
-                allergens: allergenList,
+                modifiers,
+                allergens,
               }
             }),
           })),
