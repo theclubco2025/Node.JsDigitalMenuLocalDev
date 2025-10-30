@@ -348,7 +348,6 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
                 price: item.price,
                 imageUrl: item.imageUrl || null,
                 calories: item.calories || null,
-                kcal: item.kcal || item.calories || null,
                 available: item.available ?? true,
               }
             })
