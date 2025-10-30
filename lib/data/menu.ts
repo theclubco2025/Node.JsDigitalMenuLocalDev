@@ -346,12 +346,10 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
                 name: item.name,
                 description: item.description || '',
                 price: item.price,
-                priceCents: typeof item.priceCents === 'number' ? item.priceCents : Math.round((item.price || 0) * 100),
                 imageUrl: item.imageUrl || null,
                 calories: item.calories || null,
                 kcal: item.kcal || item.calories || null,
                 available: item.available ?? true,
-                tagLabels: item.tags || [],
               }
             })
             for (const tag of item.tags || []) {
