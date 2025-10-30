@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
+const prismaAny = prisma as Record<string, any>
 
 async function main() {
   console.log('🌱 Starting database seed...')
@@ -77,12 +78,22 @@ async function main() {
   })
 
   // Reset menu data to keep seed idempotent
-  await prisma.itemModifier.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
-  await prisma.itemAllergen.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
-  await prisma.menuItemTag.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
+  if (typeof prismaAny.itemModifier?.deleteMany === 'function') {
+    await prismaAny.itemModifier.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
+  }
+  if (typeof prismaAny.itemAllergen?.deleteMany === 'function') {
+    await prismaAny.itemAllergen.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
+  }
+  if (typeof prismaAny.menuItemTag?.deleteMany === 'function') {
+    await prismaAny.menuItemTag.deleteMany({ where: { item: { category: { menuId: menu.id } } } })
+  }
   await prisma.menuCategory.deleteMany({ where: { menuId: menu.id } })
-  await prisma.modifier.deleteMany({ where: { tenantId: tenant.id } })
-  await prisma.allergen.deleteMany({ where: { tenantId: tenant.id } })
+  if (typeof prismaAny.modifier?.deleteMany === 'function') {
+    await prismaAny.modifier.deleteMany({ where: { tenantId: tenant.id } })
+  }
+  if (typeof prismaAny.allergen?.deleteMany === 'function') {
+    await prismaAny.allergen.deleteMany({ where: { tenantId: tenant.id } })
+  }
 
   // Categories and items data
   type SeedItem = {
@@ -169,90 +180,99 @@ async function main() {
           name: itemData.name,
           description: itemData.description,
           price: itemData.price,
-          priceCents: Math.round(itemData.price * 100),
           calories: itemData.calories ?? null,
-          kcal: itemData.calories ?? null,
           available: true,
           imageUrl: itemData.imageUrl ?? null,
-          tagLabels: itemData.tags,
         }
       })
 
       createdItems.set(itemData.name, { id: item.id })
 
-      for (const tagName of itemData.tags) {
-        await prisma.menuItemTag.create({
-          data: {
-            itemId: item.id,
-            tag: tagName
-          }
-        })
+      if (typeof prismaAny.menuItemTag?.create === 'function') {
+        for (const tagName of itemData.tags) {
+          await prismaAny.menuItemTag.create({
+            data: {
+              itemId: item.id,
+              tag: tagName
+            }
+          })
+        }
       }
     }
   }
 
   // Seed allergens and item associations
-  const dairyAllergen = await prisma.allergen.upsert({
-    where: { tenantId_code: { tenantId: tenant.id, code: 'DAIRY' } },
-    update: { label: 'Contains Dairy' },
-    create: { tenantId: tenant.id, code: 'DAIRY', label: 'Contains Dairy' }
-  })
+  let dairyAllergenId: string | null = null
+  let shellfishAllergenId: string | null = null
+  if (typeof prismaAny.allergen?.upsert === 'function') {
+    const dairyAllergen = await prismaAny.allergen.upsert({
+      where: { tenantId_code: { tenantId: tenant.id, code: 'DAIRY' } },
+      update: { label: 'Contains Dairy' },
+      create: { tenantId: tenant.id, code: 'DAIRY', label: 'Contains Dairy' }
+    })
+    dairyAllergenId = dairyAllergen.id
 
-  const shellfishAllergen = await prisma.allergen.upsert({
-    where: { tenantId_code: { tenantId: tenant.id, code: 'SHELLFISH' } },
-    update: { label: 'Contains Shellfish' },
-    create: { tenantId: tenant.id, code: 'SHELLFISH', label: 'Contains Shellfish' }
-  })
+    const shellfishAllergen = await prismaAny.allergen.upsert({
+      where: { tenantId_code: { tenantId: tenant.id, code: 'SHELLFISH' } },
+      update: { label: 'Contains Shellfish' },
+      create: { tenantId: tenant.id, code: 'SHELLFISH', label: 'Contains Shellfish' }
+    })
+    shellfishAllergenId = shellfishAllergen.id
+  }
 
   const burrata = createdItems.get('Burrata Caprese')
-  if (burrata) {
-    await prisma.itemAllergen.create({
+  if (burrata && dairyAllergenId && typeof prismaAny.itemAllergen?.create === 'function') {
+    await prismaAny.itemAllergen.create({
       data: {
         itemId: burrata.id,
-        allergenId: dairyAllergen.id,
+        allergenId: dairyAllergenId,
       }
     })
   }
 
   const seafoodLinguine = createdItems.get('Seafood Linguine')
-  if (seafoodLinguine) {
-    await prisma.itemAllergen.create({
+  if (seafoodLinguine && shellfishAllergenId && typeof prismaAny.itemAllergen?.create === 'function') {
+    await prismaAny.itemAllergen.create({
       data: {
         itemId: seafoodLinguine.id,
-        allergenId: shellfishAllergen.id,
+        allergenId: shellfishAllergenId,
       }
     })
   }
 
   // Seed modifiers and link to a featured item
-  const pizzaSizeModifier = await prisma.modifier.upsert({
-    where: { id: 'monochrome-size' },
-    update: {
-      options: [
-        { label: 'Standard', priceCentsDelta: 0 },
-        { label: 'Large (+$3)', priceCentsDelta: 300 },
-      ]
-    },
-    create: {
-      id: 'monochrome-size',
-      tenantId: tenant.id,
-      name: 'Pizza Size',
-      type: 'size',
-      options: [
-        { label: 'Standard', priceCentsDelta: 0 },
-        { label: 'Large (+$3)', priceCentsDelta: 300 },
-      ],
-    }
-  })
+  let pizzaSizeModifierId: string | null = null
+  if (typeof prismaAny.modifier?.upsert === 'function') {
+    const pizzaSizeModifier = await prismaAny.modifier.upsert({
+      where: { id: 'monochrome-size' },
+      update: {
+        options: [
+          { label: 'Standard', priceCentsDelta: 0 },
+          { label: 'Large (+$3)', priceCentsDelta: 300 },
+        ]
+      },
+      create: {
+        id: 'monochrome-size',
+        tenantId: tenant.id,
+        name: 'Pizza Size',
+        type: 'size',
+        options: [
+          { label: 'Standard', priceCentsDelta: 0 },
+          { label: 'Large (+$3)', priceCentsDelta: 300 },
+        ],
+      }
+    })
+    pizzaSizeModifierId = pizzaSizeModifier.id
+  }
 
   const margherita = createdItems.get('Margherita')
-  if (margherita) {
-    await prisma.itemModifier.upsert({
-      where: { itemId_modifierId: { itemId: margherita.id, modifierId: pizzaSizeModifier.id } },
+  if (margherita && pizzaSizeModifierId && typeof prismaAny.itemModifier?.upsert === 'function') {
+    await prismaAny.itemModifier.upsert({
+      where: { itemId_modifierId: { itemId: margherita.id, modifierId: pizzaSizeModifierId } },
       update: {},
       create: {
         itemId: margherita.id,
-        modifierId: pizzaSizeModifier.id,
+        modifierId: pizzaSizeModifierId,
       }
     })
   }
