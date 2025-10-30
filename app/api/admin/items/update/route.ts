@@ -155,7 +155,10 @@ export async function POST(request: NextRequest) {
     if (updates.name !== undefined) itemUpdateData.name = updates.name
     if (updates.description !== undefined) itemUpdateData.description = updates.description
     if (updates.price !== undefined) itemUpdateData.price = updates.price
-    if (updates.priceCents !== undefined) itemUpdateData.priceCents = updates.priceCents
+    if (updates.priceCents !== undefined) {
+      const cents = Math.max(0, updates.priceCents)
+      itemUpdateData.price = cents / 100
+    }
     if (updates.available !== undefined) itemUpdateData.available = updates.available
     if (updates.imageUrl !== undefined) itemUpdateData.imageUrl = updates.imageUrl
     if (updates.kcal !== undefined) {
