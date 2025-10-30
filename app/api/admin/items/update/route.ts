@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
     available: item.available,
     imageUrl: item.imageUrl,
     kcal: (item as unknown as { kcal?: number; calories?: number }).kcal ?? item.calories ?? null,
-    tagLabels: (item as unknown as { tagLabels?: string[] }).tagLabels ?? [],
+    tags: item.tags.map(t => t.tag),
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -164,7 +164,12 @@ export async function POST(request: NextRequest) {
     if (updates.kcal !== undefined) {
       itemUpdateData.calories = updates.kcal
     }
-    if (updates.tags !== undefined) itemUpdateData.tagLabels = updates.tags
+    if (updates.tags !== undefined) {
+      await tx.menuItemTag.deleteMany({ where: { itemId } })
+      for (const tag of updates.tags) {
+        await tx.menuItemTag.create({ data: { itemId, tag } })
+      }
+    }
 
     const nextItem = await tx.menuItem.update({
       where: { id: itemId },
@@ -173,13 +178,6 @@ export async function POST(request: NextRequest) {
     })
 
     const nextPriceCents = (nextItem as unknown as { priceCents?: number }).priceCents ?? Math.round(nextItem.price * 100)
-
-    if (updates.tags !== undefined) {
-      await tx.menuItemTag.deleteMany({ where: { itemId } })
-      for (const tag of updates.tags) {
-        await tx.menuItemTag.create({ data: { itemId, tag } })
-      }
-    }
 
     await tx.editLog.create({
       data: {
@@ -198,7 +196,7 @@ export async function POST(request: NextRequest) {
             available: nextItem.available,
             imageUrl: nextItem.imageUrl,
             kcal: (nextItem as unknown as { kcal?: number; calories?: number }).kcal ?? nextItem.calories ?? null,
-            tagLabels: updates.tags !== undefined ? updates.tags : ((nextItem as unknown as { tagLabels?: string[] }).tagLabels ?? []),
+            tags: updates.tags !== undefined ? updates.tags : nextItem.tags.map(t => t.tag),
           },
         },
       },
@@ -218,7 +216,7 @@ export async function POST(request: NextRequest) {
       available: updated.available,
       imageUrl: updated.imageUrl ?? undefined,
       kcal: (updated as unknown as { kcal?: number; calories?: number }).kcal ?? updated.calories ?? undefined,
-      tags: updates.tags ?? ((updated as unknown as { tagLabels?: string[] }).tagLabels ?? []),
+      tags: updates.tags ?? updated.tags.map(t => t.tag),
     },
     scopeNote: SCOPE_NOTE,
   })
