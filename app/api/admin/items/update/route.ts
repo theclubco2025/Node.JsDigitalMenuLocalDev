@@ -179,7 +179,9 @@ export async function POST(request: NextRequest) {
 
     const nextPriceCents = (nextItem as unknown as { priceCents?: number }).priceCents ?? Math.round(nextItem.price * 100)
 
-    await tx.editLog.create({
+    const txWithEditLog = tx as unknown as { editLog: typeof prisma.editLog }
+
+    await txWithEditLog.editLog.create({
       data: {
         tenantId: item.category.menu.tenantId,
         userId,
