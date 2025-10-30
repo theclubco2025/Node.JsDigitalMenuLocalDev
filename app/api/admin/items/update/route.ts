@@ -136,11 +136,13 @@ export async function POST(request: NextRequest) {
   if (!item || !item.category.menu.tenant) return validationError('Item not found', 404)
   if (item.category.menu.tenant.slug !== tenantSlug) return validationError('Forbidden', 403)
 
+  const currentPriceCents = Math.round(item.price * 100)
+
   const beforeSnapshot = {
     name: item.name,
     description: item.description,
     price: item.price,
-    priceCents: item.priceCents,
+    priceCents: (item as unknown as { priceCents?: number }).priceCents ?? currentPriceCents,
     available: item.available,
     imageUrl: item.imageUrl,
     kcal: item.kcal,
@@ -168,6 +170,8 @@ export async function POST(request: NextRequest) {
       include: { tags: true },
     })
 
+    const nextPriceCents = (nextItem as unknown as { priceCents?: number }).priceCents ?? Math.round(nextItem.price * 100)
+
     if (updates.tags !== undefined) {
       await tx.menuItemTag.deleteMany({ where: { itemId } })
       for (const tag of updates.tags) {
@@ -188,7 +192,7 @@ export async function POST(request: NextRequest) {
             name: nextItem.name,
             description: nextItem.description,
             price: nextItem.price,
-            priceCents: nextItem.priceCents,
+            priceCents: nextPriceCents,
             available: nextItem.available,
             imageUrl: nextItem.imageUrl,
             kcal: nextItem.kcal,
@@ -208,7 +212,7 @@ export async function POST(request: NextRequest) {
       name: updated.name,
       description: updated.description,
       price: updated.price,
-      priceCents: updated.priceCents,
+      priceCents: (updated as unknown as { priceCents?: number }).priceCents ?? Math.round(updated.price * 100),
       available: updated.available,
       imageUrl: updated.imageUrl ?? undefined,
       kcal: updated.kcal ?? undefined,
