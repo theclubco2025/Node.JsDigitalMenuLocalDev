@@ -179,46 +179,48 @@ export async function POST(request: NextRequest) {
 
     const nextPriceCents = (nextItem as unknown as { priceCents?: number }).priceCents ?? Math.round(nextItem.price * 100)
 
-    const txWithEditLog = tx as unknown as { editLog: typeof prisma.editLog }
+    const afterSnapshot = {
+      name: nextItem.name,
+      description: nextItem.description,
+      price: nextItem.price,
+      priceCents: nextPriceCents,
+      available: nextItem.available,
+      imageUrl: nextItem.imageUrl,
+      kcal: (nextItem as unknown as { kcal?: number; calories?: number }).kcal ?? nextItem.calories ?? null,
+      tags: updates.tags !== undefined ? updates.tags : nextItem.tags.map(t => t.tag),
+    }
 
-    await txWithEditLog.editLog.create({
-      data: {
-        tenantId: item.category.menu.tenantId,
-        userId,
-        entity: 'MenuItem',
-        entityId: itemId,
-        action: 'update',
-        diff: {
-          before: beforeSnapshot,
-          after: {
-            name: nextItem.name,
-            description: nextItem.description,
-            price: nextItem.price,
-            priceCents: nextPriceCents,
-            available: nextItem.available,
-            imageUrl: nextItem.imageUrl,
-            kcal: (nextItem as unknown as { kcal?: number; calories?: number }).kcal ?? nextItem.calories ?? null,
-            tags: updates.tags !== undefined ? updates.tags : nextItem.tags.map(t => t.tag),
-          },
-        },
-      },
-    })
-
-    return nextItem
+    return { nextItem, afterSnapshot }
   })
+
+  await prisma.editLog.create({
+    data: {
+      tenantId: item.category.menu.tenantId,
+      userId,
+      entity: 'MenuItem',
+      entityId: itemId,
+      action: 'update',
+      diff: {
+        before: beforeSnapshot,
+        after: updated.afterSnapshot,
+      },
+    },
+  })
+
+  const responseItem = updated.nextItem
 
   return NextResponse.json({
     ok: true,
     item: {
-      id: updated.id,
-      name: updated.name,
-      description: updated.description,
-      price: updated.price,
-      priceCents: (updated as unknown as { priceCents?: number }).priceCents ?? Math.round(updated.price * 100),
-      available: updated.available,
-      imageUrl: updated.imageUrl ?? undefined,
-      kcal: (updated as unknown as { kcal?: number; calories?: number }).kcal ?? updated.calories ?? undefined,
-      tags: updates.tags ?? updated.tags.map(t => t.tag),
+      id: responseItem.id,
+      name: responseItem.name,
+      description: responseItem.description,
+      price: responseItem.price,
+      priceCents: (responseItem as unknown as { priceCents?: number }).priceCents ?? Math.round(responseItem.price * 100),
+      available: responseItem.available,
+      imageUrl: responseItem.imageUrl ?? undefined,
+      kcal: (responseItem as unknown as { kcal?: number; calories?: number }).kcal ?? responseItem.calories ?? undefined,
+      tags: updates.tags ?? responseItem.tags.map(t => t.tag),
     },
     scopeNote: SCOPE_NOTE,
   })
