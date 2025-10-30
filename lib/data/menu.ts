@@ -184,7 +184,9 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
         tags: true,
         modifiers: { include: { modifier: true } },
         allergens: { include: { allergen: true } },
-      } as unknown as Prisma.MenuItemInclude
+      }
+
+      type PrismaMenuItemWithExtras = Prisma.MenuItemGetPayload<{ include: typeof itemInclude }>
 
       const tenantRow = await prisma.tenant.findUnique({
         where: { slug: tenant },
@@ -232,29 +234,37 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
           categories: menu.categories.map(c => ({
             id: c.id,
             name: c.name,
-            items: c.items.map(i => ({
-              id: i.id,
-              name: i.name,
-              description: i.description || '',
-              price: Number(i.price),
-              priceCents: typeof i.priceCents === 'number' ? i.priceCents : undefined,
-              available: i.available,
-              tags: Array.from(new Set([...(i.tagLabels || []), ...i.tags.map(t => t.tag)])),
-              imageUrl: i.imageUrl || undefined,
-              calories: i.calories || undefined,
-              kcal: i.kcal || i.calories || undefined,
-              modifiers: Array.isArray((i as unknown as { modifiers?: Array<{ modifier: { id: string; name: string; type: string; options: unknown } }> }).modifiers)
-                ? ((i as unknown as { modifiers: Array<{ modifier: { id: string; name: string; type: string; options: unknown } }> }).modifiers.map(m => ({
+            items: c.items.map(i => {
+              const item = i as unknown as PrismaMenuItemWithExtras
+
+              const modifierList = Array.isArray(item.modifiers)
+                ? item.modifiers.map(m => ({
                     id: m.modifier.id,
                     name: m.modifier.name,
                     type: m.modifier.type,
                     options: m.modifier.options,
-                  })))
-                : [],
-              allergens: Array.isArray((i as unknown as { allergens?: Array<{ allergen: { label: string | null; code: string } }> }).allergens)
-                ? ((i as unknown as { allergens: Array<{ allergen: { label: string | null; code: string } }> }).allergens.map(a => a.allergen.label || a.allergen.code))
-                : [],
-            })),
+                  }))
+                : []
+
+              const allergenList = Array.isArray(item.allergens)
+                ? item.allergens.map(a => a.allergen.label || a.allergen.code)
+                : []
+
+              return {
+                id: item.id,
+                name: item.name,
+                description: item.description || '',
+                price: Number(item.price),
+                priceCents: typeof item.priceCents === 'number' ? item.priceCents : undefined,
+                available: item.available ?? true,
+                tags: Array.from(new Set([...(item.tagLabels || []), ...item.tags.map(t => t.tag)])),
+                imageUrl: item.imageUrl || undefined,
+                calories: item.calories || undefined,
+                kcal: item.kcal || item.calories || undefined,
+                modifiers: modifierList,
+                allergens: allergenList,
+              }
+            }),
           })),
         };
         return normalizeMenu(dbMenu);
