@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { MenuResponse, MenuCategory, MenuItem } from "@/types/api";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 
 // Simple in-memory override store (used when filesystem is unavailable)
 const memoryStore = new Map<string, MenuResponse>();
@@ -180,7 +180,12 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
     try {
       const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
       if (!prisma) throw new Error('prisma-not-ready')
-      // Our Prisma schema is richer; map to MenuResponse using the latest Menu for tenant slug
+      const itemInclude = {
+        tags: true,
+        modifiers: { include: { modifier: true } },
+        allergens: { include: { allergen: true } },
+      } as unknown as Prisma.MenuItemInclude
+
       const tenantRow = await prisma.tenant.findUnique({
         where: { slug: tenant },
         include: {
@@ -191,12 +196,8 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
               categories: {
                 include: {
                   items: {
-                    include: {
-                      tags: true,
-                      modifiers: { include: { modifier: true } },
-                      allergens: { include: { allergen: true } },
-                    }
-                  }
+                    include: itemInclude,
+                  },
                 }
               }
             }
@@ -216,12 +217,8 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
                 categories: {
                   include: {
                     items: {
-                      include: {
-                        tags: true,
-                        modifiers: { include: { modifier: true } },
-                        allergens: { include: { allergen: true } },
-                      }
-                    }
+                      include: itemInclude,
+                    },
                   }
                 }
               }
@@ -246,13 +243,17 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
               imageUrl: i.imageUrl || undefined,
               calories: i.calories || undefined,
               kcal: i.kcal || i.calories || undefined,
-              modifiers: i.modifiers.map(m => ({
-                id: m.modifier.id,
-                name: m.modifier.name,
-                type: m.modifier.type,
-                options: m.modifier.options,
-              })),
-              allergens: i.allergens.map(a => a.allergen.label || a.allergen.code),
+              modifiers: Array.isArray((i as unknown as { modifiers?: Array<{ modifier: { id: string; name: string; type: string; options: unknown } }> }).modifiers)
+                ? ((i as unknown as { modifiers: Array<{ modifier: { id: string; name: string; type: string; options: unknown } }> }).modifiers.map(m => ({
+                    id: m.modifier.id,
+                    name: m.modifier.name,
+                    type: m.modifier.type,
+                    options: m.modifier.options,
+                  })))
+                : [],
+              allergens: Array.isArray((i as unknown as { allergens?: Array<{ allergen: { label: string | null; code: string } }> }).allergens)
+                ? ((i as unknown as { allergens: Array<{ allergen: { label: string | null; code: string } }> }).allergens.map(a => a.allergen.label || a.allergen.code))
+                : [],
             })),
           })),
         };
