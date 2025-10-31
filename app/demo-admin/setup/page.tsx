@@ -35,7 +35,7 @@ export default function DemoAdminSetupPage() {
 
       const payload = await res.json().catch(() => ({}))
       const email = typeof payload?.email === 'string' ? payload.email : (process.env.NEXT_PUBLIC_DEMO_ADMIN_EMAIL || 'demo-admin@demo.local')
-      const tenantSlug = typeof payload?.tenant === 'string' ? payload.tenant : 'demo-draft'
+      const tenantSlug = typeof payload?.tenant === 'string' ? payload.tenant : 'demo'
 
       setStep('success')
 

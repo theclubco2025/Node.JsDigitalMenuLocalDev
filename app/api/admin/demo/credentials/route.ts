@@ -15,7 +15,7 @@ function invalid(message: string, status = 400) {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json().catch(() => ({}))) as Payload
-    const tenantSlug = (body.tenant || 'demo-draft').trim()
+    const tenantSlug = (body.tenant || 'demo').trim()
     const accessCode = String(body.accessCode ?? '').trim()
     const displayName = (body.displayName || '').trim() || 'Demo Restaurant Admin'
 
