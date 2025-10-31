@@ -23,6 +23,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  if (request.nextUrl.pathname === '/admin/demo') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/menu'
+    url.searchParams.set('tenant', 'demo-draft')
+    url.searchParams.set('admin', '1')
+    return NextResponse.redirect(url)
+  }
+
   if (branch === 'demo-preview' && request.nextUrl.pathname === '/') {
     const url = request.nextUrl.clone()
     url.pathname = '/menu'
