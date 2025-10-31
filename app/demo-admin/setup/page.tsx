@@ -7,9 +7,6 @@ type Step = 'form' | 'success' | 'error'
 
 export default function DemoAdminSetupPage() {
   const [accessCode, setAccessCode] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<Step>('form')
@@ -17,10 +14,6 @@ export default function DemoAdminSetupPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (password !== confirmPassword) {
-      setError('Passwords must match')
-      return
-    }
     setError('')
     setLoading(true)
 
@@ -30,8 +23,6 @@ export default function DemoAdminSetupPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tenant: 'demo-draft',
-          email,
-          password,
           accessCode,
           displayName,
         }),
@@ -39,22 +30,25 @@ export default function DemoAdminSetupPage() {
 
       if (!res.ok) {
         const detail = await res.json().catch(() => ({}))
-        throw new Error(detail?.error || 'Unable to save credentials')
+        throw new Error(detail?.error || 'Unable to unlock admin console')
       }
+
+      const payload = await res.json().catch(() => ({}))
+      const email = typeof payload?.email === 'string' ? payload.email : (process.env.NEXT_PUBLIC_DEMO_ADMIN_EMAIL || 'demo-admin@demo.local')
+      const tenantSlug = typeof payload?.tenant === 'string' ? payload.tenant : 'demo-draft'
 
       setStep('success')
 
       await signIn('credentials', {
         redirect: true,
         email,
-        password,
-        tenant: 'demo',
+        password: accessCode,
+        tenant: tenantSlug,
         callbackUrl: '/admin/demo',
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
       setStep('error')
-    } finally {
       setLoading(false)
     }
   }
@@ -66,7 +60,7 @@ export default function DemoAdminSetupPage() {
           <p className="text-xs uppercase tracking-[0.4em] text-emerald-400 mb-2">Demo Admin</p>
           <h1 className="text-3xl font-semibold">Secure Your Menu Console</h1>
           <p className="text-sm text-slate-300 mt-3">
-            Use the access code provided by your TCC onboarding specialist to claim your admin login. These credentials control your live menu, so please store them securely.
+            Use the access code provided by your TCC onboarding specialist to unlock the demo admin console. The code doubles as your password, so keep it private.
           </p>
         </div>
 
@@ -92,48 +86,8 @@ export default function DemoAdminSetupPage() {
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
               className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm focus:border-emerald-400 focus:outline-none focus:ring focus:ring-emerald-500/30"
-              placeholder="e.g. Indie Eats Team"
+              placeholder="Optional – shown in the header"
             />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-200" htmlFor="email">Admin email</label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm focus:border-emerald-400 focus:outline-none focus:ring focus:ring-emerald-500/30"
-              placeholder="you@restaurant.com"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-200" htmlFor="password">New password</label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm focus:border-emerald-400 focus:outline-none focus:ring focus:ring-emerald-500/30"
-                placeholder="Minimum 8 characters"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-200" htmlFor="confirm">Confirm password</label>
-              <input
-                id="confirm"
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm focus:border-emerald-400 focus:outline-none focus:ring focus:ring-emerald-500/30"
-                placeholder="Repeat password"
-              />
-            </div>
           </div>
 
           {error && (
@@ -147,12 +101,12 @@ export default function DemoAdminSetupPage() {
             disabled={loading}
             className="w-full rounded-lg bg-emerald-500 px-6 py-3 text-sm font-semibold tracking-wide text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Saving credentials…' : 'Save credentials & launch admin'}
+            {loading ? 'Unlocking console…' : 'Unlock admin console'}
           </button>
 
           {step === 'success' && !loading && (
             <p className="text-sm text-emerald-300">
-              Credentials saved! Redirecting you to the demo admin console…
+              Access granted! Redirecting you to the demo admin console…
             </p>
           )}
         </form>
@@ -160,9 +114,9 @@ export default function DemoAdminSetupPage() {
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-5 py-4 text-xs leading-5 text-slate-300">
           <p className="font-semibold text-slate-100">What happens next?</p>
           <ul className="mt-3 space-y-2 list-disc list-inside">
-            <li>You&apos;ll be redirected to the secure demo admin console.</li>
-            <li>Review draft menu changes and stage updates in real time.</li>
-            <li>When you approve, push the draft to live with one click.</li>
+            <li>The access code becomes your password for this session.</li>
+            <li>After unlock, you&apos;ll land in the demo admin console ready to edit.</li>
+            <li>Use the Promote card to mirror draft changes onto the live demo.</li>
           </ul>
         </div>
       </div>
