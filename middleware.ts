@@ -28,6 +28,10 @@ export function middleware(request: NextRequest) {
     url.pathname = '/menu'
     url.searchParams.set('tenant', 'demo')
     url.searchParams.set('admin', '1')
+    const adminToken = process.env.ADMIN_TOKEN?.trim()
+    if (adminToken) {
+      url.searchParams.set('token', adminToken)
+    }
     return NextResponse.redirect(url)
   }
 
