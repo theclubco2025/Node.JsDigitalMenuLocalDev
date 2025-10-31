@@ -17,6 +17,12 @@ export function middleware(request: NextRequest) {
   const branchFromHost = host.match(/-git-([a-z0-9-]+)-/i)?.[1]?.toLowerCase() || ''
   const branch = (process.env.VERCEL_GIT_COMMIT_REF || branchFromHost || '').toLowerCase()
 
+  if (branch === 'demo-admin-draft' && request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/demo-admin/setup'
+    return NextResponse.redirect(url)
+  }
+
   if (branch === 'demo-preview' && request.nextUrl.pathname === '/') {
     const url = request.nextUrl.clone()
     url.pathname = '/menu'
