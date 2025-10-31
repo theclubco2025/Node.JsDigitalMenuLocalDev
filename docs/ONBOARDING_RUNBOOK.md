@@ -23,6 +23,13 @@
 - In Vercel, add wildcard domain (e.g. `*.menu.yourdomain.com`).
 - Map subdomains to tenant slugs in resolver when you’re ready.
 
+### Demo Admin (POC) Flow
+- Share `/demo-admin/setup` with restaurant stakeholders. They must enter the shared `DEMO_ADMIN_ACCESS_CODE` to set email + password.
+- On save, we upsert a tenant owner account and automatically sign them into `/admin/demo`.
+- `/admin/demo` shows the draft menu (`demo-draft`) with inline fields for name, description, price, tags. Blur to persist each field.
+- Promotion requires the same access code and calls `/api/admin/demo/promote`, which mirrors draft → live via the standard promote API.
+- Update `env` with `DEMO_ADMIN_ACCESS_CODE` before deploying a demo branch.
+
 ### Troubleshooting
 - 405 on `/api/assistant`: ensure GET/POST/OPTIONS/HEAD are present; CORS echoing Origin; `dynamic='force-dynamic'`.
 - White screen in dev: middleware matcher must exclude `/_next/*`.
