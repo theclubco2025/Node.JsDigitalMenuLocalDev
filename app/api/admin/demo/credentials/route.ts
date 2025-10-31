@@ -27,9 +27,14 @@ export async function POST(request: NextRequest) {
       return invalid('Invalid access code', 403)
     }
 
-    const tenant = await prisma.tenant.findFirst({ where: { slug: tenantSlug } })
+    let tenant = await prisma.tenant.findFirst({ where: { slug: tenantSlug } })
     if (!tenant) {
-      return invalid('Tenant not found', 404)
+      tenant = await prisma.tenant.create({
+        data: {
+          slug: tenantSlug,
+          name: tenantSlug.replace(/-draft$/, '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        },
+      })
     }
 
     const adminEmail = (process.env.DEMO_ADMIN_EMAIL || 'demo-admin@demo.local').trim().toLowerCase()

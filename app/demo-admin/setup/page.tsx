@@ -43,7 +43,7 @@ export default function DemoAdminSetupPage() {
         redirect: true,
         email,
         password: accessCode,
-        tenant: tenantSlug,
+        tenant: tenantSlug.replace(/-draft$/, ''),
         callbackUrl: '/admin/demo',
       })
     } catch (err) {
