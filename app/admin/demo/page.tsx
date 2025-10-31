@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/options'
 import DemoAdminConsole from '@/components/DemoAdminConsole'
+import AdminSessionProvider from '@/components/AdminSessionProvider'
 
 export default async function DemoAdminPage() {
   const session = await getServerSession(authOptions)
@@ -14,7 +15,11 @@ export default async function DemoAdminPage() {
     redirect('/auth/login?callbackUrl=%2Fadmin%2Fdemo')
   }
 
-  return <DemoAdminConsole tenantSlug="demo-draft" />
+  return (
+    <AdminSessionProvider session={session}>
+      <DemoAdminConsole tenantSlug="demo-draft" />
+    </AdminSessionProvider>
+  )
 }
 
 
