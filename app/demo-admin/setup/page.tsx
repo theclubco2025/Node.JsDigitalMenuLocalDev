@@ -39,13 +39,20 @@ export default function DemoAdminSetupPage() {
 
       setStep('success')
 
-      await signIn('credentials', {
-        redirect: true,
+      const signInResult = await signIn('credentials', {
+        redirect: false,
         email,
         password: accessCode,
-        tenant: tenantSlug.replace(/-draft$/, ''),
+        tenant: tenantSlug,
         callbackUrl: '/admin/demo',
       })
+
+      if (signInResult?.error) {
+        throw new Error('Automatic sign-in failed. Please try again or contact support.')
+      }
+
+      const target = signInResult?.url || '/admin/demo'
+      window.location.href = target
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
       setStep('error')
