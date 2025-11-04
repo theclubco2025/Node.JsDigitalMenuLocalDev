@@ -57,6 +57,17 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    const syncUrl = new URL('/api/tenant/promote', request.nextUrl.origin)
+    await fetch(syncUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(process.env.ADMIN_TOKEN ? { 'x-admin-token': process.env.ADMIN_TOKEN } : {}),
+      },
+      body: JSON.stringify({ from: 'demo', to: 'demo-draft' }),
+      cache: 'no-store',
+    }).catch(() => undefined)
+
     return NextResponse.json({ ok: true, userId: user.id, email: adminEmail, tenant: tenantSlug })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)

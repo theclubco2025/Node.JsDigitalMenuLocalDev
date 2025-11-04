@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname === '/admin/demo') {
     const url = request.nextUrl.clone()
     url.pathname = '/menu'
-    url.searchParams.set('tenant', 'demo')
+    url.searchParams.set('tenant', 'demo-draft')
     url.searchParams.set('admin', '1')
     const adminToken = process.env.ADMIN_TOKEN?.trim()
     if (adminToken) {
