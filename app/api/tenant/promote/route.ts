@@ -19,14 +19,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'DATABASE_URL required' }, { status: 501 })
     }
 
-    const body = await request.json().catch(() => ({})) as { from?: string; to?: string }
+    const body = await request.json().catch(() => ({})) as { from?: string; to?: string; skipForward?: boolean }
     const params = request.nextUrl.searchParams
     const from = ((body.from ?? params.get('from') ?? '') as string).trim()
     const to = ((body.to ?? params.get('to') ?? '') as string).trim()
     if (!from || !to) return NextResponse.json({ error: 'Missing from/to' }, { status: 400 })
+    const skipForward = body.skipForward === true
 
     const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
     if (!prisma) return NextResponse.json({ error: 'Prisma unavailable' }, { status: 500 })
+    let forwarded = false
 
     // Load source tenant and latest menu
     const srcTenant = await prisma.tenant.findUnique({ where: { slug: from } })
@@ -119,7 +121,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: true })
+    const forwardBase = process.env.PROMOTE_FORWARD_BASE_URL || ''
+    const shouldForward = !skipForward && forwardBase && ((process.env.VERCEL_ENV || '').toLowerCase() === 'preview')
+    if (shouldForward) {
+      try {
+        const url = `${forwardBase.replace(/\/$/, '')}/api/tenant/promote`
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        const adminToken = process.env.ADMIN_TOKEN?.trim()
+        if (adminToken) headers['X-Admin-Token'] = adminToken
+        const res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ from, to, skipForward: true }),
+          cache: 'no-store',
+        })
+        forwarded = res.ok
+      } catch (err) {
+        console.error('Promote forward failed', err)
+      }
+    }
+
+    return NextResponse.json({ ok: true, forwarded })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
     return NextResponse.json({ error: 'promote_error', detail }, { status: 500 })
