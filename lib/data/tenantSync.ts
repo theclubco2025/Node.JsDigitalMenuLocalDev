@@ -98,24 +98,23 @@ export async function syncTenantFromFilesystem(slug: string): Promise<boolean> {
 
   const prisma = await ensurePrisma()
 
-  const settings: Prisma.InputJsonValue = {
-    ...(bundle.brand ? { brand: bundle.brand } : {}),
-    ...(bundle.images ? { images: bundle.images } : {}),
-    ...(bundle.style ? { style: bundle.style } : {}),
-    ...(bundle.copy ? { copy: bundle.copy } : {}),
-    ...(bundle.theme ? { theme: bundle.theme } : {}),
-  }
+  const settings: Record<string, unknown> = {}
+  if (bundle.brand) settings.brand = bundle.brand
+  if (bundle.images) settings.images = bundle.images
+  if (bundle.style) settings.style = bundle.style
+  if (bundle.copy) settings.copy = bundle.copy
+  if (bundle.theme) settings.theme = bundle.theme
 
   await prisma.tenant.upsert({
     where: { slug },
     update: {
       name: prettifyName(slug) || slug,
-      settings,
+      settings: settings as Prisma.InputJsonValue,
     },
     create: {
       slug,
       name: prettifyName(slug) || slug,
-      settings,
+      settings: settings as Prisma.InputJsonValue,
     },
   })
 
