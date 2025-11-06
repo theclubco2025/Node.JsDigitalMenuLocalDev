@@ -24,6 +24,22 @@ async function readJsonFile<T = Record<string, unknown>>(filePath: string): Prom
   }
 }
 
+type MenuFilePayload = MenuResponse | { menu?: MenuResponse | null } | null
+
+function extractMenu(payload: MenuFilePayload): MenuResponse | null {
+  if (!payload) return null
+  if (Array.isArray((payload as MenuResponse).categories)) {
+    return payload as MenuResponse
+  }
+  if (typeof payload === 'object' && 'menu' in payload) {
+    const nested = (payload as { menu?: MenuResponse | null }).menu
+    if (nested && Array.isArray(nested.categories)) {
+      return nested
+    }
+  }
+  return null
+}
+
 export async function readTenantBundle(slug: string): Promise<TenantBundle | null> {
   const base = tenantDir(slug)
   const exists = await fs
@@ -41,10 +57,10 @@ export async function readTenantBundle(slug: string): Promise<TenantBundle | nul
     readJsonFile<Record<string, unknown>>(tenantDir(slug, 'style.json')),
     readJsonFile<Record<string, unknown>>(tenantDir(slug, 'copy.json')),
     readJsonFile<Record<string, unknown>>(tenantDir(slug, 'theme.json')),
-    readJsonFile<MenuResponse | { menu?: MenuResponse }>(tenantDir(slug, 'menu.json')),
+    readJsonFile<MenuFilePayload>(tenantDir(slug, 'menu.json')),
   ])
 
-  const extractedMenu = (menu && 'menu' in menu ? menu.menu : menu) ?? null
+  const extractedMenu = extractMenu(menu)
 
   return {
     brand,
