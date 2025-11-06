@@ -174,7 +174,7 @@ function normalizeMenu(raw: RawMenu | null | undefined): MenuResponse {
 }
 
 export async function readMenu(tenant: string): Promise<MenuResponse> {
-  const fallbackTenant = tenant.endsWith('-draft') ? tenant : `${tenant}-draft`
+  const fallbackTenant = tenant.endsWith('-draft') ? tenant.replace(/-draft$/, '') : `${tenant}-draft`
   // If DATABASE_URL exists, prefer DB
   if (process.env.DATABASE_URL) {
     try {
@@ -222,7 +222,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
       })
       let menu = tenantRow?.menus?.[0]
       // If no live menu, try draft tenant as fallback
-      if (!menu && fallbackTenant !== tenant) {
+      if (!menu && fallbackTenant && fallbackTenant !== tenant) {
         const fbRow = await prisma.tenant.findUnique({
           where: { slug: fallbackTenant },
           include: {
@@ -307,7 +307,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
     }
     const live = await tryRead(tenant)
     if (live) return live
-    if (fallbackTenant !== tenant) {
+    if (fallbackTenant && fallbackTenant !== tenant) {
       const draft = await tryRead(fallbackTenant)
       if (draft) return draft
     }
@@ -340,17 +340,22 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
         for (const cat of normalized.categories) {
           const createdCat = await tx.menuCategory.create({ data: { menuId: newMenu.id, name: cat.name } })
           for (const item of cat.items) {
-            const createdItem = await tx.menuItem.create({
-              data: {
-                categoryId: createdCat.id,
-                name: item.name,
-                description: item.description || '',
-                price: item.price,
-                imageUrl: item.imageUrl || null,
-                calories: item.calories || null,
-                available: item.available ?? true,
-              }
-            })
+            const priceCents = typeof item.priceCents === 'number' ? item.priceCents : Math.round((item.price ?? 0) * 100)
+            const data: Prisma.MenuItemCreateInput = {
+              categoryId: createdCat.id,
+              name: item.name,
+              description: item.description || '',
+              price: item.price,
+              priceCents,
+              imageUrl: item.imageUrl || null,
+              calories: item.calories ?? null,
+              kcal: item.kcal ?? item.calories ?? null,
+              available: item.available ?? true,
+              tagLabels: item.tags || [],
+            }
+
+            const createdItem = await tx.menuItem.create({ data })
+
             for (const tag of item.tags || []) {
               await tx.menuItemTag.create({ data: { itemId: createdItem.id, tag } })
             }

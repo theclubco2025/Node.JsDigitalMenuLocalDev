@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { hash } from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
+import { cloneTenantFilesystem, syncTenantFromFilesystem } from '@/lib/data/tenantSync'
 
 type Payload = {
   tenant?: string
@@ -26,6 +27,10 @@ export async function POST(request: NextRequest) {
     if (!accessCode || accessCode !== process.env.DEMO_ADMIN_ACCESS_CODE.trim()) {
       return invalid('Invalid access code', 403)
     }
+
+    await syncTenantFromFilesystem('demo').catch(() => undefined)
+    await cloneTenantFilesystem('demo', 'demo-draft').catch(() => undefined)
+    await syncTenantFromFilesystem('demo-draft').catch(() => undefined)
 
     let tenant = await prisma.tenant.findFirst({ where: { slug: tenantSlug } })
     if (!tenant) {
