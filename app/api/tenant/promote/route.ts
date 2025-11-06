@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { PrismaClient, Prisma } from '@prisma/client'
 import { promises as fs } from 'fs'
 import path from 'path'
-import { writeMenu } from '@/lib/data/menu'
+import { readMenu, writeMenu } from '@/lib/data/menu'
 import type { MenuResponse } from '@/types/api'
+
+type PromoteBundle = {
+  settings?: Record<string, unknown>
+  menu?: MenuResponse
+}
+
+const titleizeSlug = (slug: string) => slug.replace(/-draft$/, '').split('-').filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ') || slug
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,19 +26,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'DATABASE_URL required' }, { status: 501 })
     }
 
-    const body = await request.json().catch(() => ({})) as { from?: string; to?: string; skipForward?: boolean }
+    const body = await request.json().catch(() => ({})) as { from?: string; to?: string; skipForward?: boolean; bundle?: PromoteBundle }
     const params = request.nextUrl.searchParams
     const from = ((body.from ?? params.get('from') ?? '') as string).trim()
     const to = ((body.to ?? params.get('to') ?? '') as string).trim()
     if (!from || !to) return NextResponse.json({ error: 'Missing from/to' }, { status: 400 })
     const skipForward = body.skipForward === true
+    const rawBundle = body.bundle && typeof body.bundle === 'object' ? body.bundle : undefined
+    const bundle: PromoteBundle | undefined = rawBundle
 
     const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
     if (!prisma) return NextResponse.json({ error: 'Prisma unavailable' }, { status: 500 })
     let forwarded = false
 
+    if (bundle && (bundle.settings || bundle.menu)) {
+      const settingsRecord = bundle.settings ? JSON.parse(JSON.stringify(bundle.settings)) : undefined
+      const settingsValue = settingsRecord ? (settingsRecord as Prisma.InputJsonValue) : undefined
+      const name = titleizeSlug(from)
+      await prisma.tenant.upsert({
+        where: { slug: from },
+        update: {
+          name,
+          ...(settingsValue ? { settings: settingsValue } : {}),
+        },
+        create: {
+          slug: from,
+          name,
+          settings: settingsValue ?? {},
+        },
+      })
+      if (bundle.menu) {
+        await writeMenu(from, bundle.menu)
+      }
+    }
+
     // Load source tenant and latest menu
-    const srcTenant = await prisma.tenant.findUnique({ where: { slug: from } })
+    let srcTenant = await prisma.tenant.findUnique({ where: { slug: from } })
     if (!srcTenant) {
       // FS fallback: copy from data/tenants/<from> when DB tenant missing
       try {
@@ -129,10 +159,23 @@ export async function POST(request: NextRequest) {
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
         const adminToken = process.env.ADMIN_TOKEN?.trim()
         if (adminToken) headers['X-Admin-Token'] = adminToken
+        const payload: Record<string, unknown> = { from, to, skipForward: true }
+        let forwardBundle: PromoteBundle | undefined
+        try {
+          const settingsValue = srcTenant.settings ? JSON.parse(JSON.stringify(srcTenant.settings)) : undefined
+          const menuPayload = await readMenu(from)
+          forwardBundle = {
+            ...(settingsValue ? { settings: settingsValue as Record<string, unknown> } : {}),
+            ...(menuPayload ? { menu: menuPayload } : {}),
+          }
+        } catch {}
+        if (forwardBundle && (forwardBundle.settings || forwardBundle.menu)) {
+          payload.bundle = forwardBundle
+        }
         const res = await fetch(url, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ from, to, skipForward: true }),
+          body: JSON.stringify(payload),
           cache: 'no-store',
         })
         forwarded = res.ok
