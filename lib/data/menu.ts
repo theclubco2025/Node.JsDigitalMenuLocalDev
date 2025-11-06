@@ -342,7 +342,7 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
           for (const item of cat.items) {
             const priceCents = typeof item.priceCents === 'number' ? item.priceCents : Math.round((item.price ?? 0) * 100)
             const data: Prisma.MenuItemCreateInput = {
-              categoryId: createdCat.id,
+              category: { connect: { id: createdCat.id } },
               name: item.name,
               description: item.description || '',
               price: item.price,
