@@ -21,7 +21,9 @@ export function middleware(request: NextRequest) {
   const branchFromHost = host.match(/-git-([a-z0-9-]+)-/i)?.[1]?.toLowerCase() || ''
   const branch = (process.env.VERCEL_GIT_COMMIT_REF || branchFromHost || '').toLowerCase()
 
-  if (branch === 'demo-admin-draft' && request.nextUrl.pathname === '/') {
+  // Only force demo-admin setup as the homepage when landing is explicitly disabled.
+  // This keeps production behavior: '/' remains the marketing landing with links to /demo and booking.
+  if (branch === 'demo-admin-draft' && !landingMode && request.nextUrl.pathname === '/') {
     const url = request.nextUrl.clone()
     url.pathname = '/demo-admin/setup'
     return NextResponse.redirect(url)
