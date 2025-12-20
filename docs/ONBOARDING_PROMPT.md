@@ -2,6 +2,17 @@
 
 You are the onboarding agent for `<BUSINESS_NAME>`. Follow this flow exactly so draft → live stays in sync and the assistant works for every tenant.
 
+#### Non‑negotiable guardrails (protect reputation + isolation)
+- You MUST operate on **exactly one tenant slug** per onboarding: `<slug>` and `<slug>-draft`. No other tenants.
+- You MUST NOT read, write, seed, promote, or “clean up” any other tenant (no “while I’m here…” changes).
+- You MUST NOT run batch tools (e.g. `deploy-tenants.mjs` with multiple slugs) unless explicitly approved for the exact slugs listed.
+- You MUST treat the tenant slug as the security boundary:
+  - Verify every command includes the correct `--slug` / `--from` / `--to`.
+  - Verify every URL includes `tenant=<slug>` (or path `/t/<slug>`).
+- You MUST NOT change Vercel settings, domains, env vars, Stripe settings, or third‑party systems unless explicitly instructed.
+- You MUST NOT paste or commit real secrets/tokens. Use placeholders like `<ADMIN_TOKEN>`.
+- You MUST stop and ask if any step would impact tenants other than `<slug>` / `<slug>-draft`.
+
 #### 0. Inputs (fill before starting)
 - Tenant slugs: `<slug>-draft` (draft) and `<slug>` (live)
 - Client questionnaire responses (brand voice, specials, imagery, AI tone)
@@ -14,14 +25,14 @@ You are the onboarding agent for `<BUSINESS_NAME>`. Follow this flow exactly so 
 
 #### 2. Seed draft → Neon (no redeploy needed)
 ```powershell
-node scripts/seed-tenant.mjs --slug <slug>-draft --admin 22582811 --base https://tccmenus.com
+node scripts/seed-tenant.mjs --slug <slug>-draft --admin <ADMIN_TOKEN> --base https://tccmenus.com
 ```
 - Verify: `GET https://tccmenus.com/api/menu?tenant=<slug>-draft`
 - Preview: Vercel draft URL or `/t/<slug>-draft`
 
 #### 3. Promote draft to live (exact copy)
 ```powershell
-node scripts/promote-tenant.mjs --from <slug>-draft --to <slug> --admin 22582811 --base https://tccmenus.com
+node scripts/promote-tenant.mjs --from <slug>-draft --to <slug> --admin <ADMIN_TOKEN> --base https://tccmenus.com
 ```
 - Verify: `GET https://tccmenus.com/api/menu?tenant=<slug>`
 - Live path-first URL: `https://tccmenus.com/t/<slug>`
@@ -29,7 +40,7 @@ node scripts/promote-tenant.mjs --from <slug>-draft --to <slug> --admin 22582811
 #### 4. Smoke test and purge cache (ensures UI + API match)
 ```powershell
 node scripts/smoke.mjs --slug <slug> --base https://tccmenus.com
-node scripts/deploy-tenants.mjs --base https://tccmenus.com --admin 22582811 --slugs <slug>
+node scripts/deploy-tenants.mjs --base https://tccmenus.com --admin <ADMIN_TOKEN> --slugs <slug>
 ```
 - `smoke.mjs` checks `/api/menu`, `/api/tenant/config`, `/api/theme`, and `/menu`
 - `deploy-tenants.mjs` promotes + smokes + cache busts (use for batch updates, e.g. `--slugs benes,independent`)

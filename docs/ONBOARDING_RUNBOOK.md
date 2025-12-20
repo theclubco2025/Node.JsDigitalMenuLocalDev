@@ -1,5 +1,13 @@
 ## Onboarding Runbook (20–30 minutes per tenant)
 
+### Tenant isolation rules (must follow)
+- Treat the tenant slug as the boundary. During one onboarding you may touch **only**:
+  - `<slug>-draft` (draft)
+  - `<slug>` (live)
+- Do not seed/promote/verify any other tenant. No “cleanup” on other tenants.
+- Never run batch scripts with multiple slugs unless explicitly approved and listed.
+- Never change domains/env vars/Stripe/third‑party systems unless explicitly requested.
+
 ### Prereqs
 - env: fill `.env.local` from `env.example` (DATABASE_URL, NEXTAUTH_SECRET, ADMIN_TOKEN, AI keys if used).
 - Local build: `npm run build` once to catch lint/type issues.

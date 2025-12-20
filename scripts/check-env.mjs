@@ -49,7 +49,7 @@ console.log(`Missing (${missing.length}): ${missing.join(', ') || '(none)'}`)
 if (info.length) console.log(info.join('\n'))
 console.log('\nNotes:')
 console.log('- Missing variables may be optional depending on enabled features.')
-console.log('- The assistant API returns 501 if OPENAI_API_KEY is not set (by design).')
+console.log('- The assistant API supports a fallback mode if AI keys are missing (returns safe retrieval-only answers).')
 console.log('- Database and NextAuth are optional unless you use those routes/features.')
 process.exit(0)
 

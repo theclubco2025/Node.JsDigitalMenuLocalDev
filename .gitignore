@@ -9,3 +9,13 @@ dist/
 *.pfx
 *.p12
 .npmrc
+
+# Build artifacts / caches
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Local scratch / generated files
+tmp/
+
+# Local logs
+*.log
