@@ -678,6 +678,15 @@ export default function MenuClient() {
                         <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
                       )}
                     </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${it.name}`) }}
+                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
+                        aria-label={`Ask about ${it.name}`}
+                      >
+                        Ask AI
+                      </button>
+                    </div>
                   </div>
                 </div>
               )
@@ -1080,7 +1089,7 @@ export default function MenuClient() {
                             className="px-4 py-2 rounded-lg text-sm font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 whitespace-nowrap"
                             aria-label={`Ask about ${item.name}`}
                           >
-                            <span>AI</span>
+                            <span>Ask AI</span>
                           </button>
                         </div>
                       </div>
@@ -1108,7 +1117,7 @@ export default function MenuClient() {
         style={{ background: '#059669', color: '#ffffff' }}
         aria-label="Open assistant"
       >
-        <span className="font-extrabold tracking-widest">AI</span>
+        <span className="font-extrabold tracking-widest">Ask AI</span>
       </button>
 
       {/* Plate Drawer */}
@@ -1191,9 +1200,9 @@ export default function MenuClient() {
 
       {/* AI Assistant Drawer */}
       {isAssistantOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 z-50 flex md:justify-end">
+          <div className="w-full md:max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
+            <div className="px-4 py-4 md:p-6 border-b border-gray-200 bg-white" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
                 <button
@@ -1208,7 +1217,7 @@ export default function MenuClient() {
               </p>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6">
               {chatHistory.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">
                   <div className="text-4xl mb-4">🤖</div>
@@ -1238,19 +1247,26 @@ export default function MenuClient() {
               )}
             </div>
             
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="px-4 py-4 md:p-6 border-t border-gray-200 bg-white" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder="Ask about our menu..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-colors text-base text-black bg-white placeholder-gray-500"
+                  style={{ fontSize: 16 }}
+                  inputMode="text"
                   value={assistantMessage}
                   onChange={(e) => setAssistantMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      void sendAssistantMessage()
+                    }
+                  }}
                 />
                 <button
                   onClick={() => { void sendAssistantMessage() }}
-                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                  className="bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-500 transition-colors text-sm font-bold"
                 >
                   Send
                 </button>

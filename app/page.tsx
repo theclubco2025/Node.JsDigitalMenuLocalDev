@@ -79,7 +79,7 @@ export default function Landing() {
               Your menu hasn’t changed in decades — your customers have.
             </h1>
             <p className="mt-4 text-lg text-neutral-700">
-              Update your menu like texting a friend. Give guests instant answers, spotlight best-sellers, and keep availability accurate — while you run the room.
+              Update your menu like texting a friend. Give guests instant answers, spotlight best-sellers, and keep your menu details consistent — while you run the room.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
