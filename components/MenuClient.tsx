@@ -67,6 +67,7 @@ export default function MenuClient() {
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [showDemoAcknowledgement, setShowDemoAcknowledgement] = useState(false)
 
   // Get tenant/admin from URL params
   const isBrowser = typeof window !== 'undefined'
@@ -75,6 +76,7 @@ export default function MenuClient() {
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+  const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
   useEffect(() => {
@@ -88,6 +90,18 @@ export default function MenuClient() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Demo reminder (first-visit acknowledgement)
+  useEffect(() => {
+    if (!isBrowser) return
+    if (tenant !== 'demo') return
+    try {
+      const ack = localStorage.getItem(demoAcknowledgeKey)
+      if (!ack) setShowDemoAcknowledgement(true)
+    } catch {
+      setShowDemoAcknowledgement(true)
+    }
+  }, [isBrowser, tenant])
 
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
@@ -604,6 +618,31 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
+      {/* Demo reminder */}
+      {tenant === 'demo' && showDemoAcknowledgement && (
+        <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-neutral-900">Demo experience</div>
+                <p className="mt-2 text-sm text-neutral-700">
+                  You’re viewing a demo menu. This experience will be customized for your restaurant after onboarding (your branding, your items, your QR link).
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                  setShowDemoAcknowledgement(false)
+                }}
+                className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-500"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Header */}
       <div
         className="fixed top-0 left-0 right-0 z-50 shadow-sm"
@@ -621,8 +660,8 @@ export default function MenuClient() {
             )}
             <div className="text-center">
               <h1
-                className="text-3xl font-bold text-white tracking-widest italic"
-                style={{ fontFamily: tenant === 'demo' ? 'var(--font-serif)' : 'var(--font-italian)' }}
+                className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
+                style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
               >
                 {brandName}
               </h1>
@@ -725,8 +764,8 @@ export default function MenuClient() {
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
                   <h2
-                    className="text-2xl md:text-3xl font-bold italic tracking-wide"
-                    style={{ color: 'var(--ink)', fontFamily: tenant === 'demo' ? 'var(--font-serif)' : 'inherit' }}
+                    className={`text-2xl md:text-3xl font-bold tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
+                    style={{ color: 'var(--ink)' }}
                   >
                     {brandName}
                   </h2>
