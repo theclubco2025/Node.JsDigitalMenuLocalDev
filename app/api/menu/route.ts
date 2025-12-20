@@ -7,6 +7,11 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const tenant = resolveTenant(request.url)
+    // Safety: never serve draft tenants on production (prevents leaking unapproved menus)
+    const isPreview = process.env.VERCEL_ENV === 'preview'
+    if (!isPreview && tenant.endsWith('-draft')) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+    }
     const q = searchParams.get('q') || undefined
 
     const menu = await readMenu(tenant)

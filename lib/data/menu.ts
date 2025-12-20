@@ -170,7 +170,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
       })
       let menu = tenantRow?.menus?.[0]
       // If no live menu, try draft tenant as fallback
-      if (!menu && fallbackTenant !== tenant) {
+      if (!menu && fallbackTenant) {
         const fbRow = await prisma.tenant.findUnique({
           where: { slug: fallbackTenant },
           include: {
@@ -220,7 +220,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
     }
     const live = await tryRead(tenant)
     if (live) return live
-    if (fallbackTenant !== tenant) {
+    if (fallbackTenant) {
       const draft = await tryRead(fallbackTenant)
       if (draft) return draft
     }
@@ -229,7 +229,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
   } catch {
     // Fallback to in-memory override if present; otherwise avoid stub for non-demo tenants
     if (memoryStore.has(tenant)) return memoryStore.get(tenant)!;
-    if (fallbackTenant !== tenant && memoryStore.has(fallbackTenant)) return memoryStore.get(fallbackTenant)!;
+    if (fallbackTenant && memoryStore.has(fallbackTenant)) return memoryStore.get(fallbackTenant)!;
     return tenant === 'demo' ? STUB : { categories: [] };
   }
 }

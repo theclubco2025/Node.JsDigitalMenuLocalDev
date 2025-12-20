@@ -19,7 +19,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const tenant = (searchParams.get('tenant') || '').trim() || 'demo'
-    const fallbackTenant = `${tenant}-draft`
+
+    const isPreview = process.env.VERCEL_ENV === 'preview'
+    // Safety: never serve draft tenants on production
+    if (!isPreview && tenant.endsWith('-draft')) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+    }
+
+    const allowDraftFallback = isPreview || process.env.ALLOW_DRAFT_FALLBACK === '1'
+    const fallbackTenant = (allowDraftFallback && !tenant.endsWith('-draft')) ? `${tenant}-draft` : ''
     // Always prefer DB (Neon) so preview reflects live edits instantly; fallback to repo files
 
     // Load DB settings first (if available)
@@ -47,8 +55,8 @@ export async function GET(request: NextRequest) {
           dbStyle = (s.style as Record<string, unknown>) || null
           dbCopy = (s.copy as Record<string, unknown>) || null
 
-          // If any are missing, try draft tenant as fallback (DB)
-          if (!dbBrand || !dbTheme || !dbImages || !dbStyle || !dbCopy) {
+          // If any are missing, try draft tenant as fallback (DB) â€” preview only
+          if (fallbackTenant && (!dbBrand || !dbTheme || !dbImages || !dbStyle || !dbCopy)) {
             const fbRow = await prisma.tenant.findUnique({ where: { slug: fallbackTenant }, select: { settings: true } })
             const fs = (fbRow?.settings as Record<string, unknown>) || {}
             fbDbTheme = (fs.theme as Record<string, unknown>) || null
@@ -68,14 +76,12 @@ export async function GET(request: NextRequest) {
     const fsImages = await readJson(path.join(base, 'images.json'))
     const fsStyle = await readJson(path.join(base, 'style.json'))
     const fsCopy = await readJson(path.join(base, 'copy.json'))
-
-    // Filesystem fallback from draft tenant
-    const fbBase = path.join(process.cwd(), 'data', 'tenants', fallbackTenant)
-    const fbFsBrand = await readJson(path.join(fbBase, 'brand.json'))
-    const fbFsTheme = await readJson(path.join(fbBase, 'theme.json'))
-    const fbFsImages = await readJson(path.join(fbBase, 'images.json'))
-    const fbFsStyle = await readJson(path.join(fbBase, 'style.json'))
-    const fbFsCopy = await readJson(path.join(fbBase, 'copy.json'))
+    // Filesystem fallback from draft tenant (preview only)
+    const fbFsBrand = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'brand.json')) : null
+    const fbFsTheme = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'theme.json')) : null
+    const fbFsImages = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'images.json')) : null
+    const fbFsStyle = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'style.json')) : null
+    const fbFsCopy = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'copy.json')) : null
 
     const isNonEmpty = (obj: unknown) => !!(obj && typeof obj === 'object' && Object.keys(obj as Record<string, unknown>).length > 0)
     const hasName = (obj: unknown) => !!(obj && typeof (obj as Record<string, unknown>)['name'] === 'string' && ((obj as Record<string, unknown>)['name'] as string).trim() !== '')

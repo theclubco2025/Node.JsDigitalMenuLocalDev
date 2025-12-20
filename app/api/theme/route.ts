@@ -9,6 +9,11 @@ export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   try {
     const tenant = resolveTenant(request.url)
+    // Safety: never serve draft tenants on production
+    const isPreview = process.env.VERCEL_ENV === 'preview'
+    if (!isPreview && tenant.endsWith('-draft')) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+    }
     const theme = await getTheme(tenant)
     return NextResponse.json(theme, { headers: { 'Cache-Control': 'no-store' } })
   } catch {

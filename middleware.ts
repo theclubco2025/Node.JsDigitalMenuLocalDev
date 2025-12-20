@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
+  const isPreview = process.env.VERCEL_ENV === 'preview'
   // Handle CORS preflight generically for all API routes
   if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
     const res = NextResponse.json({ ok: true })
@@ -16,10 +17,19 @@ export function middleware(request: NextRequest) {
     }
     return res
   }
+
+  // Safety: never allow -draft tenants on production domain (prevents accidental draft leakage)
+  if (!isPreview && request.nextUrl.pathname === '/menu') {
+    const t = (request.nextUrl.searchParams.get('tenant') || '').toLowerCase()
+    if (t.endsWith('-draft')) {
+      const url = request.nextUrl.clone()
+      url.searchParams.set('tenant', 'demo')
+      return NextResponse.redirect(url)
+    }
+  }
   // Default landing: render marketing page unless a tenant is explicitly requested or landing mode disabled
   if (request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
     const landingDisabled = process.env.NEXT_PUBLIC_LANDING_MODE === '0'
-    const isPreview = process.env.VERCEL_ENV === 'preview'
     if (!landingDisabled && !isPreview) {
       return NextResponse.next()
     }
@@ -41,7 +51,6 @@ export function middleware(request: NextRequest) {
   }
   // In preview, ALWAYS normalize /menu to the branch slug tenant, even if a wrong tenant query is present
   if (request.nextUrl.pathname === '/menu') {
-    const isPreview = process.env.VERCEL_ENV === 'preview'
     if (isPreview) {
       const url = request.nextUrl.clone()
       const host = request.headers.get('host') || ''
@@ -73,6 +82,12 @@ export function middleware(request: NextRequest) {
     const parts = request.nextUrl.pathname.split('/').filter(Boolean)
     const slug = parts[1]
     if (slug) {
+      if (!isPreview && slug.toLowerCase().endsWith('-draft')) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/menu'
+        url.searchParams.set('tenant', 'demo')
+        return NextResponse.redirect(url)
+      }
       const url = request.nextUrl.clone()
       url.pathname = '/menu'
       url.searchParams.set('tenant', slug)
@@ -86,6 +101,12 @@ export function middleware(request: NextRequest) {
     !['api', 't', 'menu', '_next', 'favicon.ico', 'robots.txt', 'sitemap.xml'].includes(pathOnly[0])
   ) {
     const slug = pathOnly[0]
+    if (!isPreview && slug.toLowerCase().endsWith('-draft')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/menu'
+      url.searchParams.set('tenant', 'demo')
+      return NextResponse.redirect(url)
+    }
     const url = request.nextUrl.clone()
     url.pathname = '/menu'
     url.searchParams.set('tenant', slug)
