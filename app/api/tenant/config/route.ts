@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
     }
 
-    const allowDraftFallback = isPreview || process.env.ALLOW_DRAFT_FALLBACK === '1'
+    const allowDraftFallback = isPreview
     const fallbackTenant = (allowDraftFallback && !tenant.endsWith('-draft')) ? `${tenant}-draft` : ''
     // Always prefer DB (Neon) so preview reflects live edits instantly; fallback to repo files
 
