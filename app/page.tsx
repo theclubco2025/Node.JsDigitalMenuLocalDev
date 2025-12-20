@@ -92,7 +92,7 @@ export default function Landing() {
               </a>
               <a
                 href="/demo"
-                className="inline-flex items-center rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-neutral-800 hover:border-neutral-400"
+                className="inline-flex items-center rounded-2xl bg-emerald-600 px-5 py-3 text-white shadow-sm hover:bg-emerald-500"
               >
                 Try Live Demo
               </a>

@@ -556,6 +556,28 @@ export default function MenuClient() {
     if (/margherita|bolognese|prosciutto/.test(name)) badges.push('House Favorite')
     return badges
   }
+
+  function badgeStyle(label: string): React.CSSProperties {
+    // Classic Italian tricolor badge (requested): green / white / red
+    const italian = {
+      backgroundImage: 'linear-gradient(90deg, #008C45 0%, #008C45 33%, #F4F5F0 33%, #F4F5F0 66%, #CD212A 66%, #CD212A 100%)',
+      color: '#111827',
+      borderColor: 'rgba(0,0,0,0.15)',
+    } satisfies React.CSSProperties
+
+    // Category label stays readable and neutral; other labels get the tricolor look.
+    if (label && typeof label === 'string' && label.length > 0 && label === label.toUpperCase()) {
+      return italian
+    }
+    if (['Vegan', 'Vegetarian', 'GF', 'Dairy-Free', 'Spicy', 'House Favorite'].includes(label)) {
+      return italian
+    }
+    return {
+      background: 'rgba(255,255,255,0.9)',
+      color: '#111827',
+      borderColor: 'rgba(0,0,0,0.12)',
+    }
+  }
   function resolveFeatured() {
     const items: Array<MenuItem & { categoryName?: string }> = []
     if (!menuData?.categories) return items
@@ -949,17 +971,12 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <div className="min-w-0">
-                            <div className="text-[10px] uppercase tracking-widest text-gray-500">
-                              {category.name}
-                            </div>
-                            <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
-                              {highlightText(item.name, searchQuery)}
-                              {typeof item.calories === 'number' && (
-                                <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
-                              )}
-                            </h3>
-                          </div>
+                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+                            {highlightText(item.name, searchQuery)}
+                            {typeof item.calories === 'number' && (
+                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
+                            )}
+                          </h3>
                         )}
                         {isAdmin ? (
                           <input
@@ -975,8 +992,14 @@ export default function MenuClient() {
                       </div>
                       {!isAdmin && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {getItemBadges(item).map(badge => (
-                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
+                          {[category.name.toUpperCase(), ...getItemBadges(item)].map(badge => (
+                            <span
+                              key={badge}
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold border"
+                              style={badgeStyle(badge)}
+                            >
+                              {badge}
+                            </span>
                           ))}
                         </div>
                       )}
