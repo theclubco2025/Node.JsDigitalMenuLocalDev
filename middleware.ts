@@ -3,6 +3,14 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const isPreview = process.env.VERCEL_ENV === 'preview'
+  // Preview-only tenant normalization for branch-based previews.
+  // We intentionally keep tenant slugs clean (no "-draft") for South Fork Grille.
+  const normalizePreviewTenant = (raw: string) => {
+    const t = (raw || '').toLowerCase()
+    // Branch name: south-fork-grille-draft → tenant slug: south-fork-grille
+    if (t === 'south-fork-grille-draft') return 'south-fork-grille'
+    return t
+  }
   // Handle CORS preflight generically for all API routes
   if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
     const res = NextResponse.json({ ok: true })
@@ -41,8 +49,8 @@ export function middleware(request: NextRequest) {
     }
     const host = request.headers.get('host') || ''
     const m = host.match(/-git-([a-z0-9-]+)-/i)
-    const fromHost = (m?.[1] || '').toLowerCase()
-    const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
+    const fromHost = normalizePreviewTenant(m?.[1] || '')
+    const candidate = fromHost || normalizePreviewTenant(process.env.PREVIEW_DEFAULT_TENANT || '')
     if (candidate) {
       url.pathname = '/menu'
       url.searchParams.set('tenant', candidate)
@@ -54,10 +62,10 @@ export function middleware(request: NextRequest) {
     if (isPreview) {
       const url = request.nextUrl.clone()
       const host = request.headers.get('host') || ''
-      const fromEnv = (process.env.VERCEL_GIT_COMMIT_REF || '').toLowerCase()
+      const fromEnv = normalizePreviewTenant(process.env.VERCEL_GIT_COMMIT_REF || '')
       const m = host.match(/-git-([a-z0-9-]+)-/i)
-      const fromHost = (m?.[1] || '').toLowerCase()
-      const desiredTenant = fromEnv || fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
+      const fromHost = normalizePreviewTenant(m?.[1] || '')
+      const desiredTenant = fromEnv || fromHost || normalizePreviewTenant(process.env.PREVIEW_DEFAULT_TENANT || '')
       const currentTenant = (url.searchParams.get('tenant') || '').toLowerCase()
       if (desiredTenant && currentTenant !== desiredTenant) {
         url.searchParams.set('tenant', desiredTenant)
