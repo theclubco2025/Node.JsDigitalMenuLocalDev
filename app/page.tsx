@@ -14,27 +14,27 @@ const LANDING = {
   features: [
     {
       title: 'Fast updates',
-      body: 'Same-day edits on request — availability, photos, pricing, and specials. No reprints.',
+      body: 'Handles same-day edits on request — availability, photos, pricing, and specials. No reprints.',
     },
     {
       title: 'Menu Q&A',
-      body: 'Guests get instant answers grounded in your official menu data — not internet guesses.',
+      body: 'Answers guest questions using your official menu data — not internet guesses.',
     },
     {
       title: 'Reduce friction',
-      body: 'Cut paper waste and repeat questions — smoother service, happier guests.',
+      body: 'Reduces repeat questions and keeps ordering simple — smoother service, happier guests.',
     },
     {
       title: 'Allergen clarity',
-      body: 'Clear dietary + allergen tags so guests can decide confidently.',
+      body: 'Keeps dietary and allergen tags clear so guests can decide confidently.',
     },
     {
-      title: 'Staff assist',
-      body: 'New staff can rely on the menu assistant for quick, consistent answers.',
+      title: 'Hero dishes',
+      body: 'Illustrates hero dishes with dietary tags and storytelling copy.',
     },
     {
       title: 'Embed anywhere',
-      body: 'Drop the menu into your website with a simple embed script.',
+      body: 'Embeds on your website with a simple script — mobile-first and QR-ready.',
     },
   ],
   useCases: [
