@@ -485,6 +485,18 @@ export default function MenuClient() {
     )
   }
 
+  function getCategoryImage(name: string): string | null {
+    // Demo-only category photos (POC): use local assets
+    if (tenant !== 'demo') return null
+    const n = (name || '').toLowerCase()
+    if (n.includes('pizza')) return '/assets/demo-pizza.jpg'
+    if (n.includes('pasta')) return '/assets/demo-pasta.jpg'
+    if (n.includes('drink') || n.includes('bever')) return '/assets/demo-beverage.jpg'
+    // "Lunch" / sandwiches / handhelds → use calzone photo as a stand-in for now
+    if (n.includes('lunch') || n.includes('sandwich') || n.includes('handheld') || n.includes('calzone')) return '/assets/demo-calzone.jpg'
+    return null
+  }
+
   const firstImageUrl = useMemo(() => {
     // Prefer any configured image if items lack imageUrl in DB
     const fromConfig = Object.values(imageMap || {})[0]
@@ -690,18 +702,18 @@ export default function MenuClient() {
       {/* Signature Picks (data-flagged) */}
       {showSignatureGrid && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex items-center mb-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+          <div className="flex flex-col items-center mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
             </div>
-            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {resolveFeatured().map((it) => {
-              const src = imageMap[it.id] || it.imageUrl || ''
+              const src = imageMap[it.id] || it.imageUrl || (it.categoryName ? getCategoryImage(it.categoryName) : null) || ''
               return (
                 <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
                   {src && (
@@ -863,7 +875,18 @@ export default function MenuClient() {
               style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
             >
               <span className="inline-flex items-center gap-2">
-                {getCategoryIcon(category)}
+                {getCategoryImage(category) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={getCategoryImage(category) as string}
+                    alt=""
+                    className="h-6 w-6 rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  getCategoryIcon(category)
+                )}
                 <span>{category}</span>
               </span>
             </button>
@@ -933,7 +956,18 @@ export default function MenuClient() {
                   style={activeCategoryId===category.id?{ color: '#0b0b0b', background: 'var(--accent)' }:{ color: '#e5e5e5', background: '#1a1a1a' }}
                 >
                   <span className="inline-flex items-center gap-2">
-                    {getCategoryIcon(category.name)}
+                    {getCategoryImage(category.name) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={getCategoryImage(category.name) as string}
+                        alt=""
+                        className="h-6 w-6 rounded-md object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      getCategoryIcon(category.name)
+                    )}
                     <span>{category.name}</span>
                   </span>
                 </button>
@@ -958,7 +992,18 @@ export default function MenuClient() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
-                  {getCategoryIcon(category.name)}
+                  {getCategoryImage(category.name) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={getCategoryImage(category.name) as string}
+                      alt=""
+                      className="h-9 w-9 rounded-lg object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    getCategoryIcon(category.name)
+                  )}
                   <span>{category.name}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
