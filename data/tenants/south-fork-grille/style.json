@@ -3,7 +3,7 @@
   "navVariant": "chipScroller",
   "motion": "subtle",
   "texture": { "vignette": true, "paper": false },
-  "accentSecondary": "#8b6a2b",
+  "accentSecondary": "#1d4ed8",
   "flags": {
     "specials": true,
     "signatureGrid": true,
