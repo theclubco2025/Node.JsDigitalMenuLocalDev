@@ -713,12 +713,8 @@ export default function MenuClient() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {resolveFeatured().map((it) => {
-              const src = imageMap[it.id] || it.imageUrl || (it.categoryName ? getCategoryImage(it.categoryName) : null) || ''
               return (
                 <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
-                  {src && (
-                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
-                  )}
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
