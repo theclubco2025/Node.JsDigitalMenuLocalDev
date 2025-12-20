@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { MenuResponse, MenuCategory, MenuItem } from "@/types/api";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 
 // Simple in-memory override store (used when filesystem is unavailable)
 const memoryStore = new Map<string, MenuResponse>();
@@ -186,16 +186,20 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
         menu = fbRow?.menus?.[0]
       }
       if (menu) {
+        type DbTag = { tag: string }
+        type DbItem = { id: string; name: string; description: string | null; price: unknown; tags: DbTag[]; imageUrl: string | null; calories: number | null }
+        type DbCategory = { id: string; name: string; items: DbItem[] }
+
         const dbMenu: RawMenu = {
-          categories: menu.categories.map(c => ({
+          categories: (menu.categories as unknown as DbCategory[]).map((c) => ({
             id: c.id,
             name: c.name,
-            items: c.items.map(i => ({
+            items: c.items.map((i) => ({
               id: i.id,
               name: i.name,
               description: i.description || '',
               price: Number(i.price),
-              tags: i.tags.map(t => t.tag),
+              tags: i.tags.map((t) => t.tag),
               imageUrl: i.imageUrl || undefined,
               calories: i.calories || undefined,
             })),
@@ -243,7 +247,7 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
     try {
       const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
       if (!prisma) throw new Error('prisma-not-ready')
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Ensure tenant exists
         const tenantRow = await tx.tenant.upsert({
           where: { slug: tenant },

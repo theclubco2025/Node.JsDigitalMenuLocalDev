@@ -55,7 +55,8 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export default function MenuClient() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [activeSection, setActiveSection] = useState<string>('All')
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [selectedDietaryFilters, setSelectedDietaryFilters] = useState<string[]>([])
   const [cart, setCart] = useState<Array<{ item: MenuItem; quantity: number }>>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -158,6 +159,42 @@ export default function MenuClient() {
 
   const baseMenu: MenuResponse | null = isAdmin ? (editableMenu || null) : (menuData || null)
 
+  const deriveSection = (categoryName: string): string => {
+    const n = (categoryName || '').toLowerCase()
+    if (n.includes('breakfast') || n.includes('brunch')) return 'Breakfast'
+    if (n.includes('lunch')) return 'Lunch'
+    if (n.includes('kid')) return 'Kids'
+    if (n.includes('dessert') || n.includes('sweet')) return 'Dessert'
+    if (n.includes('beer') || n.includes('beers') || n.includes('wine') || n.includes('cocktail') || n.includes('drinks') || n.includes('beverage')) return 'Drinks'
+    return 'Dinner'
+  }
+
+  const categorySections = useMemo(() => {
+    const names = (baseMenu?.categories ?? []).map(c => c.name).filter(Boolean)
+    const map: Record<string, string[]> = {}
+    for (const name of names) {
+      const sec = deriveSection(name)
+      if (!map[sec]) map[sec] = []
+      map[sec].push(name)
+    }
+    const preferredOrder = ['All', 'Dinner', 'Lunch', 'Breakfast', 'Drinks', 'Kids', 'Dessert']
+    const existing = Object.keys(map)
+    const sections = preferredOrder
+      .filter(s => s === 'All' || existing.includes(s))
+      .concat(existing.filter(s => !preferredOrder.includes(s)).sort())
+    return { sections, map }
+  }, [baseMenu?.categories])
+
+  useEffect(() => {
+    if (activeSection === 'All') {
+      setSelectedCategories([])
+      return
+    }
+    const inSection = categorySections.map[activeSection] ?? []
+    setSelectedCategories(inSection)
+  }, [activeSection, categorySections.map])
+
+
   // Filter logic matching your Canvas app exactly (client-side now to avoid API refiring per keystroke)
   const filteredCategories = useMemo(() => {
     if (!baseMenu?.categories) return []
@@ -169,7 +206,7 @@ export default function MenuClient() {
           const isMarketPrice = tagList.includes('mp') || tagList.includes('market-price')
           if (typeof item.price === 'number' && item.price <= 0 && !isMarketPrice) return false
           // Category filter
-          if (selectedCategory && category.name !== selectedCategory) return false
+          if (selectedCategories.length > 0 && !selectedCategories.includes(category.name)) return false
           // Search filter (name and description)
           if (searchQuery) {
             const searchLower = searchQuery.toLowerCase()
@@ -191,7 +228,7 @@ export default function MenuClient() {
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
+  }, [baseMenu, searchQuery, selectedCategories, selectedDietaryFilters])
 
   const updateItemField = (
     categoryId: string,
@@ -400,8 +437,7 @@ export default function MenuClient() {
   
   // Note: avoid early returns before hooks to keep hook order stable
 
-  const categories = useMemo(() => menuData?.categories ?? [], [menuData])
-  const allCategories = useMemo(() => categories.map(cat => cat.name), [categories])
+  const categories = useMemo(() => baseMenu?.categories ?? [], [baseMenu])
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase()
@@ -927,38 +963,76 @@ export default function MenuClient() {
         </div>
         
         {/* Category Filters */}
-        <div className="flex gap-2 justify-center flex-wrap mb-4">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
-            style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
-          >
-            All Categories
-          </button>
-          {allCategories.map(category => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
-              className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
-              style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
-            >
-              <span className="inline-flex items-center gap-2">
-                {getCategoryImage(category) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={getCategoryImage(category) as string}
-                    alt=""
-                    className="h-6 w-6 rounded-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  getCategoryIcon(category)
-                )}
-                <span>{category}</span>
-              </span>
-            </button>
-          ))}
+        <div className="flex flex-col items-center gap-3 mb-4">
+          <div className="flex gap-2 justify-center flex-wrap">
+            {categorySections.sections.map(section => (
+              <button
+                key={section}
+                onClick={() => setActiveSection(section)}
+                className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
+                style={activeSection===section
+                  ? { background: 'var(--accent)', color: '#0b0b0b' }
+                  : { background: '#ffffff', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                }
+              >
+                {section}
+              </button>
+            ))}
+          </div>
+
+          {activeSection !== 'All' && (
+            <div className="w-full max-w-3xl rounded-xl p-3" style={{ background: 'var(--card)', border: '1px solid var(--muted)' }}>
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="text-xs font-semibold" style={{ color: 'var(--ink)', opacity: 0.8 }}>
+                  {activeSection} categories (multi-select)
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedCategories(categorySections.map[activeSection] ?? [])}
+                    className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ background: '#fff', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+                  >
+                    Select all
+                  </button>
+                  <button
+                    onClick={() => setSelectedCategories([])}
+                    className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ background: '#fff', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {(categorySections.map[activeSection] ?? []).map(category => {
+                  const checked = selectedCategories.includes(category)
+                  return (
+                    <label
+                      key={category}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer select-none"
+                      style={checked
+                        ? { background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.10)' }
+                        : { background: '#fff', border: '1px solid var(--muted)' }
+                      }
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          setSelectedCategories(prev => prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category])
+                        }}
+                      />
+                      <span className="inline-flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>
+                        {getCategoryIcon(category)}
+                        <span>{category}</span>
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dietary Filters (compact dropdown) */}
@@ -983,9 +1057,9 @@ export default function MenuClient() {
                 {option}
               </button>
             ))}
-            {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
+            {(searchQuery || selectedDietaryFilters.length>0 || selectedCategories.length>0 || activeSection !== "All") && (
               <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
+                onClick={() => { setSearchQuery(''); setSelectedDietaryFilters([]); setActiveSection('All'); setSelectedCategories([]) }}
                 className="px-3 py-1 rounded-full text-xs font-medium"
                 style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
               >
@@ -1006,7 +1080,7 @@ export default function MenuClient() {
         {/* Current Category Chip */}
         <div className="lg:col-span-12 mb-4">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
-            Browsing: {selectedCategory || 'All'}
+            Browsing: {activeSection === 'All' ? 'All' : (selectedCategories.length > 0 ? `${activeSection} â€” ${selectedCategories.length} selected` : activeSection)}
           </span>
         </div>
         {/* Category Sidebar */}
