@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Promote, smoke test, and cache-bust one or more tenants in sequence.
 // Usage:
-//   node scripts/deploy-tenants.mjs --base https://tccmenus.com --admin 22582811 [--slugs benes,independent,demo] [--bypass <TOKEN>]
+//   node scripts/deploy-tenants.mjs --base https://tccmenus.com --admin <ADMIN_TOKEN> --slugs benes,independent,demo [--bypass <TOKEN>]
 // If --slugs is omitted, the script detects tenants that have a matching <slug>-draft folder.
 
 import fs from 'fs/promises'

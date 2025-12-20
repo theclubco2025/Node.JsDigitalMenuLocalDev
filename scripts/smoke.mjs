@@ -26,7 +26,24 @@ async function main() {
     `${baseUrl}/api/theme?tenant=${encodeURIComponent(slug)}`,
     `${baseUrl}/menu?tenant=${encodeURIComponent(slug)}`
   ]
-  const headers = bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : undefined
+  async function getBypassCookieHeader() {
+    if (!bypass) return undefined
+    // Preferred: Vercel Deployment Protection bypass flow
+    try {
+      const u = baseUrl + "/api/health?x-vercel-set-bypass-cookie=true&x-vercel-protection-bypass=" + encodeURIComponent(bypass)
+      const r = await fetch(u, { redirect: "manual" })
+      const getSet = r.headers && typeof r.headers.getSetCookie === "function" ? r.headers.getSetCookie.bind(r.headers) : null
+      const setCookies = getSet ? getSet() : (r.headers.get("set-cookie") ? [r.headers.get("set-cookie")] : [])
+      const cookie = (setCookies || []).filter(Boolean).map((x) => String(x).split(";")[0]).join("; ")
+      if (cookie) return { Cookie: cookie }
+    } catch {
+      // fall back below
+    }
+    // Fallback: legacy cookie name (some setups still accept this)
+    return { Cookie: `__Secure-vercel-bypass=${bypass}` }
+  }
+
+  const headers = await getBypassCookieHeader()
   for (const u of urls) {
     try {
       const r = await fetch(u, { headers })

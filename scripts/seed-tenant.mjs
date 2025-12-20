@@ -29,13 +29,23 @@ async function main() {
 
   const baseUrl = base.replace(/\/$/, '')
   const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': admin }
-  const cookieHeader = bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : {}
+  let cookieHeader = bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : {}
 
   // Optionally set bypass cookie for Vercel deployment protection
   if (bypass) {
     try {
-      await fetch(`${baseUrl}/api/health`, { headers: { Cookie: `__Secure-vercel-bypass=${bypass}` } })
-      console.log('Bypass cookie set')
+      const warm = `${baseUrl}/api/health?x-vercel-set-bypass-cookie=true&x-vercel-protection-bypass=${encodeURIComponent(bypass)}`
+      const r = await fetch(warm, { redirect: 'manual' })
+      const getSet = r.headers && typeof r.headers.getSetCookie === 'function' ? r.headers.getSetCookie.bind(r.headers) : null
+      const setCookies = getSet ? getSet() : (r.headers.get('set-cookie') ? [r.headers.get('set-cookie')] : [])
+      const cookie = (setCookies || []).filter(Boolean).map((x) => String(x).split(';')[0]).join('; ')
+      if (cookie) {
+        cookieHeader = { Cookie: cookie }
+        console.log('Bypass cookie set (deployment protection)')
+      } else {
+        await fetch(`${baseUrl}/api/health`, { headers: { Cookie: `__Secure-vercel-bypass=${bypass}` } })
+        console.log('Bypass cookie set (legacy)')
+      }
     } catch (e) {
       console.warn('Bypass cookie set failed (continuing):', e?.message || e)
     }

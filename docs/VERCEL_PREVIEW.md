@@ -5,7 +5,8 @@
 - Middleware auto-derives the tenant from the host/branch; no `tenant` query needed.
 
 Deployment protection
-- If enabled, set the bypass cookie once per browser using the token: the seed script will do a warm request with `__Secure-vercel-bypass=<TOKEN>`.
+- If enabled, use the Vercel bypass token flow (recommended): scripts warm `/api/health?x-vercel-set-bypass-cookie=true&x-vercel-protection-bypass=<TOKEN>` and reuse the returned cookie.
+- Fallback: some setups still accept the legacy cookie name `__Secure-vercel-bypass=<TOKEN>`.
 - Do not use preview URLs for QR codes.
 
 Seeding a draft in preview

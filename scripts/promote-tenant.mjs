@@ -20,7 +20,19 @@ async function main() {
     process.exit(1)
   }
   const baseUrl = base.replace(/\/$/, '')
-  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': admin, ...(bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : {}) }
+  let cookieHeader = bypass ? { Cookie: `__Secure-vercel-bypass=${bypass}` } : {}
+  if (bypass) {
+    try {
+      const warm = `${baseUrl}/api/health?x-vercel-set-bypass-cookie=true&x-vercel-protection-bypass=${encodeURIComponent(bypass)}`
+      const r = await fetch(warm, { redirect: 'manual' })
+      const getSet = r.headers && typeof r.headers.getSetCookie === 'function' ? r.headers.getSetCookie.bind(r.headers) : null
+      const setCookies = getSet ? getSet() : (r.headers.get('set-cookie') ? [r.headers.get('set-cookie')] : [])
+      const cookie = (setCookies || []).filter(Boolean).map((x) => String(x).split(';')[0]).join('; ')
+      if (cookie) cookieHeader = { Cookie: cookie }
+    } catch {}
+  }
+
+  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': admin, ...cookieHeader }
   const res = await fetch(`${baseUrl}/api/tenant/promote`, { method: 'POST', headers, body: JSON.stringify({ from, to }) })
   const text = await res.text().catch(() => '')
   console.log('Promote:', res.status, text)

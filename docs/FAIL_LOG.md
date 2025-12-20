@@ -41,6 +41,6 @@ Digital Menu SaaS – Fail Log and Resolutions
 - SOP:
   - In Vercel → Project → Settings → Environment Variables, set DATABASE_URL + ADMIN_TOKEN for Production and Preview. Re-deploy.
   - Set shared secrets (DATABASE_URL, ADMIN_TOKEN, AI keys) to “All Environments” so Production and Preview stay in sync; keep dev-only overrides in .env.local.
-  - After redeploy, run `node scripts/seed-tenant.mjs --slug <slug>-draft --admin 22582811 --base https://tccmenus.com` and `--slug <slug>` so any new flags (e.g. hideCart) copy into Neon.
+  - After redeploy, run `node scripts/seed-tenant.mjs --slug <slug>-draft --admin <ADMIN_TOKEN> --base https://tccmenus.com` and `--slug <slug>` so any new flags (e.g. hideCart) copy into Neon.
 
 
