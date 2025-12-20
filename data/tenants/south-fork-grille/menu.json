@@ -1,0 +1,1928 @@
+{
+  "categories": [
+    {
+      "id": "c-sfg-dinner-starters",
+      "name": "Dinner — Starters",
+      "items": [
+        {
+          "id": "i-sfg-dinner-cornbread-skillet",
+          "name": "Cornbread Skillet",
+          "description": "Honey butter glazed cornbread with sharp cheddar and jalapeños",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-pork-belly-skewers",
+          "name": "Pork Belly Skewers",
+          "description": "Grilled jalapeños, red curry macadamia nut rice and house made Korean chili sauce",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-roasted-garlic-hummus",
+          "name": "Roasted Garlic Hummus",
+          "description": "Broccolini, Brussels sprouts, carrots, pine nuts and warm naan bread",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-popcorn-shrimp",
+          "name": "Popcorn Shrimp",
+          "description": "House made Korean chili sauce, crispy wonton and dill slaw",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-skillet-meatballs",
+          "name": "Skillet Meatballs",
+          "description": "House made marinara, grilled crostinis, parmesan cheese and fresh basil",
+          "price": 17.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-buffalo-cauliflower",
+          "name": "Buffalo Cauliflower",
+          "description": "Creamy buffalo aioli and mixed greens",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-spicy-tuna-roll",
+          "name": "Spicy Tuna Roll",
+          "description": "Fresh #1 ahi tuna, avocado, jalapeño, cucumber and spicy aioli",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-tempura-shrimp-roll",
+          "name": "Tempura Shrimp Roll",
+          "description": "Toasted coconut, macadamia nuts, avocado, cucumber, soy ginger and coconut sauce drizzles",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-coconut-curry-steamed-mussels",
+          "name": "Coconut Curry Steamed Mussels",
+          "description": "Cherry tomatoes and grilled crostinis",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-dinner-entrees",
+      "name": "Dinner — Entrees",
+      "items": [
+        {
+          "id": "i-sfg-dinner-fitness-special",
+          "name": "Fitness Special",
+          "description": "Chef created special always under 450 calories",
+          "price": 0.0,
+          "tags": [
+            "mp"
+          ],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-butternut-squash-ravioli",
+          "name": "Butternut Squash Ravioli",
+          "description": "Chopped walnuts, parmesan cheese, fresh sage and brown butter cream sauce",
+          "price": 21.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-blackened-salmon",
+          "name": "Blackened Salmon",
+          "description": "Heirloom cherry tomatoes, spinach, mashed potatoes and roasted tomato cream sauce",
+          "price": 29.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-miso-marinated-chilean-sea-bass",
+          "name": "Miso Marinated Chilean Sea Bass",
+          "description": "Baby bok choy, furikake jasmine rice and kombu broth",
+          "price": 43.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-hawaiian-spiced-ahi-tuna",
+          "name": "Hawaiian Spiced Ahi Tuna",
+          "description": "Fresh #1 ahi tuna seared rare, red curry macadamia nut rice and baby bok choy",
+          "price": 34.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-jambalaya-pasta",
+          "name": "Jambalaya Pasta",
+          "description": "Chicken, shrimp, spicy sausage, sweet peppers, onions, cilantro, fresh pasta and parmesan",
+          "price": 27.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-crispy-airline-chicken",
+          "name": "Crispy Airline Chicken",
+          "description": "Mashed potatoes, broccolini and prosciutto-sage cream sauce",
+          "price": 28.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-filet-mignon-pasta",
+          "name": "Filet Mignon Pasta",
+          "description": "Cremini mushrooms, spinach, red onions, bell peppers and cremini mushroom sauce",
+          "price": 26.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-drunken-brandy-steak",
+          "name": "Drunken Brandy Steak",
+          "description": "Marinated ﬂank steak, mashed potatoes, broccolini and honey glazed carrots",
+          "price": 34.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-filet-mignon-au-poivre",
+          "name": "Filet Mignon Au Poivre",
+          "description": "Mashed potatoes, haricot verts, crispy onion strings and cremini mushroom sauce",
+          "price": 48.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-surf-and-turf",
+          "name": "SURF and TURF",
+          "description": "6oz filet mignon, grilled prawns and scallops skewer, loaded mashed potatoes and broccolini",
+          "price": 65.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-dinner-fresh-salads",
+      "name": "Dinner — Fresh Salads",
+      "items": [
+        {
+          "id": "i-sfg-dinner-thai-chicken-salad",
+          "name": "Thai Chicken Salad",
+          "description": "Ramen noodles, mango, carrots, bell peppers, snow peas, chopped peanuts and fresh basil",
+          "price": 21.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-seared-ahi-tuna-salad",
+          "name": "Seared Ahi Tuna Salad",
+          "description": "Fresh #1 ahi tuna, mixed greens, cucumbers, cherry tomatoes and crispy rice sticks",
+          "price": 27.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-honey-buffalo-shrimp-salad",
+          "name": "Honey Buffalo Shrimp Salad",
+          "description": "Popcorn shrimp, chopped iceberg lettuce, bacon, tomatoes, red onions, Fuji apples, croutons and house made blue cheese dressing",
+          "price": 22.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-avocado-chicken-caesar-salad",
+          "name": "Avocado Chicken Caesar Salad",
+          "description": "Chopped romaine, cherry tomatoes, pepitas, croutons and parmesan cheese",
+          "price": 21.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-dinner-burger-and-sandwiches",
+      "name": "Dinner — Burger and Sandwiches",
+      "items": [
+        {
+          "id": "i-sfg-dinner-smashed-burger",
+          "name": "Smashed Burger",
+          "description": "Double patties, American cheese, crisp lettuce, onion, pickle and 1000 island dressing. Add Bacon 2 / Add Avocado 2",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-crispy-chicken-sandwich",
+          "name": "Crispy Chicken Sandwich",
+          "description": "Crispy chicken, dill slaw, honey-chipotle sauce and pickles",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-reuben-sandwich",
+          "name": "Reuben Sandwich",
+          "description": "NY style pastrami, white American cheese, sauerkraut, artisan rye bread and 1000 island dressing",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-sfg-cheesesteak",
+          "name": "SFG Cheesesteak",
+          "description": "White American cheese, onions, sautéed mushrooms, red bell peppers and garlic aioli",
+          "price": 22.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-dinner-soups-and-sides",
+      "name": "Dinner — Soups and Sides",
+      "items": [
+        {
+          "id": "i-sfg-dinner-soup-of-the-day",
+          "name": "Soup of the Day",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-side-house-salad",
+          "name": "Side House Salad",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-side-caesar-salad",
+          "name": "Side Caesar Salad",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-dinner-bacon-parmesan-brussels-sprouts",
+          "name": "Bacon Parmesan Brussels Sprouts",
+          "description": "",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-lunch-starters",
+      "name": "Lunch — Starters",
+      "items": [
+        {
+          "id": "i-sfg-lunch-cornbread-skillet",
+          "name": "Cornbread Skillet",
+          "description": "Honey butter glazed cornbread with sharp cheddar and jalapeños",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-pork-belly-skewers",
+          "name": "Pork Belly Skewers",
+          "description": "Grilled jalapeños, red curry macadamia nut rice and house made Korean chili sauce",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-roasted-garlic-hummus",
+          "name": "Roasted Garlic Hummus",
+          "description": "Broccolini, Brussels sprouts, carrots, pine nuts and warm naan bread",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-popcorn-shrimp",
+          "name": "Popcorn Shrimp",
+          "description": "House made Korean chili sauce, crispy wonton and dill slaw",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-skillet-meatballs",
+          "name": "Skillet Meatballs",
+          "description": "House made marinara, grilled crostinis, parmesan cheese and fresh basil",
+          "price": 17.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-buffalo-cauliflower",
+          "name": "Buffalo Cauliflower",
+          "description": "Creamy buffalo aioli and mixed greens",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-spicy-tuna-roll",
+          "name": "Spicy Tuna Roll",
+          "description": "Fresh #1 ahi tuna, avocado, jalapeño, cucumber and spicy aioli",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-tempura-shrimp-roll",
+          "name": "Tempura Shrimp Roll",
+          "description": "Toasted coconut, macadamia nuts, avocado, cucumber, soy ginger and coconut sauce drizzles",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-coconut-curry-steamed-mussels",
+          "name": "Coconut Curry Steamed Mussels",
+          "description": "Cherry tomatoes and grilled crostinis",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-lunch-burger-and-sandwiches",
+      "name": "Lunch — Burger and Sandwiches",
+      "items": [
+        {
+          "id": "i-sfg-lunch-smashed-burger",
+          "name": "Smashed Burger",
+          "description": "Double patties, American cheese, crisp lettuce, onion, pickle and 1000 island dressing. Add Bacon 2 / Add Avocado 2",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-crispy-chicken-sandwich",
+          "name": "Crispy Chicken Sandwich",
+          "description": "Crispy chicken, dill slaw, honey-chipotle sauce and pickles",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-reuben-sandwich",
+          "name": "Reuben Sandwich",
+          "description": "NY style pastrami, white American cheese, sauerkraut, artisan rye bread and 1000 island dressing",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-sfg-cheesesteak",
+          "name": "SFG Cheesesteak",
+          "description": "White American cheese, onions, sautéed mushrooms, red bell peppers and garlic aioli",
+          "price": 22.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-lunch-fresh-salads",
+      "name": "Lunch — Fresh Salads",
+      "items": [
+        {
+          "id": "i-sfg-lunch-thai-chicken-salad",
+          "name": "Thai Chicken Salad",
+          "description": "Ramen noodles, mango, carrots, bell peppers, snow peas, chopped peanuts and fresh basil",
+          "price": 20.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-seared-ahi-tuna-salad",
+          "name": "Seared Ahi Tuna Salad",
+          "description": "Fresh #1 ahi tuna, mixed greens, cucumbers, cherry tomatoes and crispy rice sticks",
+          "price": 24.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-honey-buffalo-shrimp-salad",
+          "name": "Honey Buffalo Shrimp Salad",
+          "description": "Popcorn shrimp, chopped iceberg lettuce, bacon, tomatoes, red onions, Fuji apples, croutons and house made blue cheese dressing",
+          "price": 21.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-avocado-chicken-caesar-salad",
+          "name": "Avocado Chicken Caesar Salad",
+          "description": "Chopped romaine, cherry tomatoes, pepitas, croutons and parmesan cheese",
+          "price": 20.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-lunch-entrees",
+      "name": "Lunch — Entrees",
+      "items": [
+        {
+          "id": "i-sfg-lunch-fitness-special",
+          "name": "Fitness Special",
+          "description": "Chef created special always under 450 calories",
+          "price": 0.0,
+          "tags": [
+            "mp"
+          ],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-butternut-squash-ravioli",
+          "name": "Butternut Squash Ravioli",
+          "description": "Chopped walnuts, parmesan cheese, fresh sage and brown butter cream sauce",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-fish-and-chips",
+          "name": "Fish and Chips",
+          "description": "Chilean sea bass, malt vinegar, tartar sauce and Old Bay waffle fries",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-blackened-salmon",
+          "name": "Blackened Salmon",
+          "description": "Heirloom cherry tomatoes, spinach, mashed potatoes and roasted tomato cream sauce",
+          "price": 24.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-miso-marinated-chilean-sea-bass",
+          "name": "Miso Marinated Chilean Sea Bass",
+          "description": "Baby bok choy, furikake jasmine rice and kombu broth",
+          "price": 39.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-hawaiian-spiced-ahi-tuna",
+          "name": "Hawaiian Spiced Ahi Tuna",
+          "description": "Fresh #1 ahi tuna seared rare, red curry macadamia nut rice and baby bok choy",
+          "price": 30.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-baja-fish-tacos",
+          "name": "Baja Fish Tacos",
+          "description": "Chilean sea bass, corn tortillas, cabbage slaw, pico de gallo, chipotle aioli and cilantro rice",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-jambalaya-pasta",
+          "name": "Jambalaya Pasta",
+          "description": "Chicken, shrimp, spicy sausage, sweet peppers, onions, cilantro, fresh pasta and parmesan",
+          "price": 25.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-crispy-airline-chicken",
+          "name": "Crispy Airline Chicken",
+          "description": "Mashed potatoes, broccolini and prosciutto-sage cream sauce",
+          "price": 28.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-filet-mignon-pasta",
+          "name": "Filet Mignon Pasta",
+          "description": "Cremini mushrooms, spinach, red onions, bell peppers and cremini mushroom sauce",
+          "price": 24.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-drunken-brandy-steak",
+          "name": "Drunken Brandy Steak",
+          "description": "Marinated ﬂank steak, mashed potatoes, broccolini and honey glazed carrots",
+          "price": 30.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-lunch-soups-and-sides",
+      "name": "Lunch — Soups and Sides",
+      "items": [
+        {
+          "id": "i-sfg-lunch-soup-of-the-day",
+          "name": "Soup of the Day",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-side-house-salad",
+          "name": "Side House Salad",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-side-caesar-salad",
+          "name": "Side Caesar Salad",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-lunch-bacon-parmesan-brussels-sprouts",
+          "name": "Bacon Parmesan Brussels Sprouts",
+          "description": "",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-brunch-brunch-specialties",
+      "name": "Brunch — Brunch Specialties",
+      "items": [
+        {
+          "id": "i-sfg-brunch-blueberry-pancakes",
+          "name": "Blueberry Pancakes",
+          "description": "Blueberry compote, mascarpone and maple syrup. Add Bacon 2",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-avocado-toast",
+          "name": "Avocado Toast",
+          "description": "Poached eggs, artisan rye bread, garlic aioli, pickled shallots and cherry tomatoes garnished with togarashi spice",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-pastrami-hash",
+          "name": "Pastrami Hash",
+          "description": "House made pastrami, two over easy eggs, shredded crispy potatoes, fire roasted red peppers and sautéed onions",
+          "price": 17.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-biscuits-and-gravy",
+          "name": "Biscuits and Gravy",
+          "description": "Fresh baked biscuits, sausage country gravy, two eggs and crispy hash browns",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-sfg-breakfast-sandwich",
+          "name": "SFG Breakfast Sandwich",
+          "description": "Sliced rye bread, fried egg, creamy white American cheese, guacamole and bacon with crispy hash browns",
+          "price": 17.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-cheesesteak-benedict",
+          "name": "Cheesesteak Benedict",
+          "description": "Thinly sliced steak, diced onions, creamy white American cheese, garlic aioli and chipotle hollandaise on fresh baked biscuits with crispy hash browns",
+          "price": 17.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-pastrami-benedict",
+          "name": "Pastrami Benedict",
+          "description": "House made pastrami sliced thin, chipotle hollandaise and poached eggs on fresh baked biscuits with crispy hash browns",
+          "price": 17.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-lobster-benedict",
+          "name": "Lobster Benedict",
+          "description": "Fried lobster tail, dill beurre blanc sauce and poached eggs on fresh biscuits with crispy hash browns",
+          "price": 25.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-gallo-pinto",
+          "name": "Gallo Pinto",
+          "description": "Black beans, sticky rice, radish, spicy Fresno chilis, corn, marinated cherry tomatoes, avocado and pico salsa topped with over easy eggs. Add Bacon 2 / Add Grilled Chicken 7",
+          "price": 16.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-brunch-childrens-brunch",
+      "name": "Brunch — Children's Brunch",
+      "items": [
+        {
+          "id": "i-sfg-brunch-pancakes",
+          "name": "Pancakes",
+          "description": "Crispy bacon, maple syrup and fresh fruit",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-scrambled-egg-breakfast",
+          "name": "Scrambled Egg Breakfast",
+          "description": "Crispy hash browns, bacon and fresh fruit",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-breakfast-sandwich",
+          "name": "Breakfast Sandwich",
+          "description": "Scrambled eggs, American cheese, bacon and fresh fruit",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-brunch-brunch-cocktails",
+      "name": "Brunch — Brunch Cocktails",
+      "items": [
+        {
+          "id": "i-sfg-brunch-bottomless-mimosa",
+          "name": "Bottomless Mimosa",
+          "description": "With Purchase of Entrée",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-hospital-bar-bloody-mary",
+          "name": "Hospital Bar Bloody Mary",
+          "description": "Grey Goose Vodka and house made bloody Mary mix",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-chili-cesspool-bloody-mary",
+          "name": "Chili Cesspool Bloody Mary",
+          "description": "Fresno chili infused vodka and house made bloody Mary mix",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-recovery-room-cold-brew-martini",
+          "name": "Recovery Room Cold Brew Martini",
+          "description": "Grey Goose Vodka, Mr. Black Cold Brew Coffee Liqueur and Bailey’s Irish Cream",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-aperol-spritz-surprise",
+          "name": "Aperol Spritz Surprise",
+          "description": "Aperol Aperitivo, Roederer Estate Brut sparkling wine, soda and sliced orange",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-pre-op-irish-coffee",
+          "name": "Pre-Op Irish Coffee",
+          "description": "Jameson Irish Whiskey, fresh brewed premium local coffee and whipped cream",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-brunch-premium-bubbles-by-the-bottle",
+      "name": "Brunch — Premium Bubbles By The Bottle",
+      "items": [
+        {
+          "id": "i-sfg-brunch-roederer-estate-anderson-valley",
+          "name": "Roederer Estate, Anderson Valley",
+          "description": "Brut",
+          "price": 54.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-brunch-vueve-clicquot-yellow-label-france",
+          "name": "Vueve Clicquot, Yellow Label, France",
+          "description": "Brut",
+          "price": 78.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-happy-hour-food-specials",
+      "name": "Happy Hour — Food Specials",
+      "items": [
+        {
+          "id": "i-sfg-happy-hour-waffle-fries",
+          "name": "Waffle Fries",
+          "description": "",
+          "price": 3.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-bacon-parmesan-brussels-sprouts",
+          "name": "Bacon Parmesan Brussels Sprouts",
+          "description": "",
+          "price": 6.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-cornbread-skillet",
+          "name": "Cornbread Skillet",
+          "description": "Honey butter glazed cornbread with cheddar and jalapeños",
+          "price": 6.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-mini-smashed-burger",
+          "name": "* Mini Smashed Burger",
+          "description": "American Cheese, crisp lettuce, onions, pickle and 1000 island dressing",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-cheesesteak-slider",
+          "name": "* Cheesesteak Slider",
+          "description": "White American cheese, onions, sautéed mushrooms, red bell peppers and garlic aioli",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-buffalo-cauliflower",
+          "name": "Buffalo Cauliflower",
+          "description": "Creamy buffalo aioli and mixed greens",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-baja-fish-tacos",
+          "name": "Baja Fish Tacos",
+          "description": "Chilean sea bass, corn tortillas, cabbage slaw, pico de gallo, cilantro and chipotle aioli",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-hawaiian-poke-tower",
+          "name": "Hawaiian Poke Tower",
+          "description": "#1 Ahi tuna tossed in Hawaiian poke sauce, fresh mangos, cucumber, avocado, baked wonton chips and wasabi aioli",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-coconut-curry-steamed-mussels",
+          "name": "Coconut Curry Steamed Mussels",
+          "description": "Cherry tomatoes and grilled crostinis",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-popcorn-shrimp",
+          "name": "Popcorn Shrimp",
+          "description": "House made Korean chili sauce, crispy wonton and mixed greens",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-spicy-tuna-roll",
+          "name": "Spicy Tuna Roll",
+          "description": "Fresh #1 ahi tuna, avocado, jalapeño, cucumber and spicy aioli",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-tempura-shrimp-roll",
+          "name": "Tempura Shrimp Roll",
+          "description": "Toasted coconut, macadamia nuts, avocado, cucumber, soy ginger and coconut sauce drizzles",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-happy-hour-draft-beer",
+      "name": "Happy Hour — Draft Beer",
+      "items": [
+        {
+          "id": "i-sfg-happy-hour-boring-rose-lazy-river-hazy-ipa",
+          "name": "Boring Rose 'Lazy River' Hazy IPA",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-fifty-fifty-donner-party-porter",
+          "name": "Fifty Fifty ‘Donner Party’ Porter",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-firestone-walker-805-blonde-ale",
+          "name": "Firestone Walker ‘805’ Blonde Ale",
+          "description": "",
+          "price": 6.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-moonraker-rotating-tap-handle",
+          "name": "Moonraker Rotating Tap Handle",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-north-coast-scrimshaw-pilsner",
+          "name": "North Coast ‘Scrimshaw’ Pilsner",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-russian-river-blind-pig-ipa",
+          "name": "Russian River ‘Blind Pig’ IPA",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-happy-hour-hand-crafted-cocktails",
+      "name": "Happy Hour — Hand Crafted Cocktails",
+      "items": [
+        {
+          "id": "i-sfg-happy-hour-well-cocktails-well-spirit-and-mixer",
+          "name": "Well Cocktails, well spirit and mixer",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-deadmans-blackberry-lemon-drop",
+          "name": "Deadman’s Blackberry Lemon Drop",
+          "description": "Ciroc Red Berry Vodka, muddled blackberries, fresh lemon and house made sweet and sour",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-lost-hat-martini",
+          "name": "Lost Hat Martini",
+          "description": "Grey Goose Vodka, guava nector, fresh lemon juice and raspberry liqueur",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-highway-rapid-mule",
+          "name": "Highway Rapid Mule",
+          "description": "Ketel One Vodka, fresh lime juice and Bundaberg ginger beer",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-racehorse-bend-barrel-aged-manhattan",
+          "name": "Racehorse Bend Barrel Aged Manhattan",
+          "description": "Dickel 'Bottled in Bond' Whisky, Noilly Prat Sweet Vermouth, cherry bark and vanilla bitters",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-current-divider-blackberry-margarita",
+          "name": "Current Divider Blackberry Margarita",
+          "description": "Don Julio Blanco Tequila, blackberries, fresh lime juice, agave nectar and sugar rim",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-happy-hour-white-wine",
+      "name": "Happy Hour — White Wine",
+      "items": [
+        {
+          "id": "i-sfg-happy-hour-sycamore-lane-california",
+          "name": "Sycamore Lane, California",
+          "description": "Chardonnay",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-domaine-chandon-california-split",
+          "name": "Domaine Chandon, California (Split)",
+          "description": "Sparkling Brut",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-la-crema-monterey",
+          "name": "La Crema, Monterey",
+          "description": "Pinot Gris",
+          "price": 8.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-daou-paso-robles",
+          "name": "Daou, Paso Robles",
+          "description": "Rosé",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-chalk-hill-sonoma-coast",
+          "name": "Chalk Hill, Sonoma Coast",
+          "description": "Chardonnay",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-frank-family-napa-valley",
+          "name": "Frank Family, Napa Valley",
+          "description": "Chardonnay",
+          "price": 16.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-matanzas-creek-sonoma",
+          "name": "Matanzas Creek, Sonoma",
+          "description": "Sauvignon Blanc",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-cakebread-north-coast",
+          "name": "Cakebread, North Coast",
+          "description": "Sauvignon Blanc",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-happy-hour-red-wine",
+      "name": "Happy Hour — Red Wine",
+      "items": [
+        {
+          "id": "i-sfg-happy-hour-sycamore-lane-california",
+          "name": "Sycamore Lane, California",
+          "description": "Cabernet Sauvignon",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-chateau-chapelle-france",
+          "name": "Chateau Chapelle, France",
+          "description": "Bordeaux",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-daou-paso-robles",
+          "name": "Daou, Paso Robles",
+          "description": "Cabernet Sauvignon",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-caymus-california",
+          "name": "Caymus, California",
+          "description": "Cabernet Sauvignon",
+          "price": 16.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-schug-sonoma-coast",
+          "name": "Schug, Sonoma Coast",
+          "description": "Pinot Noir",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-sobon-rocky-top-amador",
+          "name": "Sobon, Rocky Top, Amador",
+          "description": "Zinfandel",
+          "price": 8.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-st-francis-sonoma",
+          "name": "St. Francis, Sonoma",
+          "description": "Merlot",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-happy-hour-borjon-amador-county",
+          "name": "Borjon, Amador County",
+          "description": "Barbera",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-cocktails-specialty-drinks",
+      "name": "Cocktails — Specialty Drinks",
+      "items": [
+        {
+          "id": "i-sfg-cocktails-racehorse-bend-barrel-aged-manhattan",
+          "name": "Racehorse Bend Barrel Aged Manhattan",
+          "description": "Dickel ‘Bottled in Bond’ Whisky, Noilly Prat Sweet Vermouth, cherry bark and vanilla bitters",
+          "price": 16.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-double-dip-brown-sugar-old-fashioned",
+          "name": "Double Dip Brown Sugar Old Fashioned",
+          "description": "Bulleit Bourbon, brown sugar simple syrup and aromatic bitters",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-fowlers-rock-gold-rush",
+          "name": "Fowler’s Rock Gold Rush",
+          "description": "Michter's Bourbon, local honey simple syrup and fresh lemon juice",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-upper-haystacks-paper-plane",
+          "name": "Upper Haystacks Paper Plane",
+          "description": "Elijah Craig Small Batch Bourbon, Aperol Aperitivo, Amaro Nonino and fresh lemon juice",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-chili-bar-martini",
+          "name": "Chili Bar Martini",
+          "description": "Fresno chili pepper infused vodka, simple syrup and fresh citrus",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-lost-hat-martini",
+          "name": "Lost Hat Martini",
+          "description": "Grey Goose Vodka, guava nectar, fresh lemon juice and Chambord Black Raspberry Liqueur",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-deadmans-blackberry-lemon-drop",
+          "name": "Deadman’s Blackberry Lemon Drop",
+          "description": "Ciroc Red Berry Vodka, muddled blackberries, fresh lemon and house made sweet and sour",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-barking-dog-cooler",
+          "name": "Barking Dog Cooler",
+          "description": "House infused grapefruit vodka, St. Germain Elderflower Liqueur, fresh lemon juice, black cherry syrup and grapefruit seltzer",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-highway-rapid-mule",
+          "name": "Highway Rapid Mule",
+          "description": "Ketel One Vodka, fresh lime juice, Angostura Bitters and Owen's Craft Ginger Beer",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-recovery-room-cold-brew-martini",
+          "name": "Recovery Room Cold Brew Martini",
+          "description": "Grey Goose Vodka, Mr. Black Cold Brew Coffee Liqueur and Bailey’s Irish Cream",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-current-divider-blackberry-margarita",
+          "name": "Current Divider Blackberry Margarita",
+          "description": "Don Julio Blanco Tequila, blackberries, fresh lime juice, agave nectar and sugar rim",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-troublemaker-dragon-margarita",
+          "name": "Troublemaker Dragon Margarita",
+          "description": "Casa Dragones Blanco Tequila, agave nectar and fresh lime juice with a Grand Marnier float",
+          "price": 16.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-south-fork-75",
+          "name": "South Fork 75",
+          "description": "Bombay Sapphire Gin, St. Germain Elderflflower Liqueur and fresh lemon juice topped with Roederer Estate Brut sparkling wine",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-cocktails-draft-bottled-beer",
+      "name": "Cocktails — Draft & Bottled Beer",
+      "items": [
+        {
+          "id": "i-sfg-cocktails-boring-rose-lazy-river-hazy-ipa",
+          "name": "Boring Rose 'Lazy River' Hazy IPA",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-fifty-fifty-donner-party-porter",
+          "name": "Fifty Fifty ‘Donner Party’ Porter",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-firestone-walker-805-blonde-ale",
+          "name": "Firestone Walker ‘805’ Blonde Ale",
+          "description": "",
+          "price": 8.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-moonraker-rotating-tap-handle",
+          "name": "Moonraker Rotating Tap Handle",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-north-coast-scrimshaw-pilsner",
+          "name": "North Coast ‘Scrimshaw’ Pilsner",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-russian-river-blind-pig-ipa",
+          "name": "Russian River ‘Blind Pig’ IPA",
+          "description": "",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-coors-light-lager-bottle",
+          "name": "Coors Light Lager (Bottle)",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-estrella-jalisco-mexican-lager-bottle",
+          "name": "Estrella Jalisco Mexican Lager (Bottle)",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-stella-artois-lager-bottle",
+          "name": "Stella Artois Lager (Bottle)",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-cocktails-white-wines",
+      "name": "Cocktails — White Wines",
+      "items": [
+        {
+          "id": "i-sfg-cocktails-sycamore-lane-california",
+          "name": "Sycamore Lane, California",
+          "description": "Chardonnay",
+          "price": 8.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-la-crema-monterey",
+          "name": "La Crema, Monterey",
+          "description": "Chardonnay",
+          "price": 11.5,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-chalk-hill-sonoma-coast",
+          "name": "Chalk Hill, Sonoma Coast",
+          "description": "Chardonnay",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-robert-talbott-sleepy-hollow-vineyard-slh",
+          "name": "Robert Talbott, Sleepy Hollow Vineyard, SLH",
+          "description": "Chardonnay",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-frank-family-napa-valley",
+          "name": "Frank Family, Napa Valley",
+          "description": "Chardonnay",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-lloyd-carneros",
+          "name": "Lloyd, Carneros",
+          "description": "Chardonnay",
+          "price": 65.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-rombauer-napa-valley",
+          "name": "Rombauer, Napa Valley",
+          "description": "Chardonnay",
+          "price": 68.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-joel-gott-california",
+          "name": "Joel Gott, California",
+          "description": "Sauvignon Blanc",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-kim-crawford-marlborough-new-zealand",
+          "name": "Kim Crawford, Marlborough, New Zealand",
+          "description": "Sauvignon Blanc",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-matanzas-creek-sonoma",
+          "name": "Matanzas Creek, Sonoma",
+          "description": "Sauvignon Blanc",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-cakebread-north-coast",
+          "name": "Cakebread, North Coast",
+          "description": "Sauvignon Blanc",
+          "price": 16.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-justin-paso-robles",
+          "name": "Justin, Paso Robles",
+          "description": "Sauvignon Blanc",
+          "price": 36.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-whitehall-lane-napa-valley",
+          "name": "Whitehall Lane, Napa Valley",
+          "description": "Sauvignon Blanc",
+          "price": 53.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-charles-smith-kung-fu-girl-washington",
+          "name": "Charles Smith, Kung Fu Girl, Washington",
+          "description": "Riesling",
+          "price": 9.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-la-crema-monterey-15",
+          "name": "La Crema, Monterey",
+          "description": "Pinot Gris",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-daou-paso-robles",
+          "name": "Daou, Paso Robles",
+          "description": "Rosé",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-cocktails-red-wines",
+      "name": "Cocktails — Red Wines",
+      "items": [
+        {
+          "id": "i-sfg-cocktails-sycamore-lane-california",
+          "name": "Sycamore Lane, California",
+          "description": "Cabernet Sauvignon",
+          "price": 8.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-chateau-chapelle-france",
+          "name": "Chateau Chapelle, France",
+          "description": "Bordeaux",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-daou-paso-robles",
+          "name": "Daou, Paso Robles",
+          "description": "Cabernet Sauvignon",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-beringer-knights-valley",
+          "name": "Beringer, Knights Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 18.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-caymus-california",
+          "name": "Caymus, California",
+          "description": "Cabernet Sauvignon",
+          "price": 19.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-louis-m-martini-napa-valley",
+          "name": "Louis M. Martini, Napa Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 63.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-frank-family-napa-valley",
+          "name": "Frank Family, Napa Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 68.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-bv-tapestry-napa-valley",
+          "name": "BV, Tapestry, Napa Valley",
+          "description": "Red Blend",
+          "price": 75.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-grgich-hills-napa-valley",
+          "name": "Grgich Hills, Napa Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 79.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-justin-isosceles-paso-robles",
+          "name": "Justin, Isosceles, Paso Robles",
+          "description": "Cabernet Sauvignon",
+          "price": 80.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-raymond-reserve-napa-valley",
+          "name": "Raymond, Reserve, Napa Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 80.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-orin-swift-8-years-in-the-desert-napa-valley",
+          "name": "Orin Swift, 8 Years in the Desert, Napa Valley",
+          "description": "Red Blend",
+          "price": 83.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-silver-oak-alexander-valley",
+          "name": "Silver Oak, Alexander Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 115.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-joseph-phelps-napa-valley",
+          "name": "Joseph Phelps, Napa Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 126.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-chimney-rock-napa-valley",
+          "name": "Chimney Rock, Napa Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 130.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-caymus-napa-valley",
+          "name": "Caymus, Napa Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 140.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-mt-brave-mt-veeder-napa-valley",
+          "name": "Mt. Brave, Mt. Veeder, Napa Valley",
+          "description": "Cabernet Sauvignon",
+          "price": 140.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-schug-sonoma-coast",
+          "name": "Schug, Sonoma Coast",
+          "description": "Pinot Noir",
+          "price": 12.5,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-paul-hobbs-crossbarn-sonoma-coast",
+          "name": "Paul Hobbs ‘Crossbarn’, Sonoma Coast",
+          "description": "Pinot Noir",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-davis-bynum-russian-river-valley",
+          "name": "Davis Bynum, Russian River Valley",
+          "description": "Pinot Noir",
+          "price": 17.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-erath-oregon",
+          "name": "Erath, Oregon",
+          "description": "Pinot Noir",
+          "price": 39.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-frank-family-napa-valley-22",
+          "name": "Frank Family, Napa Valley",
+          "description": "Pinot Noir",
+          "price": 55.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-belle-glos-dairyman-russian-river-valley",
+          "name": "Belle Glos, Dairyman, Russian River Valley",
+          "description": "Pinot Noir",
+          "price": 75.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-flowers-sonoma-coast",
+          "name": "Flowers, Sonoma Coast",
+          "description": "Pinot Noir",
+          "price": 75.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-hartford-court-lands-edge-vineyard-sonoma-coast",
+          "name": "Hartford Court, Land’s Edge Vineyard, Sonoma Coast",
+          "description": "Pinot Noir",
+          "price": 80.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-trapiche-broquel-mendoza-argentina",
+          "name": "Trapiche Broquel, Mendoza, Argentina",
+          "description": "Malbec",
+          "price": 8.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-sobon-rocky-top-amador",
+          "name": "Sobon, Rocky Top, Amador",
+          "description": "Zinfandel",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-benziger-sonoma",
+          "name": "Benziger, Sonoma",
+          "description": "Merlot",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-earthquake-lodi",
+          "name": "Earthquake, Lodi",
+          "description": "Zinfandel",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-st-francis-sonoma",
+          "name": "St. Francis, Sonoma",
+          "description": "Merlot",
+          "price": 13.5,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-borjon-amador",
+          "name": "Borjon, Amador",
+          "description": "Barbera",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-frank-family-napa-valley-32",
+          "name": "Frank Family, Napa Valley",
+          "description": "Zinfandel",
+          "price": 50.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-rombauer-napa-valley",
+          "name": "Rombauer, Napa Valley",
+          "description": "Zinfandel",
+          "price": 65.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-cocktails-sparkling",
+      "name": "Cocktails — Sparkling",
+      "items": [
+        {
+          "id": "i-sfg-cocktails-la-marca-italy-split",
+          "name": "La Marca, Italy (Split)",
+          "description": "Prosecco",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-chandon-california-split",
+          "name": "Chandon, California (Split)",
+          "description": "Brut",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-roederer-estate-anderson-valley",
+          "name": "Roederer Estate, Anderson Valley",
+          "description": "Brut",
+          "price": 15.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-nicolas-feuillatte-champagne-split",
+          "name": "Nicolas Feuillatte, Champagne (Split)",
+          "description": "Brut Rosé",
+          "price": 22.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-veuve-clicquot-yellow-label-france",
+          "name": "Veuve Clicquot, Yellow Label, France",
+          "description": "Brut",
+          "price": 78.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-cocktails-non-alcoholic-drinks",
+      "name": "Cocktails — Non-Alcoholic Drinks",
+      "items": [
+        {
+          "id": "i-sfg-cocktails-blackberry-margarita",
+          "name": "Blackberry Margarita",
+          "description": "Ritual Zero Proof Tequila",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-aperol-spritz",
+          "name": "Aperol Spritz",
+          "description": "Alcohol Free Mionetto Aperitivo",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-mionetto-italy-split",
+          "name": "Mionetto, Italy (Split)",
+          "description": "Prosecco",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-heineken-0-0-lager",
+          "name": "Heineken '0.0' Lager",
+          "description": "",
+          "price": 7.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-athletic-free-wave-hazy-ipa",
+          "name": "Athletic 'Free Wave' Hazy IPA",
+          "description": "",
+          "price": 8.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-cocktails-wyld-cbd-infused-blackberry-sparkling-water",
+          "name": "Wyld, CBD Infused Blackberry Sparkling Water",
+          "description": "",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-desserts-house-made-desserts",
+      "name": "Desserts — House Made Desserts",
+      "items": [
+        {
+          "id": "i-sfg-desserts-apple-berry-crisp",
+          "name": "Apple Berry Crisp",
+          "description": "Served warm with cinnamon crumb topping and vanilla bean ice cream",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-desserts-gold-rush-ice-cream-pie",
+          "name": "Gold Rush Ice Cream Pie",
+          "description": "Oreo Cookie crumb, coffee ice cream, whipped cream, slivered almonds and chocolate and caramel drizzles",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-desserts-vanilla-bean-cr-me-br-l-e",
+          "name": "Vanilla Bean Crème Brûlée",
+          "description": "Creamy vanilla bean custard with wild Italian Amarena cherries",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-desserts-wild-berry-sorbet",
+          "name": "Wild Berry Sorbet",
+          "description": "Served with fresh berries",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-desserts-seasonal-cheesecake",
+          "name": "Seasonal Cheesecake",
+          "description": "Ask your server for our current selection",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-desserts-port-wine-dessert-cocktails",
+      "name": "Desserts — Port Wine & Dessert Cocktails",
+      "items": [
+        {
+          "id": "i-sfg-desserts-warres-otima-10yr-tawny-port",
+          "name": "Warre’s Otima 10yr Tawny Port",
+          "description": "",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-desserts-recovery-room-cold-brew-martini",
+          "name": "Recovery Room Cold Brew Martini",
+          "description": "Grey Goose Vodka, Mr. Black Cold Brew Coffee Liqueur, Bailey’s Irish Cream and chocolate swirl",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-desserts-pre-op-irish-coffee",
+          "name": "Pre-Op Irish Coffee",
+          "description": "Jameson Irish Whiskey, fresh brewed premium local coffee and whipped cream",
+          "price": 11.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sfg-kids-childrens-menu",
+      "name": "Kids — Children's Menu",
+      "items": [
+        {
+          "id": "i-sfg-kids-crispy-chicken-tenders",
+          "name": "Crispy Chicken Tenders",
+          "description": "Waffle fries and apple slices",
+          "price": 13.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-kids-rigatoni-pasta",
+          "name": "Rigatoni Pasta",
+          "description": "Butter sauce and parmesan cheese",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-kids-grilled-chicken-breast",
+          "name": "Grilled Chicken Breast",
+          "description": "Waffle fries or seasonal veggie",
+          "price": 12.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-kids-cheese-burger",
+          "name": "Cheese Burger",
+          "description": "Waffle fries and apple slices",
+          "price": 14.0,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sfg-kids-grilled-cheese",
+          "name": "Grilled Cheese",
+          "description": "Waffle fries and apple slices",
+          "price": 10.0,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    }
+  ]
+}

@@ -163,7 +163,9 @@ export default function MenuClient() {
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
-          if (typeof item.price === 'number' && item.price <= 0) return false
+          const tagList = (item.tags || []).map(t => String(t).toLowerCase())
+          const isMarketPrice = tagList.includes('mp') || tagList.includes('market-price')
+          if (typeof item.price === 'number' && item.price <= 0 && !isMarketPrice) return false
           // Category filter
           if (selectedCategory && category.name !== selectedCategory) return false
           // Search filter (name and description)
@@ -1062,7 +1064,16 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                          (() => {
+                            const tagList = (item.tags || []).map(t => String(t).toLowerCase())
+                            const isMarketPrice = tagList.includes('mp') || tagList.includes('market-price')
+                            const label = isMarketPrice || item.price <= 0 ? 'MP' : `$${item.price.toFixed(2)}`
+                            return (
+                              <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>
+                                {label}
+                              </span>
+                            )
+                          })()
                         )}
                       </div>
                       {!isAdmin && (

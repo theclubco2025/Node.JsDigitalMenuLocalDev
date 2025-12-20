@@ -1,0 +1,19 @@
+{
+  "heroVariant": "image",
+  "navVariant": "chipScroller",
+  "motion": "subtle",
+  "texture": { "vignette": true, "paper": false },
+  "accentSecondary": "#2563eb",
+  "flags": {
+    "specials": true,
+    "signatureGrid": true,
+    "hideCart": true
+  },
+  "featuredIds": [
+    "i-sfg-dinner-miso-marinated-chilean-sea-bass",
+    "i-sfg-dinner-smashed-burger",
+    "i-sfg-brunch-lobster-benedict"
+  ]
+}
+
+
