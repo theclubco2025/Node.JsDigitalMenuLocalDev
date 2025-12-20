@@ -19,3 +19,5 @@ tmp/
 
 # Local logs
 *.log
+# Cursor / IDE metadata
+.cursor/
