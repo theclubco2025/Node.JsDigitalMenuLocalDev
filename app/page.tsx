@@ -11,14 +11,15 @@ const LANDING = {
   priceDisclaimer: 'From $150/month. One-time onboarding based on menu size. No POS overhaul. QR-ready in days.',
   logo: '/assets/tcc-logo-horizontal.png',
   qrDemo: '/assets/tcc-demo-qr.png',
+  demoUrlLabel: 'tccmenus.com/demo',
   features: [
     {
-      title: 'Save time',
-      body: 'Update items, 86 dishes, and swap specials in seconds — no reprints or retraining.',
+      title: 'Fast updates',
+      body: 'Same-day edits on request — 86 dishes, specials, availability, photos, and pricing. No reprints.',
     },
     {
-      title: 'Grow revenue',
-      body: 'The assistant gently recommends popular items based on time, season, and guest behavior.',
+      title: 'Menu Q&A',
+      body: 'Guests get instant answers grounded in your official menu data — not internet guesses.',
     },
     {
       title: 'Reduce friction',
@@ -26,15 +27,15 @@ const LANDING = {
     },
     {
       title: 'Allergen clarity',
-      body: 'Instant answers for allergens and dietary needs with owner-approved responses.',
+      body: 'Clear allergen + dietary tags so guests can decide confidently.',
     },
     {
       title: 'Staff assist',
       body: 'New staff lean on the assistant for pairings and FAQs while they learn the menu.',
     },
     {
-      title: 'Monthly insights',
-      body: 'Simple, once-a-month report: what sold, what stalled, and 3 quick wins to try.',
+      title: 'Embed anywhere',
+      body: 'Drop the menu into your website with a simple embed script.',
     },
   ],
   useCases: [
@@ -63,8 +64,12 @@ const LANDING = {
       a: 'You approve all item data. We support photos, tags (GF/V/VG/DF), and clear allergen callouts.',
     },
     {
+      q: 'How do menu updates work?',
+      a: 'Tomorrow-ready: we handle updates for you (same-day, within scope). Optional owner self-edit is available as a beta once your menu is fully onboarded.',
+    },
+    {
       q: 'What does ongoing service include?',
-      a: 'Monthly insights, bug fixes, copy tweaks, and owner-requested adjustments within scope.',
+      a: 'Bug fixes, copy tweaks, and owner-requested adjustments within scope. (Insights can be added as an upgrade.)',
     },
     {
       q: 'Is there a contract?',
@@ -128,7 +133,7 @@ export default function Landing() {
                       decoding="async"
                     />
                   </div>
-                  <div className="text-xs text-neutral-500">tccmenus.com/demo</div>
+                  <div className="text-xs text-neutral-500">{LANDING.demoUrlLabel}</div>
                 </div>
               </div>
             </div>

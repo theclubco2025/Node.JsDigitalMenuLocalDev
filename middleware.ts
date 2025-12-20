@@ -5,11 +5,15 @@ export function middleware(request: NextRequest) {
   // Handle CORS preflight generically for all API routes
   if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
     const res = NextResponse.json({ ok: true })
-    const origin = request.headers.get('origin') || '*'
-    res.headers.set('Access-Control-Allow-Origin', origin)
-    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
-    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
-    res.headers.set('Vary', 'Origin')
+    const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/')
+    // Admin APIs are same-origin only: do NOT emit permissive CORS headers.
+    if (!isAdminApi) {
+      const origin = request.headers.get('origin') || '*'
+      res.headers.set('Access-Control-Allow-Origin', origin)
+      res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
+      res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
+      res.headers.set('Vary', 'Origin')
+    }
     return res
   }
   const landingMode = process.env.NEXT_PUBLIC_LANDING_MODE !== '0'
@@ -120,14 +124,17 @@ export function middleware(request: NextRequest) {
     const response = NextResponse.next()
     const origin = request.headers.get('origin') || undefined
     const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/')
-    if (origin) {
-      response.headers.set('Access-Control-Allow-Origin', origin)
-    } else if (!isAdminApi) {
-      response.headers.set('Access-Control-Allow-Origin', '*')
+    // Admin APIs are same-origin only: do NOT emit permissive CORS headers.
+    if (!isAdminApi) {
+      if (origin) {
+        response.headers.set('Access-Control-Allow-Origin', origin)
+      } else {
+        response.headers.set('Access-Control-Allow-Origin', '*')
+      }
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token, x-admin-token')
+      response.headers.set('Vary', 'Origin')
     }
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token, x-admin-token')
-    response.headers.set('Vary', 'Origin')
     return response
   }
   return NextResponse.next()

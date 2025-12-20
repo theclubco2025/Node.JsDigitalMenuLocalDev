@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Load source tenant and latest menu
-    let srcTenant = await prisma.tenant.findUnique({ where: { slug: from } })
+    const srcTenant = await prisma.tenant.findUnique({ where: { slug: from } })
     if (!srcTenant) {
       // FS fallback: copy from data/tenants/<from> when DB tenant missing
       try {
