@@ -544,39 +544,15 @@ export default function MenuClient() {
   function cardStyleForCategory(): React.CSSProperties {
     return {}
   }
-  function getItemBadges(item: MenuItem): string[] {
-    const badges: string[] = []
-    const name = (item?.name || '').toLowerCase()
-    const tags: string[] = item?.tags || []
-    if (tags.includes('vegan') || /vegan/.test(name)) badges.push('Vegan')
-    if (tags.includes('vegetarian') || /vegetarian/.test(name)) badges.push('Vegetarian')
-    if (tags.includes('gf') || tags.includes('gluten-free') || /gluten\s*free|gf/.test(name)) badges.push('GF')
-    if (tags.includes('dairy-free') || /dairy\s*free/.test(name)) badges.push('Dairy-Free')
-    if (/spicy|vesuvio|pepperoncini|diavolo/.test(name)) badges.push('Spicy')
-    if (/margherita|bolognese|prosciutto/.test(name)) badges.push('House Favorite')
-    return badges
-  }
-
-  function badgeStyle(label: string): React.CSSProperties {
-    // Classic Italian tricolor badge (requested): green / white / red
+  function badgeStyle(): React.CSSProperties {
+    // Classic Italian tricolor badge (requested): green / white / red.
+    // Used ONLY for category badges (Pasta / Pizza / Lunch / etc).
     const italian = {
       backgroundImage: 'linear-gradient(90deg, #008C45 0%, #008C45 33%, #F4F5F0 33%, #F4F5F0 66%, #CD212A 66%, #CD212A 100%)',
       color: '#111827',
       borderColor: 'rgba(0,0,0,0.15)',
     } satisfies React.CSSProperties
-
-    // Category label stays readable and neutral; other labels get the tricolor look.
-    if (label && typeof label === 'string' && label.length > 0 && label === label.toUpperCase()) {
-      return italian
-    }
-    if (['Vegan', 'Vegetarian', 'GF', 'Dairy-Free', 'Spicy', 'House Favorite'].includes(label)) {
-      return italian
-    }
-    return {
-      background: 'rgba(255,255,255,0.9)',
-      color: '#111827',
-      borderColor: 'rgba(0,0,0,0.12)',
-    }
+    return italian
   }
   function resolveFeatured() {
     const items: Array<MenuItem & { categoryName?: string }> = []
@@ -644,7 +620,12 @@ export default function MenuClient() {
               <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
             )}
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italian)' }}>{brandName}</h1>
+              <h1
+                className="text-3xl font-bold text-white tracking-widest italic"
+                style={{ fontFamily: tenant === 'demo' ? 'var(--font-serif)' : 'var(--font-italian)' }}
+              >
+                {brandName}
+              </h1>
               <p className="text-gray-200 text-xs">{brandTagline}</p>
             </div>
           </div>
@@ -734,7 +715,12 @@ export default function MenuClient() {
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
-                  <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
+                  <h2
+                    className="text-2xl md:text-3xl font-bold italic tracking-wide"
+                    style={{ color: 'var(--ink)', fontFamily: tenant === 'demo' ? 'var(--font-serif)' : 'inherit' }}
+                  >
+                    {brandName}
+                  </h2>
                   <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
             </div>
           </div>
@@ -992,11 +978,11 @@ export default function MenuClient() {
                       </div>
                       {!isAdmin && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {[category.name.toUpperCase(), ...getItemBadges(item)].map(badge => (
+                          {[category.name.toUpperCase()].map(badge => (
                             <span
                               key={badge}
                               className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold border"
-                              style={badgeStyle(badge)}
+                              style={badgeStyle()}
                             >
                               {badge}
                             </span>
@@ -1091,15 +1077,10 @@ export default function MenuClient() {
                           )}
                           <button
                             onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                            className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                            className="px-4 py-2 rounded-lg text-sm font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 whitespace-nowrap"
                             aria-label={`Ask about ${item.name}`}
                           >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                              <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
-                            </svg>
-                            <span>Ask AI</span>
+                            <span>AI</span>
                           </button>
                         </div>
                       </div>
@@ -1124,14 +1105,10 @@ export default function MenuClient() {
       <button
         onClick={() => setIsAssistantOpen(true)}
         className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
-        style={{background:'var(--accent)', color:'#0b0b0b'}}
+        style={{ background: '#059669', color: '#ffffff' }}
         aria-label="Open assistant"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
-        </svg>
+        <span className="font-extrabold tracking-widest">AI</span>
       </button>
 
       {/* Plate Drawer */}
