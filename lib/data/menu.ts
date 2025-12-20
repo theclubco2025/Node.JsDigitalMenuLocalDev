@@ -149,7 +149,9 @@ function normalizeMenu(raw: RawMenu | null | undefined): MenuResponse {
 }
 
 export async function readMenu(tenant: string): Promise<MenuResponse> {
-  const fallbackTenant = tenant.endsWith('-draft') ? tenant : `${tenant}-draft`
+  const isPreview = process.env.VERCEL_ENV === 'preview'
+  // Safety: in production, do NOT fall back from <slug> â†’ <slug>-draft
+  const fallbackTenant = (!tenant.endsWith('-draft') && isPreview) ? `${tenant}-draft` : null
   // If DATABASE_URL exists, prefer DB
   if (process.env.DATABASE_URL) {
     try {
