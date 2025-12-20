@@ -6,8 +6,8 @@ import React from 'react'
 const LANDING = {
   calendlyUrl: 'https://calendly.com/adennis-tccmenus/menu-demo',
   primaryCtaLabel: 'Book Demo',
-  priceMonthly: 150,
-  priceDisclaimer: 'From $150/month. One-time onboarding based on menu size. No POS overhaul. QR-ready in days.',
+  priceMonthly: 75,
+  priceDisclaimer: 'From $75/month. One-time onboarding based on menu size. No POS overhaul. QR-ready in days.',
   logo: '/assets/tcc-logo-horizontal.png',
   qrDemo: '/assets/tcc-demo-qr.png',
   demoUrlLabel: 'tccmenus.com/demo',
@@ -56,10 +56,7 @@ const LANDING = {
       q: 'What about photos and allergens?',
       a: 'You approve all item data. We support photos, tags (GF/V/VG/DF), and clear allergen callouts.',
     },
-    {
-      q: 'How do menu updates work?',
-      a: 'Tomorrow-ready: we handle updates for you (same-day, within scope). Optional owner self-edit is available as a beta once your menu is fully onboarded.',
-    },
+    { q: 'How do menu updates work?', a: 'We handle updates for you (same-day, within scope). You send changes by text/email and we push them live.' },
     {
       q: 'What does ongoing service include?',
       a: 'Bug fixes, copy tweaks, and owner-requested adjustments within scope. (Insights can be added as an upgrade.)',
@@ -108,7 +105,7 @@ export default function Landing() {
                 <img
                   src={LANDING.logo}
                   alt="TCC Solutions"
-                  className="w-full max-w-xs md:max-w-sm"
+                  className="w-full max-w-[180px]"
                   loading="lazy"
                   decoding="async"
                 />
@@ -116,7 +113,7 @@ export default function Landing() {
               <div className="mt-4 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-700">
                 <p className="font-medium">Scan the live demo QR to see it in action.</p>
                 <div className="mt-3 flex items-center gap-4">
-                  <div className="grid h-28 w-28 place-items-center rounded-md border border-dashed border-neutral-300 text-neutral-400">
+                  <div className="grid h-36 w-36 place-items-center rounded-md border border-dashed border-neutral-300 text-neutral-400">
                     <img
                       src={LANDING.qrDemo}
                       alt="Demo menu QR"

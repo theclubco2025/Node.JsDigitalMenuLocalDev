@@ -949,12 +949,17 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
-                            {highlightText(item.name, searchQuery)}
-                            {typeof item.calories === 'number' && (
-                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
-                            )}
-                          </h3>
+                          <div className="min-w-0">
+                            <div className="text-[10px] uppercase tracking-widest text-gray-500">
+                              {category.name}
+                            </div>
+                            <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+                              {highlightText(item.name, searchQuery)}
+                              {typeof item.calories === 'number' && (
+                                <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
+                              )}
+                            </h3>
+                          </div>
                         )}
                         {isAdmin ? (
                           <input
