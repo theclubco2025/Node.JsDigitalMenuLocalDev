@@ -5,11 +5,15 @@ export function middleware(request: NextRequest) {
   // Handle CORS preflight generically for all API routes
   if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
     const res = NextResponse.json({ ok: true })
-    const origin = request.headers.get('origin') || '*'
-    res.headers.set('Access-Control-Allow-Origin', origin)
-    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
-    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
-    res.headers.set('Vary', 'Origin')
+    const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/')
+    // Admin APIs are same-origin only: do NOT emit permissive CORS headers.
+    if (!isAdminApi) {
+      const origin = request.headers.get('origin') || '*'
+      res.headers.set('Access-Control-Allow-Origin', origin)
+      res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
+      res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
+      res.headers.set('Vary', 'Origin')
+    }
     return res
   }
   // Default landing: render marketing page unless a tenant is explicitly requested or landing mode disabled
@@ -90,11 +94,19 @@ export function middleware(request: NextRequest) {
   // Add CORS headers for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     const response = NextResponse.next()
-    const origin = request.headers.get('origin') || '*'
-    response.headers.set('Access-Control-Allow-Origin', origin)
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token, x-admin-token')
-    response.headers.set('Vary', 'Origin')
+    const origin = request.headers.get('origin') || undefined
+    const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/')
+    // Admin APIs are same-origin only: do NOT emit permissive CORS headers.
+    if (!isAdminApi) {
+      if (origin) {
+        response.headers.set('Access-Control-Allow-Origin', origin)
+      } else {
+        response.headers.set('Access-Control-Allow-Origin', '*')
+      }
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token, x-admin-token')
+      response.headers.set('Vary', 'Origin')
+    }
     return response
   }
   return NextResponse.next()

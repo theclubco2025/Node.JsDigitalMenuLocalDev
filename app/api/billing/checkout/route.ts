@@ -1,0 +1,54 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { getStripe, planToPriceId, type StripePlanKey } from '@/lib/stripe'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+const BodySchema = z.object({
+  tenant: z.string().min(1),
+  plan: z.enum(['basic', 'premium', 'enterprise']).default('basic'),
+})
+
+function baseUrl() {
+  return (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXTAUTH_URL || 'http://localhost:3002').replace(/\/$/, '')
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const raw = await req.json().catch(() => ({}))
+    const parsed = BodySchema.safeParse(raw)
+    if (!parsed.success) {
+      return NextResponse.json({ ok: false, error: 'Invalid payload' }, { status: 400 })
+    }
+
+    const tenant = parsed.data.tenant.trim()
+    const plan = parsed.data.plan as StripePlanKey
+
+    const stripe = getStripe()
+    const priceId = planToPriceId(plan)
+
+    const successUrl = `${baseUrl()}/billing/success?tenant=${encodeURIComponent(tenant)}`
+    const cancelUrl = `${baseUrl()}/billing?tenant=${encodeURIComponent(tenant)}&canceled=1`
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      allow_promotion_codes: true,
+      metadata: {
+        tenant,
+        plan,
+      },
+    })
+
+    return NextResponse.json({ ok: true, url: session.url }, { status: 200 })
+  } catch (e) {
+    const msg = (e as Error)?.message || 'Billing error'
+    // Safe, user-friendly error; don’t leak secrets.
+    return NextResponse.json({ ok: false, error: msg }, { status: 200 })
+  }
+}
+
+
