@@ -143,6 +143,8 @@ export default function MenuClient() {
   const showSpecials = Boolean(flags.specials && specialsText)
   const showSignatureGrid = Boolean(flags.signatureGrid)
   const hideCart = Boolean(flags.hideCart)
+  const showDietaryFilters = flags.dietaryFilters !== false
+  const showCategoryBadges = flags.categoryBadges !== false
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -573,8 +575,16 @@ export default function MenuClient() {
     return {}
   }
   function badgeStyle(): React.CSSProperties {
-    // Classic Italian tricolor badge (requested): green / white / red.
-    // Used ONLY for category badges (Pasta / Pizza / Lunch / etc).
+    // Default: Classic Italian tricolor badge (kept for existing tenants that expect it).
+    // Tenant override: South Fork Grille uses a clean neutral badge (if enabled).
+    if (tenant === 'south-fork-grille') {
+      const sfg = {
+        background: 'rgba(0,0,0,0.05)',
+        color: '#111827',
+        borderColor: 'rgba(17,24,39,0.12)',
+      } satisfies React.CSSProperties
+      return sfg
+    }
     const italian = {
       backgroundImage: 'linear-gradient(90deg, #008C45 0%, #008C45 33%, #F4F5F0 33%, #F4F5F0 66%, #CD212A 66%, #CD212A 100%)',
       color: '#111827',
@@ -692,57 +702,11 @@ export default function MenuClient() {
 
       {/* No special-case banner */}
 
-      {/* Subtle Specials ribbon */}
-      {showSpecials && (
-        <div className="max-w-7xl mx-auto px-4 mb-4">
-          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
-            {specialsText}
-          </div>
-        </div>
-      )}
-
-      {/* Signature (data-flagged) */}
-      {showSignatureGrid && (
-        <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex flex-col items-center mb-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
-            </div>
-            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {resolveFeatured().map((it) => {
-              return (
-                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
-                  <div className="p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
-                        {/* optional pairing copy can be added via copy data */}
-                      </div>
-                      {typeof it.price === 'number' && it.price > 0 && (
-                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
-                      )}
-                    </div>
-                    <div className="mt-3 flex justify-end">
-                      <button
-                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${it.name}`) }}
-                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
-                        aria-label={`Ask about ${it.name}`}
-                      >
-                        Ask AI
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+      {/*
+        Layout note:
+        - For South Fork Grille we want signature dishes directly UNDER the hero image.
+        - For other tenants, keep the original order.
+      */}
 
       {/* Hero section (variant-driven) */}
       {heroVariant !== 'none' && (
@@ -784,6 +748,105 @@ export default function MenuClient() {
           </div>
             {/* Divider */}
             <div className="w-full h-1.5" style={{ background: 'var(--muted)' }} />
+        </div>
+      )}
+
+      {/* Signature (data-flagged) — South Fork placement: directly under hero */}
+      {tenant === 'south-fork-grille' && showSignatureGrid && (
+        <div className="max-w-7xl mx-auto px-4 mt-5 mb-6">
+          <div className="flex flex-col items-center mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.06)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
+            </div>
+            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {resolveFeatured().map((it) => {
+              return (
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
+                      </div>
+                      {typeof it.price === 'number' && it.price > 0 && (
+                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
+                      )}
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${it.name}`) }}
+                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
+                        aria-label={`Ask about ${it.name}`}
+                      >
+                        Ask AI
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Subtle Specials ribbon */}
+      {showSpecials && (
+        <div className="max-w-7xl mx-auto px-4 mb-4">
+          <div
+            className="rounded-lg px-3 py-2 text-sm"
+            style={tenant === 'south-fork-grille'
+              ? { background:'linear-gradient(90deg, rgba(202,162,92,0.16), rgba(255,255,255,0))', border:'1px solid rgba(202,162,92,0.22)', color:'#101010' }
+              : { background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }
+            }
+          >
+            {specialsText}
+          </div>
+        </div>
+      )}
+
+      {/* Signature (data-flagged) — legacy placement for other tenants */}
+      {tenant !== 'south-fork-grille' && showSignatureGrid && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div className="flex flex-col items-center mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" stroke="#0b0b0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
+            </div>
+            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {resolveFeatured().map((it) => {
+              return (
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
+                      </div>
+                      {typeof it.price === 'number' && it.price > 0 && (
+                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
+                      )}
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${it.name}`) }}
+                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
+                        aria-label={`Ask about ${it.name}`}
+                      >
+                        Ask AI
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
@@ -892,7 +955,7 @@ export default function MenuClient() {
         </div>
 
         {/* Dietary Filters (compact dropdown) */}
-        {filtersOpen && (
+        {filtersOpen && showDietaryFilters && (
           <div className="flex gap-2 justify-center flex-wrap">
             {dietaryOptions.map(option => (
               <button
@@ -922,6 +985,11 @@ export default function MenuClient() {
                 Clear all
               </button>
             )}
+          </div>
+        )}
+        {filtersOpen && !showDietaryFilters && tenant === 'south-fork-grille' && (
+          <div className="text-center text-xs" style={{ color: 'var(--ink)', opacity: 0.72 }}>
+            Dietary filters are hidden for accuracy. Use <span className="font-semibold">Ask AI</span> to check ingredients/allergens.
           </div>
         )}
       </div>
@@ -1076,7 +1144,7 @@ export default function MenuClient() {
                           })()
                         )}
                       </div>
-                      {!isAdmin && (
+                      {!isAdmin && showCategoryBadges && (
                         <div className="flex flex-wrap gap-1 mb-2">
                           {[category.name.toUpperCase()].map(badge => (
                             <span
@@ -1304,7 +1372,9 @@ export default function MenuClient() {
                 </button>
               </div>
               <p className="text-sm text-gray-600 mt-2">
-                Ask about ingredients, allergens, or recommendations
+                {tenant === 'south-fork-grille'
+                  ? 'Ask about ingredients or allergens (we’ll answer from the current menu text, but always confirm with staff for severe allergies).'
+                  : 'Ask about ingredients, allergens, or recommendations'}
               </p>
             </div>
             

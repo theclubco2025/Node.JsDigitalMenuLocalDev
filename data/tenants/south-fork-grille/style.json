@@ -3,11 +3,13 @@
   "navVariant": "chipScroller",
   "motion": "subtle",
   "texture": { "vignette": true, "paper": false },
-  "accentSecondary": "#2563eb",
+  "accentSecondary": "#8b6a2b",
   "flags": {
     "specials": true,
     "signatureGrid": true,
-    "hideCart": true
+    "hideCart": true,
+    "dietaryFilters": false,
+    "categoryBadges": false
   },
   "featuredIds": [
     "i-sfg-dinner-miso-marinated-chilean-sea-bass",
