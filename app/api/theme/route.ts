@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { InputJsonValue } from '@prisma/client/runtime/library'
+import type { Prisma } from '@prisma/client'
 import { resolveTenant } from '@/lib/tenant'
 import { getTheme } from '@/lib/theme'
 
@@ -85,12 +85,12 @@ export async function POST(request: NextRequest) {
             ...(currentSettings as Record<string, unknown>)?.['theme'] as Record<string, unknown> || {},
             ...nextTheme,
           },
-        } as unknown as InputJsonValue,
+        } as Prisma.InputJsonValue,
       },
       create: {
         slug: tenant,
         name: tenant,
-        settings: { theme: nextTheme } as unknown as InputJsonValue,
+        settings: { theme: nextTheme } as Prisma.InputJsonValue,
       },
     })
 

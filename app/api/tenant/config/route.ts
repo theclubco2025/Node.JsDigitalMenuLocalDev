@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { promises as fs } from 'fs'
 import path from 'path'
-import type { PrismaClient } from '@prisma/client'
-import type { InputJsonValue } from '@prisma/client/runtime/library'
+import type { PrismaClient, Prisma } from '@prisma/client'
 
 type TenantConfigJson = Record<string, unknown> | null
 
@@ -164,8 +163,8 @@ export async function POST(request: NextRequest) {
 
     await prisma.tenant.upsert({
       where: { slug: tenant },
-      update: { settings: merged as unknown as InputJsonValue },
-      create: { slug: tenant, name: tenant, settings: merged as unknown as InputJsonValue },
+      update: { settings: merged as Prisma.InputJsonValue },
+      create: { slug: tenant, name: tenant, settings: merged as Prisma.InputJsonValue },
     })
 
     return NextResponse.json({ ok: true })

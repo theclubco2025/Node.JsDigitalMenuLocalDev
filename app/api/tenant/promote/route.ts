@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import type { PrismaClient } from '@prisma/client'
-import type { InputJsonValue } from '@prisma/client/runtime/library'
+import type { PrismaClient, Prisma } from '@prisma/client'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { writeMenu } from '@/lib/data/menu'
@@ -60,14 +59,14 @@ export async function POST(request: NextRequest) {
             ...(style ? { style } : {}),
             ...(copy ? { copy } : {}),
             ...(theme ? { theme } : {}),
-          } as unknown as InputJsonValue) },
+          } as Prisma.InputJsonValue) },
           create: { slug: to, name: to, settings: ({
             ...(brand ? { brand } : {}),
             ...(images ? { images } : {}),
             ...(style ? { style } : {}),
             ...(copy ? { copy } : {}),
             ...(theme ? { theme } : {}),
-          } as unknown as InputJsonValue) },
+          } as Prisma.InputJsonValue) },
         })
 
         // Persist menu if present (via shared writer → DB when available)
@@ -92,8 +91,8 @@ export async function POST(request: NextRequest) {
     // Upsert target tenant and copy settings
     const target = await prisma.tenant.upsert({
       where: { slug: to },
-      update: { name: srcTenant.name, settings: (srcTenant.settings as unknown as InputJsonValue) },
-      create: { slug: to, name: srcTenant.name, settings: (srcTenant.settings as unknown as InputJsonValue) }
+      update: { name: srcTenant.name, settings: (srcTenant.settings as Prisma.InputJsonValue) },
+      create: { slug: to, name: srcTenant.name, settings: (srcTenant.settings as Prisma.InputJsonValue) }
     })
 
     if (srcMenu) {
