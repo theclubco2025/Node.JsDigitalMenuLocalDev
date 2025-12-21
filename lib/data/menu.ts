@@ -152,6 +152,11 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
   const isPreview = process.env.VERCEL_ENV === 'preview'
   // Safety: in production, do NOT fall back from <slug> â†’ <slug>-draft
   const fallbackTenant = (!tenant.endsWith('-draft') && isPreview) ? `${tenant}-draft` : null
+
+  const maybeEnrich = (slug: string, menu: MenuResponse): MenuResponse => {
+    return isSouthForkTenant(slug) ? enrichSouthForkDietTags(menu) : menu
+  }
+
   // If DATABASE_URL exists, prefer DB
   if (process.env.DATABASE_URL) {
     try {
@@ -205,7 +210,8 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
             })),
           })),
         };
-        return normalizeMenu(dbMenu);
+        const normalized = normalizeMenu(dbMenu);
+        return maybeEnrich(tenant, normalized);
       }
     } catch {
       // fall back to FS below
@@ -219,7 +225,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
         const buf = await fs.readFile(path.join(base, slug, "menu.json"), "utf8")
         const json = JSON.parse(buf)
         if (!json || !Array.isArray(json.categories)) return null
-        return normalizeMenu(json)
+        return maybeEnrich(slug, normalizeMenu(json))
       } catch {
         return null
       }
@@ -234,8 +240,8 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
     return tenant === 'demo' ? STUB : { categories: [] };
   } catch {
     // Fallback to in-memory override if present; otherwise avoid stub for non-demo tenants
-    if (memoryStore.has(tenant)) return memoryStore.get(tenant)!;
-    if (fallbackTenant && memoryStore.has(fallbackTenant)) return memoryStore.get(fallbackTenant)!;
+    if (memoryStore.has(tenant)) return maybeEnrich(tenant, memoryStore.get(tenant)!);
+    if (fallbackTenant && memoryStore.has(fallbackTenant)) return maybeEnrich(fallbackTenant, memoryStore.get(fallbackTenant)!);
     return tenant === 'demo' ? STUB : { categories: [] };
   }
 }
@@ -296,17 +302,91 @@ export async function getMenuForTenant(tenantId: string): Promise<MenuResponse> 
   return readMenu(tenantId)
 }
 
-export function filterMenuByDiet(menu: MenuResponse, filters: { vegan?: boolean; glutenFree?: boolean; dairyFree?: boolean } = {}): MenuResponse {
+function normalizeText(s: unknown): string {
+  return String(s ?? '').toLowerCase()
+}
+
+function isSouthForkTenant(tenantId: string): boolean {
+  return normalizeText(tenantId).startsWith('south-fork-grille')
+}
+
+// South Fork menu data currently ships with empty tags. To keep filters accurate and sellable,
+// we enrich items with dietary tags using deterministic keyword heuristics.
+function classifyDietTagsFromText(name: string, description: string): Set<string> {
+  const text = (name + ' ' + (description || '')).toLowerCase()
+  const hasAny = (words: string[]) => words.some(w => text.includes(w))
+
+  const meatFish = [
+    'beef','steak','burger','pork','bacon','ham','sausage','chicken','turkey','lamb','duck',
+    'prosciutto','pepperoni','salami',
+    'fish','salmon','tuna','ahi','sea bass','bass','shrimp','prawn','crab','lobster','mussel','mussels','clam','clams','oyster','octopus','squid',
+  ]
+  const dairy = [
+    'butter','cream','cheese','cheddar','parmesan','mozzarella','ricotta','yogurt','milk',
+    'aioli','mayo','mayonnaise',
+  ]
+  const eggs = ['egg','eggs','yolk','mayo','mayonnaise','aioli']
+  const gluten = [
+    'bread','bun','croissant','naan','crostini','wonton','panko','flour','pasta','noodle','noodles',
+    'tempura','beer battered','soy sauce','teriyaki','udon','ramen','tortilla',
+  ]
+  const nuts = [
+    'nut','nuts','peanut','peanuts','almond','almonds','walnut','walnuts','pecan','pecans','cashew','cashews','pistachio','pistachios',
+    'macadamia','macadamias','pine nut','pine nuts','hazelnut','hazelnuts',
+  ]
+
+  const hasMeatFish = hasAny(meatFish)
+  const hasDairy = hasAny(dairy)
+  const hasEggs = hasAny(eggs)
+  const hasGluten = hasAny(gluten)
+  const hasNuts = hasAny(nuts)
+
+  const out = new Set<string>()
+
+  if (!hasMeatFish) out.add('vegetarian')
+  if (!hasMeatFish && !hasDairy && !hasEggs && !text.includes('honey')) out.add('vegan')
+
+  if (!hasGluten) out.add('gluten-free')
+  if (!hasDairy && !hasEggs) out.add('dairy-free')
+  if (!hasNuts) out.add('nut-free')
+
+  return out
+}
+
+function enrichSouthForkDietTags(menu: import('@/types/api').MenuResponse): import('@/types/api').MenuResponse {
+  const categories = menu.categories.map(c => ({
+    ...c,
+    items: c.items.map(it => {
+      const existing = (it.tags || []).map(t => String(t).toLowerCase()).filter(Boolean)
+      const inferred = classifyDietTagsFromText(it.name, it.description || '')
+      const merged = new Set<string>(existing)
+      for (const t of Array.from(inferred)) merged.add(t)
+      // Ensure vegan implies vegetarian for filtering UX consistency
+      if (merged.has('vegan')) merged.add('vegetarian')
+      return { ...it, tags: Array.from(merged) }
+    })
+  }))
+  return { categories }
+}
+
+export function filterMenuByDiet(
+  menu: MenuResponse,
+  filters: { vegetarian?: boolean; vegan?: boolean; glutenFree?: boolean; dairyFree?: boolean; nutFree?: boolean } = {}
+): MenuResponse {
   const wants = {
+    vegetarian: !!filters.vegetarian,
     vegan: !!filters.vegan,
     glutenFree: !!filters.glutenFree,
     dairyFree: !!filters.dairyFree,
+    nutFree: !!filters.nutFree,
   }
   const hasAll = (item: MenuItem) => {
     const tags = (item.tags || []).map(t => t.toLowerCase())
+    if (wants.vegetarian && !tags.includes('vegetarian')) return false
     if (wants.vegan && !tags.includes('vegan')) return false
     if (wants.glutenFree && !tags.includes('gluten-free')) return false
     if (wants.dairyFree && !tags.includes('dairy-free')) return false
+    if (wants.nutFree && !tags.includes('nut-free')) return false
     return true
   }
   const categories: MenuCategory[] = menu.categories
