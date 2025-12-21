@@ -161,7 +161,8 @@ export default function MenuClient() {
   const showSpecials = Boolean(flags.specials && specialsText)
   const showSignatureGrid = Boolean(flags.signatureGrid)
   const hideCart = Boolean(flags.hideCart)
-  const showDietaryFilters = flags.dietaryFilters !== false
+  // South Fork: show dietary filters by default and keep AI in the loop.
+  const showDietaryFilters = isSouthFork ? true : (flags.dietaryFilters !== false)
   const showCategoryBadges = flags.categoryBadges !== false
 
   // Admin inline edit state
@@ -1072,9 +1073,10 @@ export default function MenuClient() {
           )}
         </div>
 
-        {/* Dietary Filters (compact dropdown) */}
+        {/* Dietary Filters (shown by default for South Fork; toggle still works) */}
         {filtersOpen && showDietaryFilters && (
-          <div className="flex gap-2 justify-center flex-wrap">
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex gap-2 justify-center flex-wrap">
             {dietaryOptions.map(option => (
               <button
                 key={option}
@@ -1088,7 +1090,10 @@ export default function MenuClient() {
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
                 style={selectedDietaryFilters.includes(option)
                   ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
-                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                  : (isSouthFork
+                      ? { background: 'rgba(255,255,255,0.92)', color: '#0b0b0b', border: '1px solid rgba(0,0,0,0.12)' }
+                      : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                    )
                 }
               >
                 {option}
@@ -1098,16 +1103,18 @@ export default function MenuClient() {
               <button
                 onClick={() => { setSearchQuery(''); setSelectedDietaryFilters([]); setActiveSection('All'); setSelectedCategories([]) }}
                 className="px-3 py-1 rounded-full text-xs font-medium"
-                style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+                style={isSouthFork
+                  ? { background: 'rgba(255,255,255,0.92)', color: '#0b0b0b', border: '1px solid rgba(0,0,0,0.12)' }
+                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                }
               >
                 Clear all
               </button>
             )}
-          </div>
-        )}
-        {filtersOpen && !showDietaryFilters && tenant === 'south-fork-grille' && (
-          <div className="text-center text-xs" style={{ color: 'var(--ink)', opacity: 0.72 }}>
-            Dietary filters are hidden for accuracy. Use <span className="font-semibold">Ask AI</span> to check ingredients/allergens.
+            </div>
+            <div className="text-center text-xs" style={{ color: isSouthFork ? '#0b0b0b' : 'var(--ink)', opacity: 0.72 }}>
+              Tip: use <span className="font-semibold">Ask AI</span> to ask about ingredients and allergens.
+            </div>
           </div>
         )}
       </div>
