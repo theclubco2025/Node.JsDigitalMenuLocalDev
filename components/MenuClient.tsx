@@ -76,6 +76,7 @@ export default function MenuClient() {
   const tenant = isBrowser
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
+  const isSouthFork = tenant.startsWith('south-fork-grille')
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
@@ -167,6 +168,23 @@ export default function MenuClient() {
     if (n.includes('dessert') || n.includes('sweet')) return 'Dessert'
     if (n.includes('beer') || n.includes('beers') || n.includes('wine') || n.includes('cocktail') || n.includes('drinks') || n.includes('beverage')) return 'Drinks'
     return 'Dinner'
+  }
+
+
+  const stripSouthForkPrefix = (name: string): string => {
+    if (!isSouthFork) return name
+    const raw = (name || '').trim()
+    const lower = raw.toLowerCase()
+    const prefixes = ['dinner', 'lunch', 'breakfast', 'brunch', 'drinks', 'drink', 'kids', 'dessert']
+    for (const p of prefixes) {
+      const p1 = `${p} â€” `
+      const p2 = `${p} - `
+      const p3 = `${p}: `
+      if (lower.startsWith(p1)) return raw.slice(p1.length)
+      if (lower.startsWith(p2)) return raw.slice(p2.length)
+      if (lower.startsWith(p3)) return raw.slice(p3.length)
+    }
+    return raw
   }
 
   const categorySections = useMemo(() => {
@@ -1025,7 +1043,7 @@ export default function MenuClient() {
                       />
                       <span className="inline-flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--ink)' }}>
                         {getCategoryIcon(category)}
-                        <span>{category}</span>
+                        <span>{stripSouthForkPrefix(category)}</span>
                       </span>
                     </label>
                   )
@@ -1115,7 +1133,7 @@ export default function MenuClient() {
                     ) : (
                       getCategoryIcon(category.name)
                     )}
-                    <span>{category.name}</span>
+                    <span>{stripSouthForkPrefix(category.name)}</span>
                   </span>
                 </button>
               ))}
@@ -1151,7 +1169,7 @@ export default function MenuClient() {
                   ) : (
                     getCategoryIcon(category.name)
                   )}
-                  <span>{category.name}</span>
+                  <span>{stripSouthForkPrefix(category.name)}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
