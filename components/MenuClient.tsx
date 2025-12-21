@@ -67,7 +67,14 @@ export default function MenuClient() {
   const [cartBump, setCartBump] = useState(false)
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
-  const [filtersOpen, setFiltersOpen] = useState(false)
+  // South Fork: show filters by default (but allow user to hide via the toggle)
+  const [filtersOpen, setFiltersOpen] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const sp = new URLSearchParams(window.location.search)
+    const t = (sp.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes').toLowerCase()
+    return t.startsWith('south-fork-grille')
+  })
+  const [userToggledFilters, setUserToggledFilters] = useState(false)
   const [showDemoAcknowledgement, setShowDemoAcknowledgement] = useState(false)
 
   // Get tenant/admin from URL params
@@ -76,7 +83,7 @@ export default function MenuClient() {
   const tenant = isBrowser
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
-  const isSouthFork = tenant.startsWith('south-fork-grille')
+  const isSouthFork = tenant.toLowerCase().startsWith('south-fork-grille')
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
@@ -92,6 +99,15 @@ export default function MenuClient() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+
+  // If the app lands on /menu before tenant query is present, ensure South Fork still defaults to open filters.
+  // Respect user intent: once they toggle, don't auto-reopen.
+  useEffect(() => {
+    if (!isSouthFork) return
+    if (userToggledFilters) return
+    if (!filtersOpen) setFiltersOpen(true)
+  }, [isSouthFork, userToggledFilters, filtersOpen])
 
   // Demo reminder (first-visit acknowledgement)
   useEffect(() => {
@@ -971,7 +987,10 @@ export default function MenuClient() {
               </div>
             </div>
             <button
-              onClick={() => setFiltersOpen(o => !o)}
+              onClick={() => {
+                setUserToggledFilters(true)
+                setFiltersOpen(o => !o)
+              }}
               className="px-3 py-2 rounded-md text-sm font-medium"
               style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
             >
