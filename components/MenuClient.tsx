@@ -471,7 +471,7 @@ export default function MenuClient() {
     { key: 'no-nuts-listed', label: 'No nuts listed' },
   ] as const
 
-  const matchesDietFilter = (dietFilter: string, tagList: string[]) => {
+  function matchesDietFilter(dietFilter: string, tagList: string[]) {
     const normalized = dietFilter.toLowerCase()
     switch (normalized) {
       case 'no-gluten-listed':
