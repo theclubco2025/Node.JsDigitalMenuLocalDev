@@ -99,10 +99,14 @@ export async function GET(request: NextRequest) {
       ?? (isNonEmpty(fbDbTheme) ? fbDbTheme : null)
       ?? fbFsTheme
 
-    const images = (isNonEmpty(dbImages) ? dbImages : null)
-      ?? (isNonEmpty(fsImages) ? fsImages : null)
-      ?? (isNonEmpty(fbDbImages) ? fbDbImages : null)
-      ?? fbFsImages
+    // Images should MERGE across sources so DB can override but FS can provide defaults (important for demo).
+    // Precedence (highest last): draft FS < draft DB < live FS < live DB
+    const images = {
+      ...(isNonEmpty(fbFsImages) ? (fbFsImages as Record<string, unknown>) : {}),
+      ...(isNonEmpty(fbDbImages) ? (fbDbImages as Record<string, unknown>) : {}),
+      ...(isNonEmpty(fsImages) ? (fsImages as Record<string, unknown>) : {}),
+      ...(isNonEmpty(dbImages) ? (dbImages as Record<string, unknown>) : {}),
+    }
 
     const style = (isNonEmpty(dbStyle) ? dbStyle : null)
       ?? (isNonEmpty(fsStyle) ? fsStyle : null)
