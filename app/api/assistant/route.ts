@@ -161,9 +161,11 @@ export async function POST(request: NextRequest) {
     // Load menu and apply diet filters
     const menu = await getMenuForTenant(tenantId)
     const filtered = filterMenuByDiet(menu, {
+      vegetarian: !!filters.vegetarian,
       vegan: !!filters.vegan,
       glutenFree: !!filters.glutenFree,
       dairyFree: !!filters.dairyFree,
+      nutFree: !!filters.nutFree,
     })
     const matches = getTopMatches(filtered, query, 18)
     const focused = matchesToMenu(matches, filtered)

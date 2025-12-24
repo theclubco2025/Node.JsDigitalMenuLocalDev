@@ -358,9 +358,11 @@ export default function MenuClient() {
           tenantId: tenant,
           query: userMessage,
           filters: {
+            vegetarian: selectedDietaryFilters.includes('vegetarian'),
             vegan: selectedDietaryFilters.includes('vegan'),
             glutenFree: selectedDietaryFilters.includes('gluten-free'),
-            dairyFree: selectedDietaryFilters.includes('dairy-free')
+            dairyFree: selectedDietaryFilters.includes('dairy-free'),
+            nutFree: selectedDietaryFilters.includes('nut-free')
           }
         })
       })

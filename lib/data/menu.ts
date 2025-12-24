@@ -152,6 +152,13 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
   const isPreview = process.env.VERCEL_ENV === 'preview'
   // Safety: in production, do NOT fall back from <slug> â†’ <slug>-draft
   const fallbackTenant = (!tenant.endsWith('-draft') && isPreview) ? `${tenant}-draft` : null
+
+
+  const maybeEnrich = (slug: string, menu: MenuResponse): MenuResponse => {
+    // If menu already has structured diet/allergen tags, enrichment no-ops per item.
+    // Otherwise we enrich tags conservatively from name/description.
+    return enrichMenuTagsFromText(menu)
+  }
   // If DATABASE_URL exists, prefer DB
   if (process.env.DATABASE_URL) {
     try {
@@ -201,7 +208,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
             })),
           })),
         };
-        return normalizeMenu(dbMenu);
+        return maybeEnrich(tenant, normalizeMenu(dbMenu));
       }
     } catch {
       // fall back to FS below
@@ -215,7 +222,7 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
         const buf = await fs.readFile(path.join(base, slug, "menu.json"), "utf8")
         const json = JSON.parse(buf)
         if (!json || !Array.isArray(json.categories)) return null
-        return normalizeMenu(json)
+        return maybeEnrich(slug, normalizeMenu(json))
       } catch {
         return null
       }
@@ -230,8 +237,8 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
     return tenant === 'demo' ? STUB : { categories: [] };
   } catch {
     // Fallback to in-memory override if present; otherwise avoid stub for non-demo tenants
-    if (memoryStore.has(tenant)) return memoryStore.get(tenant)!;
-    if (fallbackTenant && memoryStore.has(fallbackTenant)) return memoryStore.get(fallbackTenant)!;
+    if (memoryStore.has(tenant)) return maybeEnrich(tenant, memoryStore.get(tenant)!);
+    if (fallbackTenant && memoryStore.has(fallbackTenant)) return maybeEnrich(fallbackTenant, memoryStore.get(fallbackTenant)!);
     return tenant === 'demo' ? STUB : { categories: [] };
   }
 }
@@ -292,17 +299,144 @@ export async function getMenuForTenant(tenantId: string): Promise<MenuResponse> 
   return readMenu(tenantId)
 }
 
-export function filterMenuByDiet(menu: MenuResponse, filters: { vegan?: boolean; glutenFree?: boolean; dairyFree?: boolean } = {}): MenuResponse {
+function normalizeText(s: unknown): string {
+  return String(s ?? '').toLowerCase()
+}
+
+type DietFilterFlags = {
+  vegetarian?: boolean
+  vegan?: boolean
+  glutenFree?: boolean
+  dairyFree?: boolean
+  nutFree?: boolean
+}
+
+type InferredFacts = {
+  containsMeat: boolean
+  containsSeafood: boolean
+  containsDairy: boolean
+  containsEggs: boolean
+  containsGluten: boolean
+  containsNuts: boolean
+  containsHoney: boolean
+  explicitVegetarian: boolean
+  explicitVegan: boolean
+  explicitGlutenFree: boolean
+  explicitDairyFree: boolean
+  explicitNutFree: boolean
+}
+
+function inferFactsFromText(name: string, description: string): InferredFacts {
+  const text = `${name} ${description}`.toLowerCase()
+  const hasAny = (words: string[]) => words.some(w => text.includes(w))
+
+  const meat = [
+    'beef','steak','flank','filet mignon','mignon',
+    'pork','bacon','ham','sausage','chicken','turkey','lamb','duck',
+    'prosciutto','pepperoni','salami','meatball','meatballs',
+  ]
+  const seafood = [
+    'fish','salmon','tuna','ahi','sea bass','chilean sea bass','bass',
+    'shrimp','prawn','prawns','scallop','scallops','mussel','mussels','clam','clams','crab','lobster','oyster','octopus','squid',
+  ]
+  const dairy = [
+    'butter','cream','cheese','cheddar','parmesan','mozzarella','ricotta','milk','yogurt','blue cheese',
+  ]
+  const eggs = ['egg','eggs','yolk','aioli','mayo','mayonnaise']
+  const gluten = [
+    'bread','bun','croissant','naan','crostini','crouton','croutons','wonton','panko','flour',
+    'pasta','ramen','noodle','noodles','tortilla','tempura','beer battered','cornbread',
+    'soy sauce','teriyaki',
+  ]
+  const nuts = [
+    'nut','nuts','peanut','peanuts','almond','almonds','walnut','walnuts','pecan','pecans','cashew','cashews','pistachio','pistachios',
+    'macadamia','macadamias','pine nut','pine nuts','hazelnut','hazelnuts',
+  ]
+
+  const explicitVegetarian = /\bvegetarian\b/i.test(text)
+  const explicitVegan = /\bvegan\b/i.test(text)
+  const explicitGlutenFree = /\bgluten[-\s]?free\b/i.test(text)
+  const explicitDairyFree = /\bdairy[-\s]?free\b/i.test(text)
+  const explicitNutFree = /\bnut[-\s]?free\b/i.test(text)
+
+  return {
+    containsMeat: hasAny(meat),
+    containsSeafood: hasAny(seafood),
+    containsDairy: hasAny(dairy),
+    containsEggs: hasAny(eggs),
+    containsGluten: hasAny(gluten),
+    containsNuts: hasAny(nuts),
+    containsHoney: text.includes('honey'),
+    explicitVegetarian,
+    explicitVegan,
+    explicitGlutenFree,
+    explicitDairyFree,
+    explicitNutFree,
+  }
+}
+
+function shouldEnrichItemTags(existingTags: string[]): boolean {
+  const normalized = existingTags.map(t => t.toLowerCase())
+  const anyKnown = normalized.some(t =>
+    t === 'vegetarian' ||
+    t === 'vegan' ||
+    t === 'gluten-free' ||
+    t === 'dairy-free' ||
+    t === 'nut-free' ||
+    t.startsWith('contains-')
+  )
+  return !anyKnown
+}
+
+function enrichMenuTagsFromText(menu: MenuResponse): MenuResponse {
+  const categories: MenuCategory[] = menu.categories.map(c => ({
+    ...c,
+    items: c.items.map(it => {
+      const existing = (it.tags || []).map(String).map(t => t.trim()).filter(Boolean)
+      if (!shouldEnrichItemTags(existing)) return it
+
+      const facts = inferFactsFromText(it.name, it.description || '')
+      const tags = new Set<string>(existing.map(t => t.toLowerCase()))
+
+      if (facts.containsMeat) tags.add('contains-meat')
+      if (facts.containsSeafood) tags.add('contains-seafood')
+      if (facts.containsDairy) tags.add('contains-dairy')
+      if (facts.containsEggs) tags.add('contains-eggs')
+      if (facts.containsGluten) tags.add('contains-gluten')
+      if (facts.containsNuts) tags.add('contains-nuts')
+      if (facts.containsHoney) tags.add('contains-honey')
+
+      const vegetarian = facts.explicitVegetarian || (!facts.containsMeat && !facts.containsSeafood)
+      const vegan = facts.explicitVegan || (vegetarian && !facts.containsDairy && !facts.containsEggs && !facts.containsHoney)
+      if (vegetarian) tags.add('vegetarian')
+      if (vegan) tags.add('vegan')
+
+      // Free-from tags: only when explicitly stated.
+      if (facts.explicitGlutenFree) tags.add('gluten-free')
+      if (facts.explicitDairyFree) tags.add('dairy-free')
+      if (facts.explicitNutFree) tags.add('nut-free')
+
+      return { ...it, tags: Array.from(tags) }
+    })
+  }))
+  return { categories }
+}
+
+export function filterMenuByDiet(menu: MenuResponse, filters: DietFilterFlags = {}): MenuResponse {
   const wants = {
+    vegetarian: !!filters.vegetarian,
     vegan: !!filters.vegan,
     glutenFree: !!filters.glutenFree,
     dairyFree: !!filters.dairyFree,
+    nutFree: !!filters.nutFree,
   }
   const hasAll = (item: MenuItem) => {
-    const tags = (item.tags || []).map(t => t.toLowerCase())
+    const tags = (item.tags || []).map(t => normalizeText(t))
+    if (wants.vegetarian && !tags.includes('vegetarian')) return false
     if (wants.vegan && !tags.includes('vegan')) return false
     if (wants.glutenFree && !tags.includes('gluten-free')) return false
     if (wants.dairyFree && !tags.includes('dairy-free')) return false
+    if (wants.nutFree && !tags.includes('nut-free')) return false
     return true
   }
   const categories: MenuCategory[] = menu.categories
