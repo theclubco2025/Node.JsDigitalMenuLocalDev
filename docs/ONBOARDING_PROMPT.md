@@ -21,7 +21,14 @@ You are the onboarding agent for `<BUSINESS_NAME>`. Follow this flow exactly so 
 #### 1. Prep draft data (`data/tenants/<slug>-draft/`)
 - Update `brand.json`, `style.json`, `copy.json`, `menu.json` with the client’s answers.
 - Add any feature flags (e.g. `"flags": { "hideCart": true, "emailCapture": true }`).
-- Ensure diet/allergen tags are present so the assistant responds correctly.
+- Dietary/allergen filtering (sellable + safe):
+  - The app supports **diet tags**: `vegetarian`, `vegan`
+  - The app supports **explicit free-from tags** when the menu states them: `gluten-free`, `dairy-free`, `nut-free`
+  - The app supports **â€œNo X listedâ€** filters (UI) by using inferred `contains-*` tags from the itemâ€™s name/description.
+  - **Do not claim â€œgluten-free / dairy-free / nut-freeâ€ unless the menu explicitly states it or the client confirms.**
+  - Always keep the on-page disclaimer visible under filters (already in UI). If you change filter UX, preserve/restore that disclaimer.
+
+  Minimum requirement for onboarding tomorrow: ensure items have a reasonable description; the system will infer `contains-*` tags to power â€œNo X listedâ€ filters.
 
 #### 2. Seed draft → Neon (no redeploy needed)
 ```powershell
