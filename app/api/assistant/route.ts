@@ -163,6 +163,9 @@ export async function POST(request: NextRequest) {
     const filtered = filterMenuByDiet(menu, {
       vegetarian: !!filters.vegetarian,
       vegan: !!filters.vegan,
+      noGlutenListed: !!filters.noGlutenListed,
+      noDairyListed: !!filters.noDairyListed,
+      noNutsListed: !!filters.noNutsListed,
       glutenFree: !!filters.glutenFree,
       dairyFree: !!filters.dairyFree,
       nutFree: !!filters.nutFree,

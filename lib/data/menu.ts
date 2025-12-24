@@ -306,6 +306,9 @@ function normalizeText(s: unknown): string {
 type DietFilterFlags = {
   vegetarian?: boolean
   vegan?: boolean
+  noGlutenListed?: boolean
+  noDairyListed?: boolean
+  noNutsListed?: boolean
   glutenFree?: boolean
   dairyFree?: boolean
   nutFree?: boolean

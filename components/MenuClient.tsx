@@ -175,11 +175,10 @@ export default function MenuClient() {
             if (!matchesName && !matchesDescription && !matchesTags) return false
           }
           // Dietary filters (must have all selected dietary tags)
-          const hasTags = (item.tags || []).length > 0
           if (selectedDietaryFilters.length > 0) {
-            if (!hasTags) return false
+            const tagList = (item.tags || []).map(t => String(t).toLowerCase())
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
-              (item.tags || []).some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
+              matchesDietFilter(dietFilter, tagList)
             )
             if (!hasAllDietaryFilters) return false
           }
@@ -360,9 +359,9 @@ export default function MenuClient() {
           filters: {
             vegetarian: selectedDietaryFilters.includes('vegetarian'),
             vegan: selectedDietaryFilters.includes('vegan'),
-            glutenFree: selectedDietaryFilters.includes('gluten-free'),
-            dairyFree: selectedDietaryFilters.includes('dairy-free'),
-            nutFree: selectedDietaryFilters.includes('nut-free')
+            noGlutenListed: selectedDietaryFilters.includes('no-gluten-listed'),
+            noDairyListed: selectedDietaryFilters.includes('no-dairy-listed'),
+            noNutsListed: selectedDietaryFilters.includes('no-nuts-listed'),
           }
         })
       })
@@ -388,8 +387,28 @@ export default function MenuClient() {
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
 
-  const dietaryOptions = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free']
-  
+  const dietaryOptions = [
+    { key: 'vegetarian', label: 'Vegetarian' },
+    { key: 'vegan', label: 'Vegan' },
+    { key: 'no-gluten-listed', label: 'No gluten listed' },
+    { key: 'no-dairy-listed', label: 'No dairy listed' },
+    { key: 'no-nuts-listed', label: 'No nuts listed' },
+  ] as const
+
+  const matchesDietFilter = (dietFilter: string, tagList: string[]) => {
+    const normalized = dietFilter.toLowerCase()
+    switch (normalized) {
+      case 'no-gluten-listed':
+        return tagList.includes('gluten-free') || !tagList.includes('contains-gluten')
+      case 'no-dairy-listed':
+        return tagList.includes('dairy-free') || !tagList.includes('contains-dairy')
+      case 'no-nuts-listed':
+        return tagList.includes('nut-free') || !tagList.includes('contains-nuts')
+      default:
+        return tagList.includes(normalized)
+    }
+  }
+
   const scrollTo = (elementId: string) => {
     if (typeof window === 'undefined') return
     const el = document.getElementById(elementId)
@@ -896,21 +915,21 @@ export default function MenuClient() {
           <div className="flex gap-2 justify-center flex-wrap">
             {dietaryOptions.map(option => (
               <button
-                key={option}
+                key={option.key}
                 onClick={() => {
                   setSelectedDietaryFilters(prev => 
-                    prev.includes(option)
-                      ? prev.filter(f => f !== option)
-                      : [...prev, option]
+                    prev.includes(option.key)
+                      ? prev.filter(f => f !== option.key)
+                      : [...prev, option.key]
                   )
                 }}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
-                style={selectedDietaryFilters.includes(option)
+                style={selectedDietaryFilters.includes(option.key)
                   ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
                   : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
                 }
               >
-                {option}
+                {option.label}
               </button>
             ))}
             {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
@@ -976,6 +995,26 @@ export default function MenuClient() {
 
         {/* Menu Grid */}
         <div className="space-y-12 lg:col-span-9" id="top">
+          {filteredCategories.length === 0 && (
+            <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--muted)' }}>
+              <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+                No items match your filters
+              </div>
+              <div className="mt-1 text-xs" style={{ color: 'var(--ink)', opacity: 0.78 }}>
+                This menu may not list enough ingredient details to filter reliably. Try removing the â€œNo gluten/dairy/nuts listedâ€ filters,
+                or use <span className="font-semibold">Ask AI</span> / ask staff for allergy needs.
+              </div>
+              <div className="mt-3 flex justify-center">
+                <button
+                  onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
+                  className="px-3 py-2 rounded-md text-xs font-semibold"
+                  style={{ background: 'var(--accent)', color: '#0b0b0b' }}
+                >
+                  Clear all filters
+                </button>
+              </div>
+            </div>
+          )}
           {filteredCategories.map((category, idx) => (
             <div
               key={category.id}
