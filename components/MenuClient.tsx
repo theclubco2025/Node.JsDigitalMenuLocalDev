@@ -474,13 +474,22 @@ export default function MenuClient() {
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
 
-  const dietaryOptions = [
-    { key: 'vegetarian', label: 'Vegetarian' },
-    { key: 'vegan', label: 'Vegan' },
-    { key: 'no-gluten-listed', label: 'No gluten listed' },
-    { key: 'no-dairy-listed', label: 'No dairy listed' },
-    { key: 'no-nuts-listed', label: 'No nuts listed' },
-  ] as const
+  // Demo: only show Vegetarian/Vegan. Others: only show No-X-listed if at least one item matches.
+  const dietaryOptions = useMemo(() => {
+    const vegOnly = DIETARY_OPTIONS_BASE.filter(o => o.key === 'vegetarian' || o.key === 'vegan')
+    if (tenant === 'demo') return vegOnly
+
+    const allItems = (baseMenu?.categories ?? []).flatMap(c => c.items ?? [])
+    const hasAnyMatch = (key: string) => allItems.some(it => {
+      const tagList = (it.tags || []).map(t => String(t).toLowerCase())
+      return matchesDietFilter(key, tagList)
+    })
+
+    return DIETARY_OPTIONS_BASE.filter(o => {
+      if (o.key === 'vegetarian' || o.key === 'vegan') return true
+      return hasAnyMatch(o.key)
+    })
+  }, [tenant, baseMenu])
 
   function matchesDietFilter(dietFilter: string, tagList: string[]) {
     const normalized = dietFilter.toLowerCase()
