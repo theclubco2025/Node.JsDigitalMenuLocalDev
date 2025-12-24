@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { resolveTenant } from '@/lib/tenant'
 import { readMenu } from '@/lib/data/menu'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,6 +12,19 @@ export async function GET(request: NextRequest) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     if (!isPreview && tenant.endsWith('-draft')) {
       return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+    }
+
+    // Paid-gate (production only): do not serve live menus for unpaid tenants.
+    // Preview must remain viewable for client review.
+    if (!isPreview && tenant !== 'demo' && !tenant.endsWith('-draft') && process.env.DATABASE_URL) {
+      const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })
+      if (row?.status !== 'ACTIVE') {
+        const billingUrl = `/billing?tenant=${encodeURIComponent(tenant)}`
+        return NextResponse.json(
+          { error: 'payment_required', billingUrl },
+          { status: 402, headers: { 'Cache-Control': 'no-store' } }
+        )
+      }
     }
     const q = searchParams.get('q') || undefined
 

@@ -12,11 +12,24 @@ function webhookSecret() {
 
 async function updateTenantFromSession(session: Stripe.Checkout.Session) {
   const tenantSlug = String(session.metadata?.tenant || '').trim()
-  const plan = String(session.metadata?.plan || '').trim().toUpperCase()
   if (!tenantSlug) return
 
+  const stripe = getStripe()
   const customerId = typeof session.customer === 'string' ? session.customer : null
   const subscriptionId = typeof session.subscription === 'string' ? session.subscription : null
+
+  // Try to fetch subscription details for period end / cancel flags.
+  let currentPeriodEnd: Date | undefined
+  let cancelAtPeriodEnd: boolean | undefined
+  if (subscriptionId) {
+    try {
+      const sub = await stripe.subscriptions.retrieve(subscriptionId)
+      currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : undefined
+      cancelAtPeriodEnd = !!sub.cancel_at_period_end
+    } catch {
+      // ignore
+    }
+  }
 
   await prisma.tenant.updateMany({
     where: { slug: tenantSlug },
@@ -24,7 +37,8 @@ async function updateTenantFromSession(session: Stripe.Checkout.Session) {
       stripeCustomerId: customerId || undefined,
       stripeSubscriptionId: subscriptionId || undefined,
       status: 'ACTIVE',
-      plan: (plan === 'PREMIUM' || plan === 'ENTERPRISE') ? (plan as 'PREMIUM' | 'ENTERPRISE') : 'BASIC',
+      currentPeriodEnd,
+      ...(typeof cancelAtPeriodEnd === 'boolean' ? { cancelAtPeriodEnd } : {}),
     },
   })
 }
@@ -35,6 +49,34 @@ async function markTenantCanceledBySubscription(subscription: Stripe.Subscriptio
     where: { stripeSubscriptionId: subscriptionId },
     data: { status: 'CANCELED', cancelAtPeriodEnd: false },
   })
+}
+
+async function markTenantSuspendedBySubscriptionId(subscriptionId: string) {
+  await prisma.tenant.updateMany({
+    where: { stripeSubscriptionId: subscriptionId },
+    data: { status: 'SUSPENDED' },
+  })
+}
+
+async function markTenantActiveBySubscriptionId(subscriptionId: string) {
+  const stripe = getStripe()
+  try {
+    const sub = await stripe.subscriptions.retrieve(subscriptionId)
+    await prisma.tenant.updateMany({
+      where: { stripeSubscriptionId: subscriptionId },
+      data: {
+        status: 'ACTIVE',
+        currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : undefined,
+        cancelAtPeriodEnd: !!sub.cancel_at_period_end,
+      },
+    })
+  } catch {
+    // fallback: still flip active
+    await prisma.tenant.updateMany({
+      where: { stripeSubscriptionId: subscriptionId },
+      data: { status: 'ACTIVE' },
+    })
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -60,6 +102,18 @@ export async function POST(req: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
         await updateTenantFromSession(session)
+        break
+      }
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice
+        const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : null
+        if (subscriptionId) await markTenantActiveBySubscriptionId(subscriptionId)
+        break
+      }
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice
+        const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : null
+        if (subscriptionId) await markTenantSuspendedBySubscriptionId(subscriptionId)
         break
       }
       case 'customer.subscription.deleted': {

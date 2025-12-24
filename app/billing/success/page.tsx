@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export default function BillingSuccessPage() {
   const tenant = useMemo(() => {
@@ -9,23 +9,86 @@ export default function BillingSuccessPage() {
     return (sp.get('tenant') || '').trim()
   }, [])
 
+  const [active, setActive] = useState(false)
+  const [status, setStatus] = useState<string>('')
+
+  const siteUrl = useMemo(() => {
+    if (typeof window === 'undefined') return ''
+    return window.location.origin
+  }, [])
+
+  const liveUrl = tenant ? `${siteUrl.replace(/\/$/, '')}/t/${encodeURIComponent(tenant)}` : ''
+  const qrUrl = liveUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(liveUrl)}`
+    : ''
+
+  useEffect(() => {
+    if (!tenant) return
+    let cancelled = false
+    async function poll() {
+      try {
+        const res = await fetch(`/api/tenant/status?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
+        const json = await res.json().catch(() => null)
+        if (!json || cancelled) return
+        setStatus(String(json.status || ''))
+        setActive(Boolean(json.active))
+      } catch {
+        // ignore
+      }
+    }
+    void poll()
+    const t = setInterval(poll, 1500)
+    return () => {
+      cancelled = true
+      clearInterval(t)
+    }
+  }, [tenant])
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-16">
       <h1 className="text-3xl font-semibold tracking-tight">You’re all set</h1>
       <p className="mt-3 text-neutral-700">
-        Payment succeeded. Your tenant should now be active.
+        Payment succeeded. We’re activating your menu now.
       </p>
       <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
         <div className="text-sm text-neutral-600">Tenant</div>
         <div className="mt-1 font-mono text-sm">{tenant || '(unknown)'}</div>
+        <div className="mt-2 text-xs text-neutral-500">
+          Status: <span className="font-mono">{status || (active ? 'ACTIVE' : 'PENDING')}</span>
+        </div>
       </div>
+
+      {active && tenant ? (
+        <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
+          <div className="text-sm font-medium">Your live link</div>
+          <a className="mt-2 block break-all font-mono text-sm text-blue-700 underline" href={`/t/${encodeURIComponent(tenant)}`}>
+            {`/t/${tenant}`}
+          </a>
+
+          <div className="mt-5 text-sm font-medium">Your QR code</div>
+          <div className="mt-3 flex items-start gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qrUrl} alt="Menu QR code" className="h-44 w-44 rounded-xl border border-neutral-200 bg-white" />
+            <div className="text-sm text-neutral-700">
+              <div>This QR points to your live menu.</div>
+              <a
+                className="mt-3 inline-flex items-center rounded-2xl bg-neutral-900 px-5 py-3 text-sm text-white"
+                href={qrUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Download / Open QR
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+          We haven’t unlocked your tenant yet. This usually takes a few seconds after checkout. Please keep this page open.
+        </div>
+      )}
+
       <div className="mt-6 flex gap-3">
-        <a
-          className="inline-flex items-center rounded-2xl bg-neutral-900 px-5 py-3 text-sm text-white"
-          href={tenant ? `/menu?tenant=${encodeURIComponent(tenant)}` : '/menu'}
-        >
-          View menu
-        </a>
         <a className="inline-flex items-center rounded-2xl border border-neutral-300 px-5 py-3 text-sm" href="/">
           Back to home
         </a>

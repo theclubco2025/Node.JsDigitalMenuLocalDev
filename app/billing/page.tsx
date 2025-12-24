@@ -1,11 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-
-type PlanKey = 'basic' | 'premium' | 'enterprise'
+import { useEffect, useMemo, useState } from 'react'
 
 export default function BillingPage() {
-  const [loading, setLoading] = useState<PlanKey | null>(null)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const tenant = useMemo(() => {
@@ -14,14 +12,14 @@ export default function BillingPage() {
     return (sp.get('tenant') || '').trim()
   }, [])
 
-  async function start(plan: PlanKey) {
+  async function start() {
     setError(null)
-    setLoading(plan)
+    setLoading(true)
     try {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenant, plan }),
+        body: JSON.stringify({ tenant }),
       })
       const json = await res.json()
       if (!json?.ok || !json?.url) {
@@ -32,16 +30,24 @@ export default function BillingPage() {
     } catch (e) {
       setError((e as Error)?.message || 'Could not start checkout')
     } finally {
-      setLoading(null)
+      setLoading(false)
     }
   }
 
+  // Smooth flow: auto-start checkout for unpaid tenants (but still show a fallback button).
+  useEffect(() => {
+    if (!tenant) return
+    // Don't auto-loop if there is an error.
+    if (error) return
+    const t = setTimeout(() => { void start() }, 700)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant])
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-semibold tracking-tight">Activate your monthly plan</h1>
-      <p className="mt-3 text-neutral-700">
-        This page is intended for onboarded restaurants. If you don’t have a tenant slug yet, book a demo and we’ll set it up for you.
-      </p>
+      <h1 className="text-3xl font-semibold tracking-tight">Activate your menu</h1>
+      <p className="mt-3 text-neutral-700">Complete checkout to unlock your live QR + link.</p>
 
       <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
         <div className="text-sm text-neutral-600">Tenant</div>
@@ -54,24 +60,16 @@ export default function BillingPage() {
         </div>
       ) : null}
 
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
-        {([
-          { key: 'basic', title: 'Basic', desc: 'Core menu + assistant' },
-          { key: 'premium', title: 'Premium', desc: 'More customization' },
-          { key: 'enterprise', title: 'Enterprise', desc: 'Multi-location / custom' },
-        ] as const).map((p) => (
-          <div key={p.key} className="rounded-2xl border border-neutral-200 bg-white p-5">
-            <div className="font-medium">{p.title}</div>
-            <div className="mt-1 text-sm text-neutral-600">{p.desc}</div>
-            <button
-              disabled={!tenant || !!loading}
-              onClick={() => start(p.key)}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-neutral-900 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading === p.key ? 'Starting…' : 'Checkout'}
-            </button>
-          </div>
-        ))}
+      <div className="mt-8 rounded-2xl border border-neutral-200 bg-white p-5">
+        <div className="font-medium">One-time onboarding + monthly service</div>
+        <div className="mt-1 text-sm text-neutral-600">This will open a secure Stripe checkout.</div>
+        <button
+          disabled={!tenant || loading}
+          onClick={() => { void start() }}
+          className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-neutral-900 px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? 'Starting…' : 'Continue to Checkout'}
+        </button>
       </div>
     </main>
   )

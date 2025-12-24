@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getStripe, planToPriceId, type StripePlanKey } from '@/lib/stripe'
+import { getStripe, getOnboardingPriceId, getMonthlyPriceId } from '@/lib/stripe'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const BodySchema = z.object({
   tenant: z.string().min(1),
-  plan: z.enum(['basic', 'premium', 'enterprise']).default('basic'),
 })
 
 function baseUrl() {
@@ -23,23 +22,31 @@ export async function POST(req: NextRequest) {
     }
 
     const tenant = parsed.data.tenant.trim()
-    const plan = parsed.data.plan as StripePlanKey
 
     const stripe = getStripe()
-    const priceId = planToPriceId(plan)
+    const monthlyPriceId = getMonthlyPriceId()
+    const onboardingPriceId = getOnboardingPriceId()
 
     const successUrl = `${baseUrl()}/billing/success?tenant=${encodeURIComponent(tenant)}`
     const cancelUrl = `${baseUrl()}/billing?tenant=${encodeURIComponent(tenant)}&canceled=1`
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      line_items: [{ price: priceId, quantity: 1 }],
+      // One-time onboarding fee + monthly subscription in one Checkout session.
+      line_items: [
+        { price: onboardingPriceId, quantity: 1 },
+        { price: monthlyPriceId, quantity: 1 },
+      ],
       success_url: successUrl,
       cancel_url: cancelUrl,
       allow_promotion_codes: true,
+      client_reference_id: tenant,
+      subscription_data: {
+        metadata: { tenant },
+      },
       metadata: {
         tenant,
-        plan,
+        offer: 'onboarding_plus_monthly',
       },
     })
 
