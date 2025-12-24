@@ -164,8 +164,8 @@ export async function POST(request: NextRequest) {
 
     await prisma.tenant.upsert({
       where: { slug: tenant },
-      update: { settings: merged as unknown as InputJsonValue },
-      create: { slug: tenant, name: tenant, settings: merged as unknown as InputJsonValue },
+      update: { settings: merged as InputJsonValue },
+      create: { slug: tenant, name: tenant, settings: merged as InputJsonValue },
     })
 
     return NextResponse.json({ ok: true })

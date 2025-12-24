@@ -85,12 +85,12 @@ export async function POST(request: NextRequest) {
             ...(currentSettings as Record<string, unknown>)?.['theme'] as Record<string, unknown> || {},
             ...nextTheme,
           },
-        } as unknown as InputJsonValue,
+        } as InputJsonValue,
       },
       create: {
         slug: tenant,
         name: tenant,
-        settings: { theme: nextTheme } as unknown as InputJsonValue,
+        settings: { theme: nextTheme } as InputJsonValue,
       },
     })
 

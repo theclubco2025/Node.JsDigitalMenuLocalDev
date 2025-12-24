@@ -51,7 +51,18 @@ type TenantConfig = {
 
 type ThemeCSSVariables = React.CSSProperties & Record<'--bg' | '--text' | '--ink' | '--card' | '--muted' | '--accent', string | undefined>
 
+type DietaryOption = { key: string; label: string }
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+const DIETARY_OPTIONS_BASE: readonly DietaryOption[] = [
+  { key: 'vegetarian', label: 'Vegetarian' },
+  { key: 'vegan', label: 'Vegan' },
+  { key: 'no-gluten-listed', label: 'No gluten listed' },
+  { key: 'no-dairy-listed', label: 'No dairy listed' },
+  { key: 'no-nuts-listed', label: 'No nuts listed' },
+]
+
 
 export default function MenuClient() {
   const [searchQuery, setSearchQuery] = useState('')

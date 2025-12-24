@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { MenuResponse, MenuCategory, MenuItem } from "@/types/api";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 
 // Simple in-memory override store (used when filesystem is unavailable)
 const memoryStore = new Map<string, MenuResponse>();
@@ -193,16 +193,20 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
         menu = fbRow?.menus?.[0]
       }
       if (menu) {
+        type DbTag = { tag: string }
+        type DbItem = { id: string; name: string; description: string | null; price: unknown; tags: DbTag[]; imageUrl: string | null; calories: number | null }
+        type DbCategory = { id: string; name: string; items: DbItem[] }
+
         const dbMenu: RawMenu = {
-          categories: menu.categories.map(c => ({
+          categories: (menu.categories as unknown as DbCategory[]).map((c) => ({
             id: c.id,
             name: c.name,
-            items: c.items.map(i => ({
+            items: c.items.map((i) => ({
               id: i.id,
               name: i.name,
               description: i.description || '',
               price: Number(i.price),
-              tags: i.tags.map(t => t.tag),
+              tags: i.tags.map((t) => t.tag),
               imageUrl: i.imageUrl || undefined,
               calories: i.calories || undefined,
             })),
@@ -250,7 +254,7 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
     try {
       const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
       if (!prisma) throw new Error('prisma-not-ready')
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Ensure tenant exists
         const tenantRow = await tx.tenant.upsert({
           where: { slug: tenant },
@@ -392,7 +396,7 @@ function shouldEnrichItemTags(existingTags: string[]): boolean {
 }
 
 function enrichMenuTagsFromText(menu: MenuResponse): MenuResponse {
-  const categories: MenuCategory[] = menu.categories.map(c => ({
+  const categories: MenuCategory[] = menu.categories.map((c) => ({
     ...c,
     items: c.items.map(it => {
       const existing = (it.tags || []).map(String).map(t => t.trim()).filter(Boolean)
@@ -429,6 +433,9 @@ export function filterMenuByDiet(menu: MenuResponse, filters: DietFilterFlags = 
   const wants = {
     vegetarian: !!filters.vegetarian,
     vegan: !!filters.vegan,
+    noGlutenListed: !!filters.noGlutenListed,
+    noDairyListed: !!filters.noDairyListed,
+    noNutsListed: !!filters.noNutsListed,
     glutenFree: !!filters.glutenFree,
     dairyFree: !!filters.dairyFree,
     nutFree: !!filters.nutFree,
@@ -437,13 +444,16 @@ export function filterMenuByDiet(menu: MenuResponse, filters: DietFilterFlags = 
     const tags = (item.tags || []).map(t => normalizeText(t))
     if (wants.vegetarian && !tags.includes('vegetarian')) return false
     if (wants.vegan && !tags.includes('vegan')) return false
+    if (wants.noGlutenListed && !(tags.includes('gluten-free') || !tags.includes('contains-gluten'))) return false
+    if (wants.noDairyListed && !(tags.includes('dairy-free') || !tags.includes('contains-dairy'))) return false
+    if (wants.noNutsListed && !(tags.includes('nut-free') || !tags.includes('contains-nuts'))) return false
     if (wants.glutenFree && !tags.includes('gluten-free')) return false
     if (wants.dairyFree && !tags.includes('dairy-free')) return false
     if (wants.nutFree && !tags.includes('nut-free')) return false
     return true
   }
   const categories: MenuCategory[] = menu.categories
-    .map(c => ({ ...c, items: c.items.filter(hasAll) }))
+    .map((c) => ({ ...c, items: c.items.filter(hasAll) }))
     .filter(c => c.items.length > 0)
   return { categories }
 }
