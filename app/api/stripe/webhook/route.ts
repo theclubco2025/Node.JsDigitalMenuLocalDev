@@ -31,9 +31,18 @@ async function updateTenantFromSession(session: Stripe.Checkout.Session) {
     }
   }
 
-  await prisma.tenant.updateMany({
+  await prisma.tenant.upsert({
     where: { slug: tenantSlug },
-    data: {
+    update: {
+      stripeCustomerId: customerId || undefined,
+      stripeSubscriptionId: subscriptionId || undefined,
+      status: 'ACTIVE',
+      currentPeriodEnd,
+      ...(typeof cancelAtPeriodEnd === 'boolean' ? { cancelAtPeriodEnd } : {}),
+    },
+    create: {
+      slug: tenantSlug,
+      name: tenantSlug,
       stripeCustomerId: customerId || undefined,
       stripeSubscriptionId: subscriptionId || undefined,
       status: 'ACTIVE',
