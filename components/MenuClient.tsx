@@ -755,18 +755,25 @@ export default function MenuClient() {
                 <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
                   {(() => {
                     const sigSrc = (imageMap[it.id] as string | undefined) || it.imageUrl || ''
-                    if (!sigSrc) return null
+                    if (!sigSrc) {
+                      return (
+                        <div
+                          className="h-28 sm:h-32 w-full"
+                          style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02))' }}
+                        />
+                      )
+                    }
                     return (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={sigSrc}
                         alt={it.name}
-                        className="h-40 w-full object-cover"
+                        className="h-28 sm:h-32 w-full object-cover"
                         loading="lazy"
                         decoding="async"
                       />
                     )
-                  })()}
+})()}
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
