@@ -163,8 +163,8 @@ export async function POST(request: NextRequest) {
 
     await prisma.tenant.upsert({
       where: { slug: tenant },
-      update: { settings: merged as Prisma.InputJsonValue },
-      create: { slug: tenant, name: tenant, settings: merged as Prisma.InputJsonValue },
+      update: { settings: merged as any },
+      create: { slug: tenant, name: tenant, settings: merged as any },
     })
 
     return NextResponse.json({ ok: true })

@@ -194,15 +194,15 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
       }
       if (menu) {
         const dbMenu: RawMenu = {
-          categories: menu.categories.map(c => ({
+          categories: menu.categories.map((c: any) => ({
             id: c.id,
             name: c.name,
-            items: c.items.map(i => ({
+            items: c.items.map((i: any) => ({
               id: i.id,
               name: i.name,
               description: i.description || '',
               price: Number(i.price),
-              tags: i.tags.map(t => t.tag),
+              tags: i.tags.map((t: any) => t.tag),
               imageUrl: i.imageUrl || undefined,
               calories: i.calories || undefined,
             })),
@@ -250,7 +250,7 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
     try {
       const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
       if (!prisma) throw new Error('prisma-not-ready')
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: any) => {
         // Ensure tenant exists
         const tenantRow = await tx.tenant.upsert({
           where: { slug: tenant },
@@ -392,7 +392,7 @@ function shouldEnrichItemTags(existingTags: string[]): boolean {
 }
 
 function enrichMenuTagsFromText(menu: MenuResponse): MenuResponse {
-  const categories: MenuCategory[] = menu.categories.map(c => ({
+  const categories: MenuCategory[] = menu.categories.map((c: any) => ({
     ...c,
     items: c.items.map(it => {
       const existing = (it.tags || []).map(String).map(t => t.trim()).filter(Boolean)
@@ -443,7 +443,7 @@ export function filterMenuByDiet(menu: MenuResponse, filters: DietFilterFlags = 
     return true
   }
   const categories: MenuCategory[] = menu.categories
-    .map(c => ({ ...c, items: c.items.filter(hasAll) }))
+    .map((c: any) => ({ ...c, items: c.items.filter(hasAll) }))
     .filter(c => c.items.length > 0)
   return { categories }
 }

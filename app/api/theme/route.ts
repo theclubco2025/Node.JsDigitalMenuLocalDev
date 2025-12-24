@@ -85,12 +85,12 @@ export async function POST(request: NextRequest) {
             ...(currentSettings as Record<string, unknown>)?.['theme'] as Record<string, unknown> || {},
             ...nextTheme,
           },
-        } as Prisma.InputJsonValue,
+        } as any,
       },
       create: {
         slug: tenant,
         name: tenant,
-        settings: { theme: nextTheme } as Prisma.InputJsonValue,
+        settings: { theme: nextTheme } as any,
       },
     })
 

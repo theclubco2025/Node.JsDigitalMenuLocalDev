@@ -59,14 +59,14 @@ export async function POST(request: NextRequest) {
             ...(style ? { style } : {}),
             ...(copy ? { copy } : {}),
             ...(theme ? { theme } : {}),
-          } as Prisma.InputJsonValue) },
+          } as any) },
           create: { slug: to, name: to, settings: ({
             ...(brand ? { brand } : {}),
             ...(images ? { images } : {}),
             ...(style ? { style } : {}),
             ...(copy ? { copy } : {}),
             ...(theme ? { theme } : {}),
-          } as Prisma.InputJsonValue) },
+          } as any) },
         })
 
         // Persist menu if present (via shared writer → DB when available)
@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
     // Upsert target tenant and copy settings
     const target = await prisma.tenant.upsert({
       where: { slug: to },
-      update: { name: srcTenant.name, settings: (srcTenant.settings as Prisma.InputJsonValue) },
-      create: { slug: to, name: srcTenant.name, settings: (srcTenant.settings as Prisma.InputJsonValue) }
+      update: { name: srcTenant.name, settings: (srcTenant.settings as any) },
+      create: { slug: to, name: srcTenant.name, settings: (srcTenant.settings as any) }
     })
 
     if (srcMenu) {
