@@ -9,8 +9,15 @@ export default function BillingSuccessPage() {
     return (sp.get('tenant') || '').trim()
   }, [])
 
+  const sessionId = useMemo(() => {
+    if (typeof window === 'undefined') return ''
+    const sp = new URLSearchParams(window.location.search)
+    return (sp.get('session_id') || '').trim()
+  }, [])
+
   const [active, setActive] = useState(false)
   const [status, setStatus] = useState<string>('')
+  const [confirmTried, setConfirmTried] = useState(false)
 
   const siteUrl = useMemo(() => {
     if (typeof window === 'undefined') return ''
@@ -43,6 +50,25 @@ export default function BillingSuccessPage() {
       clearInterval(t)
     }
   }, [tenant])
+
+  // If webhook isn't configured yet, we can still activate by confirming the checkout session_id server-side.
+  useEffect(() => {
+    if (!tenant || !sessionId) return
+    if (active) return
+    if (confirmTried) return
+    setConfirmTried(true)
+    ;(async () => {
+      try {
+        await fetch('/api/billing/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenant, session_id: sessionId }),
+        })
+      } catch {
+        // ignore
+      }
+    })()
+  }, [tenant, sessionId, active, confirmTried])
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-16">

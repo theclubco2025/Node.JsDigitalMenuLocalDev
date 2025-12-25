@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     const monthlyPriceId = getMonthlyPriceId()
     const onboardingPriceId = getOnboardingPriceId()
 
-    const successUrl = `${baseUrl()}/billing/success?tenant=${encodeURIComponent(tenant)}`
+    // Include Checkout session id so we can confirm/activate even if webhook signing secret isn't configured yet.
+    const successUrl = `${baseUrl()}/billing/success?tenant=${encodeURIComponent(tenant)}&session_id={CHECKOUT_SESSION_ID}`
     const cancelUrl = `${baseUrl()}/billing?tenant=${encodeURIComponent(tenant)}&canceled=1`
 
     const session = await stripe.checkout.sessions.create({
