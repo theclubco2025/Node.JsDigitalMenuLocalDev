@@ -24,8 +24,9 @@ export default async function MenuPage({ searchParams }: Props) {
   const previewTestPaywall = isPreview && process.env.PREVIEW_TEST_PAYWALL === '1' && tenant === 'demo'
   if (isPreview && !previewTestPaywall) return <MenuClient />
 
-  // Always allow demo + any draft tenants (drafts are blocked elsewhere on prod anyway).
-  if (!tenant || tenant === 'demo' || tenant.endsWith('-draft')) return <MenuClient />
+  // Always allow drafts (drafts are blocked elsewhere on prod anyway).
+  // Allow demo too, except when we're explicitly testing the paywall in preview.
+  if (!tenant || (!previewTestPaywall && tenant === 'demo') || tenant.endsWith('-draft')) return <MenuClient />
 
   // If DB isn't configured (local/demo), don't block.
   if (!process.env.DATABASE_URL) return <MenuClient />

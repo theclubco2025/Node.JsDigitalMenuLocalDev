@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
     env: {
       VERCEL_ENV: process.env.VERCEL_ENV || 'unknown',
       NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || '',
+      PREVIEW_TEST_PAYWALL: process.env.PREVIEW_TEST_PAYWALL || '0',
       DATABASE_URL: bool(process.env.DATABASE_URL),
       STRIPE_SECRET_KEY: bool(process.env.STRIPE_SECRET_KEY),
       STRIPE_WEBHOOK_SECRET: bool(process.env.STRIPE_WEBHOOK_SECRET),

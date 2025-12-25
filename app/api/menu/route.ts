@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
     // Paid-gate (production only): do not serve live menus for unpaid tenants.
     // Preview must remain viewable for client review.
     const previewTestPaywall = isPreview && process.env.PREVIEW_TEST_PAYWALL === '1' && tenant === 'demo'
-    if ((!isPreview || previewTestPaywall) && tenant !== 'demo' && !tenant.endsWith('-draft') && process.env.DATABASE_URL) {
+    // In preview, only enforce payment when explicitly testing the paywall (demo tenant only).
+    // In production, enforce for all non-draft tenants (including demo if you ever point demo at prod).
+    const shouldEnforcePayment = (!isPreview && !tenant.endsWith('-draft')) || previewTestPaywall
+    if (shouldEnforcePayment && !tenant.endsWith('-draft') && process.env.DATABASE_URL) {
       const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })
       if (row?.status !== 'ACTIVE') {
         const billingUrl = `/billing?tenant=${encodeURIComponent(tenant)}`
