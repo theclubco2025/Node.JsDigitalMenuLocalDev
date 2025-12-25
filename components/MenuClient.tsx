@@ -7,11 +7,18 @@ import { useState, useMemo, useEffect } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
 
+const DEMO_PASTA_PHOTO_ITEM_IDS = new Set<string>([
+  'i-fettuccine-bolognese',
+  'i-spaghetti-and-meatballs',
+  'i-chicken-fettuccine-alfredo',
+])
+
 type TenantStyleFlags = {
   flags?: Record<string, boolean>
   navVariant?: string
   heroVariant?: string
   accentSecondary?: string
+  featuredIds?: string[]
   badges?: Record<string, string>
   texture?: { vignette?: boolean; paper?: boolean }
 }
@@ -526,15 +533,8 @@ export default function MenuClient() {
     )
   }
 
-  function getCategoryImage(name: string): string | null {
-    // Demo-only category photos (POC): use local assets
-    if (tenant !== 'demo') return null
-    const n = (name || '').toLowerCase()
-    if (n.includes('pizza')) return '/assets/demo-pizza.jpg'
-    if (n.includes('pasta')) return '/assets/demo-pasta.jpg'
-    if (n.includes('drink') || n.includes('bever')) return '/assets/demo-beverage.jpg'
-    // "Lunch" / sandwiches / handhelds → use calzone photo as a stand-in for now
-    if (n.includes('lunch') || n.includes('sandwich') || n.includes('handheld') || n.includes('calzone')) return '/assets/demo-calzone.jpg'
+  function getCategoryImage(_name: string): string | null {
+    void _name
     return null
   }
 
@@ -607,7 +607,7 @@ export default function MenuClient() {
   }
 
   // Featured picks come from config copy.style.flags/featuredIds or fallback later
-  const featuredItemIds: string[] = copy?.featuredIds ?? []
+  const featuredItemIds: string[] = styleCfg?.featuredIds ?? copy?.featuredIds ?? []
   function cardStyleForCategory(): React.CSSProperties {
     return {}
   }
@@ -983,6 +983,64 @@ export default function MenuClient() {
         )}
       </div>
 
+      {/* Demo Signature (Pasta only) */}
+      {tenant === 'demo' && showSignatureGrid && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div className="flex flex-col items-center mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
+            </div>
+            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {resolveFeatured().map((it) => {
+              const canShow = DEMO_PASTA_PHOTO_ITEM_IDS.has(it.id)
+              const sigSrc = canShow ? (((imageMap[it.id] as string | undefined) || it.imageUrl || '')) : ''
+              return (
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
+                  {sigSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={sigSrc}
+                      alt={it.name}
+                      className="h-28 sm:h-32 w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="h-28 sm:h-32 w-full" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02))' }} />
+                  )}
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
+                      </div>
+                      {typeof it.price === 'number' && it.price > 0 && (
+                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
+                      )}
+                    </div>
+                    {it.description && (
+                      <div className="mt-1 text-xs" style={{ color: 'rgba(16,16,16,0.72)' }}>{it.description}</div>
+                    )}
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage('Tell me about ' + it.name) }}
+                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
+                        aria-label={'Ask about ' + it.name}
+                      >
+                        Ask AI
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
         {/* Current Category Chip */}
@@ -1100,7 +1158,8 @@ export default function MenuClient() {
                     }}
                   >
                     {(() => {
-                      const src = imageMap[item.id] || item.imageUrl || ''
+                      const canShow = tenant !== 'demo' || DEMO_PASTA_PHOTO_ITEM_IDS.has(item.id)
+                      const src = canShow ? (imageMap[item.id] || item.imageUrl || '') : ''
                       if (!src) return null
                       return (
                         <div className="bg-gray-100">
