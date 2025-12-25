@@ -741,7 +741,7 @@ export default function MenuClient() {
       )}
 
       {/* Signature (data-flagged) */}
-      {showSignatureGrid && (
+      {showSignatureGrid && tenant !== 'demo' && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div className="flex flex-col items-center mb-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>

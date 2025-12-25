@@ -2,7 +2,10 @@
   "heroVariant": "none",
   "navVariant": "chipScroller",
   "motion": "subtle",
-  "texture": { "vignette": false, "paper": true },
+  "texture": {
+    "vignette": false,
+    "paper": true
+  },
   "accentSecondary": "#2e7d32",
   "flags": {
     "specials": false,
@@ -14,15 +17,14 @@
     "hideCart": true
   },
   "featuredIds": [
-    "i-margherita-napoletana-14",
     "i-fettuccine-bolognese",
-    "i-prosciutto-arugula-14"
+    "i-spaghetti-and-meatballs",
+    "i-chicken-fettuccine-alfredo"
   ],
   "badges": {
     "category": "Benes"
   },
-  "ab": { "copy": false }
+  "ab": {
+    "copy": false
+  }
 }
-
-
-

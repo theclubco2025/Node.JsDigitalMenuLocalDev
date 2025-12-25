@@ -5,6 +5,14 @@
       "name": "Pasta",
       "items": [
         {
+          "id": "i-spaghetti-bolognese",
+          "name": "Spaghetti Bolognese",
+          "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
+          "price": 23,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
           "id": "i-fettuccine-bolognese",
           "name": "Fettuccine Bolognese",
           "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
@@ -25,14 +33,6 @@
           "name": "Chicken Fettuccine Alfredo",
           "description": "House made alfredo sauce, sliced chicken breast, basil, parmesan.",
           "price": 22,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-spaghetti-bolognese",
-          "name": "Spaghetti Bolognese",
-          "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
-          "price": 23,
           "tags": [],
           "imageUrl": ""
         },
