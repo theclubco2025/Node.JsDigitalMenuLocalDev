@@ -177,7 +177,12 @@ export default function MenuClient() {
   // Filter logic matching your Canvas app exactly (client-side now to avoid API refiring per keystroke)
   const filteredCategories = useMemo(() => {
     if (!baseMenu?.categories) return []
-    return baseMenu.categories
+    const baseCategories = baseMenu.categories.filter(category => {
+      if (tenant !== 'demo') return true
+      const n = String(category.name || '').toLowerCase()
+      return !(category.id === 'c-signature' || n.includes('signature'))
+    })
+    return baseCategories
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
@@ -204,7 +209,7 @@ export default function MenuClient() {
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
+  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters, tenant])
 
   const updateItemField = (
     categoryId: string,
@@ -445,7 +450,14 @@ export default function MenuClient() {
   // Note: avoid early returns before hooks to keep hook order stable
 
   const categories = useMemo(() => menuData?.categories ?? [], [menuData])
-  const allCategories = useMemo(() => categories.map(cat => cat.name), [categories])
+  const allCategories = useMemo(() => {
+    const visible = categories.filter(cat => {
+      if (tenant !== 'demo') return true
+      const n = String(cat.name || '').toLowerCase()
+      return !(cat.id === 'c-signature' || n.includes('signature'))
+    })
+    return visible.map(cat => cat.name)
+  }, [categories, tenant])
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase()
@@ -649,16 +661,23 @@ export default function MenuClient() {
   function resolveDemoSignaturePastaItems(): Array<MenuItem & { categoryName?: string }> {
     const items: Array<MenuItem & { categoryName?: string }> = []
     const cats = menuData?.categories ?? []
+
+    const sig = cats.find(c => c.id === 'c-signature' || String(c.name).toLowerCase().includes('signature'))
+    if (sig?.items?.length) {
+      for (const it of sig.items) items.push({ ...it, categoryName: sig.name })
+      return items
+    }
+
+    // Back-compat fallback: older demo data stored these under Pasta
     const pasta = cats.find(c => c.id === 'c-pasta' || String(c.name).toLowerCase() === 'pasta')
     if (!pasta) return items
     const idToItem: Record<string, MenuItem> = {}
     for (const it of pasta.items) idToItem[it.id] = it
     const ids = ['i-fettuccine-bolognese', 'i-spaghetti-and-meatballs', 'i-chicken-fettuccine-alfredo']
-    for (const id of ids) {
-      if (idToItem[id]) items.push({ ...idToItem[id], categoryName: pasta.name })
-    }
+    for (const id of ids) if (idToItem[id]) items.push({ ...idToItem[id], categoryName: pasta.name })
     return items
   }
+
 
   return (
     <div className="min-h-screen" style={containerStyle}>
