@@ -20,7 +20,9 @@ export default async function MenuPage({ searchParams }: Props) {
       'demo')
 
   // In preview we want clients to be able to review work without being paywalled.
-  if (isPreview) return <MenuClient />
+  // But allow forcing the paywall for testing (demo tenant only) via env flag.
+  const previewTestPaywall = isPreview && process.env.PREVIEW_TEST_PAYWALL === '1' && tenant === 'demo'
+  if (isPreview && !previewTestPaywall) return <MenuClient />
 
   // Always allow demo + any draft tenants (drafts are blocked elsewhere on prod anyway).
   if (!tenant || tenant === 'demo' || tenant.endsWith('-draft')) return <MenuClient />

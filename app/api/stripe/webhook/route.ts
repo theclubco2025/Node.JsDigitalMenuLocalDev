@@ -7,7 +7,13 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 function webhookSecret() {
-  return (process.env.STRIPE_WEBHOOK_SECRET || '').trim()
+  const isPreview = process.env.VERCEL_ENV === 'preview'
+  // Vercel env vars can be scoped per-environment under the same name, but some setups
+  // use a dedicated preview-only var. Support both.
+  const previewSecret =
+    (process.env.STRIPE_WEBHOOK_SECRET_PREVIEW || process.env.stripe_webhook_secret_preview || '').trim()
+  const prodSecret = (process.env.STRIPE_WEBHOOK_SECRET || '').trim()
+  return isPreview ? (previewSecret || prodSecret) : prodSecret
 }
 
 async function updateTenantFromSession(session: Stripe.Checkout.Session) {

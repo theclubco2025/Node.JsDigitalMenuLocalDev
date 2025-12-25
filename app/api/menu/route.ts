@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
 
     // Paid-gate (production only): do not serve live menus for unpaid tenants.
     // Preview must remain viewable for client review.
-    if (!isPreview && tenant !== 'demo' && !tenant.endsWith('-draft') && process.env.DATABASE_URL) {
+    const previewTestPaywall = isPreview && process.env.PREVIEW_TEST_PAYWALL === '1' && tenant === 'demo'
+    if ((!isPreview || previewTestPaywall) && tenant !== 'demo' && !tenant.endsWith('-draft') && process.env.DATABASE_URL) {
       const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })
       if (row?.status !== 'ACTIVE') {
         const billingUrl = `/billing?tenant=${encodeURIComponent(tenant)}`
