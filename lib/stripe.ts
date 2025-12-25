@@ -25,4 +25,18 @@ export function planToPriceId(plan: StripePlanKey): string {
   return priceId
 }
 
+// Fixed billing (onboarding + monthly) used for tenant activation / QR unlock
+export function getOnboardingPriceId(): string {
+  const priceId = (process.env.STRIPE_ONBOARDING_PRICE_ID || '').trim()
+  if (!priceId) throw new Error('Missing STRIPE_ONBOARDING_PRICE_ID')
+  return priceId
+}
+
+export function getMonthlyPriceId(): string {
+  // Prefer the dedicated env var; fall back to BASIC for backward compatibility.
+  const direct = (process.env.STRIPE_MONTHLY_PRICE_ID || '').trim()
+  if (direct) return direct
+  return planToPriceId('basic')
+}
+
 

@@ -98,7 +98,19 @@ export function middleware(request: NextRequest) {
   const pathOnly = request.nextUrl.pathname.split('/').filter(Boolean)
   if (
     pathOnly.length === 1 &&
-    !['api', 't', 'menu', '_next', 'favicon.ico', 'robots.txt', 'sitemap.xml'].includes(pathOnly[0])
+    ![
+      'api',
+      't',
+      'menu',
+      'billing',
+      'auth',
+      'admin',
+      'demo-admin',
+      'favicon.ico',
+      'robots.txt',
+      'sitemap.xml',
+      '_next',
+    ].includes(pathOnly[0])
   ) {
     const slug = pathOnly[0]
     if (!isPreview && slug.toLowerCase().endsWith('-draft')) {
