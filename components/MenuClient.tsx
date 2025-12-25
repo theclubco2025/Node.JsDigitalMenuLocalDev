@@ -646,6 +646,20 @@ export default function MenuClient() {
     return items
   }
 
+  function resolveDemoSignaturePastaItems(): Array<MenuItem & { categoryName?: string }> {
+    const items: Array<MenuItem & { categoryName?: string }> = []
+    const cats = menuData?.categories ?? []
+    const pasta = cats.find(c => c.id === 'c-pasta' || String(c.name).toLowerCase() === 'pasta')
+    if (!pasta) return items
+    const idToItem: Record<string, MenuItem> = {}
+    for (const it of pasta.items) idToItem[it.id] = it
+    const ids = ['i-fettuccine-bolognese', 'i-spaghetti-and-meatballs', 'i-chicken-fettuccine-alfredo']
+    for (const id of ids) {
+      if (idToItem[id]) items.push({ ...idToItem[id], categoryName: pasta.name })
+    }
+    return items
+  }
+
   return (
     <div className="min-h-screen" style={containerStyle}>
       {/* Loading and error states */}
@@ -994,7 +1008,7 @@ export default function MenuClient() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {resolveFeatured().map((it) => {
+            {resolveDemoSignaturePastaItems().map((it) => {
               const canShow = DEMO_PASTA_PHOTO_ITEM_IDS.has(it.id)
               const sigSrc = canShow ? (((imageMap[it.id] as string | undefined) || it.imageUrl || '')) : ''
               return (
