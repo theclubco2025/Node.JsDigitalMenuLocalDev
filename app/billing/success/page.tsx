@@ -86,52 +86,106 @@ export default function BillingSuccessPage() {
     })()
   }, [tenant, sessionId, active, confirmTried])
 
+  const subtitle = active
+    ? 'Your menu is live. Save your QR and share your link.'
+    : 'We’re activating your menu now. This usually takes a few seconds.'
+
   return (
-    <main className="mx-auto max-w-2xl px-4 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight">Payment received — welcome to the team</h1>
-      <p className="mt-3 text-neutral-700">We’re activating your menu now. Once active, you can download your QR.</p>
-      <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
-        <div className="text-sm text-neutral-600">Tenant</div>
-        <div className="mt-1 font-mono text-sm">{tenant || '(unknown)'}</div>
-        <div className="mt-2 text-xs text-neutral-500">
-          Status: <span className="font-mono">{status || (active ? 'ACTIVE' : 'PENDING')}</span>
+    <main className="min-h-[100dvh] bg-gradient-to-b from-neutral-50 to-white">
+      <div className="mx-auto max-w-4xl px-4 py-12">
+        <header className="flex items-center justify-between gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/tcc-logo-horizontal.png" alt="TCC Solutions" className="h-8 w-auto" />
+          <div className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-600">
+            <span className="font-mono">{status || (active ? 'ACTIVE' : 'PENDING')}</span>
+          </div>
+        </header>
+
+        <div className="mt-10">
+          <h1 className="text-4xl font-semibold tracking-tight text-neutral-900">Thank you — welcome to the team</h1>
+          <p className="mt-3 max-w-2xl text-neutral-700">{subtitle}</p>
         </div>
-      </div>
 
-      {active && tenant ? (
-        <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
-          <div className="text-sm font-medium">Your live link</div>
-          <a className="mt-2 block break-all font-mono text-sm text-blue-700 underline" href={`/t/${encodeURIComponent(tenant)}`}>
-            {liveUrl}
-          </a>
+        <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <div className="text-sm font-medium text-neutral-900">Your live link</div>
+            <div className="mt-2 text-sm text-neutral-600">Share this with customers.</div>
 
-          <div className="mt-5 text-sm font-medium">Your QR code</div>
-          <div className="mt-3 flex items-start gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrUrl} alt="Menu QR code" className="h-44 w-44 rounded-xl border border-neutral-200 bg-white" />
-            <div className="text-sm text-neutral-700">
-              <div>This QR points to your live menu link above (and won’t change unless you change the slug).</div>
+            <div className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+              <div className="text-xs text-neutral-500">Tenant</div>
+              <div className="mt-1 font-mono text-sm text-neutral-900">{tenant || '(unknown)'}</div>
+              {tenant ? (
+                <a
+                  className="mt-3 block break-all font-mono text-sm text-blue-700 underline"
+                  href={`/t/${encodeURIComponent(tenant)}`}
+                >
+                  {liveUrl}
+                </a>
+              ) : null}
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
               <a
-                className="mt-3 inline-flex items-center rounded-2xl bg-neutral-900 px-5 py-3 text-sm text-white"
-                href={qrUrl}
-                target="_blank"
-                rel="noreferrer"
+                className={`inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-medium ${
+                  active && tenant ? 'bg-neutral-900 text-white hover:bg-neutral-800' : 'bg-neutral-200 text-neutral-500'
+                }`}
+                href={active && tenant ? `/t/${encodeURIComponent(tenant)}` : '#'}
+                aria-disabled={!(active && tenant)}
               >
-                Download / Open QR
+                Open your menu
+              </a>
+              <a
+                className="inline-flex items-center justify-center rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-sm font-medium text-neutral-900 hover:bg-neutral-50"
+                href="/"
+              >
+                Home
               </a>
             </div>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-          We haven’t unlocked your tenant yet. This usually takes a few seconds after checkout. Please keep this page open.
-        </div>
-      )}
+          </section>
 
-      <div className="mt-6 flex gap-3">
-        <a className="inline-flex items-center rounded-2xl border border-neutral-300 px-5 py-3 text-sm" href="/">
-          Back to home
-        </a>
+          <section className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <div className="text-sm font-medium text-neutral-900">Your QR code</div>
+            <div className="mt-2 text-sm text-neutral-600">This QR points to your live menu link.</div>
+
+            <div className="mt-4 flex items-start gap-4">
+              <div className="grid h-44 w-44 place-items-center rounded-2xl border border-neutral-200 bg-white">
+                {active && tenant && qrUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={qrUrl} alt="Menu QR code" className="h-40 w-40 rounded-xl" />
+                ) : (
+                  <div className="text-xs text-neutral-500">Activating…</div>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="text-sm text-neutral-700">
+                  {active && tenant
+                    ? 'Download the QR image and add it to tables, takeout bags, posters, or receipts.'
+                    : 'Once activation completes, your QR will appear here.'}
+                </div>
+                <a
+                  className={`mt-3 inline-flex w-full items-center justify-center rounded-2xl px-5 py-3 text-sm font-medium ${
+                    active && tenant && qrUrl
+                      ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                      : 'bg-neutral-200 text-neutral-500'
+                  }`}
+                  href={active && tenant && qrUrl ? qrUrl : '#'}
+                  target={active && tenant && qrUrl ? '_blank' : undefined}
+                  rel={active && tenant && qrUrl ? 'noreferrer' : undefined}
+                  aria-disabled={!(active && tenant && qrUrl)}
+                >
+                  Download QR
+                </a>
+                <div className="mt-2 text-xs text-neutral-500">Tip: the QR only changes if you change the slug.</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {!active ? (
+          <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+            Activation in progress… keep this page open.
+          </div>
+        ) : null}
       </div>
     </main>
   )

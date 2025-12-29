@@ -3,6 +3,15 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const isPreview = process.env.VERCEL_ENV === 'preview'
+
+  // finish-checkout POC: if a preview deployment lands on /menu (blank blue menu), send it to the thank-you page.
+  if (isPreview && request.nextUrl.pathname === '/menu') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/billing/success'
+    url.searchParams.set('tenant', 'demo')
+    url.searchParams.set('mock', '1')
+    return NextResponse.redirect(url)
+  }
   // Handle CORS preflight generically for all API routes
   if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
     const res = NextResponse.json({ ok: true })
