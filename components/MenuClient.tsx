@@ -1268,14 +1268,14 @@ export default function MenuClient() {
                 <button
                   onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
                   className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
-                  aria-label={`Ask about ${item.name}`}
+                  aria-label={`Ask AI about ${item.name}`}
                 >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                             <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                             <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
                           </svg>
-                          <span>Ask</span>
+                          <span>Ask AI</span>
                         </button>
                         </div>
                       </div>
@@ -1357,15 +1357,16 @@ export default function MenuClient() {
       {/* AI Assistant Button */}
       <button
         onClick={() => setIsAssistantOpen(true)}
-        className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
+        className="fixed bottom-6 left-6 px-4 py-3 rounded-full shadow-lg transition-all duration-200 z-50 flex items-center gap-2"
         style={{background:'var(--accent)', color:'#0b0b0b'}}
-        aria-label="Open assistant"
+        aria-label="Ask AI"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
           <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
           <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
         </svg>
+        <span className="font-semibold text-sm">Ask AI</span>
       </button>
 
       {/* Floating flyers for add-to-plate animation */}
@@ -1468,7 +1469,7 @@ export default function MenuClient() {
           <div className="w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
+                <h2 className="text-2xl font-bold text-black">Ask AI</h2>
                 <button
                   onClick={() => setIsAssistantOpen(false)}
                   className="text-gray-500 hover:text-black transition-colors"
@@ -1515,7 +1516,7 @@ export default function MenuClient() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Ask about our menu..."
+                  placeholder="Ask about the menu..."
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
                   value={assistantMessage}
                   onChange={(e) => setAssistantMessage(e.target.value)}
