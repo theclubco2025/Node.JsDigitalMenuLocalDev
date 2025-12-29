@@ -5,7 +5,10 @@ export function middleware(request: NextRequest) {
   // In preview, normalize tenant to branch name (from env) for both '/' and '/menu'
   const isPreview = process.env.VERCEL_ENV === 'preview'
   const branchRef = (process.env.VERCEL_GIT_COMMIT_REF || '').toLowerCase()
-  if (isPreview && branchRef) {
+  // TEMP testing override: disable preview tenant normalization when explicitly requested.
+  // This effectively removes the “checkout wall” behavior of forcing /menu to a specific tenant.
+  const disablePreviewTenantForce = process.env.NEXT_PUBLIC_DISABLE_PREVIEW_TENANT_FORCE === '1'
+  if (isPreview && branchRef && !disablePreviewTenantForce) {
     if (request.nextUrl.pathname === '/') {
       const url = request.nextUrl.clone()
       url.pathname = '/menu'
