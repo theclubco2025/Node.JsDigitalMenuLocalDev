@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
 export default function Home() {
-  // POC: go straight to checkout on this branch
-  redirect('/billing?tenant=demo')
+  // POC: show the post-payment "Thank you / QR download" page immediately
+  redirect('/billing/success?tenant=demo&mock=1')
 }
