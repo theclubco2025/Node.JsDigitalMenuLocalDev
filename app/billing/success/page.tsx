@@ -21,7 +21,10 @@ export default function BillingSuccessPage() {
 
   const siteUrl = useMemo(() => {
     if (typeof window === 'undefined') return ''
-    return window.location.origin
+    const host = window.location.hostname.toLowerCase()
+    // Canonicalize production QR/link to tccmenus.com so the QR "never changes" for real clients.
+    const isProd = host === 'tccmenus.com' || host.endsWith('.tccmenus.com')
+    return isProd ? 'https://tccmenus.com' : window.location.origin
   }, [])
 
   const liveUrl = tenant ? `${siteUrl.replace(/\/$/, '')}/t/${encodeURIComponent(tenant)}` : ''
@@ -72,10 +75,8 @@ export default function BillingSuccessPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight">You’re all set</h1>
-      <p className="mt-3 text-neutral-700">
-        Payment succeeded. We’re activating your menu now.
-      </p>
+      <h1 className="text-3xl font-semibold tracking-tight">Payment received — welcome to the team</h1>
+      <p className="mt-3 text-neutral-700">We’re activating your menu now. Once active, you can download your QR.</p>
       <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
         <div className="text-sm text-neutral-600">Tenant</div>
         <div className="mt-1 font-mono text-sm">{tenant || '(unknown)'}</div>
@@ -88,7 +89,7 @@ export default function BillingSuccessPage() {
         <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-5">
           <div className="text-sm font-medium">Your live link</div>
           <a className="mt-2 block break-all font-mono text-sm text-blue-700 underline" href={`/t/${encodeURIComponent(tenant)}`}>
-            {`/t/${tenant}`}
+            {liveUrl}
           </a>
 
           <div className="mt-5 text-sm font-medium">Your QR code</div>
@@ -96,7 +97,7 @@ export default function BillingSuccessPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qrUrl} alt="Menu QR code" className="h-44 w-44 rounded-xl border border-neutral-200 bg-white" />
             <div className="text-sm text-neutral-700">
-              <div>This QR points to your live menu.</div>
+              <div>This QR points to your live menu link above (and won’t change unless you change the slug).</div>
               <a
                 className="mt-3 inline-flex items-center rounded-2xl bg-neutral-900 px-5 py-3 text-sm text-white"
                 href={qrUrl}
