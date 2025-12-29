@@ -3,24 +3,17 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
-
-const DEMO_PASTA_PHOTO_ITEM_IDS = new Set<string>([
-  'i-fettuccine-bolognese',
-  'i-spaghetti-and-meatballs',
-  'i-chicken-fettuccine-alfredo',
-])
 
 type TenantStyleFlags = {
   flags?: Record<string, boolean>
   navVariant?: string
   heroVariant?: string
   accentSecondary?: string
-  featuredIds?: string[]
   badges?: Record<string, string>
-  texture?: { vignette?: boolean; paper?: boolean }
+  featuredIds?: string[]
 }
 
 type TenantTheme = {
@@ -38,14 +31,7 @@ type TenantBrand = {
   tagline?: string
   logoUrl?: string
   header?: { logoUrl?: string }
-}
-
-type TenantCopy = {
-  featuredIds?: string[]
-  categoryIntros?: Record<string, string>
-  heroSubtitle?: string
-  tagline?: string
-  specials?: string | boolean
+  links?: { website?: string; phone?: string; address?: string }
 }
 
 type TenantConfig = {
@@ -53,23 +39,12 @@ type TenantConfig = {
   theme?: TenantTheme
   images?: Record<string, string>
   style?: TenantStyleFlags
-  copy?: TenantCopy
+  copy?: Record<string, unknown>
 }
 
 type ThemeCSSVariables = React.CSSProperties & Record<'--bg' | '--text' | '--ink' | '--card' | '--muted' | '--accent', string | undefined>
 
-type DietaryOption = { key: string; label: string }
-
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
-
-const DIETARY_OPTIONS_BASE: readonly DietaryOption[] = [
-  { key: 'vegetarian', label: 'Vegetarian' },
-  { key: 'vegan', label: 'Vegan' },
-  { key: 'no-gluten-listed', label: 'No gluten listed' },
-  { key: 'no-dairy-listed', label: 'No dairy listed' },
-  { key: 'no-nuts-listed', label: 'No nuts listed' },
-]
-
 
 export default function MenuClient() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -85,7 +60,10 @@ export default function MenuClient() {
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [showDemoAcknowledgement, setShowDemoAcknowledgement] = useState(false)
+  const plateButtonRef = useRef<HTMLButtonElement | null>(null)
+  const [platePile, setPlatePile] = useState<Array<{ itemId: string; src: string }>>([])
+  type Flyer = { key: string; src: string; startX: number; startY: number; dx: number; dy: number; moved: boolean }
+  const [flyers, setFlyers] = useState<Flyer[]>([])
 
   // Get tenant/admin from URL params
   const isBrowser = typeof window !== 'undefined'
@@ -94,7 +72,6 @@ export default function MenuClient() {
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
-  const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
   useEffect(() => {
@@ -109,34 +86,55 @@ export default function MenuClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Demo reminder (first-visit acknowledgement)
-  useEffect(() => {
-    if (!isBrowser) return
-    if (tenant !== 'demo') return
-    try {
-      const ack = localStorage.getItem(demoAcknowledgeKey)
-      if (!ack) setShowDemoAcknowledgement(true)
-    } catch {
-      setShowDemoAcknowledgement(true)
-    }
-  }, [isBrowser, tenant])
+  // Tenant flags
+  const isBenes = useMemo(() => {
+    const slug = (tenant || '').toLowerCase()
+    return slug === 'benes' || slug === 'benes-draft'
+  }, [tenant])
 
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
   const brand = cfg?.brand
   const theme = cfg?.theme ?? null
-  const imageMap = useMemo(() => cfg?.images ?? {}, [cfg?.images])
-  const copy = cfg?.copy as TenantCopy | undefined
+  const imageMap = cfg?.images ?? {}
+  const copy = cfg?.copy as Record<string, unknown> | undefined
   const styleCfg = cfg?.style
   const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
   const accentSecondary = styleCfg?.accentSecondary || undefined
-  const categoryIntros: Record<string, string | undefined> = copy?.categoryIntros ?? {}
+  const featuredIds = (styleCfg?.featuredIds || []).filter(Boolean)
+  const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
-  const brandName = tenant === 'demo' ? 'Demo Menu Experience' : (brand?.name || 'Menu')
+  const brandName = brand?.name || 'Menu'
   const brandTagline = brand?.tagline || ''
+  const brandLinks = brand?.links
+  const locationLine = useMemo(() => {
+    const address = typeof brandLinks?.address === 'string' ? brandLinks.address.trim() : ''
+    const phone = typeof brandLinks?.phone === 'string' ? brandLinks.phone.trim() : ''
+    return [address, phone].filter(Boolean).join(' • ')
+  }, [brandLinks?.address, brandLinks?.phone])
 
-  // Ensure themed CSS variables exist on first paint
-  const effectiveTheme = useMemo(() => theme ?? null, [theme])
+  const heroHeadline = (typeof copy?.heroSubtitle === 'string' && copy.heroSubtitle.trim() !== '')
+    ? copy.heroSubtitle.trim()
+    : brandTagline
+
+  // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
+  const effectiveTheme = useMemo(() => {
+    if (!theme) return null
+    if (isBenes) {
+      return {
+        primary: theme.primary || '#0f1e17',
+        bg: theme.bg || theme.primary || '#0f1e17',
+        text: theme.text || '#f3f5f0',
+        ink: theme.ink || '#101010',
+        card: theme.card || '#ffffff',
+        muted: theme.muted || '#e7e0d3',
+        accent: theme.accent || '#ef4444'
+      }
+    }
+    return theme
+  }, [theme, isBenes])
+
+  
 
   // Apply theme from config
   useEffect(() => {
@@ -148,7 +146,6 @@ export default function MenuClient() {
     if (theme.card) document.body.style.setProperty('--card', theme.card)
     if (theme.muted) document.body.style.setProperty('--muted', theme.muted)
     if (theme.accent) document.body.style.setProperty('--accent', theme.accent)
-    if (theme.primary) document.body.style.setProperty('--primary', theme.primary)
   }, [theme])
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
@@ -156,11 +153,9 @@ export default function MenuClient() {
     fetcher
   )
 
-  const specialsText = typeof copy?.specials === 'string' ? copy.specials : ''
-  const flags = (styleCfg?.flags ?? {}) as Record<string, boolean>
-  const showSpecials = Boolean(flags.specials && specialsText)
-  const showSignatureGrid = Boolean(flags.signatureGrid)
-  const hideCart = Boolean(flags.hideCart)
+  // Feature toggle: allow hiding Benes hero via style.heroVariant === 'none'
+  const showBenesHero = useMemo(() => isBenes && (styleCfg?.heroVariant !== 'none'), [isBenes, styleCfg?.heroVariant])
+  const showSpecials = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -177,18 +172,14 @@ export default function MenuClient() {
   // Filter logic matching your Canvas app exactly (client-side now to avoid API refiring per keystroke)
   const filteredCategories = useMemo(() => {
     if (!baseMenu?.categories) return []
-    const baseCategories = baseMenu.categories.filter(category => {
-      if (tenant !== 'demo') return true
-      const n = String(category.name || '').toLowerCase()
-      return !(category.id === 'c-signature' || n.includes('signature'))
-    })
-    return baseCategories
+    
+    return baseMenu.categories
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
-          if (typeof item.price === 'number' && item.price <= 0) return false
           // Category filter
           if (selectedCategory && category.name !== selectedCategory) return false
+          
           // Search filter (name and description)
           if (searchQuery) {
             const searchLower = searchQuery.toLowerCase()
@@ -197,19 +188,20 @@ export default function MenuClient() {
             const matchesTags = (item.tags || []).some(tag => tag.toLowerCase().includes(searchLower))
             if (!matchesName && !matchesDescription && !matchesTags) return false
           }
+          
           // Dietary filters (must have all selected dietary tags)
           if (selectedDietaryFilters.length > 0) {
-            const tagList = (item.tags || []).map(t => String(t).toLowerCase())
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
-              matchesDietFilter(dietFilter, tagList)
+              (item.tags || []).some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
             )
             if (!hasAllDietaryFilters) return false
           }
+          
           return true
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters, tenant])
+  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
 
   const updateItemField = (
     categoryId: string,
@@ -337,6 +329,30 @@ export default function MenuClient() {
     )
   }
 
+  const launchFlyToPlate = (item: MenuItem) => {
+    if (typeof window === 'undefined') return
+    const img = document.getElementById(`img-${item.id}`) as HTMLImageElement | null
+    const plateBtn = plateButtonRef.current
+    if (!img || !plateBtn) return
+    const imgRect = img.getBoundingClientRect()
+    const btnRect = plateBtn.getBoundingClientRect()
+    const startX = imgRect.left + imgRect.width / 2
+    const startY = imgRect.top + imgRect.height / 2
+    const endX = btnRect.left + btnRect.width / 2
+    const endY = btnRect.top + btnRect.height / 2
+    const key = `${item.id}-${Date.now()}-${Math.random()}`
+            const src = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
+    setFlyers(prev => [...prev, { key, src, startX, startY, dx: endX - startX, dy: endY - startY, moved: false }])
+    // trigger transition on next frame
+    requestAnimationFrame(() => {
+      setFlyers(prev => prev.map(f => f.key === key ? { ...f, moved: true } : f))
+    })
+    // cleanup after animation
+    setTimeout(() => {
+      setFlyers(prev => prev.filter(f => f.key !== key))
+    }, 700)
+  }
+
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
       const existing = prev.find(cartItem => cartItem.item.id === item.id)
@@ -353,6 +369,8 @@ export default function MenuClient() {
 
   const removeFromCart = (itemId: string) => {
     setCart(prev => prev.filter(cartItem => cartItem.item.id !== itemId))
+    // remove from plate pile if present
+    setPlatePile(prev => prev.filter(p => p.itemId !== itemId))
   }
 
   const updateCartQuantity = (itemId: string, quantity: number) => {
@@ -363,6 +381,18 @@ export default function MenuClient() {
     setCart(prev => prev.map(cartItem =>
       cartItem.item.id === itemId ? { ...cartItem, quantity } : cartItem
     ))
+    if (quantity === 1) {
+      // ensure plate pile has this item
+      const target = cart.find(c => c.item.id === itemId)?.item
+      if (target) {
+          const src = target.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(target.name)}`
+        setPlatePile(prev => {
+          if (prev.some(p => p.itemId === itemId)) return prev
+          const filtered = prev.filter(p => p.itemId !== itemId)
+          return [...filtered.slice(-2), { itemId, src }]
+        })
+      }
+    }
   }
 
   const sendAssistantMessage = async (overrideMessage?: string) => {
@@ -379,28 +409,12 @@ export default function MenuClient() {
         body: JSON.stringify({
           tenantId: tenant,
           query: userMessage,
-          filters: {
-            vegetarian: selectedDietaryFilters.includes('vegetarian'),
-            vegan: selectedDietaryFilters.includes('vegan'),
-            noGlutenListed: selectedDietaryFilters.includes('no-gluten-listed'),
-            noDairyListed: selectedDietaryFilters.includes('no-dairy-listed'),
-            noNutsListed: selectedDietaryFilters.includes('no-nuts-listed'),
-          }
+          filters: {}
         })
       })
 
-      const raw = await response.text()
-      let assistantText = 'Thanks for your question.'
-      try {
-        const data = raw ? JSON.parse(raw) : null
-        if (data) {
-          assistantText = data.text || data.response || data.message || assistantText
-        } else if (!response.ok) {
-          assistantText = `Assistant error (${response.status})`
-        }
-      } catch {
-        assistantText = raw && raw.trim().length > 0 ? raw : assistantText
-      }
+      const data = await response.json()
+      const assistantText = data.text || data.response || data.message || 'Thanks for your question.'
       setChatHistory(prev => [...prev, { role: 'assistant', message: assistantText }])
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Sorry, I had trouble processing your request.'
@@ -409,38 +423,10 @@ export default function MenuClient() {
   }
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
-  // Hoisted function to avoid TDZ issues when used by useMemo.
-  function matchesDietFilter(dietFilter: string, tagList: string[]) {
-    const normalized = dietFilter.toLowerCase()
-    switch (normalized) {
-      case 'no-gluten-listed':
-        return tagList.includes('gluten-free') || !tagList.includes('contains-gluten')
-      case 'no-dairy-listed':
-        return tagList.includes('dairy-free') || !tagList.includes('contains-dairy')
-      case 'no-nuts-listed':
-        return tagList.includes('nut-free') || !tagList.includes('contains-nuts')
-      default:
-        return tagList.includes(normalized)
-    }
-  }
+  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
-  // Demo: only show Vegetarian/Vegan. Others: only show No-X-listed if at least one item matches.
-  const dietaryOptions = useMemo(() => {
-    const vegOnly = DIETARY_OPTIONS_BASE.filter(o => o.key === 'vegetarian' || o.key === 'vegan')
-    if (tenant === 'demo') return vegOnly
-
-    const allItems = (baseMenu?.categories ?? []).flatMap(c => c.items ?? [])
-    const hasAnyMatch = (key: string) => allItems.some(it => {
-      const tagList = (it.tags || []).map(t => String(t).toLowerCase())
-      return matchesDietFilter(key, tagList)
-    })
-
-    return DIETARY_OPTIONS_BASE.filter(o => {
-      if (o.key === 'vegetarian' || o.key === 'vegan') return true
-      return hasAnyMatch(o.key)
-    })
-  }, [tenant, baseMenu])
-
+  const dietaryOptions = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free']
+  
   const scrollTo = (elementId: string) => {
     if (typeof window === 'undefined') return
     const el = document.getElementById(elementId)
@@ -450,14 +436,7 @@ export default function MenuClient() {
   // Note: avoid early returns before hooks to keep hook order stable
 
   const categories = useMemo(() => menuData?.categories ?? [], [menuData])
-  const allCategories = useMemo(() => {
-    const visible = categories.filter(cat => {
-      if (tenant !== 'demo') return true
-      const n = String(cat.name || '').toLowerCase()
-      return !(cat.id === 'c-signature' || n.includes('signature'))
-    })
-    return visible.map(cat => cat.name)
-  }, [categories, tenant])
+  const allCategories = useMemo(() => categories.map(cat => cat.name), [categories])
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase()
@@ -545,11 +524,6 @@ export default function MenuClient() {
     )
   }
 
-  function getCategoryImage(_name: string): string | null {
-    void _name
-    return null
-  }
-
   const firstImageUrl = useMemo(() => {
     // Prefer any configured image if items lack imageUrl in DB
     const fromConfig = Object.values(imageMap || {})[0]
@@ -612,26 +586,54 @@ export default function MenuClient() {
     '--muted': effectiveTheme?.muted,
     '--accent': effectiveTheme?.accent,
   }
-  const paperTexture = Boolean(styleCfg?.texture?.paper)
-  const containerStyle: React.CSSProperties = {
-    ...rootStyle,
-    ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
-  }
 
-  // Featured picks come from config copy.style.flags/featuredIds or fallback later
-  const featuredItemIds: string[] = styleCfg?.featuredIds ?? copy?.featuredIds ?? []
-  function cardStyleForCategory(): React.CSSProperties {
+  // Featured picks: Benes has defaults; other tenants can opt-in via style.featuredIds + style.flags.signatureGrid
+  const featuredItemIds: string[] = isBenes ? (
+    featuredIds.length > 0 ? featuredIds : [
+      'i-margherita-napoletana-14',
+      'i-fettuccine-bolognese',
+      'i-prosciutto-arugula-14'
+    ]
+  ) : featuredIds
+  const pairingsById: Record<string, string> = isBenes ? {
+    'i-fettuccine-bolognese': 'Pairs with Zinfandel',
+    'i-margherita-napoletana-14': 'Pairs with Chianti',
+    'i-prosciutto-arugula-14': 'Pairs with Pinot Grigio',
+    'i-lasagna': 'Pairs with Sangiovese'
+  } : {}
+  function cardStyleForCategory(categoryName: string): React.CSSProperties {
+    if (/pizza/i.test(categoryName)) {
+      return {
+        backgroundColor: '#ffffff',
+        backgroundImage: 'radial-gradient(rgba(16,16,16,0.05) 1px, transparent 1px)',
+        backgroundSize: '8px 8px',
+        borderColor: 'rgba(0,0,0,0.06)'
+      }
+    }
+    if (/pasta/i.test(categoryName)) {
+      return {
+        background: '#fffaf2',
+        borderColor: 'rgba(185,28,28,0.12)',
+        boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
+      }
+    }
+    if (/calzone/i.test(categoryName)) {
+      return {
+        background: '#fffef8',
+        borderColor: 'rgba(0,0,0,0.08)'
+      }
+    }
     return {}
   }
-  function badgeStyle(): React.CSSProperties {
-    // Classic Italian tricolor badge (requested): green / white / red.
-    // Used ONLY for category badges (Pasta / Pizza / Lunch / etc).
-    const italian = {
-      backgroundImage: 'linear-gradient(90deg, #008C45 0%, #008C45 33%, #F4F5F0 33%, #F4F5F0 66%, #CD212A 66%, #CD212A 100%)',
-      color: '#111827',
-      borderColor: 'rgba(0,0,0,0.15)',
-    } satisfies React.CSSProperties
-    return italian
+  function getItemBadges(item: MenuItem): string[] {
+    const badges: string[] = []
+    const name = (item?.name || '').toLowerCase()
+    const tags: string[] = item?.tags || []
+    if (tags.includes('vegan') || /vegan/.test(name)) badges.push('Vegan')
+    if (tags.includes('gf') || /gluten\s*free|gf/.test(name)) badges.push('GF')
+    if (/spicy|vesuvio|pepperoncini|diavolo/.test(name)) badges.push('Spicy')
+    if (/margherita|bolognese|prosciutto/.test(name)) badges.push('House Favorite')
+    return badges
   }
   function resolveFeatured() {
     const items: Array<MenuItem & { categoryName?: string }> = []
@@ -658,29 +660,14 @@ export default function MenuClient() {
     return items
   }
 
-  function resolveDemoSignaturePastaItems(): Array<MenuItem & { categoryName?: string }> {
-    const items: Array<MenuItem & { categoryName?: string }> = []
-    const cats = menuData?.categories ?? []
-
-    const sig = cats.find(c => c.id === 'c-signature' || String(c.name).toLowerCase().includes('signature'))
-    if (sig?.items?.length) {
-      for (const it of sig.items) items.push({ ...it, categoryName: sig.name })
-      return items
-    }
-
-    // Back-compat fallback: older demo data stored these under Pasta
-    const pasta = cats.find(c => c.id === 'c-pasta' || String(c.name).toLowerCase() === 'pasta')
-    if (!pasta) return items
-    const idToItem: Record<string, MenuItem> = {}
-    for (const it of pasta.items) idToItem[it.id] = it
-    const ids = ['i-fettuccine-bolognese', 'i-spaghetti-and-meatballs', 'i-chicken-fettuccine-alfredo']
-    for (const id of ids) if (idToItem[id]) items.push({ ...idToItem[id], categoryName: pasta.name })
-    return items
-  }
-
+  const showSignatureGrid = useMemo(() => {
+    const enabled = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).signatureGrid)
+    if (!enabled) return false
+    return featuredItemIds.length > 0
+  }, [styleCfg?.flags, featuredItemIds.length])
 
   return (
-    <div className="min-h-screen" style={containerStyle}>
+    <div className="min-h-screen" style={rootStyle}>
       {/* Loading and error states */}
       {error && (
         <div className="flex items-center justify-center min-h-screen text-red-600">Failed to load menu</div>
@@ -704,127 +691,139 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Demo reminder */}
-      {tenant === 'demo' && showDemoAcknowledgement && (
-        <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold text-neutral-900">Demo experience</div>
-                <p className="mt-2 text-sm text-neutral-700">
-                  You’re viewing a demo menu. This experience will be customized for your restaurant after onboarding (your branding, your items, your QR link).
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
-                  setShowDemoAcknowledgement(false)
-                }}
-                className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-500"
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Fixed Header */}
+      {/* Fixed Header: Benes uses centered logo background; others show title */}
       <div
         className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-        style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+        style={isBenes ? {
+          backgroundColor: '#ffffff',
+          backgroundImage: brandLogoUrl ? `url(${brandLogoUrl})` : undefined,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: 'auto 140px'
+        } : { background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
       >
         <div
           className="px-4"
-          style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+          style={{
+            height: isBenes ? 160 : 72,
+            borderBottom: isBenes ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'
+          }}
         >
-          <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-            {brandLogoUrl ? (
-              <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-            )}
-            <div className="text-center">
-              <h1
-                className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
-                style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
-              >
-                {brandName}
-              </h1>
-              <p className="text-gray-200 text-xs">{brandTagline}</p>
+          {!isBenes && (
+            <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+              {brandLogoUrl ? (
+                <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+              )}
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italian)' }}>{brandName}</h1>
+                <p className="text-gray-200 text-xs">{brandTagline}</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Spacer to offset fixed header height */}
-      <div style={{ height: 80 }} />
+      {/* Optional hero subtitle from copy */}
+      <div style={{ height: isBenes ? 160 : 80 }} />
+      {isBenes && (
+        <div className="w-full" style={{height:6, background:'linear-gradient(90deg, #128807 0% 33.33%, #ffffff 33.33% 66.66%, #b91c1c 66.66% 100%)'}} />
+      )}
+      {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
+        <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
+          <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
+        </div>
+      )}
 
-      {/* Category chip scroller (optional - enable via future flag) */}
+      {/* Category chip scroller (Benes) */}
+      {isBenes && (
+        <div className="max-w-7xl mx-auto px-4 mb-4">
+          <div className="no-scrollbar overflow-x-auto py-2 -mx-2 px-2 flex gap-2">
+            {(menuData?.categories || []).map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.name === selectedCategory ? null : cat.name)
+                  const el = document.getElementById(`cat-${cat.id}`)
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+                className={`px-3 py-1.5 rounded-full text-sm border transition-colors whitespace-nowrap ${activeCategoryId===cat.id ? 'bg-[var(--accent)] text-white border-[var(--accent)]' : 'bg-white text-black border-gray-300 hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-white'}`}
+                style={{boxShadow: activeCategoryId===cat.id ? '0 2px 12px rgba(185,28,28,0.25)' : undefined}}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* No special-case banner */}
+      {/* Benes hero banner */}
+      {showBenesHero && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div
+            className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
+            style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
+          >
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.22), rgba(255,255,255,.12), rgba(185,28,28,.22))' }} />
+            {brandLogoUrl && (
+              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
+            )}
+            <div className="relative h-full flex items-center justify-between px-5">
+              <div className="max-w-lg">
+                {typeof copy?.tagline === 'string' && (
+                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#101010' }}>{copy.tagline}</div>
+                )}
+                {typeof copy?.heroSubtitle === 'string' && (
+                  <div className="text-sm md:text-base text-gray-700 mt-1">{copy.heroSubtitle}</div>
+                )}
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#128807' }} />
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.06)' }} />
+                <span className="inline-block w-2 h-8 rounded" style={{ background: '#b91c1c' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Subtle Specials ribbon */}
       {showSpecials && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
           <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
-            {specialsText}
+            Tonight&apos;s Specials: Margherita 14&quot;, Fettuccine Bolognese, Prosciutto &amp; Arugula
           </div>
         </div>
       )}
 
-      {/* Signature (data-flagged) */}
-      {showSignatureGrid && tenant !== 'demo' && (
+      {/* Signature Picks (Benes) */}
+      {isBenes && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex flex-col items-center mb-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
-            </div>
-            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
+            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {resolveFeatured().map((it) => {
+              const src = imageMap[it.id] || it.imageUrl || ''
               return (
-                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
-                  {(() => {
-                    const sigSrc = (imageMap[it.id] as string | undefined) || it.imageUrl || ''
-                    if (!sigSrc) {
-                      return (
-                        <div
-                          className="h-28 sm:h-32 w-full"
-                          style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02))' }}
-                        />
-                      )
-                    }
-                    return (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={sigSrc}
-                        alt={it.name}
-                        className="h-28 sm:h-32 w-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    )
-})()}
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'#fffdf5' }}>
+                  {src && (
+                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
+                  )}
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.08), rgba(255,255,255,.04), rgba(185,28,28,.08))' }} />
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-semibold text-white" style={{ background:'rgba(185,28,28,0.9)' }}>Most Loved</div>
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
-                        {/* optional pairing copy can be added via copy data */}
+                        {pairingsById[it.id] && (
+                          <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
+                        )}
                       </div>
-                      {typeof it.price === 'number' && it.price > 0 && (
-                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
-                      )}
-                    </div>
-                    <div className="mt-3 flex justify-end">
-                      <button
-                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${it.name}`) }}
-                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
-                        aria-label={`Ask about ${it.name}`}
-                      >
-                        Ask AI
-                      </button>
+                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'linear-gradient(180deg, #ef4444, #b91c1c)' }}>${Number(it.price).toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -834,8 +833,8 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Hero section (variant-driven) */}
-      {heroVariant !== 'none' && (
+      {/* Hero section (hidden for Benes to keep a single compact header) */}
+      {!isBenes && heroVariant !== 'none' && (
         <div className="relative">
           <div
             className="w-full h-56 md:h-64 lg:h-72"
@@ -846,7 +845,7 @@ export default function MenuClient() {
               borderBottom: '1px solid var(--muted)'
             }}
           >
-            {/* Overlay tuned by tenant style */}
+            {/* Overlay tuned by tenant style (non-Benes) */}
             <div className="w-full h-full" style={{
               background: 'linear-gradient(90deg, rgba(0,0,0,0.28), rgba(255,255,255,0.14), rgba(0,0,0,0.28))'
             }} />
@@ -862,18 +861,57 @@ export default function MenuClient() {
             )}
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
-            <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
-                  <h2
-                    className={`text-2xl md:text-3xl font-bold tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
-                    style={{ color: 'var(--ink)' }}
-                  >
-                    {brandName}
-                  </h2>
-                  <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
+            <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg max-w-2xl" style={{ background: 'rgba(255,255,255,0.70)', border: '1px solid rgba(17,24,39,0.10)' }}>
+              <h2 className="text-base md:text-xl font-bold" style={{ color: 'var(--ink)' }}>{heroHeadline}</h2>
+              {locationLine && (
+                <p className="text-[11px] md:text-xs mt-1" style={{ color: 'rgba(17,24,39,0.70)' }}>{locationLine}</p>
+              )}
+              {typeof copy?.specials === 'string' && copy.specials.trim() !== '' && (
+                <p className="text-[11px] md:text-xs mt-1" style={{ color: 'var(--accent)' }}>{copy.specials}</p>
+              )}
             </div>
           </div>
-            {/* Divider */}
-            <div className="w-full h-1.5" style={{ background: 'var(--muted)' }} />
+          {/* Tricolor divider bar */}
+          <div className="w-full h-1.5 flex">
+            <div className="flex-1" style={{ background: 'var(--accent)' }} />
+            <div className="flex-1" style={{ background: '#ffffff' }} />
+            <div className="flex-1" style={{ background: accentSecondary || 'var(--accent)' }} />
+          </div>
+        </div>
+      )}
+
+      {/* Signature Picks (non-Benes opt-in via style.flags.signatureGrid + style.featuredIds) */}
+      {!isBenes && showSignatureGrid && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>House Favorites</h3>
+            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {resolveFeatured().slice(0, 3).map((it) => {
+              const src = imageMap[it.id] || it.imageUrl || ''
+              return (
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(17,24,39,0.12)', boxShadow: '0 10px 24px rgba(17,24,39,0.10)', background: 'var(--card)' }}>
+                  {src && (
+                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
+                  )}
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.0) 60%, rgba(0,0,0,0.08))' }} />
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(255,255,255,0.82)', color: 'var(--ink)', border: '1px solid rgba(17,24,39,0.12)' }}>Most Loved</div>
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>{it.name}</div>
+                        {it.categoryName && (
+                          <div className="text-xs mt-0.5" style={{ color: 'rgba(17,24,39,0.65)' }}>{it.categoryName}</div>
+                        )}
+                      </div>
+                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--ink)', background: 'linear-gradient(180deg, rgba(207,168,106,0.95), rgba(110,79,47,0.95))' }}>${Number(it.price).toFixed(2)}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
@@ -894,15 +932,10 @@ export default function MenuClient() {
                   const res = await fetch('/api/tenant/promote', {
                     method: 'POST', headers, body: JSON.stringify({ from, to })
                   })
-                  if (!res.ok) {
-                    const detail = await res.text().catch(() => '')
-                    throw new Error(detail || `Publish failed (${res.status})`)
-                  }
+                  if (!res.ok) throw new Error('Publish failed')
                   setToast('Published to live')
                 } catch (e) {
-                  const needsToken = typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && !adminToken
-                  const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL and retry.' : ''
-                  setToast((e instanceof Error ? e.message : 'Publish failed') + suffix)
+                  setToast(e instanceof Error ? e.message : 'Publish failed')
                 }
               }}
               className="px-3 py-1 rounded text-sm border border-yellow-300"
@@ -917,6 +950,7 @@ export default function MenuClient() {
 
       {/* Search & Filters (scroll with page) */}
       <div className="max-w-7xl mx-auto px-4 py-2">
+        
         {/* Search Bar */}
         <div className="mb-3">
           <div className="flex items-center gap-2 max-w-2xl mx-auto">
@@ -963,18 +997,7 @@ export default function MenuClient() {
               style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
             >
               <span className="inline-flex items-center gap-2">
-                {getCategoryImage(category) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={getCategoryImage(category) as string}
-                    alt=""
-                    className="h-6 w-6 rounded-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  getCategoryIcon(category)
-                )}
+                {getCategoryIcon(category)}
                 <span>{category}</span>
               </span>
             </button>
@@ -986,21 +1009,21 @@ export default function MenuClient() {
           <div className="flex gap-2 justify-center flex-wrap">
             {dietaryOptions.map(option => (
               <button
-                key={option.key}
+                key={option}
                 onClick={() => {
                   setSelectedDietaryFilters(prev => 
-                    prev.includes(option.key)
-                      ? prev.filter(f => f !== option.key)
-                      : [...prev, option.key]
+                    prev.includes(option)
+                      ? prev.filter(f => f !== option)
+                      : [...prev, option]
                   )
                 }}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
-                style={selectedDietaryFilters.includes(option.key)
+                style={selectedDietaryFilters.includes(option)
                   ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
                   : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
                 }
               >
-                {option.label}
+                {option}
               </button>
             ))}
             {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
@@ -1015,80 +1038,6 @@ export default function MenuClient() {
           </div>
         )}
       </div>
-
-      {/* Demo Signature (Pasta only) */}
-      {tenant === 'demo' && showSignatureGrid && (
-        <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex flex-col items-center mb-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
-            </div>
-            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
-          </div>
-
-          {/* Use the same card layout as the Pasta category items (with description). */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {resolveDemoSignaturePastaItems().map((it) => {
-              const canShow = DEMO_PASTA_PHOTO_ITEM_IDS.has(it.id)
-              const sigSrc = canShow ? (((imageMap[it.id] as string | undefined) || it.imageUrl || '')) : ''
-              return (
-                <div
-                  key={it.id}
-                  className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                  style={{
-                    borderRadius: 'var(--radius)',
-                    background: 'var(--card)',
-                    borderColor: 'var(--muted)',
-                    ...cardStyleForCategory()
-                  }}
-                >
-                  {sigSrc ? (
-                    <div className="bg-gray-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={sigSrc}
-                        alt={it.name}
-                        className="w-full h-48 object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                  ) : null}
-
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
-                        {it.name}
-                      </h3>
-                      {typeof it.price === 'number' && (
-                        <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>
-                          ${it.price.toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-
-                    {it.description && (
-                      <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
-                        {it.description}
-                      </p>
-                    )}
-
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage('Tell me about ' + it.name) }}
-                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
-                        aria-label={'Ask about ' + it.name}
-                      >
-                        Ask AI
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
@@ -1118,18 +1067,7 @@ export default function MenuClient() {
                   style={activeCategoryId===category.id?{ color: '#0b0b0b', background: 'var(--accent)' }:{ color: '#e5e5e5', background: '#1a1a1a' }}
                 >
                   <span className="inline-flex items-center gap-2">
-                    {getCategoryImage(category.name) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={getCategoryImage(category.name) as string}
-                        alt=""
-                        className="h-6 w-6 rounded-md object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      getCategoryIcon(category.name)
-                    )}
+                    {getCategoryIcon(category.name)}
                     <span>{category.name}</span>
                   </span>
                 </button>
@@ -1140,33 +1078,13 @@ export default function MenuClient() {
 
         {/* Menu Grid */}
         <div className="space-y-12 lg:col-span-9" id="top">
-          {filteredCategories.length === 0 && (
-            <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--muted)' }}>
-              <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
-                No items match your filters
-              </div>
-              <div className="mt-1 text-xs" style={{ color: 'var(--ink)', opacity: 0.78 }}>
-                This menu may not list enough ingredient details to filter reliably. Try removing the â€œNo gluten/dairy/nuts listedâ€ filters,
-                or use <span className="font-semibold">Ask AI</span> / ask staff for allergy needs.
-              </div>
-              <div className="mt-3 flex justify-center">
-                <button
-                  onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
-                  className="px-3 py-2 rounded-md text-xs font-semibold"
-                  style={{ background: 'var(--accent)', color: '#0b0b0b' }}
-                >
-                  Clear all filters
-                </button>
-              </div>
-            </div>
-          )}
           {filteredCategories.map((category, idx) => (
             <div
               key={category.id}
               id={`cat-${category.id}`}
               className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t' : ''}`}
               style={{
-                background: 'var(--card)',
+                background: isBenes ? 'linear-gradient(90deg, rgba(20,83,45,0.03), rgba(255,255,255,0.03), rgba(185,28,28,0.03))' : 'var(--card)',
                 borderColor: 'var(--muted)',
                 borderRadius: 12,
                 padding: 12
@@ -1174,21 +1092,10 @@ export default function MenuClient() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
-                  {getCategoryImage(category.name) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={getCategoryImage(category.name) as string}
-                      alt=""
-                      className="h-9 w-9 rounded-lg object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    getCategoryIcon(category.name)
-                  )}
+                  {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
-                <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
+                <div className="flex-1 ml-6" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
               {typeof categoryIntros[category.name] === 'string' && (
                 <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
@@ -1201,14 +1108,14 @@ export default function MenuClient() {
                     className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
                     style={{ 
                       borderRadius: 'var(--radius)', 
-                      background: 'var(--card)', 
-                      borderColor: 'var(--muted)',
-                      ...cardStyleForCategory()
+                      background: isBenes ? '#fffdf5' : 'var(--card)', 
+                      borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
+                      boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
+                      ...cardStyleForCategory(category.name)
                     }}
                   >
                     {(() => {
-                      const canShow = tenant !== 'demo' || DEMO_PASTA_PHOTO_ITEM_IDS.has(item.id)
-                      const src = canShow ? (imageMap[item.id] || item.imageUrl || '') : ''
+                      const src = imageMap[item.id] || item.imageUrl || ''
                       if (!src) return null
                       return (
                         <div className="bg-gray-100">
@@ -1216,7 +1123,7 @@ export default function MenuClient() {
                             id={`img-${item.id}`}
                             src={src}
                             alt={item.name}
-                            className="w-full h-48 object-cover"
+                            className="w-full h-56 object-cover"
                             loading="lazy"
                             decoding="async"
                           />
@@ -1235,9 +1142,9 @@ export default function MenuClient() {
                         ) : (
                           <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
                             {highlightText(item.name, searchQuery)}
-                            {typeof item.calories === 'number' && (
-                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
-                            )}
+                            <span className="ml-2 align-middle text-sm font-normal text-gray-500">
+                              ({typeof item.calories === 'number' ? `${item.calories} cal` : 'cal N/A'})
+                            </span>
                           </h3>
                         )}
                         {isAdmin ? (
@@ -1249,19 +1156,13 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : undefined, color: isBenes ? '#0b0b0b' : undefined }}>${item.price.toFixed(2)}</span>
                         )}
                       </div>
                       {!isAdmin && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {[category.name.toUpperCase()].map(badge => (
-                            <span
-                              key={badge}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold border"
-                              style={badgeStyle()}
-                            >
-                              {badge}
-                            </span>
+                          {getItemBadges(item).map(badge => (
+                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
                           ))}
                         </div>
                       )}
@@ -1336,28 +1237,43 @@ export default function MenuClient() {
                         </div>
                         
                         <div className="shrink-0 flex items-center gap-2">
-                          {!hideCart && (
-                            <button
-                              onClick={() => {
-                                addToCart(item)
-                                setRecentlyAddedId(item.id)
-                                setCartBump(true)
-                                setToast(`Added ${item.name}`)
-                                setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
-                              }}
-                              className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
-                              style={{ background: 'var(--accent)' }}
-                            >
-                              {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
-                            </button>
-                          )}
-                          <button
-                            onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                            className="px-4 py-2 rounded-lg text-sm font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 whitespace-nowrap"
-                            aria-label={`Ask about ${item.name}`}
-                          >
-                            <span>Ask AI</span>
-                          </button>
+                        <button
+                          onClick={() => {
+                            addToCart(item)
+                            setRecentlyAddedId(item.id)
+                            setCartBump(true)
+                            setToast(`Added ${item.name}`)
+                            setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
+                            launchFlyToPlate(item)
+                            const thumb = item.imageUrl || `https://via.placeholder.com/120/cccccc/333333?text=${encodeURIComponent(item.name)}`
+                            setPlatePile(prev => {
+                              const filtered = prev.filter(p => p.itemId !== item.id)
+                              return [...filtered.slice(-2), { itemId: item.id, src: thumb }]
+                            })
+                          }}
+                          className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump' : ''}`}
+                          style={{
+                            background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : 'var(--accent)',
+                            boxShadow: isBenes ? '0 8px 18px rgba(185,28,28,0.35)' : undefined,
+                            letterSpacing: isBenes ? 0.3 : undefined,
+                            outline: recentlyAddedId===item.id ? (isBenes ? '2px solid #b91c1c' : '2px solid var(--accent)') : undefined,
+                            outlineOffset: recentlyAddedId===item.id ? 2 : undefined,
+                          }}
+                        >
+                          {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
+                        </button>
+                <button
+                  onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                  className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                  aria-label={`Ask about ${item.name}`}
+                >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+                          </svg>
+                          <span>Ask</span>
+                        </button>
                         </div>
                       </div>
                     </div>
@@ -1377,15 +1293,93 @@ export default function MenuClient() {
         </p>
       </div>
 
+      {/* Floating Plate Button with hover preview */}
+      <div
+        className="fixed bottom-6 right-6 z-50"
+        onMouseEnter={() => {/* open preview on hover */}}
+        onMouseLeave={() => {/* close preview handled by CSS hover state */}}
+      >
+        <div className="group relative">
+          <button
+            onClick={() => setIsCartOpen(true)}
+            ref={plateButtonRef}
+            className={`relative text-white px-6 py-3 rounded-full shadow-lg transition-all duration-200 flex items-center gap-2 ${cartBump ? 'animate-bump' : ''}`}
+            style={{background:'var(--accent)', color:'#0b0b0b'}}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="2" />
+              <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
+            </svg>
+            <span className="font-medium">Plate ({cartItemCount})</span>
+            {cartItemCount > 0 && (
+              <span className="font-bold">${cartTotal.toFixed(2)}</span>
+            )}
+            {/* Plate pile thumbnails */}
+            {platePile.length > 0 && (
+              <div className="absolute -top-3 -right-3 flex -space-x-2 pointer-events-none">
+                {platePile.map((p, i) => (
+                  <img key={`${p.itemId}-${i}`} src={p.src} alt="" className="w-6 h-6 rounded-full border border-white object-cover shadow" />
+                ))}
+              </div>
+            )}
+          </button>
+          {/* Hover preview */}
+          {cart.length > 0 && (
+            <div className="pointer-events-none absolute right-0 bottom-full mb-2 w-72 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150">
+              <div className="bg-white text-black rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <span className="text-sm font-semibold">Plate Preview</span>
+                  <span className="text-sm font-medium">${cartTotal.toFixed(2)}</span>
+                </div>
+                <ul className="max-h-56 overflow-auto">
+                  {cart.slice(0,3).map(ci => (
+                    <li key={ci.item.id} className="px-4 py-2 text-sm flex items-center justify-between">
+                      <span className="truncate mr-2">{ci.item.name}</span>
+                      <span className="text-gray-600">×{ci.quantity}</span>
+                    </li>
+                  ))}
+                  {cart.length > 3 && (
+                    <li className="px-4 py-2 text-xs text-gray-500">+ {cart.length - 3} more items</li>
+                  )}
+                </ul>
+                <div className="px-4 py-2 bg-gray-50 text-right">
+                  <button onClick={() => setIsCartOpen(true)} className="text-sm font-medium text-black hover:underline pointer-events-auto">Open plate</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* AI Assistant Button */}
       <button
         onClick={() => setIsAssistantOpen(true)}
         className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
-        style={{ background: '#059669', color: '#ffffff' }}
+        style={{background:'var(--accent)', color:'#0b0b0b'}}
         aria-label="Open assistant"
       >
-        <span className="font-extrabold tracking-widest">Ask AI</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+        </svg>
       </button>
+
+      {/* Floating flyers for add-to-plate animation */}
+      {flyers.map(f => (
+        <img
+          key={f.key}
+          src={f.src}
+          alt=""
+          className="fixed w-10 h-10 rounded-full object-cover z-[60] pointer-events-none transition-transform duration-700 ease-out shadow"
+          style={{
+            left: 0,
+            top: 0,
+            transform: `translate(${f.startX}px, ${f.startY}px) ${f.moved ? `translate(${f.dx}px, ${f.dy}px) scale(0.4)` : ''}`,
+            border: '2px solid white'
+          }}
+        />
+      ))}
 
       {/* Plate Drawer */}
       {isCartOpen && (
@@ -1467,9 +1461,9 @@ export default function MenuClient() {
 
       {/* AI Assistant Drawer */}
       {isAssistantOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex md:justify-end">
-          <div className="w-full md:max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
-            <div className="px-4 py-4 md:p-6 border-b border-gray-200 bg-white" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
+          <div className="w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
+            <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
                 <button
@@ -1484,7 +1478,7 @@ export default function MenuClient() {
               </p>
             </div>
             
-            <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6">
+            <div className="flex-1 overflow-y-auto p-6">
               {chatHistory.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">
                   <div className="text-4xl mb-4">🤖</div>
@@ -1514,26 +1508,19 @@ export default function MenuClient() {
               )}
             </div>
             
-            <div className="px-4 py-4 md:p-6 border-t border-gray-200 bg-white" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder="Ask about our menu..."
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-colors text-base text-black bg-white placeholder-gray-500"
-                  style={{ fontSize: 16 }}
-                  inputMode="text"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
                   value={assistantMessage}
                   onChange={(e) => setAssistantMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      void sendAssistantMessage()
-                    }
-                  }}
+                  onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
                 />
                 <button
                   onClick={() => { void sendAssistantMessage() }}
-                  className="bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-500 transition-colors text-sm font-bold"
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
                 >
                   Send
                 </button>
@@ -1554,4 +1541,3 @@ export default function MenuClient() {
     </div>
   )
 }
-
