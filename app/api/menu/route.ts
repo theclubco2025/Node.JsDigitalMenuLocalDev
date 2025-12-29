@@ -18,8 +18,11 @@ export async function GET(request: NextRequest) {
     // Preview must remain viewable for client review.
     const previewTestPaywall = isPreview && process.env.PREVIEW_TEST_PAYWALL === '1' && tenant === 'demo'
     // In preview, only enforce payment when explicitly testing the paywall (demo tenant only).
-    // In production, enforce for all non-draft tenants (including demo if you ever point demo at prod).
-    const shouldEnforcePayment = (!isPreview && !tenant.endsWith('-draft')) || previewTestPaywall
+    // In production, enforce for all non-draft tenants EXCEPT demo (demo should remain freely viewable).
+    const shouldEnforcePayment =
+      (!isPreview && tenant !== 'demo' && !tenant.endsWith('-draft')) ||
+      previewTestPaywall
+
     if (shouldEnforcePayment && !tenant.endsWith('-draft') && process.env.DATABASE_URL) {
       const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })
       if (row?.status !== 'ACTIVE') {

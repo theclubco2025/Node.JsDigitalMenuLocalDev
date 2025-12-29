@@ -69,6 +69,11 @@ const LANDING = {
 }
 
 export default function Landing() {
+  const isBrowser = typeof window !== 'undefined'
+  const host = isBrowser ? window.location.hostname : ''
+  const isVercel = isBrowser && host.includes('vercel.app')
+  const looksLikeCheckoutDraft = isVercel && host.includes('checkout-draft')
+
   return (
     <main className="bg-white text-neutral-900">
       <section className="relative overflow-hidden">
@@ -98,6 +103,34 @@ export default function Landing() {
               </a>
             </div>
             <p className="mt-3 text-xs text-neutral-500">{LANDING.priceDisclaimer}</p>
+
+            {isVercel ? (
+              <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <div className="font-semibold">POC tools (Vercel deploy)</div>
+                <div className="mt-1 text-xs text-amber-800/80">Host: <span className="font-mono">{host}</span></div>
+                {looksLikeCheckoutDraft ? (
+                  <div className="mt-2 text-xs text-amber-800/80">
+                    You’re on <span className="font-mono">checkout-draft</span>. Use these links to test paywall → checkout → QR unlock.
+                  </div>
+                ) : (
+                  <div className="mt-2 text-xs text-amber-800/80">
+                    This looks like a Vercel deployment, but not obviously <span className="font-mono">checkout-draft</span>.
+                    Make sure you’re testing the preview deployment for the correct branch.
+                  </div>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a className="rounded-xl bg-neutral-900 px-3 py-2 text-xs font-semibold text-white" href="/t/demo">
+                    Open demo (tenant route)
+                  </a>
+                  <a className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold" href="/billing?tenant=demo">
+                    Go to billing (demo)
+                  </a>
+                  <a className="rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold" href="/api/stripe/health" target="_blank" rel="noreferrer">
+                    Stripe health JSON
+                  </a>
+                </div>
+              </div>
+            ) : null}
           </div>
           <div className="relative">
             <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
