@@ -31,6 +31,7 @@ type TenantBrand = {
   tagline?: string
   logoUrl?: string
   header?: { logoUrl?: string }
+  links?: { website?: string; phone?: string; address?: string }
 }
 
 type TenantConfig = {
@@ -105,6 +106,16 @@ export default function MenuClient() {
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
   const brandTagline = brand?.tagline || ''
+  const brandLinks = brand?.links
+  const locationLine = useMemo(() => {
+    const address = typeof brandLinks?.address === 'string' ? brandLinks.address.trim() : ''
+    const phone = typeof brandLinks?.phone === 'string' ? brandLinks.phone.trim() : ''
+    return [address, phone].filter(Boolean).join(' • ')
+  }, [brandLinks?.address, brandLinks?.phone])
+  const heroHeadline =
+    (typeof copy?.heroSubtitle === 'string' && copy.heroSubtitle.trim() !== '')
+      ? copy.heroSubtitle.trim()
+      : brandTagline
 
   // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
   const effectiveTheme = useMemo(() => {
@@ -850,9 +861,17 @@ export default function MenuClient() {
             )}
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
-            <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
-                  <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
-                  <p className="text-xs md:text-sm" style={{ color: 'var(--accent)' }}>{brandTagline}</p>
+            <div
+              className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg max-w-2xl"
+              style={{ background: 'rgba(255,255,255,0.70)', border: '1px solid rgba(17,24,39,0.10)' }}
+            >
+              <h2 className="text-base md:text-xl font-bold" style={{ color: 'var(--ink)' }}>{heroHeadline}</h2>
+              {locationLine && (
+                <p className="text-[11px] md:text-xs mt-1" style={{ color: 'rgba(17,24,39,0.70)' }}>{locationLine}</p>
+              )}
+              {typeof copy?.specials === 'string' && copy.specials.trim() !== '' && (
+                <p className="text-[11px] md:text-xs mt-1" style={{ color: 'var(--accent)' }}>{copy.specials}</p>
+              )}
             </div>
           </div>
           {/* Tricolor divider bar */}
