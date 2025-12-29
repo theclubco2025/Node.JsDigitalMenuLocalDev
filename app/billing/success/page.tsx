@@ -15,6 +15,12 @@ export default function BillingSuccessPage() {
     return (sp.get('session_id') || '').trim()
   }, [])
 
+  const mock = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    const sp = new URLSearchParams(window.location.search)
+    return (sp.get('mock') || '').trim() === '1'
+  }, [])
+
   const [active, setActive] = useState(false)
   const [status, setStatus] = useState<string>('')
   const [confirmTried, setConfirmTried] = useState(false)
@@ -34,6 +40,13 @@ export default function BillingSuccessPage() {
 
   useEffect(() => {
     if (!tenant) return
+    // Preview-only: allow viewing the "paid" page without Stripe for demos/screenshots.
+    // We treat *.vercel.app as preview/test surface.
+    if (mock && typeof window !== 'undefined' && window.location.hostname.toLowerCase().includes('vercel.app')) {
+      setStatus('ACTIVE (MOCK)')
+      setActive(true)
+      return
+    }
     let cancelled = false
     async function poll() {
       try {
