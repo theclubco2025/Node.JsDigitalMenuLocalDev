@@ -68,8 +68,17 @@ export default function MenuClient() {
   // Get tenant/admin from URL params
   const isBrowser = typeof window !== 'undefined'
   const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
+  const tenantFromPath = useMemo(() => {
+    if (!isBrowser) return null
+    const parts = window.location.pathname.split('/').filter(Boolean)
+    // Allow pretty path tenancy: '/<slug>' (single segment) acts like tenant=<slug>
+    if (parts.length === 1 && parts[0] && !['menu', 't', 'api', 'billing', 'auth', 'admin', 'demo-admin', '_next'].includes(parts[0].toLowerCase())) {
+      return parts[0]
+    }
+    return null
+  }, [isBrowser])
   const tenant = isBrowser
-    ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
+    ? (searchParams!.get('tenant') || tenantFromPath || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
