@@ -13,6 +13,7 @@ type TenantStyleFlags = {
   heroVariant?: string
   accentSecondary?: string
   badges?: Record<string, string>
+  featuredIds?: string[]
 }
 
 type TenantTheme = {
@@ -99,6 +100,7 @@ export default function MenuClient() {
   const styleCfg = cfg?.style
   const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
   const accentSecondary = styleCfg?.accentSecondary || undefined
+  const featuredIds = (styleCfg?.featuredIds || []).filter(Boolean)
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
@@ -574,12 +576,14 @@ export default function MenuClient() {
     '--accent': effectiveTheme?.accent,
   }
 
-  // Benes-specific featured picks and pairings
-  const featuredItemIds: string[] = isBenes ? [
-    'i-margherita-napoletana-14',
-    'i-fettuccine-bolognese',
-    'i-prosciutto-arugula-14'
-  ] : []
+  // Featured picks: Benes has defaults; other tenants can opt-in via style.featuredIds + style.flags.signatureGrid
+  const featuredItemIds: string[] = isBenes ? (
+    featuredIds.length > 0 ? featuredIds : [
+      'i-margherita-napoletana-14',
+      'i-fettuccine-bolognese',
+      'i-prosciutto-arugula-14'
+    ]
+  ) : featuredIds
   const pairingsById: Record<string, string> = isBenes ? {
     'i-fettuccine-bolognese': 'Pairs with Zinfandel',
     'i-margherita-napoletana-14': 'Pairs with Chianti',
@@ -644,6 +648,12 @@ export default function MenuClient() {
     }
     return items
   }
+
+  const showSignatureGrid = useMemo(() => {
+    const enabled = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).signatureGrid)
+    if (!enabled) return false
+    return featuredItemIds.length > 0
+  }, [styleCfg?.flags, featuredItemIds.length])
 
   return (
     <div className="min-h-screen" style={rootStyle}>
@@ -842,7 +852,7 @@ export default function MenuClient() {
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
                   <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
-                  <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
+                  <p className="text-xs md:text-sm" style={{ color: 'var(--accent)' }}>{brandTagline}</p>
             </div>
           </div>
           {/* Tricolor divider bar */}
@@ -850,6 +860,41 @@ export default function MenuClient() {
             <div className="flex-1" style={{ background: 'var(--accent)' }} />
             <div className="flex-1" style={{ background: '#ffffff' }} />
             <div className="flex-1" style={{ background: accentSecondary || 'var(--accent)' }} />
+          </div>
+        </div>
+      )}
+
+      {/* Signature Picks (non-Benes opt-in via style.flags.signatureGrid + style.featuredIds) */}
+      {!isBenes && showSignatureGrid && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>House Favorites</h3>
+            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {resolveFeatured().slice(0, 3).map((it) => {
+              const src = imageMap[it.id] || it.imageUrl || ''
+              return (
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(17,24,39,0.12)', boxShadow: '0 10px 24px rgba(17,24,39,0.10)', background: 'var(--card)' }}>
+                  {src && (
+                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
+                  )}
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.0) 60%, rgba(0,0,0,0.08))' }} />
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-semibold" style={{ background: 'rgba(255,255,255,0.82)', color: 'var(--ink)', border: '1px solid rgba(17,24,39,0.12)' }}>Most Loved</div>
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>{it.name}</div>
+                        {it.categoryName && (
+                          <div className="text-xs mt-0.5" style={{ color: 'rgba(17,24,39,0.65)' }}>{it.categoryName}</div>
+                        )}
+                      </div>
+                      <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--ink)', background: 'linear-gradient(180deg, rgba(207,168,106,0.95), rgba(110,79,47,0.95))' }}>${Number(it.price).toFixed(2)}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -1190,11 +1235,13 @@ export default function MenuClient() {
                               return [...filtered.slice(-2), { itemId: item.id, src: thumb }]
                             })
                           }}
-                          className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                          className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump' : ''}`}
                           style={{
                             background: isBenes ? 'linear-gradient(180deg, #ef4444, #b91c1c)' : 'var(--accent)',
                             boxShadow: isBenes ? '0 8px 18px rgba(185,28,28,0.35)' : undefined,
-                            letterSpacing: isBenes ? 0.3 : undefined
+                            letterSpacing: isBenes ? 0.3 : undefined,
+                            outline: recentlyAddedId===item.id ? (isBenes ? '2px solid #b91c1c' : '2px solid var(--accent)') : undefined,
+                            outlineOffset: recentlyAddedId===item.id ? 2 : undefined,
                           }}
                         >
                           {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}

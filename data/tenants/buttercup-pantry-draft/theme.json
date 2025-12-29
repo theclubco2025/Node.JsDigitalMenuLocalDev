@@ -1,11 +1,12 @@
 {
-  "primary": "#CDAA7D",
-  "accent": "#6E4F2F",
-  "text": "#333333",
-  "ink": "#111111",
-  "card": "#FFFFFF",
-  "muted": "#F0E8DE",
-  "radius": 12
+  "primary": "#2b1d12",
+  "accent": "#cfa86a",
+  "bg": "#fbf6ee",
+  "text": "#1f2937",
+  "ink": "#111827",
+  "card": "#ffffff",
+  "muted": "#efe4d6",
+  "radius": "14px"
 }
 
 
