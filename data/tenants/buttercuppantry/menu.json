@@ -1,0 +1,61 @@
+﻿{
+  "categories": [
+    {
+      "id": "skillets-scrambles-omelets",
+      "name": "Skillets, Scrambles & Omelets",
+      "items": [
+        { "id": "original-hangtown-fry", "name": "The Original ΓÇ£Hangtown FryΓÇ¥", "description": "Oysters, bacon, onions & eggs scrambled; topped with melted cheese. Served with hash or potatoes + biscuit/muffin or toast.", "price": 15.00 },
+        { "id": "smoked-bacon-and-eggs", "name": "Smoked Bacon & Eggs", "description": "Smoked bacon and eggs (choice).", "price": 14.00 },
+        { "id": "sausage-patties-and-eggs", "name": "Sausage Patties & Eggs", "description": "Sausage patties with eggs.", "price": 14.00 },
+        { "id": "smoked-pit-ham-and-eggs", "name": "Smoked Pit Ham & Eggs", "description": "Smoked pit ham and eggs.", "price": 15.00 },
+        { "id": "just-two-eggs", "name": "Just Two Eggs", "description": "Two eggs any style.", "price": 11.00 }
+      ]
+    },
+    {
+      "id": "starters",
+      "name": "Starters",
+      "items": [
+        { "id": "chicken-wings", "name": "Chicken Wings", "description": "Choice of sweet chili, hot wing sauce or ranch.", "price": 7.00 },
+        { "id": "south-of-the-border-quesadilla", "name": "South of the Border Quesadilla", "description": "Flour tortilla stuffed with chicken, cheese, tomatoes, pico; sour cream & avocado.", "price": 12.00 },
+        { "id": "tempura-zucchini", "name": "Tempura Fried Zucchini", "description": "Fresh cut zucchini tempura, served with ranch.", "price": 9.00 },
+        { "id": "beer-battered-onion-rings", "name": "Beer Battered Onion Ring Basket", "description": "Onion rings with raspberry sauce.", "price": 9.00 },
+        { "id": "mozzarella-sticks", "name": "Mozzarella Sticks", "description": "Served with marinara sauce.", "price": 9.00 }
+      ]
+    },
+    {
+      "id": "burger-shack-sandwiches",
+      "name": "Burger Shack / Sandwiches",
+      "items": [
+        { "id": "triple-coronary-bypass-burger", "name": "Triple Coronary Bypass Burger", "description": "Three beef patties, bacon, jack, swiss & cheddar + grilled onions & dressing.", "price": 17.00 },
+        { "id": "old-fashioned-texas-chili-size", "name": "Old Fashioned Texas Chili Size", "description": "Broiled patty smothered with homemade chili, jack & cheddar, onions.", "price": 14.00 },
+        { "id": "just-a-basic-burger", "name": "Just A Basic Burger", "description": "Lettuce, tomato, pickles, red onion.", "price": 10.00 },
+        { "id": "sourdough-cheese-burger", "name": "Sourdough Cheese Burger", "description": "Parmesan garlic butter sourdough with cheddar, bacon, lettuce & tomato.", "price": 14.00 },
+        { "id": "patty-melt", "name": "Patty Melt", "description": "Swirl corn rye, grilled onions, tomato & American cheese.", "price": 13.85 },
+        { "id": "monte-cristo", "name": "Monte Cristo", "description": "Ham, turkey & jack cheese on sourdough, egg-battered, grilled. Powdered sugar + raspberry habanero sauce.", "price": 14.85 }
+      ]
+    },
+    {
+      "id": "country-comfort-dinners",
+      "name": "Country Comfort Dinners",
+      "items": [
+        { "id": "chicken-fried-steak", "name": "ButtercupΓÇÖs Original Chicken Fried Steak", "description": "Breaded rib eye, fried & topped with country gravy.", "price": 26.00 },
+        { "id": "slow-roast-bbq-ribs", "name": "Slow Roast BBQ Baby Back Ribs", "description": "House BBQ sauce, served with sides.", "price": 22.00 },
+        { "id": "meatloaf-and-gravy", "name": "Old Fashioned Meatloaf & Beef Gravy", "description": "Homemade meatloaf, beef gravy & sauteed mushrooms.", "price": 18.00 },
+        { "id": "grilled-beef-liver-onions", "name": "Grilled Beef Liver & Onions", "description": "Liver, grilled onions & bacon.", "price": 18.00 },
+        { "id": "chicken-parmesan", "name": "Chicken Parmesan", "description": "Breaded chicken, meat sauce, melted provolone, fettuccine alfredo, garlic bread.", "price": 19.00 }
+      ]
+    },
+    {
+      "id": "desserts-bakery",
+      "name": "Desserts & Bakery",
+      "items": [
+        { "id": "buttercrunch-ice-cream-pie", "name": "Buttercrunch Ice Cream Pie", "description": "Signature pie from the bakery.", "price": 8.50 },
+        { "id": "apple-dumpling-supreme", "name": "Apple Dumpling Supreme", "description": "Apple dumpling with toppings & ice cream.", "price": 7.00 },
+        { "id": "old-fashioned-hot-fudge-sundae", "name": "Old Fashioned Hot Fudge Sundae", "description": "Classic sundae with hot fudge.", "price": 7.00 },
+        { "id": "mississippi-mud-pie", "name": "Mississippi Mud Pie", "description": "Decadent chocolate pie.", "price": 7.00 }
+      ]
+    }
+  ]
+}
+
+

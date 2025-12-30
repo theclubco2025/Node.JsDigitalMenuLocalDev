@@ -1,0 +1,16 @@
+﻿{
+  "heroVariant": "logo",
+  "flags": {
+    "specials": false,
+    "pairings": false,
+    "signatureGrid": true
+  },
+  "accentSecondary": "#6E4F2F",
+  "featuredIds": [
+    "original-hangtown-fry",
+    "chicken-fried-steak",
+    "buttercrunch-ice-cream-pie"
+  ]
+}
+
+
