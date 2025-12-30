@@ -19,7 +19,9 @@ async function readJson(filePath: string): Promise<TenantConfigJson> {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const tenant = (searchParams.get('tenant') || '').trim() || 'demo'
+    // Normalize tenant slug so callers can pass BUTTERCUPPANTRY and still resolve
+    // data/tenants/buttercuppantry/* consistently.
+    const tenant = ((searchParams.get('tenant') || '').trim() || 'demo').toLowerCase()
 
     const isPreview = process.env.VERCEL_ENV === 'preview'
     // Safety: never serve draft tenants on production
@@ -141,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const tenant = (searchParams.get('tenant') || '').trim()
+    const tenant = (searchParams.get('tenant') || '').trim().toLowerCase()
     if (!tenant) return NextResponse.json({ error: 'Missing tenant' }, { status: 400 })
 
     const body = await request.json().catch(() => ({}))

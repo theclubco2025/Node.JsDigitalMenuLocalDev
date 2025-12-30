@@ -155,6 +155,8 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
 
 
   const maybeEnrich = (slug: string, menu: MenuResponse): MenuResponse => {
+    // Keep buttercuppantry as an exact promoted copy (no inferred tags/diet labels).
+    if (slug.toLowerCase() === 'buttercuppantry') return menu
     // If menu already has structured diet/allergen tags, enrichment no-ops per item.
     // Otherwise we enrich tags conservatively from name/description.
     return enrichMenuTagsFromText(menu)

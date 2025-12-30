@@ -1,21 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { resolveTenant } from '@/lib/tenant'
-import type { MenuResponse } from '@/types/api'
-import { readMenu, writeMenu } from '@/lib/data/menu'
+import { readMenu } from '@/lib/data/menu'
 import { prisma } from '@/lib/prisma'
-import buttercupEmbeddedMenu from '@/data/tenants/buttercuppantry/menu.json'
-
-function hasAnyMenuItems(value: unknown): boolean {
-  if (!value || typeof value !== 'object') return false
-  const cats = (value as Record<string, unknown>).categories
-  if (!Array.isArray(cats)) return false
-  return cats.some((c) => {
-    if (!c || typeof c !== 'object') return false
-    const items = (c as Record<string, unknown>).items
-    return Array.isArray(items) && items.length > 0
-  })
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,32 +31,7 @@ export async function GET(request: NextRequest) {
       }
     }
     const q = searchParams.get('q') || undefined
-
-    // TEMP testing: for buttercuppantry, prefer the filesystem menu (exact draft copy),
-    // but fall back to DB when needed. Also guard against DB returning an empty menu.
-    let menuSource: 'fs' | 'db' = 'db'
-    let menu = await readMenu(tenant)
-    if (tenant === 'buttercuppantry') {
-      try {
-        // Use a bundled JSON import so it is always available in Vercel/serverless output tracing.
-        // (Runtime filesystem reads under /data may not be packaged in production.)
-        const embeddedMenu: unknown = buttercupEmbeddedMenu
-        if (hasAnyMenuItems(embeddedMenu)) {
-          // If DB is empty for this tenant, seed it once from the filesystem copy.
-          if (!menu.categories || menu.categories.length === 0) {
-            await writeMenu(tenant, embeddedMenu as unknown as MenuResponse)
-            menu = await readMenu(tenant)
-          }
-          // Fallback: still return filesystem copy if DB write/read fails for any reason.
-          if (!menu.categories || menu.categories.length === 0) {
-            menu = embeddedMenu as unknown as MenuResponse
-            menuSource = 'fs' // treat as non-DB source for debugging
-          }
-        }
-      } catch {
-        // keep DB
-      }
-    }
+    const menu = await readMenu(tenant)
 
     // simple filter on q
     const filtered = q?.trim()
@@ -94,9 +56,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const headers: Record<string, string> = { 'Cache-Control': 'no-store' }
-    if (tenant === 'buttercuppantry' && menuSource === 'fs') headers['X-Menu-Source'] = 'filesystem'
-    return NextResponse.json(filtered, { headers })
+    return NextResponse.json(filtered, { headers: { 'Cache-Control': 'no-store' } })
 
   } catch (error) {
     console.error('Menu API error:', error)
