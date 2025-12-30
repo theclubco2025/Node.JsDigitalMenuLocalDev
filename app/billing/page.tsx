@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react'
 export default function BillingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const bypassActivationForTesting = process.env.NEXT_PUBLIC_DISABLE_PREVIEW_TENANT_FORCE === '1'
 
   const tenant = useMemo(() => {
     if (typeof window === 'undefined') return ''
@@ -18,11 +17,11 @@ export default function BillingPage() {
   // TEMP testing bypass: if you hit /billing for buttercuppantry, bounce back to the menu.
   // This avoids the activation wall without affecting other tenants.
   useEffect(() => {
-    if (!bypassActivationForTesting) return
     if (normalizedTenant !== 'buttercuppantry') return
-    const url = `/menu?tenant=${encodeURIComponent(normalizedTenant)}`
+    // Prefer pretty path; middleware maps /<slug> -> /menu?tenant=<slug>.
+    const url = `/${encodeURIComponent(normalizedTenant)}`
     window.location.replace(url)
-  }, [bypassActivationForTesting, normalizedTenant])
+  }, [normalizedTenant])
 
   async function start() {
     setError(null)
@@ -49,13 +48,13 @@ export default function BillingPage() {
   // Smooth flow: auto-start checkout for unpaid tenants (but still show a fallback button).
   useEffect(() => {
     if (!tenant) return
-    if (bypassActivationForTesting && normalizedTenant === 'buttercuppantry') return
+    if (normalizedTenant === 'buttercuppantry') return
     // Don't auto-loop if there is an error.
     if (error) return
     const t = setTimeout(() => { void start() }, 700)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenant, bypassActivationForTesting, normalizedTenant])
+  }, [tenant, normalizedTenant])
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-12">

@@ -14,7 +14,6 @@ function firstString(v: string | string[] | undefined): string | undefined {
 
 export default async function MenuPage({ searchParams }: Props) {
   const isPreview = process.env.VERCEL_ENV === 'preview'
-  const bypassActivationForTesting = process.env.NEXT_PUBLIC_DISABLE_PREVIEW_TENANT_FORCE === '1'
   const tenant =
     (firstString(searchParams?.tenant)?.trim().toLowerCase() ||
       process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
@@ -27,8 +26,8 @@ export default async function MenuPage({ searchParams }: Props) {
   if (!tenant || tenant === 'demo' || tenant.endsWith('-draft')) return <MenuClient />
 
   // TEMP testing bypass: allow ONLY buttercuppantry to view the menu without activation.
-  // This is gated by an env var so it can be flipped off later without code changes.
-  if (bypassActivationForTesting && tenant === 'buttercuppantry') return <MenuClient />
+  // This is intentionally tenant-scoped so it won't affect any other live menus.
+  if (tenant === 'buttercuppantry') return <MenuClient />
 
   // If DB isn't configured (local/demo), don't block.
   if (!process.env.DATABASE_URL) return <MenuClient />
