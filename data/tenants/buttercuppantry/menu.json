@@ -1,10 +1,10 @@
-﻿{
+{
   "categories": [
     {
       "id": "skillets-scrambles-omelets",
       "name": "Skillets, Scrambles & Omelets",
       "items": [
-        { "id": "original-hangtown-fry", "name": "The Original ΓÇ£Hangtown FryΓÇ¥", "description": "Oysters, bacon, onions & eggs scrambled; topped with melted cheese. Served with hash or potatoes + biscuit/muffin or toast.", "price": 15.00 },
+        { "id": "original-hangtown-fry", "name": "The Original “Hangtown Fry”", "description": "Oysters, bacon, onions & eggs scrambled; topped with melted cheese. Served with hash or potatoes + biscuit/muffin or toast.", "price": 15.00 },
         { "id": "smoked-bacon-and-eggs", "name": "Smoked Bacon & Eggs", "description": "Smoked bacon and eggs (choice).", "price": 14.00 },
         { "id": "sausage-patties-and-eggs", "name": "Sausage Patties & Eggs", "description": "Sausage patties with eggs.", "price": 14.00 },
         { "id": "smoked-pit-ham-and-eggs", "name": "Smoked Pit Ham & Eggs", "description": "Smoked pit ham and eggs.", "price": 15.00 },
@@ -38,7 +38,7 @@
       "id": "country-comfort-dinners",
       "name": "Country Comfort Dinners",
       "items": [
-        { "id": "chicken-fried-steak", "name": "ButtercupΓÇÖs Original Chicken Fried Steak", "description": "Breaded rib eye, fried & topped with country gravy.", "price": 26.00 },
+        { "id": "chicken-fried-steak", "name": "Buttercup’s Original Chicken Fried Steak", "description": "Breaded rib eye, fried & topped with country gravy.", "price": 26.00 },
         { "id": "slow-roast-bbq-ribs", "name": "Slow Roast BBQ Baby Back Ribs", "description": "House BBQ sauce, served with sides.", "price": 22.00 },
         { "id": "meatloaf-and-gravy", "name": "Old Fashioned Meatloaf & Beef Gravy", "description": "Homemade meatloaf, beef gravy & sauteed mushrooms.", "price": 18.00 },
         { "id": "grilled-beef-liver-onions", "name": "Grilled Beef Liver & Onions", "description": "Liver, grilled onions & bacon.", "price": 18.00 },

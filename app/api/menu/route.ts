@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic'
 import { resolveTenant } from '@/lib/tenant'
 import { readMenu } from '@/lib/data/menu'
 import { prisma } from '@/lib/prisma'
+import { promises as fs } from 'fs'
+import path from 'path'
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,7 +34,12 @@ export async function GET(request: NextRequest) {
     }
     const q = searchParams.get('q') || undefined
 
-    const menu = await readMenu(tenant)
+    // TEMP testing: force filesystem menu for buttercuppantry to ensure it's an exact copy of the draft.
+    // This avoids DB-empty menus overriding the FS copy, and is tenant-scoped to not affect other menus.
+    const menu =
+      tenant === 'buttercuppantry'
+        ? (JSON.parse(await fs.readFile(path.join(process.cwd(), 'data', 'tenants', tenant, 'menu.json'), 'utf8')))
+        : await readMenu(tenant)
 
     // simple filter on q
     const filtered = q?.trim()
