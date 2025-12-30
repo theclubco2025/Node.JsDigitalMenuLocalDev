@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { resolveTenant } from '@/lib/tenant'
-import { readMenu } from '@/lib/data/menu'
+import type { MenuResponse } from '@/types/api'
+import { readMenu, writeMenu } from '@/lib/data/menu'
 import { prisma } from '@/lib/prisma'
 import { promises as fs } from 'fs'
 import path from 'path'
+
+function hasAnyMenuItems(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false
+  const cats = (value as Record<string, unknown>).categories
+  if (!Array.isArray(cats)) return false
+  return cats.some((c) => {
+    if (!c || typeof c !== 'object') return false
+    const items = (c as Record<string, unknown>).items
+    return Array.isArray(items) && items.length > 0
+  })
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,14 +52,20 @@ export async function GET(request: NextRequest) {
     let menu = await readMenu(tenant)
     if (tenant === 'buttercuppantry') {
       try {
-        const fsMenu = JSON.parse(
+        const fsMenu: unknown = JSON.parse(
           await fs.readFile(path.join(process.cwd(), 'data', 'tenants', tenant, 'menu.json'), 'utf8')
         )
-        const hasItems = !!(fsMenu && Array.isArray(fsMenu.categories) && fsMenu.categories.some((c: any) => Array.isArray(c.items) && c.items.length > 0))
-        if (hasItems) {
-          // Use FS copy unconditionally for this tenant while testing.
-          menu = fsMenu
-          menuSource = 'fs'
+        if (hasAnyMenuItems(fsMenu)) {
+          // If DB is empty for this tenant, seed it once from the filesystem copy.
+          if (!menu.categories || menu.categories.length === 0) {
+            await writeMenu(tenant, fsMenu as unknown as MenuResponse)
+            menu = await readMenu(tenant)
+          }
+          // Fallback: still return filesystem copy if DB write/read fails for any reason.
+          if (!menu.categories || menu.categories.length === 0) {
+            menu = fsMenu as unknown as MenuResponse
+            menuSource = 'fs'
+          }
         }
       } catch {
         // keep DB
