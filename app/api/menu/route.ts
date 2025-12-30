@@ -34,12 +34,25 @@ export async function GET(request: NextRequest) {
     }
     const q = searchParams.get('q') || undefined
 
-    // TEMP testing: force filesystem menu for buttercuppantry to ensure it's an exact copy of the draft.
-    // This avoids DB-empty menus overriding the FS copy, and is tenant-scoped to not affect other menus.
-    const menu =
-      tenant === 'buttercuppantry'
-        ? (JSON.parse(await fs.readFile(path.join(process.cwd(), 'data', 'tenants', tenant, 'menu.json'), 'utf8')))
-        : await readMenu(tenant)
+    // TEMP testing: for buttercuppantry, prefer the filesystem menu (exact draft copy),
+    // but fall back to DB when needed. Also guard against DB returning an empty menu.
+    let menuSource: 'fs' | 'db' = 'db'
+    let menu = await readMenu(tenant)
+    if (tenant === 'buttercuppantry') {
+      try {
+        const fsMenu = JSON.parse(
+          await fs.readFile(path.join(process.cwd(), 'data', 'tenants', tenant, 'menu.json'), 'utf8')
+        )
+        const hasItems = !!(fsMenu && Array.isArray(fsMenu.categories) && fsMenu.categories.some((c: any) => Array.isArray(c.items) && c.items.length > 0))
+        if (hasItems) {
+          // Use FS copy unconditionally for this tenant while testing.
+          menu = fsMenu
+          menuSource = 'fs'
+        }
+      } catch {
+        // keep DB
+      }
+    }
 
     // simple filter on q
     const filtered = q?.trim()
@@ -64,7 +77,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    return NextResponse.json(filtered, { headers: { 'Cache-Control': 'no-store' } })
+    const headers: Record<string, string> = { 'Cache-Control': 'no-store' }
+    if (tenant === 'buttercuppantry' && menuSource === 'fs') headers['X-Menu-Source'] = 'filesystem'
+    return NextResponse.json(filtered, { headers })
 
   } catch (error) {
     console.error('Menu API error:', error)
