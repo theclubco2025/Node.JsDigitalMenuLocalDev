@@ -4,8 +4,7 @@ import { resolveTenant } from '@/lib/tenant'
 import type { MenuResponse } from '@/types/api'
 import { readMenu, writeMenu } from '@/lib/data/menu'
 import { prisma } from '@/lib/prisma'
-import { promises as fs } from 'fs'
-import path from 'path'
+import buttercupEmbeddedMenu from '@/data/tenants/buttercuppantry/menu.json'
 
 function hasAnyMenuItems(value: unknown): boolean {
   if (!value || typeof value !== 'object') return false
@@ -52,19 +51,19 @@ export async function GET(request: NextRequest) {
     let menu = await readMenu(tenant)
     if (tenant === 'buttercuppantry') {
       try {
-        const fsMenu: unknown = JSON.parse(
-          await fs.readFile(path.join(process.cwd(), 'data', 'tenants', tenant, 'menu.json'), 'utf8')
-        )
-        if (hasAnyMenuItems(fsMenu)) {
+        // Use a bundled JSON import so it is always available in Vercel/serverless output tracing.
+        // (Runtime filesystem reads under /data may not be packaged in production.)
+        const embeddedMenu: unknown = buttercupEmbeddedMenu
+        if (hasAnyMenuItems(embeddedMenu)) {
           // If DB is empty for this tenant, seed it once from the filesystem copy.
           if (!menu.categories || menu.categories.length === 0) {
-            await writeMenu(tenant, fsMenu as unknown as MenuResponse)
+            await writeMenu(tenant, embeddedMenu as unknown as MenuResponse)
             menu = await readMenu(tenant)
           }
           // Fallback: still return filesystem copy if DB write/read fails for any reason.
           if (!menu.categories || menu.categories.length === 0) {
-            menu = fsMenu as unknown as MenuResponse
-            menuSource = 'fs'
+            menu = embeddedMenu as unknown as MenuResponse
+            menuSource = 'fs' // treat as non-DB source for debugging
           }
         }
       } catch {
