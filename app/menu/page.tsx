@@ -25,9 +25,9 @@ export default async function MenuPage({ searchParams }: Props) {
   // Always allow demo + any draft tenants (drafts are blocked elsewhere on prod anyway).
   if (!tenant || tenant === 'demo' || tenant.endsWith('-draft')) return <MenuClient />
 
-  // TEMP testing bypass: allow ONLY buttercuppantry to view the menu without activation.
+  // TEMP tenant-scoped bypass: allow specific tenants to view the menu without activation.
   // This is intentionally tenant-scoped so it won't affect any other live menus.
-  if (tenant === 'buttercuppantry') return <MenuClient />
+  if (tenant === 'buttercuppantry' || tenant === 'southforkgrille') return <MenuClient />
 
   // If DB isn't configured (local/demo), don't block.
   if (!process.env.DATABASE_URL) return <MenuClient />
