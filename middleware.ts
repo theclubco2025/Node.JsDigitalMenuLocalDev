@@ -3,13 +3,6 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const isPreview = process.env.VERCEL_ENV === 'preview'
-  // Pretty slug aliases → canonical tenant IDs.
-  // Keep this list tiny and explicit to avoid impacting other tenants.
-  const canonicalTenantForSlug = (slug: string) => {
-    const s = (slug || '').toLowerCase()
-    if (s === 'southforkgrille') return 'south-fork-grille'
-    return slug
-  }
   // Handle CORS preflight generically for all API routes
   if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
     const res = NextResponse.json({ ok: true })
@@ -23,6 +16,17 @@ export function middleware(request: NextRequest) {
       res.headers.set('Vary', 'Origin')
     }
     return res
+  }
+
+  // Hard bypass: never allow billing for specific tenants (avoid any paywall flash).
+  if (request.nextUrl.pathname === '/billing') {
+    const t = (request.nextUrl.searchParams.get('tenant') || '').trim().toLowerCase()
+    if (['buttercuppantry', 'southforkgrille', 'south-fork-grille', 'independent'].includes(t)) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/${encodeURIComponent(t)}`
+      url.search = ''
+      return NextResponse.redirect(url)
+    }
   }
 
   // Safety: never allow -draft tenants on production domain (prevents accidental draft leakage)
@@ -75,7 +79,7 @@ export function middleware(request: NextRequest) {
   // Friendly owner admin alias: /<slug>-admin -> /menu?tenant=<slug>-draft&admin=1
   const adminAlias = request.nextUrl.pathname.match(/^\/(.+)-admin$/)
   if (adminAlias && adminAlias[1]) {
-    const slug = canonicalTenantForSlug(adminAlias[1])
+    const slug = adminAlias[1]
     const url = request.nextUrl.clone()
     const token = url.searchParams.get('token') || ''
     url.pathname = '/menu'
@@ -119,7 +123,7 @@ export function middleware(request: NextRequest) {
       '_next',
     ].includes(pathOnly[0])
   ) {
-    const slug = canonicalTenantForSlug(pathOnly[0])
+    const slug = pathOnly[0]
     if (!isPreview && slug.toLowerCase().endsWith('-draft')) {
       const url = request.nextUrl.clone()
       url.pathname = '/menu'
@@ -129,11 +133,6 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/menu'
     url.searchParams.set('tenant', slug)
-    // For Independent, keep the clean path (/independent) in the address bar.
-    // This is intentionally tenant-scoped to avoid impacting other tenants.
-    if (slug.toLowerCase() === 'independent') {
-      return NextResponse.rewrite(url)
-    }
     return NextResponse.redirect(url)
   }
   // Add CORS headers for API routes
