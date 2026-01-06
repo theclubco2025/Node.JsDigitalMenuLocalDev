@@ -1,0 +1,26 @@
+{
+  "heroVariant": "image",
+  "navVariant": "chipScroller",
+  "motion": "subtle",
+  "texture": { "vignette": false, "paper": false },
+  "accentSecondary": "#7c5a1e",
+  "flags": {
+    "specials": true,
+    "pairings": false,
+    "signatureGrid": true,
+    "chefNotes": false,
+    "priceRibbons": true,
+    "imageBadges": false,
+    "hideCart": true
+  },
+  "featuredIds": [
+    "i-buttermilk-fried-chicken",
+    "i-lemon-caper-salmon",
+    "i-molasses-brined-pork-chop"
+  ],
+  "badges": {
+    "category": "Independent"
+  },
+  "ab": { "copy": false }
+}
+

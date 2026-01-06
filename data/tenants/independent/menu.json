@@ -1,0 +1,228 @@
+{
+  "categories": [
+    {
+      "id": "c-starters",
+      "name": "Starters",
+      "items": [
+        {
+          "id": "i-turnip-fries",
+          "name": "Turnip Fries",
+          "description": "Crisp turnip fries with house seasoning. (Prices subject to change.)",
+          "price": 12,
+          "tags": ["vegetarian"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-flash-fried-calamari",
+          "name": "Flash‑Fried Calamari",
+          "description": "Golden calamari with a bright dipping sauce. (Prices subject to change.)",
+          "price": 18,
+          "tags": ["contains-seafood"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-tempura-prawns",
+          "name": "Tempura Prawns",
+          "description": "Light tempura prawns with a house dip. (Prices subject to change.)",
+          "price": 19,
+          "tags": ["contains-seafood"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-ahi-tartare",
+          "name": "Ahi Tartare",
+          "description": "Fresh ahi tartare with bright citrus notes. (Prices subject to change.)",
+          "price": 22,
+          "tags": ["contains-seafood", "gluten-free"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-salads",
+      "name": "Salads",
+      "items": [
+        {
+          "id": "i-ahi-nicoise",
+          "name": "Ahi Niçoise",
+          "description": "Ahi tuna over classic Niçoise-inspired greens. (Prices subject to change.)",
+          "price": 23,
+          "tags": ["contains-seafood", "gluten-free"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-heirloom-beet-salad",
+          "name": "Heirloom Beet",
+          "description": "Heirloom beets with seasonal accents. (Prices subject to change.)",
+          "price": 16,
+          "tags": ["vegetarian", "gluten-free"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-handhelds",
+      "name": "Handhelds",
+      "items": [
+        {
+          "id": "i-house-ground-burger",
+          "name": "House‑Ground Burger",
+          "description": "House-ground burger cooked to order. Add your favorite toppings. (Prices subject to change.)",
+          "price": 21,
+          "tags": ["contains-meat"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-salmon-avocado-burger",
+          "name": "Salmon Avocado Burger",
+          "description": "Salmon patty with avocado and bright garnish. (Prices subject to change.)",
+          "price": 23,
+          "tags": ["contains-seafood"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-tempura-fish-and-chips",
+          "name": "Tempura‑Battered Fish & Chips",
+          "description": "Crispy fish & chips with house tartar. (Prices subject to change.)",
+          "price": 19.5,
+          "tags": ["contains-seafood"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-mains",
+      "name": "Mains",
+      "items": [
+        {
+          "id": "i-buttermilk-fried-chicken",
+          "name": "Buttermilk Fried Chicken",
+          "description": "Crisp buttermilk fried chicken with seasonal sides. (Prices subject to change.)",
+          "price": 35,
+          "tags": ["contains-meat", "contains-dairy"],
+          "imageUrl": "https://images.squarespace-cdn.com/content/v1/652d775c7dfc3727b42cc773/dfd81047-d0f0-478d-97a3-83a3b94e48c1/Indy+Food57.jpg"
+        },
+        {
+          "id": "i-lemon-caper-salmon",
+          "name": "Lemon Caper Salmon",
+          "description": "Salmon finished with lemon, capers, and butter. (Prices subject to change.)",
+          "price": 44,
+          "tags": ["contains-seafood", "contains-dairy", "gluten-free"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-molasses-brined-pork-chop",
+          "name": "Molasses‑Brined Pork Chop",
+          "description": "Molasses-brined pork chop with seasonal vegetables. (Prices subject to change.)",
+          "price": 46,
+          "tags": ["contains-meat"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-wild-mushroom-ravioli",
+          "name": "Wild Mushroom Ravioli",
+          "description": "House pasta with wild mushroom filling. (Prices subject to change.)",
+          "price": 35,
+          "tags": ["vegetarian", "contains-dairy"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-prime-rib-sunday",
+          "name": "Sunday Prime Rib (Seasonal)",
+          "description": "A Sunday dinner favorite when available. (Prices subject to change.)",
+          "price": 52,
+          "tags": ["contains-meat"],
+          "imageUrl": "https://images.squarespace-cdn.com/content/v1/652d775c7dfc3727b42cc773/3eb3bb90-39fc-4fd2-bc6c-5f19f5c0db0b/Prime+Rib.jpg"
+        }
+      ]
+    },
+    {
+      "id": "c-desserts",
+      "name": "Desserts",
+      "items": [
+        {
+          "id": "i-bread-pudding",
+          "name": "Bread Pudding",
+          "description": "Bread pudding with caramel sauce & vanilla ice cream. (Prices subject to change.)",
+          "price": 12,
+          "tags": ["vegetarian", "contains-dairy", "contains-eggs"],
+          "imageUrl": "https://images.squarespace-cdn.com/content/v1/652d775c7dfc3727b42cc773/41388011-bcfc-41f5-8bba-7834b27a7304/Bread+Pudding+with+Caramel+Sauce+%26+Vanilla+Ice+Cream"
+        },
+        {
+          "id": "i-seasonal-cheesecake",
+          "name": "Seasonal Cheesecake",
+          "description": "Ask your server for this week’s cheesecake. (Prices subject to change.)",
+          "price": 13,
+          "tags": ["vegetarian", "contains-dairy", "contains-eggs"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-cocktails",
+      "name": "Cocktails",
+      "items": [
+        {
+          "id": "i-clou-rouge",
+          "name": "Clou Rouge",
+          "description": "A house cocktail featuring citrus and spiced notes. (Prices subject to change.)",
+          "price": 16,
+          "tags": [],
+          "imageUrl": "https://images.squarespace-cdn.com/content/v1/652d775c7dfc3727b42cc773/ac6bbd19-01ef-4018-9dfa-867044ad885e/Clou+Rouge.jpeg"
+        },
+        {
+          "id": "i-espresso-martini",
+          "name": "Espresso Martini",
+          "description": "Classic espresso martini. (Prices subject to change.)",
+          "price": 16,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-beer-wine",
+      "name": "Beer & Wine",
+      "items": [
+        {
+          "id": "i-rotating-draft",
+          "name": "Rotating Draft",
+          "description": "Ask your server what’s on tap today. (Prices subject to change.)",
+          "price": 8,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-select-wine-glass",
+          "name": "Select Wine (Glass)",
+          "description": "Curated wine list — red, white, and sparkling options. (Prices subject to change.)",
+          "price": 12,
+          "tags": [],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-na",
+      "name": "Non‑Alcoholic",
+      "items": [
+        {
+          "id": "i-hot-tea",
+          "name": "Hot Tea",
+          "description": "Assorted hot tea. (Prices subject to change.)",
+          "price": 4,
+          "tags": ["vegan"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-hot-chocolate",
+          "name": "Hot Chocolate",
+          "description": "Hot chocolate. (Prices subject to change.)",
+          "price": 5,
+          "tags": ["vegetarian", "contains-dairy"],
+          "imageUrl": ""
+        }
+      ]
+    }
+  ]
+}

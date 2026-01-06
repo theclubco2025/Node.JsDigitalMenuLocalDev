@@ -1,0 +1,17 @@
+{
+  "name": "The Independent",
+  "tagline": "American fusion • craft cocktails • garden patios",
+  "header": {
+    "logoUrl": "https://images.squarespace-cdn.com/content/v1/652d775c7dfc3727b42cc773/6e561156-359b-4a87-9642-56895998504f/Indy_Logo_Light.png",
+    "background": "#0b0f12",
+    "height": 140,
+    "mode": "logo-only"
+  },
+  "links": {
+    "website": "https://www.independentplacerville.com/",
+    "reservations": "https://www.independentplacerville.com/reservation",
+    "instagram": "https://www.instagram.com/theindependentrestaurantandbar/",
+    "facebook": "https://www.facebook.com/independentrestaurantandbar/"
+  }
+}
+

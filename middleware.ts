@@ -129,6 +129,11 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/menu'
     url.searchParams.set('tenant', slug)
+    // For Independent, keep the clean path (/independent) in the address bar.
+    // This is intentionally tenant-scoped to avoid impacting other tenants.
+    if (slug.toLowerCase() === 'independent') {
+      return NextResponse.rewrite(url)
+    }
     return NextResponse.redirect(url)
   }
   // Add CORS headers for API routes

@@ -33,7 +33,7 @@ export default async function MenuPage({ searchParams }: Props) {
 
   // TEMP tenant-scoped bypass: allow specific tenants to view the menu without activation.
   // This is intentionally tenant-scoped so it won't affect any other live menus.
-  if (tenant === 'buttercuppantry' || tenant === 'south-fork-grille') return <MenuClient />
+  if (tenant === 'buttercuppantry' || tenant === 'south-fork-grille' || tenant === 'independent') return <MenuClient />
 
   // If DB isn't configured (local/demo), don't block.
   if (!process.env.DATABASE_URL) return <MenuClient />
