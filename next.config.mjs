@@ -7,10 +7,5 @@ const nextConfig = {
     }
     return config
   },
-  // Ensure filesystem-backed tenant data is included in serverless output tracing on Vercel.
-  // Without this, `fs.readFile(process.cwd()/data/tenants/...)` may work locally but return null in production.
-  outputFileTracingIncludes: {
-    '*': ['./data/tenants/**'],
-  },
 };
 export default nextConfig;
