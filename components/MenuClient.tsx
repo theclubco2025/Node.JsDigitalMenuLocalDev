@@ -161,6 +161,39 @@ export default function MenuClient() {
   const showSpecials = Boolean(flags.specials && specialsText)
   const showSignatureGrid = Boolean(flags.signatureGrid)
   const hideCart = Boolean(flags.hideCart)
+  // Respect tenant-scoped flags for UI parity between preview and live.
+  // Default to current behavior unless a tenant explicitly disables.
+  const showCategoryBadges = flags.categoryBadges !== false
+  const useMealGroups = String(styleCfg?.navVariant || '').toLowerCase() === 'chipscroller'
+
+  const cleanMojibake = (raw: string) => {
+    // Fix common encoding artifacts that can slip in when copying data through lossy paths.
+    // DISPLAY-only (no data mutation).
+    const s = String(raw || '')
+    return s
+      // sequences like " ?�� " or " �� "
+      .replace(/\s*\?[\uFFFD\?]{2,}\s*/g, ' — ')
+      .replace(/\s*�{2,}\s*/g, ' — ')
+      // common cp1252 mojibake for em/en-dash
+      .replace(/\s*â€”\s*/g, ' — ')
+      .replace(/\s*â€“\s*/g, ' – ')
+      .replace(/\s+—\s+/g, ' — ')
+      .trim()
+  }
+
+  const groupForCategory = (categoryName: string) => {
+    const cleaned = cleanMojibake(categoryName)
+    const lower = cleaned.toLowerCase()
+    if (lower.includes('kids')) return 'Kids'
+    if (lower.includes('dessert')) return 'Dessert'
+    if (lower.includes('drink') || lower.includes('beverage') || lower.includes('cocktail') || lower.includes('wine')) return 'Drinks'
+    const prefix = cleaned.split('—')[0]?.trim() || cleaned
+    if (/^brunch$/i.test(prefix)) return 'Breakfast'
+    if (/^breakfast$/i.test(prefix)) return 'Breakfast'
+    if (/^lunch$/i.test(prefix)) return 'Lunch'
+    if (/^dinner$/i.test(prefix)) return 'Dinner'
+    return prefix.replace(/\b\w/g, (m) => m.toUpperCase())
+  }
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -188,7 +221,13 @@ export default function MenuClient() {
         items: category.items.filter(item => {
           if (typeof item.price === 'number' && item.price <= 0) return false
           // Category filter
-          if (selectedCategory && category.name !== selectedCategory) return false
+          if (selectedCategory) {
+            if (!useMealGroups) {
+              if (category.name !== selectedCategory) return false
+            } else {
+              if (groupForCategory(category.name) !== selectedCategory) return false
+            }
+          }
           // Search filter (name and description)
           if (searchQuery) {
             const searchLower = searchQuery.toLowerCase()
@@ -209,7 +248,7 @@ export default function MenuClient() {
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters, tenant])
+  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters, tenant, useMealGroups])
 
   const updateItemField = (
     categoryId: string,
@@ -458,6 +497,28 @@ export default function MenuClient() {
     })
     return visible.map(cat => cat.name)
   }, [categories, tenant])
+
+  const navCategories = useMemo(() => {
+    if (!useMealGroups) return allCategories
+    const seen = new Set<string>()
+    const ordered: string[] = []
+    for (const name of allCategories) {
+      const g = groupForCategory(name)
+      if (!g || seen.has(g)) continue
+      seen.add(g)
+      ordered.push(g)
+    }
+    const preferred = ['Dinner', 'Lunch', 'Breakfast', 'Drinks', 'Kids', 'Dessert']
+    ordered.sort((a, b) => {
+      const ia = preferred.indexOf(a)
+      const ib = preferred.indexOf(b)
+      if (ia === -1 && ib === -1) return a.localeCompare(b)
+      if (ia === -1) return 1
+      if (ib === -1) return -1
+      return ia - ib
+    })
+    return ordered
+  }, [allCategories, useMealGroups])
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase()
@@ -953,9 +1014,9 @@ export default function MenuClient() {
             className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
             style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
           >
-            All Categories
+            {useMealGroups ? 'All' : 'All Categories'}
           </button>
-          {allCategories.map(category => (
+          {navCategories.map(category => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
@@ -1130,7 +1191,7 @@ export default function MenuClient() {
                     ) : (
                       getCategoryIcon(category.name)
                     )}
-                    <span>{category.name}</span>
+                    <span>{cleanMojibake(category.name)}</span>
                   </span>
                 </button>
               ))}
@@ -1186,7 +1247,7 @@ export default function MenuClient() {
                   ) : (
                     getCategoryIcon(category.name)
                   )}
-                  <span>{category.name}</span>
+                  <span>{cleanMojibake(category.name)}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
@@ -1252,9 +1313,9 @@ export default function MenuClient() {
                           <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
                         )}
                       </div>
-                      {!isAdmin && (
+                      {(!isAdmin && showCategoryBadges) && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {[category.name.toUpperCase()].map(badge => (
+                          {[cleanMojibake(category.name).toUpperCase()].map(badge => (
                             <span
                               key={badge}
                               className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold border"
