@@ -1,0 +1,16 @@
+﻿{
+  "name": "South Fork Grille",
+  "tagline": "El Dorado Hills ΓÇó Town Center",
+  "header": {
+    "mode": "logo-only",
+    "height": 160,
+    "logoUrl": "https://southforkrestaurants.com/wp-content/uploads/2022/08/SFG-Dark-e1659980816586.png",
+    "background": "#ffffff"
+  },
+  "links": {
+    "reservations": "https://www.yelp.com/reservations/south-fork-grille-el-dorado-hills?from_reserve_now=1",
+    "orderOnline": "https://order.online/business/south-fork-grille-11703091"
+  }
+}
+
+
