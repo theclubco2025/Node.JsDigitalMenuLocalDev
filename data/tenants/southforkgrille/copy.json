@@ -1,15 +1,13 @@
-﻿{
+{
   "tagline": "Upscale grill energy, sushi-inspired starters, and craft cocktails",
-  "heroSubtitle": "El Dorado Hills ΓÇó Town Center",
+  "heroSubtitle": "El Dorado Hills • Town Center",
   "specials": "",
   "categoryIntros": {
-    "Dinner ΓÇö Starters": "Shareable starters and sushi rolls to start the night right.",
-    "Dinner ΓÇö Entrees": "From seafood to steaksΓÇöbold flavors and polished comfort.",
-    "Dinner ΓÇö Fresh Salads": "Bright, crisp, and built to pair with any entr├⌐e.",
-    "Dinner ΓÇö Burger and Sandwiches": "Classic favorites with house touches.",
-    "Brunch ΓÇö Brunch Specialties": "Weekend classics, elevated.",
-    "Happy Hour ΓÇö Food Specials": "Small plates and snacks built for sipping."
+    "Dinner — Starters": "Shareable starters and sushi rolls to start the night right.",
+    "Dinner — Entrees": "From seafood to steaks — bold flavors and polished comfort.",
+    "Dinner — Fresh Salads": "Bright, crisp, and built to pair with any entrée.",
+    "Dinner — Burger and Sandwiches": "Classic favorites with house touches.",
+    "Brunch — Brunch Specialties": "Weekend classics, elevated.",
+    "Happy Hour — Food Specials": "Small plates and snacks built for sipping."
   }
 }
-
-

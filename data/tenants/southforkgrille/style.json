@@ -1,8 +1,11 @@
-﻿{
+{
   "heroVariant": "image",
   "navVariant": "chipScroller",
   "motion": "subtle",
-  "texture": { "vignette": true, "paper": false },
+  "texture": {
+    "vignette": true,
+    "paper": false
+  },
   "accentSecondary": "#1d4ed8",
   "flags": {
     "specials": false,
@@ -17,5 +20,3 @@
     "i-sfg-brunch-lobster-benedict"
   ]
 }
-
-
