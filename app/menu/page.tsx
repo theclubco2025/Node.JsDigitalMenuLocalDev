@@ -12,10 +12,16 @@ function firstString(v: string | string[] | undefined): string | undefined {
   return undefined
 }
 
+function canonicalTenant(tenant: string) {
+  const t = (tenant || '').toLowerCase()
+  if (t === 'southforkgrille') return 'south-fork-grille'
+  return tenant
+}
+
 export default async function MenuPage({ searchParams }: Props) {
   const isPreview = process.env.VERCEL_ENV === 'preview'
   const tenant =
-    (firstString(searchParams?.tenant)?.trim().toLowerCase() ||
+    canonicalTenant(firstString(searchParams?.tenant)?.trim().toLowerCase() ||
       process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
       'demo')
 
@@ -27,7 +33,7 @@ export default async function MenuPage({ searchParams }: Props) {
 
   // TEMP tenant-scoped bypass: allow specific tenants to view the menu without activation.
   // This is intentionally tenant-scoped so it won't affect any other live menus.
-  if (tenant === 'buttercuppantry' || tenant === 'southforkgrille') return <MenuClient />
+  if (tenant === 'buttercuppantry' || tenant === 'south-fork-grille') return <MenuClient />
 
   // If DB isn't configured (local/demo), don't block.
   if (!process.env.DATABASE_URL) return <MenuClient />

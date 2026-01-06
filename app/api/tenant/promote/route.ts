@@ -6,6 +6,12 @@ import path from 'path'
 import { writeMenu } from '@/lib/data/menu'
 import type { MenuResponse } from '@/types/api'
 
+function canonicalTenantSlug(raw: string): string {
+  const t = (raw || '').trim().toLowerCase()
+  if (t === 'southforkgrille') return 'south-fork-grille'
+  return t
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (process.env.NODE_ENV === 'production') {
@@ -22,8 +28,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({})) as { from?: string; to?: string }
     const params = request.nextUrl.searchParams
-    const from = ((body.from ?? params.get('from') ?? '') as string).trim()
-    const to = ((body.to ?? params.get('to') ?? '') as string).trim()
+    const from = canonicalTenantSlug(String(body.from ?? params.get('from') ?? ''))
+    const to = canonicalTenantSlug(String(body.to ?? params.get('to') ?? ''))
     if (!from || !to) return NextResponse.json({ error: 'Missing from/to' }, { status: 400 })
 
     const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
@@ -54,20 +60,29 @@ export async function POST(request: NextRequest) {
         // Upsert target settings (merge all available keys)
         await prisma.tenant.upsert({
           where: { slug: to },
-          update: { name: to, settings: ({
+          update: {
+            name: to,
+            status: 'ACTIVE',
+            settings: ({
             ...(brand ? { brand } : {}),
             ...(images ? { images } : {}),
             ...(style ? { style } : {}),
             ...(copy ? { copy } : {}),
             ...(theme ? { theme } : {}),
           } as InputJsonValue) },
-          create: { slug: to, name: to, settings: ({
+          },
+          create: {
+            slug: to,
+            name: to,
+            status: 'ACTIVE',
+            settings: ({
             ...(brand ? { brand } : {}),
             ...(images ? { images } : {}),
             ...(style ? { style } : {}),
             ...(copy ? { copy } : {}),
             ...(theme ? { theme } : {}),
           } as InputJsonValue) },
+          },
         })
 
         // Persist menu if present (via shared writer → DB when available)
@@ -92,8 +107,8 @@ export async function POST(request: NextRequest) {
     // Upsert target tenant and copy settings
     const target = await prisma.tenant.upsert({
       where: { slug: to },
-      update: { name: srcTenant.name, settings: (srcTenant.settings as InputJsonValue) },
-      create: { slug: to, name: srcTenant.name, settings: (srcTenant.settings as InputJsonValue) }
+      update: { name: srcTenant.name, status: 'ACTIVE', settings: (srcTenant.settings as InputJsonValue) },
+      create: { slug: to, name: srcTenant.name, status: 'ACTIVE', settings: (srcTenant.settings as InputJsonValue) }
     })
 
     if (srcMenu) {

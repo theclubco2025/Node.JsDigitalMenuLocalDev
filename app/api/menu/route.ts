@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     // Preview must remain viewable for client review.
     // TEMP tenant-scoped bypass: allow specific tenants to load menu data without activation.
     // This is intentionally tenant-scoped so it won't affect any other live menus.
-    if (!isPreview && (tenant === 'buttercuppantry' || tenant === 'southforkgrille')) {
+    if (!isPreview && (tenant === 'buttercuppantry' || tenant === 'south-fork-grille')) {
       // skip paywall
     } else if (!isPreview && tenant !== 'demo' && !tenant.endsWith('-draft') && process.env.DATABASE_URL) {
       const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })

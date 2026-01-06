@@ -1,11 +1,18 @@
 import { promises as fs } from "fs";
 import path from "path";
 
+function canonicalizeTenantId(tenant: string): string {
+  // Pretty slug aliases → canonical tenant IDs.
+  // Keep this list tiny and explicit to avoid impacting other tenants.
+  if (tenant === "southforkgrille") return "south-fork-grille";
+  return tenant;
+}
+
 function sanitizeTenantId(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const trimmed = raw.trim().toLowerCase();
   if (!/^[a-z0-9\-]+$/.test(trimmed)) return null;
-  return trimmed;
+  return canonicalizeTenantId(trimmed);
 }
 
 export function resolveTenant(url: string): string {

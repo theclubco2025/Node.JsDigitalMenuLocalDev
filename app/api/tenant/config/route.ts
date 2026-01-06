@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     // Normalize tenant slug so callers can pass BUTTERCUPPANTRY and still resolve
     // data/tenants/buttercuppantry/* consistently.
-    const tenant = ((searchParams.get('tenant') || '').trim() || 'demo').toLowerCase()
+    const rawTenant = ((searchParams.get('tenant') || '').trim() || 'demo').toLowerCase()
+    const tenant = rawTenant === 'southforkgrille' ? 'south-fork-grille' : rawTenant
 
     const isPreview = process.env.VERCEL_ENV === 'preview'
     // Safety: never serve draft tenants on production

@@ -17,7 +17,7 @@ export default function BillingPage() {
   // TEMP tenant-scoped bypass: if you hit /billing for specific tenants, bounce back to the menu.
   // This avoids the activation wall without affecting other tenants.
   useEffect(() => {
-    if (!['buttercuppantry', 'southforkgrille'].includes(normalizedTenant)) return
+    if (!['buttercuppantry', 'southforkgrille', 'south-fork-grille'].includes(normalizedTenant)) return
     // Prefer pretty path; middleware maps /<slug> -> /menu?tenant=<slug>.
     const url = `/${encodeURIComponent(normalizedTenant)}`
     window.location.replace(url)
@@ -48,7 +48,7 @@ export default function BillingPage() {
   // Smooth flow: auto-start checkout for unpaid tenants (but still show a fallback button).
   useEffect(() => {
     if (!tenant) return
-    if (['buttercuppantry', 'southforkgrille'].includes(normalizedTenant)) return
+    if (['buttercuppantry', 'southforkgrille', 'south-fork-grille'].includes(normalizedTenant)) return
     // Don't auto-loop if there is an error.
     if (error) return
     const t = setTimeout(() => { void start() }, 700)

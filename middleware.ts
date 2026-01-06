@@ -3,6 +3,13 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const isPreview = process.env.VERCEL_ENV === 'preview'
+  // Pretty slug aliases → canonical tenant IDs.
+  // Keep this list tiny and explicit to avoid impacting other tenants.
+  const canonicalTenantForSlug = (slug: string) => {
+    const s = (slug || '').toLowerCase()
+    if (s === 'southforkgrille') return 'south-fork-grille'
+    return slug
+  }
   // Handle CORS preflight generically for all API routes
   if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
     const res = NextResponse.json({ ok: true })
@@ -68,7 +75,7 @@ export function middleware(request: NextRequest) {
   // Friendly owner admin alias: /<slug>-admin -> /menu?tenant=<slug>-draft&admin=1
   const adminAlias = request.nextUrl.pathname.match(/^\/(.+)-admin$/)
   if (adminAlias && adminAlias[1]) {
-    const slug = adminAlias[1]
+    const slug = canonicalTenantForSlug(adminAlias[1])
     const url = request.nextUrl.clone()
     const token = url.searchParams.get('token') || ''
     url.pathname = '/menu'
@@ -112,7 +119,7 @@ export function middleware(request: NextRequest) {
       '_next',
     ].includes(pathOnly[0])
   ) {
-    const slug = pathOnly[0]
+    const slug = canonicalTenantForSlug(pathOnly[0])
     if (!isPreview && slug.toLowerCase().endsWith('-draft')) {
       const url = request.nextUrl.clone()
       url.pathname = '/menu'
