@@ -113,6 +113,8 @@ export function middleware(request: NextRequest) {
       'api',
       't',
       'menu',
+      // Dedicated landing for demo acknowledgement (do not treat as tenant slug)
+      'demo',
       'billing',
       'auth',
       'admin',
