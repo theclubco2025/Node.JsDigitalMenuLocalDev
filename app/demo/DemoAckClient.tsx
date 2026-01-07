@@ -57,12 +57,6 @@ export default function DemoAckClient() {
                 <li>Hero imagery + signature dishes</li>
               </ul>
             </div>
-            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="text-sm font-semibold">Important note</div>
-              <p className="mt-2 text-sm text-neutral-700">
-                Demo menus are for preview only. For severe allergies, guests should always confirm with staff.
-              </p>
-            </div>
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
