@@ -4,7 +4,7 @@
 import React from 'react'
 
 const LANDING = {
-  calendlyUrl: 'https://calendly.com/adennis-tccmenus/menu-demo',
+  calendlyUrl: 'https://calendly.com/tccsolutions2025/30min',
   primaryCtaLabel: 'Book Demo',
   priceMonthly: 75,
   priceDisclaimer: 'From $75/month. One-time onboarding based on menu size. No POS overhaul. QR-ready in days.',

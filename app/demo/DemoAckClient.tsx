@@ -8,7 +8,7 @@ export default function DemoAckClient() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
-  const calendlyUrl = useMemo(() => "https://calendly.com/adennis-tccmenus/menu-demo", [])
+  const calendlyUrl = useMemo(() => "https://calendly.com/tccsolutions2025/30min", [])
   const demoAckKey = "demoAcknowledged_v4"
 
   const continueToDemo = () => {
