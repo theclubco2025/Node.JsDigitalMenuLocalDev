@@ -74,6 +74,8 @@ const DIETARY_OPTIONS_BASE: readonly DietaryOption[] = [
 export default function MenuClient() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  // South Fork only: allow multi-select of specific categories via dropdown
+  const [selectedCategoryNames, setSelectedCategoryNames] = useState<string[]>([])
   const [selectedDietaryFilters, setSelectedDietaryFilters] = useState<string[]>([])
   const [cart, setCart] = useState<Array<{ item: MenuItem; quantity: number }>>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -226,7 +228,9 @@ export default function MenuClient() {
         items: category.items.filter(item => {
           if (typeof item.price === 'number' && item.price <= 0) return false
           // Category filter
-          if (selectedCategory) {
+          if (isSouthFork) {
+            if (selectedCategoryNames.length > 0 && !selectedCategoryNames.includes(category.name)) return false
+          } else if (selectedCategory) {
             if (!useMealGroups) {
               if (category.name !== selectedCategory) return false
             } else {
@@ -253,7 +257,7 @@ export default function MenuClient() {
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters, tenant, useMealGroups])
+  }, [baseMenu, searchQuery, selectedCategory, selectedCategoryNames, selectedDietaryFilters, tenant, useMealGroups, isSouthFork])
 
   const updateItemField = (
     categoryId: string,
@@ -524,6 +528,33 @@ export default function MenuClient() {
     })
     return ordered
   }, [allCategories, useMealGroups])
+
+  const southForkCategoryGroups = useMemo(() => {
+    // group -> full category names, in existing order
+    const groups: Record<string, string[]> = {}
+    for (const name of allCategories) {
+      const g = groupForCategory(name)
+      if (!groups[g]) groups[g] = []
+      groups[g].push(name)
+    }
+    const preferred = ['Dinner', 'Lunch', 'Breakfast', 'Brunch', 'Drinks', 'Kids', 'Dessert', 'Happy Hour']
+    const orderedGroups = Object.keys(groups).sort((a, b) => {
+      const ia = preferred.indexOf(a)
+      const ib = preferred.indexOf(b)
+      if (ia === -1 && ib === -1) return a.localeCompare(b)
+      if (ia === -1) return 1
+      if (ib === -1) return -1
+      return ia - ib
+    })
+    return { groups, orderedGroups }
+  }, [allCategories])
+
+  const shortCategoryLabel = (fullName: string) => {
+    const cleaned = cleanMojibake(fullName)
+    const parts = cleaned.split('—').map(s => s.trim()).filter(Boolean)
+    if (parts.length >= 2) return parts[parts.length - 1]
+    return cleaned
+  }
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase()
@@ -1016,101 +1047,101 @@ export default function MenuClient() {
           </div>
         </div>
 
-        {/* South Fork requested: place Signature Dishes below the search bar */}
-        {isSouthFork && showSignatureGrid && tenant !== 'demo' && (
-          <div className="max-w-7xl mx-auto px-0 mb-6">
-            <div className="flex flex-col items-center mb-4">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
-                <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
+        {/* Category Filters */}
+        {isSouthFork ? (
+          <div className="mb-4 flex justify-center">
+            <details className="w-full max-w-2xl rounded-lg bg-white/90" style={{ border: '1px solid var(--muted)' }}>
+              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-neutral-900 flex items-center justify-between">
+                <span>
+                  Categories
+                  {selectedCategoryNames.length > 0 ? (
+                    <span className="ml-2 text-xs font-medium text-neutral-600">
+                      ({selectedCategoryNames.length} selected)
+                    </span>
+                  ) : (
+                    <span className="ml-2 text-xs font-medium text-neutral-600">(All)</span>
+                  )}
+                </span>
+                <span className="text-xs text-neutral-500">▼</span>
+              </summary>
+              <div className="px-4 pb-4 pt-2">
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategoryNames([])}
+                    className="text-xs font-medium underline"
+                    style={{ color: 'var(--ink)' }}
+                  >
+                    Clear categories
+                  </button>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {southForkCategoryGroups.orderedGroups.map((g) => (
+                    <details key={g} className="rounded-md bg-white" style={{ border: '1px solid rgba(0,0,0,0.06)' }}>
+                      <summary className="cursor-pointer list-none px-3 py-2 text-sm font-bold" style={{ color: 'var(--ink)' }}>
+                        {g}
+                      </summary>
+                      <div className="px-3 pb-3 pt-1 space-y-2">
+                        {(southForkCategoryGroups.groups[g] || []).map((full) => {
+                          const checked = selectedCategoryNames.includes(full)
+                          return (
+                            <label key={full} className="flex items-center gap-2 text-sm text-neutral-900">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  setSelectedCategoryNames((prev) => {
+                                    if (prev.includes(full)) return prev.filter((x) => x !== full)
+                                    return [...prev, full]
+                                  })
+                                }}
+                              />
+                              <span>{shortCategoryLabel(full)}</span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </details>
+                  ))}
+                </div>
               </div>
-              <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {resolveFeatured().map((it) => {
-                return (
-                  <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
-                    {(() => {
-                      const sigSrc = (imageMap[it.id] as string | undefined) || it.imageUrl || ''
-                      if (!sigSrc) {
-                        return (
-                          <div
-                            className="h-28 sm:h-32 w-full"
-                            style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02))' }}
-                          />
-                        )
-                      }
-                      return (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={sigSrc}
-                          alt={it.name}
-                          className="h-28 sm:h-32 w-full object-cover"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      )
-                    })()}
-                    <div className="p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
-                          {/* optional pairing copy can be added via copy data */}
-                        </div>
-                        {typeof it.price === 'number' && it.price > 0 && (
-                          <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
-                        )}
-                      </div>
-                      <div className="mt-3 flex justify-end">
-                        <button
-                          onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${it.name}`) }}
-                          className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
-                          aria-label={`Ask about ${it.name}`}
-                        >
-                          Ask AI
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            </details>
+          </div>
+        ) : (
+          <div className="flex gap-2 justify-center flex-wrap mb-4">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
+            >
+              {useMealGroups ? 'All' : 'All Categories'}
+            </button>
+            {navCategories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
+                className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
+                style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
+              >
+                <span className="inline-flex items-center gap-2">
+                  {getCategoryImage(category) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={getCategoryImage(category) as string}
+                      alt=""
+                      className="h-6 w-6 rounded-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    getCategoryIcon(category)
+                  )}
+                  <span>{category}</span>
+                </span>
+              </button>
+            ))}
           </div>
         )}
-        
-        {/* Category Filters */}
-        <div className="flex gap-2 justify-center flex-wrap mb-4">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
-            style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
-          >
-            {useMealGroups ? 'All' : 'All Categories'}
-          </button>
-          {navCategories.map(category => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
-              className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
-              style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
-            >
-              <span className="inline-flex items-center gap-2">
-                {getCategoryImage(category) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={getCategoryImage(category) as string}
-                    alt=""
-                    className="h-6 w-6 rounded-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  getCategoryIcon(category)
-                )}
-                <span>{category}</span>
-              </span>
-            </button>
-          ))}
-        </div>
 
         {/* Dietary Filters (compact dropdown) */}
         {filtersOpen && (
@@ -1134,9 +1165,9 @@ export default function MenuClient() {
                 {option.label}
               </button>
             ))}
-            {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
+            {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory || selectedCategoryNames.length>0) && (
               <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
+                onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedCategoryNames([]); setSelectedDietaryFilters([]) }}
                 className="px-3 py-1 rounded-full text-xs font-medium"
                 style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
               >
