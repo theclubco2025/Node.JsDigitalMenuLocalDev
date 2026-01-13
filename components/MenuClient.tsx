@@ -93,6 +93,11 @@ export default function MenuClient() {
   const tenant = isBrowser
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
+  // Tenant-scoped UI overrides (must not affect other menus)
+  const canonicalTenant = String(tenant || '').trim().toLowerCase() === 'southforkgrille'
+    ? 'south-fork-grille'
+    : String(tenant || '').trim().toLowerCase()
+  const isSouthFork = canonicalTenant === 'south-fork-grille'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
@@ -790,36 +795,40 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Fixed Header */}
-      <div
-        className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-        style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
-      >
-        <div
-          className="px-4"
-          style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-            {brandLogoUrl ? (
-              <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-            )}
-            <div className="text-center">
-              <h1
-                className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
-                style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
-              >
-                {brandName}
-              </h1>
-              <p className="text-gray-200 text-xs">{brandTagline}</p>
+      {/* Fixed Header (South Fork requested: remove this top header; keep hero image header only) */}
+      {!isSouthFork && (
+        <>
+          <div
+            className="fixed top-0 left-0 right-0 z-50 shadow-sm"
+            style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+          >
+            <div
+              className="px-4"
+              style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+            >
+              <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+                {brandLogoUrl ? (
+                  <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+                )}
+                <div className="text-center">
+                  <h1
+                    className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
+                    style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
+                  >
+                    {brandName}
+                  </h1>
+                  <p className="text-gray-200 text-xs">{brandTagline}</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Spacer to offset fixed header height */}
-      <div style={{ height: 80 }} />
+          {/* Spacer to offset fixed header height */}
+          <div style={{ height: 80 }} />
+        </>
+      )}
 
       {/* Category chip scroller (optional - enable via future flag) */}
 
@@ -835,7 +844,7 @@ export default function MenuClient() {
       )}
 
       {/* Signature (data-flagged) */}
-      {showSignatureGrid && tenant !== 'demo' && (
+      {!isSouthFork && showSignatureGrid && tenant !== 'demo' && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div className="flex flex-col items-center mb-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
@@ -1006,6 +1015,67 @@ export default function MenuClient() {
             </button>
           </div>
         </div>
+
+        {/* South Fork requested: place Signature Dishes below the search bar */}
+        {isSouthFork && showSignatureGrid && tenant !== 'demo' && (
+          <div className="max-w-7xl mx-auto px-0 mb-6">
+            <div className="flex flex-col items-center mb-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+                <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
+              </div>
+              <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {resolveFeatured().map((it) => {
+                return (
+                  <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
+                    {(() => {
+                      const sigSrc = (imageMap[it.id] as string | undefined) || it.imageUrl || ''
+                      if (!sigSrc) {
+                        return (
+                          <div
+                            className="h-28 sm:h-32 w-full"
+                            style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02))' }}
+                          />
+                        )
+                      }
+                      return (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={sigSrc}
+                          alt={it.name}
+                          className="h-28 sm:h-32 w-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      )
+                    })()}
+                    <div className="p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
+                          {/* optional pairing copy can be added via copy data */}
+                        </div>
+                        {typeof it.price === 'number' && it.price > 0 && (
+                          <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
+                        )}
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${it.name}`) }}
+                          className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
+                          aria-label={`Ask about ${it.name}`}
+                        >
+                          Ask AI
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
         
         {/* Category Filters */}
         <div className="flex gap-2 justify-center flex-wrap mb-4">
