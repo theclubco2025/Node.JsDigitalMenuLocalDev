@@ -70,6 +70,53 @@ function isWineCategoryName(name: string): boolean {
   return n.includes('wine')
 }
 
+function isBeverageCategoryName(name: string): boolean {
+  const n = normalize(name)
+  return (
+    n.includes('cocktail') ||
+    n.includes('beer') ||
+    n.includes('wine') ||
+    n.includes('happy hour') ||
+    n.includes('brunch') && n.includes('cocktail') ||
+    n.includes('port wine') ||
+    n.includes('dessert cocktails')
+  )
+}
+
+function isDrinkQuery(query: string): boolean {
+  const q = normalize(query)
+  if (!q) return false
+  const keywords = [
+    'drink',
+    'drinks',
+    'cocktail',
+    'cocktails',
+    'beer',
+    'draft',
+    'bottled',
+    'wine',
+    'wines',
+    'martini',
+    'margarita',
+    'old fashioned',
+    'manhattan',
+    'mule',
+    'aperol',
+    'spritz',
+    'happy hour',
+  ]
+  return keywords.some(k => q.includes(k))
+}
+
+function wineListMode(query: string): 'summary' | 'full' {
+  const q = normalize(query)
+  if (!q) return 'summary'
+  // Only dump the full list if explicitly requested.
+  if (q.includes('all wines') || q.includes('full wine list') || q.includes('entire wine list') || q.includes('everything')) return 'full'
+  if (q.includes('list all') || q.includes('show all')) return 'full'
+  return 'summary'
+}
+
 function wineListResponse(menu: MenuResponse): string {
   const wineCats = (menu.categories || []).filter(c => isWineCategoryName(c.name))
   if (wineCats.length === 0) {
@@ -99,6 +146,45 @@ function wineListResponse(menu: MenuResponse): string {
   return `Here are the wines currently listed on our menu:\n\n${blocks.join('\n\n')}\n\nIf you don't see what you're looking for, please ask your server about additional selections.`
 }
 
+function wineSummaryResponse(menu: MenuResponse): string {
+  const wineCats = (menu.categories || []).filter(c => isWineCategoryName(c.name))
+  if (wineCats.length === 0) return wineListResponse(menu)
+
+  const pick = (cNameIncludes: string, k: number) => {
+    const c = wineCats.find(x => normalize(x.name).includes(cNameIncludes))
+    const items = (c?.items || []).filter(it => typeof it.price === 'number' && it.price > 0).slice(0, k)
+    return { name: c?.name || null, items }
+  }
+
+  const hhWhite = pick('happy hour', 0) // placeholder, we’ll pick more specifically below
+  // Prefer specific buckets if present
+  const happyWhite = wineCats.find(x => normalize(x.name).includes('happy hour') && normalize(x.name).includes('white'))
+  const happyRed = wineCats.find(x => normalize(x.name).includes('happy hour') && normalize(x.name).includes('red'))
+  const cockWhite = wineCats.find(x => normalize(x.name).includes('cocktails') && normalize(x.name).includes('white'))
+  const cockRed = wineCats.find(x => normalize(x.name).includes('cocktails') && normalize(x.name).includes('red'))
+
+  const takeSome = (cat: typeof wineCats[number] | undefined, k: number) =>
+    (cat?.items || []).filter(it => typeof it.price === 'number' && it.price > 0).slice(0, k)
+
+  const sections: Array<{ title: string; items: Array<{ name: string; description?: string; price: number }> }> = []
+  if (happyWhite) sections.push({ title: happyWhite.name, items: takeSome(happyWhite, 4) })
+  if (happyRed) sections.push({ title: happyRed.name, items: takeSome(happyRed, 4) })
+  if (cockWhite) sections.push({ title: cockWhite.name, items: takeSome(cockWhite, 4) })
+  if (cockRed) sections.push({ title: cockRed.name, items: takeSome(cockRed, 4) })
+  if (sections.length === 0) {
+    // fallback: first 2 wine categories, 4 each
+    for (const c of wineCats.slice(0, 2)) sections.push({ title: c.name, items: takeSome(c, 4) })
+  }
+
+  const lines = sections.flatMap(s => [
+    `${s.title}:`,
+    ...s.items.map(it => `- **${it.name}**${it.description ? ` — ${it.description}` : ''}${formatPrice(it.price) ? ` (${formatPrice(it.price)})` : ''}`),
+    '',
+  ])
+
+  return `We have a large wine list. Here are a few highlights (with prices):\n\n${lines.join('\n').trim()}\n\nTell me what you want (red/white, happy hour vs regular, and price range) or say “list all wines” if you want the full list.`
+}
+
 function wineItemResponse(menu: MenuResponse, query: string): string {
   const wineMenu: MenuResponse = { categories: (menu.categories || []).filter(c => isWineCategoryName(c.name)) }
   const matches = getTopMatches(wineMenu, query, 8)
@@ -124,6 +210,37 @@ function wineItemResponse(menu: MenuResponse, query: string): string {
   })
 
   return `Here's what we have listed:\n\n${lines.join('\n')}\n\nIf you'd like, tell me whether you want red or white and your price range.`
+}
+
+function beverageSummaryResponse(menu: MenuResponse): string {
+  const bevCats = (menu.categories || []).filter(c => isBeverageCategoryName(c.name))
+  if (bevCats.length === 0) {
+    return "I don't have drinks listed in this digital menu. Please ask your server for drink options."
+  }
+
+  const preferred = [
+    'Happy Hour — Hand Crafted Cocktails',
+    'Cocktails — Specialty Drinks',
+    'Cocktails — Draft & Bottled Beer',
+    'Happy Hour — White Wine',
+    'Happy Hour — Red Wine',
+    'Cocktails — White Wines',
+    'Cocktails — Red Wines',
+  ]
+
+  const orderKey = (name: string) => {
+    const idx = preferred.indexOf(name)
+    return `${idx === -1 ? '9' : '0'}-${String(idx === -1 ? 99 : idx).padStart(2, '0')}-${normalize(name)}`
+  }
+
+  const topCats = bevCats.slice().sort((a, b) => orderKey(a.name).localeCompare(orderKey(b.name))).slice(0, 4)
+  const blocks = topCats.map(c => {
+    const items = (c.items || []).filter(it => typeof it.price === 'number' && it.price > 0).slice(0, 4)
+    const lines = items.map(it => `- **${it.name}**${it.description ? ` — ${it.description}` : ''}${formatPrice(it.price) ? ` (${formatPrice(it.price)})` : ''}`)
+    return [`${c.name}:`, ...lines].join('\n')
+  })
+
+  return `Here are a few drink options from our menu (with prices):\n\n${blocks.join('\n\n')}\n\nWant cocktails, beer, or wine? If wine, say red or white (and your price range).`
 }
 
 function scoreItem(query: string, name: string, description?: string, tags?: string[]): number {
@@ -286,9 +403,20 @@ export async function POST(request: NextRequest) {
       const isWineItem = !isWineList && bestWine >= 6 && bestWine > bestFood
 
       if (isWineList || isWineItem) {
-        const text = isWineItem ? wineItemResponse(filtered, query) : wineListResponse(filtered)
+        const text = isWineItem
+          ? wineItemResponse(filtered, query)
+          : (wineListMode(query) === 'full' ? wineListResponse(filtered) : wineSummaryResponse(filtered))
         return NextResponse.json(
           { ok: true, tenantId, text, fallback: true },
+          { headers: corsHeaders(request.headers.get('origin') || '*') }
+        )
+      }
+
+      // South Fork: handle broader drink questions deterministically so we never rely on limited MENU SNAPSHOT.
+      const isDrinkIntent = isDrinkQuery(query)
+      if (isDrinkIntent) {
+        return NextResponse.json(
+          { ok: true, tenantId, text: beverageSummaryResponse(filtered), fallback: true },
           { headers: corsHeaders(request.headers.get('origin') || '*') }
         )
       }
