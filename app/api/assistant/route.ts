@@ -61,9 +61,6 @@ function isWineQuery(query: string): boolean {
     'by the glass',
     'pairing',
     'pair with',
-    // South Fork menu-specific/common wine terms that users ask without saying "wine"
-    'chateau',
-    'bordeaux',
   ]
   return keywords.some(k => q.includes(k))
 }
