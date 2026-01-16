@@ -65,6 +65,40 @@ function isWineQuery(query: string): boolean {
   return keywords.some(k => q.includes(k))
 }
 
+function isWineCategoryName(name: string): boolean {
+  const n = normalize(name)
+  return n.includes('wine')
+}
+
+function wineListResponse(menu: MenuResponse): string {
+  const wineCats = (menu.categories || []).filter(c => isWineCategoryName(c.name))
+  if (wineCats.length === 0) {
+    return "I don't have an up-to-date wine list in this digital menu, so I can't list wines or prices. Please ask your server for today's wine selections."
+  }
+
+  const orderKey = (name: string) => {
+    const n = normalize(name)
+    const isHappy = n.includes('happy hour')
+    const isWhite = n.includes('white')
+    const isRed = n.includes('red')
+    // Happy hour first, then white before red, then alpha
+    return `${isHappy ? '0' : '1'}-${isWhite ? '0' : isRed ? '1' : '2'}-${n}`
+  }
+
+  const blocks = wineCats
+    .slice()
+    .sort((a, b) => orderKey(a.name).localeCompare(orderKey(b.name)))
+    .map((c) => {
+      const title = c.name
+      const lines = (c.items || [])
+        .filter(it => typeof it.price === 'number' && it.price > 0)
+        .map(it => `- **${it.name}**${it.description ? ` — ${it.description}` : ''}${formatPrice(it.price) ? ` (${formatPrice(it.price)})` : ''}`)
+      return [`${title}:`, ...lines].join('\n')
+    })
+
+  return `Here are the wines currently listed on our menu:\n\n${blocks.join('\n\n')}\n\nIf you don't see what you're looking for, please ask your server about additional selections.`
+}
+
 function scoreItem(query: string, name: string, description?: string, tags?: string[]): number {
   const q = normalize(query)
   if (!q) return 0
@@ -212,6 +246,14 @@ export async function POST(request: NextRequest) {
       dairyFree: !!filters.dairyFree,
       nutFree: !!filters.nutFree,
     })
+    // South Fork prod-guardrail: for wine questions, answer deterministically from menu data (no hallucinations).
+    if (isSouthFork && isWineQuery(query)) {
+      return NextResponse.json(
+        { ok: true, tenantId, text: wineListResponse(filtered), fallback: true },
+        { headers: corsHeaders(request.headers.get('origin') || '*') }
+      )
+    }
+
     const matches = getTopMatches(filtered, query, 18)
     const focused = matchesToMenu(matches, filtered)
     const menuSnippet = snippet(focused, 1000)
@@ -220,21 +262,6 @@ export async function POST(request: NextRequest) {
     const fallbackText = previewSnippet && previewSnippet.trim().length > 0
       ? buildFallback(matches.slice(0, 4), query)
       : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
-
-    // South Fork prod-guardrail: wine hallucinations were observed in testing.
-    // If the current menu snapshot does not contain a wine list, never guess.
-    if (isSouthFork && isWineQuery(query) && !/wine/i.test(menuSnippet)) {
-      return NextResponse.json(
-        {
-          ok: true,
-          tenantId,
-          text:
-            "I don't have an up-to-date wine list in this digital menu, so I can't list wines or prices. Please ask your server for today's wine selections.",
-          fallback: true,
-        },
-        { headers: corsHeaders(request.headers.get('origin') || '*') }
-      )
-    }
 
     // Load tenant meta from theme.json if available
     const { promises: fs } = await import('fs')
