@@ -25,6 +25,46 @@ function normalize(str: string): string {
   return (str || '').toLowerCase()
 }
 
+function canonicalTenantSlug(raw: string): string {
+  const t = (raw || '').trim().toLowerCase()
+  if (t === 'southforkgrille') return 'south-fork-grille'
+  return t
+}
+
+function isWineQuery(query: string): boolean {
+  const q = normalize(query)
+  if (!q) return false
+  const keywords = [
+    'wine',
+    'wines',
+    'red wine',
+    'white wine',
+    'sparkling',
+    'champagne',
+    'prosecco',
+    'rosé',
+    'rose',
+    'cabernet',
+    'merlot',
+    'pinot',
+    'zinfandel',
+    'malbec',
+    'syrah',
+    'shiraz',
+    'sauvignon',
+    'chardonnay',
+    'riesling',
+    'moscato',
+    'vintage',
+    'winery',
+    'bottle',
+    'by the glass',
+    'pairing',
+    'pair with',
+  ]
+  return keywords.some(k => q.includes(k))
+}
+
 function scoreItem(query: string, name: string, description?: string, tags?: string[]): number {
   const q = normalize(query)
   if (!q) return 0
@@ -157,6 +197,8 @@ export async function POST(request: NextRequest) {
     }
 
     const tenantId = providedTenant || resolveTenant(request.url)
+    const canonical = canonicalTenantSlug(tenantId)
+    const isSouthFork = canonical === 'south-fork-grille'
 
     // Load menu and apply diet filters
     const menu = await getMenuForTenant(tenantId)
@@ -178,6 +220,21 @@ export async function POST(request: NextRequest) {
     const fallbackText = previewSnippet && previewSnippet.trim().length > 0
       ? buildFallback(matches.slice(0, 4), query)
       : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
+
+    // South Fork prod-guardrail: wine hallucinations were observed in testing.
+    // If the current menu snapshot does not contain a wine list, never guess.
+    if (isSouthFork && isWineQuery(query) && !/wine/i.test(menuSnippet)) {
+      return NextResponse.json(
+        {
+          ok: true,
+          tenantId,
+          text:
+            "I don’t have an up-to-date wine list in this digital menu, so I can’t list wines or prices. Please ask your server for today’s wine selections.",
+          fallback: true,
+        },
+        { headers: corsHeaders(request.headers.get('origin') || '*') }
+      )
+    }
 
     // Load tenant meta from theme.json if available
     const { promises: fs } = await import('fs')
@@ -201,6 +258,10 @@ export async function POST(request: NextRequest) {
       filters,
     })
 
+    const systemWithTenantGuards = isSouthFork
+      ? `${system}\n\nSouth Fork guardrails:\n- Never invent or infer any wine list, wineries, varietals, vintages, pours, or wine prices.\n- If asked about wine and it is not explicitly present in the MENU SNAPSHOT, say it is not listed and advise asking the server.\n- For pairings, you may give general flavor guidance only (no specific wine names) unless explicitly present in the MENU SNAPSHOT.`
+      : system
+
     // Rate limit and circuit breaker guards
     if (!rateLimit(tenantId)) {
       return NextResponse.json({ ok: false, message: 'Too many requests. Please slow down.' }, { status: 429 })
@@ -220,7 +281,7 @@ export async function POST(request: NextRequest) {
 
     const started = Date.now()
     try {
-      const text = await generate({ model: process.env.AI_MODEL, system, user })
+      const text = await generate({ model: process.env.AI_MODEL, system: systemWithTenantGuards, user })
       recordSuccess(tenantId)
       const ms = Date.now() - started
       console.log(`[assistant] tenant=${tenantId} ok latency=${ms}ms`)
