@@ -99,6 +99,33 @@ function wineListResponse(menu: MenuResponse): string {
   return `Here are the wines currently listed on our menu:\n\n${blocks.join('\n\n')}\n\nIf you don't see what you're looking for, please ask your server about additional selections.`
 }
 
+function wineItemResponse(menu: MenuResponse, query: string): string {
+  const wineMenu: MenuResponse = { categories: (menu.categories || []).filter(c => isWineCategoryName(c.name)) }
+  const matches = getTopMatches(wineMenu, query, 8)
+  if (!matches.length) return wineListResponse(menu)
+
+  // Prefer the strongest match; include other distinct priced matches too.
+  const unique = new Map<string, typeof matches[number]>()
+  for (const m of matches) {
+    const key = `${m.catName}::${m.item.name}::${m.item.price}`
+    if (!unique.has(key)) unique.set(key, m)
+  }
+  const top = Array.from(unique.values()).slice(0, 6)
+  const lines = top.map(m => {
+    const desc = m.item.description?.trim()
+    const price = formatPrice(m.item.price)
+    const parts = [
+      `- **${m.item.name}**`,
+      desc ? `— ${desc}` : '',
+      price ? `(${price})` : '',
+      `• ${m.catName}`,
+    ].filter(Boolean)
+    return parts.join(' ')
+  })
+
+  return `Here's what we have listed:\n\n${lines.join('\n')}\n\nIf you'd like, tell me whether you want red or white and your price range.`
+}
+
 function scoreItem(query: string, name: string, description?: string, tags?: string[]): number {
   const q = normalize(query)
   if (!q) return 0
@@ -248,12 +275,17 @@ export async function POST(request: NextRequest) {
       dairyFree: !!filters.dairyFree,
       nutFree: !!filters.nutFree,
     })
-    // South Fork prod-guardrail: for wine questions, answer deterministically from menu data (no hallucinations).
-    if (isSouthFork && isWineQuery(query)) {
-      return NextResponse.json(
-        { ok: true, tenantId, text: wineListResponse(filtered), fallback: true },
-        { headers: corsHeaders(request.headers.get('origin') || '*') }
-      )
+    // South Fork prod-guardrail: any wine-related question (including specific wine names) should be deterministic from menu data (no hallucinations).
+    if (isSouthFork) {
+      const wineMenu: MenuResponse = { categories: (filtered.categories || []).filter(c => isWineCategoryName(c.name)) }
+      const wineNameMatches = getTopMatches(wineMenu, query, 3)
+      if (isWineQuery(query) || wineNameMatches.length > 0) {
+        const text = isWineQuery(query) ? wineListResponse(filtered) : wineItemResponse(filtered, query)
+        return NextResponse.json(
+          { ok: true, tenantId, text, fallback: true },
+          { headers: corsHeaders(request.headers.get('origin') || '*') }
+        )
+      }
     }
 
     const matches = getTopMatches(filtered, query, 18)
