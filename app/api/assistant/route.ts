@@ -233,9 +233,11 @@ export async function POST(request: NextRequest) {
     const tenantId = providedTenant || resolveTenant(request.url)
     const canonical = canonicalTenantSlug(tenantId)
     const isSouthFork = canonical === 'south-fork-grille'
+    // South Fork only: always load menu/theme from canonical tenant slug so AI matches live menu exactly.
+    const dataTenantId = isSouthFork ? canonical : tenantId
 
     // Load menu and apply diet filters
-    const menu = await getMenuForTenant(tenantId)
+    const menu = await getMenuForTenant(dataTenantId)
     const filtered = filterMenuByDiet(menu, {
       vegetarian: !!filters.vegetarian,
       vegan: !!filters.vegan,
@@ -266,7 +268,7 @@ export async function POST(request: NextRequest) {
     // Load tenant meta from theme.json if available
     const { promises: fs } = await import('fs')
     const path = await import('path')
-    const themePath = path.join(process.cwd(), 'data', 'tenants', tenantId, 'theme.json')
+    const themePath = path.join(process.cwd(), 'data', 'tenants', dataTenantId, 'theme.json')
     let restaurantName = 'Our Restaurant'
     let tone = 'casual'
     try {
@@ -277,7 +279,7 @@ export async function POST(request: NextRequest) {
     } catch {}
 
     const { system, user } = buildPrompt({
-      tenantId,
+      tenantId: dataTenantId,
       restaurantName,
       tone,
       menuSnippet,
