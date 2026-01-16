@@ -61,6 +61,9 @@ function isWineQuery(query: string): boolean {
     'by the glass',
     'pairing',
     'pair with',
+    // South Fork menu-specific/common wine terms that users ask without saying "wine"
+    'chateau',
+    'bordeaux',
   ]
   return keywords.some(k => q.includes(k))
 }
@@ -279,8 +282,11 @@ export async function POST(request: NextRequest) {
     if (isSouthFork) {
       const wineMenu: MenuResponse = { categories: (filtered.categories || []).filter(c => isWineCategoryName(c.name)) }
       const wineNameMatches = getTopMatches(wineMenu, query, 3)
-      if (isWineQuery(query) || wineNameMatches.length > 0) {
-        const text = isWineQuery(query) ? wineListResponse(filtered) : wineItemResponse(filtered, query)
+      const isWineIntent = isWineQuery(query) || wineNameMatches.length > 0
+      if (isWineIntent) {
+        // If the query appears to target a specific wine, answer with exact matching items.
+        // Otherwise, provide the full wine list.
+        const text = wineNameMatches.length > 0 ? wineItemResponse(filtered, query) : wineListResponse(filtered)
         return NextResponse.json(
           { ok: true, tenantId, text, fallback: true },
           { headers: corsHeaders(request.headers.get('origin') || '*') }
