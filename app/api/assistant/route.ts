@@ -73,6 +73,36 @@ function isWineCategoryName(name: string): boolean {
   return n.includes('wine')
 }
 
+function wineStrongMatches(menu: MenuResponse, query: string): boolean {
+  const q = normalize(query)
+  if (!q) return false
+
+  // Ignore common filler words so we don't treat "what is in the ..." as a wine query.
+  const STOP = new Set([
+    'the','and','or','a','an','of','to','for','with','on','in','at','by',
+    'is','are','was','were','be','been','being',
+    'what','which','who','where','when','why','how',
+    'tell','me','about','describe','explain','include','contains','ingredients','inside',
+    'list','show','give','have','do','does','please',
+  ])
+
+  const tokens = q
+    .split(/[^a-z0-9]+/g)
+    .map(t => t.trim())
+    .filter(t => t.length >= 4 && !STOP.has(t))
+
+  if (tokens.length === 0) return false
+
+  for (const c of menu.categories || []) {
+    for (const it of c.items || []) {
+      const name = normalize(it.name)
+      const desc = normalize(it.description || '')
+      if (tokens.some(t => name.includes(t) || desc.includes(t))) return true
+    }
+  }
+  return false
+}
+
 function wineListResponse(menu: MenuResponse): string {
   const wineCats = (menu.categories || []).filter(c => isWineCategoryName(c.name))
   if (wineCats.length === 0) {
@@ -281,12 +311,12 @@ export async function POST(request: NextRequest) {
     // South Fork prod-guardrail: any wine-related question (including specific wine names) should be deterministic from menu data (no hallucinations).
     if (isSouthFork) {
       const wineMenu: MenuResponse = { categories: (filtered.categories || []).filter(c => isWineCategoryName(c.name)) }
-      const wineNameMatches = getTopMatches(wineMenu, query, 3)
-      const isWineIntent = isWineQuery(query) || wineNameMatches.length > 0
+      const isSpecificWine = wineStrongMatches(wineMenu, query)
+      const isWineIntent = isWineQuery(query) || isSpecificWine
       if (isWineIntent) {
         // If the query appears to target a specific wine, answer with exact matching items.
         // Otherwise, provide the full wine list.
-        const text = wineNameMatches.length > 0 ? wineItemResponse(filtered, query) : wineListResponse(filtered)
+        const text = isSpecificWine ? wineItemResponse(filtered, query) : wineListResponse(filtered)
         return NextResponse.json(
           { ok: true, tenantId, text, fallback: true },
           { headers: corsHeaders(request.headers.get('origin') || '*') }
