@@ -280,9 +280,10 @@ export async function POST(request: NextRequest) {
       const wineMenu: MenuResponse = { categories: (filtered.categories || []).filter(c => isWineCategoryName(c.name)) }
       const isWineList = isWineQuery(query)
       // Disambiguation: only treat as a specific-wine query if wine matches beat food matches.
-      const bestAll = getTopMatches(filtered, query, 3)[0]?.score ?? 0
+      const nonWineMenu: MenuResponse = { categories: (filtered.categories || []).filter(c => !isWineCategoryName(c.name)) }
+      const bestFood = getTopMatches(nonWineMenu, query, 3)[0]?.score ?? 0
       const bestWine = getTopMatches(wineMenu, query, 3)[0]?.score ?? 0
-      const isWineItem = !isWineList && bestWine >= 6 && bestWine > bestAll
+      const isWineItem = !isWineList && bestWine >= 6 && bestWine > bestFood
 
       if (isWineList || isWineItem) {
         const text = isWineItem ? wineItemResponse(filtered, query) : wineListResponse(filtered)
