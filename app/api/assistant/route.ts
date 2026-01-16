@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
           ok: true,
           tenantId,
           text:
-            "I don’t have an up-to-date wine list in this digital menu, so I can’t list wines or prices. Please ask your server for today’s wine selections.",
+            "I don't have an up-to-date wine list in this digital menu, so I can't list wines or prices. Please ask your server for today's wine selections.",
           fallback: true,
         },
         { headers: corsHeaders(request.headers.get('origin') || '*') }
