@@ -29,8 +29,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({})) as { from?: string; to?: string }
     const params = request.nextUrl.searchParams
     const from = canonicalTenantSlug(String(body.from ?? params.get('from') ?? ''))
-    const to = canonicalTenantSlug(String(body.to ?? params.get('to') ?? ''))
+    let to = canonicalTenantSlug(String(body.to ?? params.get('to') ?? ''))
     if (!from || !to) return NextResponse.json({ error: 'Missing from/to' }, { status: 400 })
+
+    // SOP: independent-draft promotes to independentbarandgrille (live slug), not "independent".
+    // Tenant-scoped so it won't affect any other menus.
+    if (from === 'independent-draft' && to === 'independent') {
+      to = 'independentbarandgrille'
+    }
 
     const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
     if (!prisma) return NextResponse.json({ error: 'Prisma unavailable' }, { status: 500 })

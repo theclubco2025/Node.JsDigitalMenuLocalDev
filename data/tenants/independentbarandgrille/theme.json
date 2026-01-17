@@ -1,0 +1,10 @@
+﻿{
+  "primary": "#1E1E1E",
+  "bg": "#1E1E1E",
+  "text": "#FFFFFF",
+  "ink": "#111111",
+  "card": "#F7F7F7",
+  "muted": "#EAEAEA",
+  "accent": "#C4A76A",
+  "radius": "12px"
+}

@@ -1,0 +1,195 @@
+﻿{
+  "categories": [
+    {
+      "id": "beginnings",
+      "name": "Beginnings",
+      "items": [
+        {
+          "id": "turnip-fries",
+          "name": "Turnip Fries",
+          "description": "Chipotle Aioli & Bleu Cheese Sauces",
+          "price": 11.0,
+          "tags": ["contains-dairy"]
+        },
+        {
+          "id": "beer-battered-potato-fries",
+          "name": "Beer Battered Potato Fries",
+          "description": "Chipotle Aioli & Bleu Cheese Sauces",
+          "price": 11.0,
+          "tags": ["contains-gluten", "contains-dairy"]
+        },
+        {
+          "id": "calamari",
+          "name": "Calamari",
+          "description": "Flash-fried, served with house cocktail sauce & remoulade",
+          "price": 18.0,
+          "tags": ["contains-seafood", "contains-gluten"]
+        },
+        {
+          "id": "truffle-mac-and-cheese",
+          "name": "Truffle Mac & Cheese",
+          "description": "White cheddar & parmesan, toasted panko, truffle oil",
+          "price": 13.0,
+          "tags": ["vegetarian", "contains-dairy", "contains-gluten"]
+        },
+        {
+          "id": "tempura-prawns",
+          "name": "Tempura Prawns",
+          "description": "Wild Mexican prawns, honey-sriracha, bleu cheese slaw",
+          "price": 21.0,
+          "tags": ["contains-shellfish", "contains-gluten"]
+        },
+        {
+          "id": "ahi-tartare",
+          "name": "Ahi Tartare",
+          "description": "Avocado, ponzu cucumber, mango, daikon sprouts, orange tobiko, wonton chips",
+          "price": 18.0,
+          "tags": ["contains-fish", "contains-shellfish", "contains-gluten"]
+        }
+      ]
+    },
+    {
+      "id": "salads",
+      "name": "Salads",
+      "items": [
+        {
+          "id": "heirloom-beet",
+          "name": "Heirloom Beet",
+          "description": "Roasted gold beets, mandarins, shaved shallots, candied walnuts, pancetta, arugula, whipped goat cheese, walnut-sherry vinaigrette",
+          "price": 16.0,
+          "tags": ["contains-nuts", "contains-dairy", "contains-pork"]
+        },
+        {
+          "id": "caesar",
+          "name": "Caesar",
+          "description": "Romaine, house Caesar, garlic chips, shaved parmesan, croutons",
+          "price": 16.0,
+          "tags": ["contains-dairy", "contains-gluten"]
+        },
+        {
+          "id": "mixed-greens",
+          "name": "Mixed Greens",
+          "description": "Carrot, cherry tomato, cucumber, toasted almonds, honey-balsamic vinaigrette",
+          "price": 16.0,
+          "tags": ["vegetarian", "contains-nuts"]
+        },
+        {
+          "id": "the-wedge",
+          "name": "The Wedge",
+          "description": "Iceberg, bacon, red onion, egg, tomato, house-made bleu cheese dressing",
+          "price": 16.0,
+          "tags": ["contains-egg", "contains-dairy", "contains-pork"]
+        },
+        {
+          "id": "ahi-nicoise",
+          "name": "Ahi Ni├ºoise",
+          "description": "Sesame-crusted tuna, mixed greens, egg, tomato, olives, new potatoes, fried capers, lemon Dijon vinaigrette",
+          "price": 23.0,
+          "tags": ["contains-fish", "contains-egg"]
+        }
+      ]
+    },
+    {
+      "id": "sandwiches",
+      "name": "Sandwiches",
+      "items": [
+        {
+          "id": "chicken-banh-mi",
+          "name": "Chicken Banh Mi",
+          "description": "Lemongrass-marinated chicken thigh, pickled daikon & carrot slaw, fresh jalape├▒o, cilantro, sriracha aioli ΓÇö choice of side",
+          "price": 19.5,
+          "tags": ["contains-gluten"]
+        },
+        {
+          "id": "blta",
+          "name": "BLTA",
+          "description": "Applewood bacon, avocado, tomato, lettuce, house aioli on sourdough ΓÇö choice of side",
+          "price": 19.5,
+          "tags": ["contains-gluten", "contains-egg"]
+        },
+        {
+          "id": "chipotle-grilled-cheese",
+          "name": "Chipotle Grilled Cheese",
+          "description": "Chipotle aioli, white cheddar, hatch mozzarella, caramelized onion, chopped bacon on sourdough ΓÇö choice of side",
+          "price": 16.0,
+          "tags": ["contains-gluten", "contains-dairy", "contains-egg"]
+        },
+        {
+          "id": "french-dip",
+          "name": "French Dip",
+          "description": "Prime beef, caramelized onions, gruyere, horseradish cr├¿me fra├«che, au jus ΓÇö side of fries or soup",
+          "price": 19.5,
+          "tags": ["contains-gluten", "contains-dairy", "contains-egg"]
+        }
+      ]
+    },
+    {
+      "id": "grill",
+      "name": "Grill & Main",
+      "items": [
+        {
+          "id": "tempura-fish-and-chips",
+          "name": "Tempura Fish & Chips",
+          "description": "True cod, garlic remoulade, house slaw, choice of fries or turnip fries",
+          "price": 19.5,
+          "tags": ["contains-seafood", "contains-gluten"]
+        },
+        {
+          "id": "classic-independent-burger",
+          "name": "Classic Independent Burger",
+          "description": "House-ground patty, aioli, cheddar, lettuce, tomato, red onion ΓÇö side included",
+          "price": 23.0,
+          "tags": ["contains-gluten", "contains-dairy", "contains-egg"]
+        },
+        {
+          "id": "salmon-avocado-burger",
+          "name": "Salmon Avocado Burger",
+          "description": "Premium salmon patty, avocado, citrus honey dill aioli, lettuce, tomato, side included",
+          "price": 23.0,
+          "tags": ["contains-fish", "contains-egg"]
+        },
+        {
+          "id": "indy-veggie-burger",
+          "name": "Indy Veggie Burger",
+          "description": "Mushroom & chickpea patty, black garlic aioli, herb tomato confit, lettuce, dill pickle, choice side",
+          "price": 20.0,
+          "tags": ["vegetarian", "contains-gluten", "contains-egg"]
+        },
+        {
+          "id": "blackened-salmon-tacos",
+          "name": "Blackened Salmon Tacos",
+          "description": "Salmon, chipotle aioli, cabbage, cilantro, salsa fresca ΓÇö (or 4 prawns for no charge)",
+          "price": 21.0,
+          "tags": ["contains-fish"]
+        },
+        {
+          "id": "certified-hereford-filet-mignon",
+          "name": "Certified Hereford Filet Mignon",
+          "description": "5 oz petite filet, demi-glace, choice turnip fries or potato fries + mixed or Caesar salad",
+          "price": 30.0,
+          "tags": []
+        },
+        {
+          "id": "pacific-salmon",
+          "name": "Pacific Salmon",
+          "description": "5 oz grilled salmon, balsamic glaze, herb confit marble potatoes, seasonal vegetables",
+          "price": 20.0,
+          "tags": ["contains-fish"]
+        }
+      ]
+    },
+    {
+      "id": "desserts",
+      "name": "Desserts",
+      "items": [
+        {
+          "id": "malted-caramel-pudding",
+          "name": "Malted Caramel Pudding",
+          "description": "House-made pudding, graham crumble, br├╗l├⌐ed bananas, banana-maple whipped cream",
+          "price": 0,
+          "tags": ["market-price", "contains-dairy", "contains-gluten"]
+        }
+      ]
+    }
+  ]
+}

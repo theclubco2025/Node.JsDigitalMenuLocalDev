@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
   // Hard bypass: never allow billing for specific tenants (avoid any paywall flash).
   if (request.nextUrl.pathname === '/billing') {
     const t = (request.nextUrl.searchParams.get('tenant') || '').trim().toLowerCase()
-    if (['buttercuppantry', 'southforkgrille', 'south-fork-grille', 'independent'].includes(t)) {
+    if (['buttercuppantry', 'southforkgrille', 'south-fork-grille', 'independent', 'independentbarandgrille'].includes(t)) {
       const url = request.nextUrl.clone()
       url.pathname = `/${encodeURIComponent(t)}`
       url.search = ''
