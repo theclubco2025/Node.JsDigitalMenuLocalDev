@@ -639,8 +639,25 @@ export default function MenuClient() {
       {/* Subtle Specials ribbon */}
       {showSpecials && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
-          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(196,167,106,0.10), rgba(255,255,255,0))', border:'1px solid rgba(196,167,106,0.28)', color:'#101010' }}>
-            {typeof copy?.specials === 'string' ? copy.specials : "Tonight's Specials are available — ask your server."}
+          <div
+            className="rounded-lg px-3 py-2 text-sm"
+            style={{
+              background: isIndependentDraft
+                ? 'linear-gradient(90deg, rgba(196,167,106,0.16), rgba(255,255,255,0.02))'
+                : 'linear-gradient(90deg, rgba(196,167,106,0.10), rgba(255,255,255,0))',
+              border: isIndependentDraft
+                ? '1px solid rgba(255,255,255,0.14)'
+                : '1px solid rgba(196,167,106,0.28)',
+              color: isIndependentDraft ? 'rgba(248,250,252,0.92)' : '#101010'
+            }}
+          >
+            {typeof copy?.specials === 'string'
+              ? copy.specials
+              : (isIndependentDraft
+                ? "Ask your server for this week’s specials & cocktail pairings."
+                : "Tonight's Specials are available — ask your server."
+              )
+            }
           </div>
         </div>
       )}
@@ -924,7 +941,13 @@ export default function MenuClient() {
               }}
             >
               <div className={`flex items-center justify-between ${isIndependentDraft ? 'mb-8' : 'mb-6'}`}>
-                <h2 className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: isBenes ? '#101010' : 'var(--ink)' }}>
+                <h2
+                  className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3"
+                  style={{
+                    fontFamily: 'var(--font-serif)',
+                    color: isIndependentDraft ? '#f8fafc' : (isBenes ? '#101010' : 'var(--ink)')
+                  }}
+                >
                   <span>{category.name}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
