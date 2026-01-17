@@ -149,7 +149,8 @@ export default function MenuClient() {
         ...category,
         items: category.items.filter(item => {
           // Category filter
-          if (selectedCategory && category.name !== selectedCategory) return false
+          // Independent draft uses category bar for navigation (scroll), not filtering.
+          if (!isIndependentDraft && selectedCategory && category.name !== selectedCategory) return false
           
           // Search filter (name and description)
           if (searchQuery) {
@@ -632,50 +633,95 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Fixed Header: Benes uses centered logo background; others show title */}
-      <div
-        className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-        style={isBenes ? {
-          backgroundColor: '#ffffff',
-          backgroundImage: brandLogoUrl ? `url(${brandLogoUrl})` : undefined,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          backgroundSize: 'auto 140px'
-        } : { background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
-      >
+      {/* Independent draft: top navigation bar with logo + search (no name/description text) */}
+      {isIndependentDraft ? (
         <div
-          className="px-4"
+          className="sticky top-0 z-50"
           style={{
-            height: 72,
-            borderBottom: '1px solid rgba(255,255,255,0.08)'
+            background: 'rgba(11, 15, 18, 0.92)',
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(196, 167, 106, 0.25)',
           }}
         >
-          {!isBenes && (
-            <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-              {brandLogoUrl ? (
-                <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-              )}
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italiana)' }}>{brandName}</h1>
-                <p className="text-gray-200 text-xs">{brandTagline}</p>
+          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
+            <img
+              src={brandLogoUrl || 'https://images.squarespace-cdn.com/content/v1/652d775c7dfc3727b42cc773/cd438e8d-6bd2-4053-aa62-3ee8a308ee38/Indy_Logo_Light.png?format=1500w'}
+              alt="The Independent"
+              className="h-9 w-auto"
+              loading="eager"
+              decoding="async"
+            />
+            <div className="flex-1" />
+            <div className="relative w-full max-w-md">
+              <input
+                type="text"
+                placeholder="Search the menu…"
+                className="w-full px-4 py-2.5 pr-10 rounded-full text-sm text-black bg-white placeholder-gray-500 focus:ring-2 transition-colors"
+                style={{ border: '1px solid rgba(196,167,106,0.45)', boxShadow: '0 10px 28px rgba(0,0,0,0.22)' }}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
+                  <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Fixed Header: Benes uses centered logo background; others show title */}
+          <div
+            className="fixed top-0 left-0 right-0 z-50 shadow-sm"
+            style={isBenes ? {
+              backgroundColor: '#ffffff',
+              backgroundImage: brandLogoUrl ? `url(${brandLogoUrl})` : undefined,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              backgroundSize: 'auto 140px'
+            } : { background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+          >
+            <div
+              className="px-4"
+              style={{
+                height: 72,
+                borderBottom: '1px solid rgba(255,255,255,0.08)'
+              }}
+            >
+              {!isBenes && (
+                <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+                  {brandLogoUrl ? (
+                    <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+                  )}
+                  <div className="text-center">
+                    <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italiana)' }}>{brandName}</h1>
+                    <p className="text-gray-200 text-xs">{brandTagline}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Spacer to offset fixed header height */}
       {/* Optional hero subtitle from copy */}
-      <div style={{ height: isBenes ? 160 : 80 }} />
-      {showBenesHero && (
-        <div className="w-full" style={{height:6, background:'linear-gradient(90deg, var(--accent), #ffffff, var(--accent))'}} />
-      )}
-      {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
-        <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
-          <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
-        </div>
+      {!isIndependentDraft && (
+        <>
+          <div style={{ height: isBenes ? 160 : 80 }} />
+          {showBenesHero && (
+            <div className="w-full" style={{height:6, background:'linear-gradient(90deg, var(--accent), #ffffff, var(--accent))'}} />
+          )}
+          {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
+            <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
+              <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Category chip scroller removed for Benes */}
@@ -750,7 +796,7 @@ export default function MenuClient() {
       )}
 
       {/* Hero section (hidden for Benes to keep a single compact header) */}
-      {!isBenes && (
+      {!isBenes && !isIndependentDraft && (
         <div className="relative">
           <div
             className="w-full h-56 md:h-64 lg:h-72"
@@ -806,138 +852,152 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Search & Filters (scroll with page) */}
-      <div
-        className={`max-w-7xl mx-auto px-4 ${isIndependentDraft ? 'py-4' : 'py-2'}`}
-        style={
-          isIndependentDraft
-            ? {
-                position: 'sticky',
-                top: 76,
-                zIndex: 45,
-                background: 'linear-gradient(180deg, rgba(17,17,17,0.92), rgba(17,17,17,0.70))',
-                backdropFilter: 'blur(10px)',
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-              }
-            : undefined
-        }
-      >
-        
-        {/* Search Bar */}
-        <div className={isIndependentDraft ? 'mb-4' : 'mb-3'}>
-          <div className="flex items-center gap-2 max-w-2xl mx-auto">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search menu items, tags, or categories..."
-                className={`w-full pr-10 focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500 ${
-                  isIndependentDraft ? 'px-4 py-3 rounded-full shadow-sm' : 'px-3 py-2 rounded-md'
-                }`}
-                style={
-                  isIndependentDraft
-                    ? { border: '1px solid rgba(196,167,106,0.45)', boxShadow: '0 10px 28px rgba(0,0,0,0.22)' }
-                    : { border: '1px solid var(--muted)' }
-                }
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
-                  <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            </div>
-            <button
-              onClick={() => setFiltersOpen(o => !o)}
-              className={`text-sm font-medium ${
-                isIndependentDraft ? 'px-4 py-3 rounded-full' : 'px-3 py-2 rounded-md'
-              }`}
-              style={
-                isIndependentDraft
-                  ? { background: 'rgba(255,255,255,0.92)', color: 'var(--ink)', border: '1px solid rgba(196,167,106,0.40)' }
-                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
-              }
-            >
-              {filtersOpen ? 'Hide Filters' : 'Filters'}
-            </button>
-          </div>
-        </div>
-        
-        {/* Category Filters */}
-        <div className={`flex justify-center flex-wrap ${isIndependentDraft ? 'gap-3 mb-5' : 'gap-2 mb-4'}`}>
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
-            style={selectedCategory===null
-              ? { background:'var(--accent)', color:'#0b0b0b', boxShadow: isIndependentDraft ? '0 10px 22px rgba(0,0,0,0.20)' : undefined }
-              : { background:'rgba(255,255,255,0.92)', color:'var(--ink)', border:'1px solid rgba(255,255,255,0.10)' }
-            }
-          >
-            All Categories
-          </button>
-          {allCategories.map(category => (
-            <button
-              key={category}
-              onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
-              className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
-              style={selectedCategory===category
-                ? { background:'var(--accent)', color:'#0b0b0b', boxShadow: isIndependentDraft ? '0 10px 22px rgba(0,0,0,0.20)' : undefined }
-                : { background:'rgba(255,255,255,0.92)', color:'var(--ink)', border:'1px solid rgba(255,255,255,0.10)' }
-              }
-            >
-              <span className="inline-flex items-center gap-2">
-                {getCategoryIcon(category)}
-                <span>{category}</span>
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {/* Dietary Filters (compact dropdown) */}
-        {filtersOpen && (
-          <div className="flex gap-2 justify-center flex-wrap">
-            {dietaryOptions.map(option => (
+      {/* Independent draft: sticky category bar (only navigation) */}
+      {isIndependentDraft ? (
+        <div
+          className="sticky z-40"
+          style={{
+            top: 64,
+            background: 'rgba(11, 15, 18, 0.86)',
+            backdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <div className="max-w-6xl mx-auto px-4 py-3">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar">
               <button
-                key={option}
-                onClick={() => {
-                  setSelectedDietaryFilters(prev => 
-                    prev.includes(option)
-                      ? prev.filter(f => f !== option)
-                      : [...prev, option]
-                  )
-                }}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
-                style={selectedDietaryFilters.includes(option)
-                  ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
-                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                onClick={() => { setSelectedCategory(null); scrollTo('top') }}
+                className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition"
+                style={selectedCategory === null
+                  ? { background: 'var(--accent)', color: '#0b0b0b' }
+                  : { background: 'rgba(255,255,255,0.08)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.14)' }
                 }
               >
-                {option}
+                All
               </button>
-            ))}
-            {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
+              {filteredCategories.map(c => {
+                const isActive = activeCategoryId === c.id
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => { setSelectedCategory(c.name); scrollTo(`cat-${c.id}`) }}
+                    className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition"
+                    style={isActive
+                      ? { background: 'rgba(196,167,106,0.18)', color: '#f8fafc', border: '1px solid rgba(196,167,106,0.55)' }
+                      : { background: 'rgba(255,255,255,0.08)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.14)' }
+                    }
+                  >
+                    {c.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Search & Filters (scroll with page)
+        <div className="max-w-7xl mx-auto px-4 py-2">
+          {/* Search Bar */}
+          <div className="mb-3">
+            <div className="flex items-center gap-2 max-w-2xl mx-auto">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search menu items, tags, or categories..."
+                  className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
+                  style={{ border: '1px solid var(--muted)' }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
+                    <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
               <button
-                onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
-                className="px-3 py-1 rounded-full text-xs font-medium"
+                onClick={() => setFiltersOpen(o => !o)}
+                className="px-3 py-2 rounded-md text-sm font-medium"
                 style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
               >
-                Clear all
+                {filtersOpen ? 'Hide Filters' : 'Filters'}
               </button>
-            )}
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* Category Filters */}
+          <div className="flex gap-2 justify-center flex-wrap mb-4">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
+              style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
+            >
+              All Categories
+            </button>
+            {allCategories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
+                className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
+                style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
+              >
+                <span className="inline-flex items-center gap-2">
+                  {getCategoryIcon(category)}
+                  <span>{category}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Dietary Filters (compact dropdown) */}
+          {filtersOpen && (
+            <div className="flex gap-2 justify-center flex-wrap">
+              {dietaryOptions.map(option => (
+                <button
+                  key={option}
+                  onClick={() => {
+                    setSelectedDietaryFilters(prev =>
+                      prev.includes(option)
+                        ? prev.filter(f => f !== option)
+                        : [...prev, option]
+                    )
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
+                  style={selectedDietaryFilters.includes(option)
+                    ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
+                    : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                  }
+                >
+                  {option}
+                </button>
+              ))}
+              {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
+                <button
+                  onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
+                  className="px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
+      <div className={isIndependentDraft ? 'max-w-6xl mx-auto px-4 py-10' : 'max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8'} style={{ color: 'var(--ink)' }}>
         {/* Current Category Chip */}
-        <div className="lg:col-span-12 mb-4">
-          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
-            Browsing: {selectedCategory || 'All'}
-          </span>
-        </div>
+        {!isIndependentDraft && (
+          <div className="lg:col-span-12 mb-4">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
+              Browsing: {selectedCategory || 'All'}
+            </span>
+          </div>
+        )}
         {/* Category Sidebar */}
+        {!isIndependentDraft && (
         <aside className="hidden lg:block lg:col-span-3">
           <div className="sticky top-24 lux-card rounded-xl p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)' }}>
             <h3 className="text-sm font-semibold text-gray-200 mb-3">Categories</h3>
@@ -965,9 +1025,10 @@ export default function MenuClient() {
             </nav>
           </div>
         </aside>
+        )}
 
         {/* Menu Grid */}
-        <div className="space-y-12 lg:col-span-9" id="top">
+        <div className={isIndependentDraft ? 'space-y-12' : 'space-y-12 lg:col-span-9'} id="top">
           {filteredCategories.map((category, idx) => (
             <div
               key={category.id}
@@ -980,7 +1041,6 @@ export default function MenuClient() {
             >
               <div className={`flex items-center justify-between ${isIndependentDraft ? 'mb-8' : 'mb-6'}`}>
                 <h2 className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: isBenes ? '#101010' : 'var(--ink)' }}>
-                  {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
@@ -989,207 +1049,129 @@ export default function MenuClient() {
                 <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
               )}
               
-              <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 ${isIndependentDraft ? 'gap-7' : 'gap-6'}`}>
-                {category.items.map(item => (
-                  <div 
-                    key={item.id} 
-                    className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                    style={{ 
-                      borderRadius: 'var(--radius)', 
-                      background: isBenes ? '#fffdf5' : 'var(--card)', 
-                      borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
-                      boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
-                      ...cardStyleForCategory(category.name)
-                    }}
-                  >
-                    {(() => {
-                      const src = imageMap[item.id] || item.imageUrl || ''
-                      if (!src) return null
-                      return (
-                        <div className="bg-gray-100">
-                          <img
-                            id={`img-${item.id}`}
-                            src={src}
-                            alt={item.name}
-                            className="w-full h-48 object-cover"
-                            loading="lazy"
-                            decoding="async"
-                          />
+              {isIndependentDraft ? (
+                <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)' }}>
+                  {category.items.map((item, itemIdx) => {
+                    const tags = (item.tags || [])
+                    const dietary = tags.filter(t => ['vegetarian','vegan','gluten-free','dairy-free','nut-free'].includes(t.toLowerCase()))
+                    return (
+                      <div
+                        key={item.id}
+                        className="px-6 py-6"
+                        style={itemIdx === 0 ? undefined : { borderTop: '1px solid rgba(255,255,255,0.08)' }}
+                      >
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="min-w-0">
+                            <h3 className="text-lg md:text-xl font-semibold tracking-tight" style={{ color: '#f8fafc' }}>
+                              {highlightText(item.name, searchQuery)}
+                            </h3>
+                            {item.description ? (
+                              <p className="mt-2 text-sm leading-relaxed" style={{ color: 'rgba(248,250,252,0.72)' }}>
+                                {highlightText(item.description, searchQuery)}
+                              </p>
+                            ) : null}
+                            {dietary.length > 0 ? (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {dietary.map(tag => (
+                                  <span
+                                    key={tag}
+                                    className="px-2.5 py-1 rounded-full text-[11px] font-medium"
+                                    style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(248,250,252,0.86)', border: '1px solid rgba(255,255,255,0.14)' }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <div className="text-base font-semibold" style={{ color: 'rgba(196,167,106,0.95)' }}>
+                              ${Number(item.price ?? 0).toFixed(2)}
+                            </div>
+                            <button
+                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition"
+                              style={{
+                                background: 'rgba(196,167,106,0.16)',
+                                border: '1px solid rgba(196,167,106,0.55)',
+                                color: '#f8fafc'
+                              }}
+                              aria-label={`Ask about ${item.name}`}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M6 10c0-3 2.7-5 6-5s6 2 6 5-2.7 5-6 5c-.9 0-1.8-.1-2.6-.3L6 17v-2.3C6 13.5 6 12.3 6 10Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                              </svg>
+                              Ask
+                            </button>
+                          </div>
                         </div>
-                      )
-                    })()}
-                    
-                    <div className={isIndependentDraft ? 'p-7' : 'p-6'}>
-                      <div className="flex justify-between items-start mb-3">
-                        {isAdmin ? (
-                          <input
-                            className="text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
-                            value={item.name}
-                            onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
-                          />
-                        ) : (
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6`}>
+                  {category.items.map(item => (
+                    <div
+                      key={item.id}
+                      className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                      style={{
+                        borderRadius: 'var(--radius)',
+                        background: isBenes ? '#fffdf5' : 'var(--card)',
+                        borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
+                        boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
+                        ...cardStyleForCategory(category.name)
+                      }}
+                    >
+                      {(() => {
+                        const src = imageMap[item.id] || item.imageUrl || ''
+                        if (!src) return null
+                        return (
+                          <div className="bg-gray-100">
+                            <img
+                              id={`img-${item.id}`}
+                              src={src}
+                              alt={item.name}
+                              className="w-full h-48 object-cover"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </div>
+                        )
+                      })()}
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-3">
                           <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
                             {highlightText(item.name, searchQuery)}
-                            {typeof item.calories === 'number' && (
-                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
-                            )}
                           </h3>
-                        )}
-                        {isAdmin ? (
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="w-28 text-right text-xl font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
-                            value={Number(item.price).toString()}
-                            onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
-                          />
-                        ) : (
                           <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${Number(item.price ?? 0).toFixed(2)}</span>
-                        )}
-                      </div>
-                      {!isAdmin && (
-                        <div className={`flex flex-wrap ${isIndependentDraft ? 'gap-1.5 mb-3' : 'gap-1 mb-2'}`}>
-                          {getItemBadges(item).map(badge => (
-                            <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
-                          ))}
                         </div>
-                      )}
-                      
-                      {isAdmin ? (
-                        <div className="space-y-2 mb-4">
-                          <textarea
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
-                            placeholder="Description"
-                            value={item.description || ''}
-                            onChange={e => updateItemField(category.id, item.id, 'description', e.target.value)}
-                          />
-                          <input
-                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
-                            placeholder="Image URL"
-                            value={item.imageUrl || ''}
-                            onChange={e => updateItemField(category.id, item.id, 'imageUrl', e.target.value)}
-                          />
-                        </div>
-                      ) : (
-                        <p className={`text-gray-600 text-sm leading-relaxed ${isIndependentDraft ? 'mb-5' : 'mb-4'}`} style={isIndependentDraft ? { fontStyle: 'normal' } : undefined}>
+                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
                           {highlightText(item.description, searchQuery)}
                         </p>
-                      )}
-                      
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0 flex flex-wrap gap-1">
-                          {isAdmin ? (
-                            <>
-                              <input
-                                type="number"
-                                placeholder="cal"
-                                className="w-20 px-2 py-1 text-xs border border-gray-300 rounded text-black"
-                                value={item.calories ?? ''}
-                                onChange={e => updateItemField(category.id, item.id, 'calories', e.target.value === '' ? undefined : Number(e.target.value))}
-                              />
-                              {(item.tags || []).map(tag => (
-                                <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-700 border border-gray-300 bg-gray-100">
-                                  {tag}
-                                  <button aria-label="Remove tag" onClick={() => removeTag(category.id, item.id, tag)} className="ml-1 text-gray-500 hover:text-black">×</button>
-                                </span>
-                              ))}
-                              <input
-                                className="px-2 py-1 text-xs border border-gray-300 rounded text-black"
-                                placeholder="Add tag (Enter)"
-                                onKeyDown={e => {
-                                  if (e.key === 'Enter') {
-                                    const v = (e.target as HTMLInputElement).value
-                                    addTag(category.id, item.id, v)
-                                    ;(e.target as HTMLInputElement).value = ''
-                                  }
-                                }}
-                              />
-                            </>
-                          ) : (
-                            <>
-                              {item.calories && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
-                                  {item.calories} cal
-                                </span>
-                              )}
-                              {/* Tenant-scoped: reduce tag noise for Independent draft */}
-                              {(() => {
-                                const tags = (item.tags || [])
-                                const dietary = tags.filter(t => ['vegetarian','vegan','gluten-free','dairy-free','nut-free'].includes(t.toLowerCase()))
-                                const contains = tags.filter(t => t.toLowerCase().startsWith('contains-') || t.toLowerCase() === 'market-price')
-                                const showAll = !isIndependentDraft
-                                const visible = showAll ? tags : dietary
-                                return (
-                                  <>
-                                    {visible.map(tag => (
-                                      <span
-                                        key={tag}
-                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
-                                      >
-                                        {tag}
-                                      </span>
-                                    ))}
-                                    {isIndependentDraft && contains.length > 0 && (
-                                      <span
-                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border"
-                                        title={contains.join(', ')}
-                                        style={{ borderColor: 'rgba(196,167,106,0.45)', color: '#6b7280', background: 'rgba(196,167,106,0.08)' }}
-                                      >
-                                        Info
-                                      </span>
-                                    )}
-                                  </>
-                                )
-                              })()}
-                            </>
-                          )}
-                        </div>
-                        
-                        <div className="shrink-0 flex items-center gap-2">
-                        <button
-                          onClick={() => {
-                            addToCart(item)
-                            setRecentlyAddedId(item.id)
-                            setCartBump(true)
-                            setToast(`Added ${item.name}`)
-                            setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
-                            launchFlyToPlate()
-                            // plate pile visuals removed
-                          }}
-                          className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
-                          style={{
-                            background: 'var(--accent)',
-                            boxShadow: isBenes ? '0 8px 18px rgba(185,28,28,0.35)' : undefined,
-                            letterSpacing: isBenes ? 0.3 : undefined
-                          }}
-                        >
-                          {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
-                        </button>
-                <button
-                  onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                  className={`text-sm font-semibold border text-black flex items-center gap-2 whitespace-nowrap ${
-                    isIndependentDraft ? 'px-4 py-2.5 rounded-full' : 'px-3 py-2 rounded-lg font-medium bg-white hover:bg-gray-100'
-                  }`}
-                  style={
-                    isIndependentDraft
-                      ? { background: 'rgba(196,167,106,0.16)', borderColor: 'rgba(196,167,106,0.45)' }
-                      : undefined
-                  }
-                  aria-label={`Ask about ${item.name}`}
-                >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                            <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
-                          </svg>
-                          <span>Ask</span>
-                        </button>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0 flex flex-wrap gap-1">
+                            {(item.tags || []).map(tag => (
+                              <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="shrink-0 flex items-center gap-2">
+                            <button
+                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                              className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                              aria-label={`Ask about ${item.name}`}
+                            >
+                              <span>Ask</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -1206,18 +1188,20 @@ export default function MenuClient() {
       {/* Floating Plate Button removed */}
 
       {/* AI Assistant Button */}
-      <button
-        onClick={() => setIsAssistantOpen(true)}
-        className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
-        style={{background:'var(--accent)', color:'#0b0b0b'}}
-        aria-label="Open assistant"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-          <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
-        </svg>
-      </button>
+      {!isIndependentDraft && (
+        <button
+          onClick={() => setIsAssistantOpen(true)}
+          className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
+          style={{background:'var(--accent)', color:'#0b0b0b'}}
+          aria-label="Open assistant"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
+          </svg>
+        </button>
+      )}
 
       {/* Floating flyers removed */}
 
