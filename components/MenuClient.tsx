@@ -70,6 +70,8 @@ export default function MenuClient() {
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+  // Tenant-scoped UI polish (must not affect other menus)
+  const isIndependentDraft = tenant === 'independent-draft'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
   useEffect(() => {
@@ -805,17 +807,37 @@ export default function MenuClient() {
       )}
 
       {/* Search & Filters (scroll with page) */}
-      <div className="max-w-7xl mx-auto px-4 py-2">
+      <div
+        className={`max-w-7xl mx-auto px-4 ${isIndependentDraft ? 'py-4' : 'py-2'}`}
+        style={
+          isIndependentDraft
+            ? {
+                position: 'sticky',
+                top: 76,
+                zIndex: 45,
+                background: 'linear-gradient(180deg, rgba(17,17,17,0.92), rgba(17,17,17,0.70))',
+                backdropFilter: 'blur(10px)',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }
+            : undefined
+        }
+      >
         
         {/* Search Bar */}
-        <div className="mb-3">
+        <div className={isIndependentDraft ? 'mb-4' : 'mb-3'}>
           <div className="flex items-center gap-2 max-w-2xl mx-auto">
             <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="Search menu items, tags, or categories..."
-                className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
-                style={{ border: '1px solid var(--muted)' }}
+                className={`w-full pr-10 focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500 ${
+                  isIndependentDraft ? 'px-4 py-3 rounded-full shadow-sm' : 'px-3 py-2 rounded-md'
+                }`}
+                style={
+                  isIndependentDraft
+                    ? { border: '1px solid rgba(196,167,106,0.45)', boxShadow: '0 10px 28px rgba(0,0,0,0.22)' }
+                    : { border: '1px solid var(--muted)' }
+                }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -828,8 +850,14 @@ export default function MenuClient() {
             </div>
             <button
               onClick={() => setFiltersOpen(o => !o)}
-              className="px-3 py-2 rounded-md text-sm font-medium"
-              style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+              className={`text-sm font-medium ${
+                isIndependentDraft ? 'px-4 py-3 rounded-full' : 'px-3 py-2 rounded-md'
+              }`}
+              style={
+                isIndependentDraft
+                  ? { background: 'rgba(255,255,255,0.92)', color: 'var(--ink)', border: '1px solid rgba(196,167,106,0.40)' }
+                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+              }
             >
               {filtersOpen ? 'Hide Filters' : 'Filters'}
             </button>
@@ -837,11 +865,14 @@ export default function MenuClient() {
         </div>
         
         {/* Category Filters */}
-        <div className="flex gap-2 justify-center flex-wrap mb-4">
+        <div className={`flex justify-center flex-wrap ${isIndependentDraft ? 'gap-3 mb-5' : 'gap-2 mb-4'}`}>
           <button
             onClick={() => setSelectedCategory(null)}
             className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
-            style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
+            style={selectedCategory===null
+              ? { background:'var(--accent)', color:'#0b0b0b', boxShadow: isIndependentDraft ? '0 10px 22px rgba(0,0,0,0.20)' : undefined }
+              : { background:'rgba(255,255,255,0.92)', color:'var(--ink)', border:'1px solid rgba(255,255,255,0.10)' }
+            }
           >
             All Categories
           </button>
@@ -850,7 +881,10 @@ export default function MenuClient() {
               key={category}
               onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
               className="px-4 py-2 rounded-full text-sm font-bold transition-all duration-200"
-              style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
+              style={selectedCategory===category
+                ? { background:'var(--accent)', color:'#0b0b0b', boxShadow: isIndependentDraft ? '0 10px 22px rgba(0,0,0,0.20)' : undefined }
+                : { background:'rgba(255,255,255,0.92)', color:'var(--ink)', border:'1px solid rgba(255,255,255,0.10)' }
+              }
             >
               <span className="inline-flex items-center gap-2">
                 {getCategoryIcon(category)}
@@ -938,13 +972,13 @@ export default function MenuClient() {
             <div
               key={category.id}
               id={`cat-${category.id}`}
-              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t border-white/10' : ''}`}
+              className={`category-section scroll-mt-24 ${idx > 0 ? (isIndependentDraft ? 'pt-10 border-t border-white/10' : 'pt-8 border-t border-white/10') : ''}`}
               style={{
                 borderRadius: 12,
-                padding: 12
+                padding: isIndependentDraft ? 20 : 12
               }}
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className={`flex items-center justify-between ${isIndependentDraft ? 'mb-8' : 'mb-6'}`}>
                 <h2 className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: isBenes ? '#101010' : 'var(--ink)' }}>
                   {getCategoryIcon(category.name)}
                   <span>{category.name}</span>
@@ -955,7 +989,7 @@ export default function MenuClient() {
                 <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 ${isIndependentDraft ? 'gap-7' : 'gap-6'}`}>
                 {category.items.map(item => (
                   <div 
                     key={item.id} 
@@ -985,7 +1019,7 @@ export default function MenuClient() {
                       )
                     })()}
                     
-                    <div className="p-6">
+                    <div className={isIndependentDraft ? 'p-7' : 'p-6'}>
                       <div className="flex justify-between items-start mb-3">
                         {isAdmin ? (
                           <input
@@ -1014,7 +1048,7 @@ export default function MenuClient() {
                         )}
                       </div>
                       {!isAdmin && (
-                        <div className="flex flex-wrap gap-1 mb-2">
+                        <div className={`flex flex-wrap ${isIndependentDraft ? 'gap-1.5 mb-3' : 'gap-1 mb-2'}`}>
                           {getItemBadges(item).map(badge => (
                             <span key={badge} className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border" style={{ borderColor:'rgba(0,0,0,0.12)', color:'#6b7280' }}>{badge}</span>
                           ))}
@@ -1037,7 +1071,7 @@ export default function MenuClient() {
                           />
                         </div>
                       ) : (
-                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
+                        <p className={`text-gray-600 text-sm leading-relaxed ${isIndependentDraft ? 'mb-5' : 'mb-4'}`} style={isIndependentDraft ? { fontStyle: 'normal' } : undefined}>
                           {highlightText(item.description, searchQuery)}
                         </p>
                       )}
@@ -1078,14 +1112,35 @@ export default function MenuClient() {
                                   {item.calories} cal
                                 </span>
                               )}
-                              {(item.tags || []).map(tag => (
-                                <span 
-                                  key={tag} 
-                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
+                              {/* Tenant-scoped: reduce tag noise for Independent draft */}
+                              {(() => {
+                                const tags = (item.tags || [])
+                                const dietary = tags.filter(t => ['vegetarian','vegan','gluten-free','dairy-free','nut-free'].includes(t.toLowerCase()))
+                                const contains = tags.filter(t => t.toLowerCase().startsWith('contains-') || t.toLowerCase() === 'market-price')
+                                const showAll = !isIndependentDraft
+                                const visible = showAll ? tags : dietary
+                                return (
+                                  <>
+                                    {visible.map(tag => (
+                                      <span
+                                        key={tag}
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))}
+                                    {isIndependentDraft && contains.length > 0 && (
+                                      <span
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border"
+                                        title={contains.join(', ')}
+                                        style={{ borderColor: 'rgba(196,167,106,0.45)', color: '#6b7280', background: 'rgba(196,167,106,0.08)' }}
+                                      >
+                                        Info
+                                      </span>
+                                    )}
+                                  </>
+                                )
+                              })()}
                             </>
                           )}
                         </div>
@@ -1112,7 +1167,14 @@ export default function MenuClient() {
                         </button>
                 <button
                   onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                  className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
+                  className={`text-sm font-semibold border text-black flex items-center gap-2 whitespace-nowrap ${
+                    isIndependentDraft ? 'px-4 py-2.5 rounded-full' : 'px-3 py-2 rounded-lg font-medium bg-white hover:bg-gray-100'
+                  }`}
+                  style={
+                    isIndependentDraft
+                      ? { background: 'rgba(196,167,106,0.16)', borderColor: 'rgba(196,167,106,0.45)' }
+                      : undefined
+                  }
                   aria-label={`Ask about ${item.name}`}
                 >
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
