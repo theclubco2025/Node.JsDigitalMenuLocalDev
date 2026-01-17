@@ -153,7 +153,6 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
   // Safety: in production, do NOT fall back from <slug> â†’ <slug>-draft
   const fallbackTenant = (!tenant.endsWith('-draft') && isPreview) ? `${tenant}-draft` : null
 
-
   const maybeEnrich = (slug: string, menu: MenuResponse): MenuResponse => {
     // Keep buttercuppantry as an exact promoted copy (no inferred tags/diet labels).
     if (slug.toLowerCase() === 'buttercuppantry') return menu
@@ -161,6 +160,21 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
     // Otherwise we enrich tags conservatively from name/description.
     return enrichMenuTagsFromText(menu)
   }
+
+  // Independent live slug: force embedded JSON so live matches preview exactly and avoids any DB mojibake.
+  // Tenant-scoped so it won't affect any other menus.
+  if (tenant === 'independentbarandgrille') {
+    try {
+      const mod = await import('@/data/tenants/independentbarandgrille/menu.json')
+      const embedded = (mod as unknown as { default?: RawMenu }).default
+      if (embedded && Array.isArray(embedded.categories)) {
+        return maybeEnrich(tenant, normalizeMenu(embedded))
+      }
+    } catch {
+      // ignore and fall through
+    }
+  }
+
   // If DATABASE_URL exists, prefer DB
   if (process.env.DATABASE_URL) {
     try {

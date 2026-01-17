@@ -34,6 +34,22 @@ export async function GET(request: NextRequest) {
     const fallbackTenant = (allowDraftFallback && !tenant.endsWith('-draft')) ? `${tenant}-draft` : ''
     // Always prefer DB (Neon) so preview reflects live edits instantly; fallback to repo files
 
+    // Independent live slug: force embedded JSON so live matches preview exactly and avoids any DB mojibake.
+    // Tenant-scoped so it won't affect any other menus.
+    if (tenant === 'independentbarandgrille') {
+      let brand: Record<string, unknown> | null = null
+      let theme: Record<string, unknown> | null = null
+      let images: Record<string, unknown> | null = null
+      let style: Record<string, unknown> | null = null
+      let copy: Record<string, unknown> | null = null
+      try { brand = (await import('@/data/tenants/independentbarandgrille/brand.json')).default as Record<string, unknown> } catch {}
+      try { theme = (await import('@/data/tenants/independentbarandgrille/theme.json')).default as Record<string, unknown> } catch {}
+      try { images = (await import('@/data/tenants/independentbarandgrille/images.json')).default as Record<string, unknown> } catch {}
+      try { style = (await import('@/data/tenants/independentbarandgrille/style.json')).default as Record<string, unknown> } catch {}
+      try { copy = (await import('@/data/tenants/independentbarandgrille/copy.json')).default as Record<string, unknown> } catch {}
+      return NextResponse.json({ brand, theme, images: images || {}, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
+    }
+
     // Load DB settings first (if available)
     let dbBrand: Record<string, unknown> | null = null
     let dbTheme: Record<string, unknown> | null = null
