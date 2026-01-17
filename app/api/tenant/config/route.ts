@@ -87,6 +87,22 @@ export async function GET(request: NextRequest) {
     const fbFsStyle = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'style.json')) : null
     const fbFsCopy = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'copy.json')) : null
 
+    // Production bundling safety (tenant-scoped):
+    // Vercel output file tracing may exclude dynamically-read tenant JSON files.
+    // For the Independent live slug, include embedded JSON fallbacks so live matches preview exactly.
+    let embeddedBrand: Record<string, unknown> | null = null
+    let embeddedTheme: Record<string, unknown> | null = null
+    let embeddedImages: Record<string, unknown> | null = null
+    let embeddedStyle: Record<string, unknown> | null = null
+    let embeddedCopy: Record<string, unknown> | null = null
+    if (tenant === 'independentbarandgrille') {
+      try { embeddedBrand = (await import('@/data/tenants/independentbarandgrille/brand.json')).default as Record<string, unknown> } catch {}
+      try { embeddedTheme = (await import('@/data/tenants/independentbarandgrille/theme.json')).default as Record<string, unknown> } catch {}
+      try { embeddedImages = (await import('@/data/tenants/independentbarandgrille/images.json')).default as Record<string, unknown> } catch {}
+      try { embeddedStyle = (await import('@/data/tenants/independentbarandgrille/style.json')).default as Record<string, unknown> } catch {}
+      try { embeddedCopy = (await import('@/data/tenants/independentbarandgrille/copy.json')).default as Record<string, unknown> } catch {}
+    }
+
     const isNonEmpty = (obj: unknown) => !!(obj && typeof obj === 'object' && Object.keys(obj as Record<string, unknown>).length > 0)
     const hasName = (obj: unknown) => !!(obj && typeof (obj as Record<string, unknown>)['name'] === 'string' && ((obj as Record<string, unknown>)['name'] as string).trim() !== '')
 
@@ -96,11 +112,13 @@ export async function GET(request: NextRequest) {
       ?? (hasName(fsBrand) ? fsBrand : null)
       ?? (hasName(fbDbBrand) ? fbDbBrand : null)
       ?? fbFsBrand
+      ?? embeddedBrand
 
     const theme = (isNonEmpty(dbTheme) ? dbTheme : null)
       ?? (isNonEmpty(fsTheme) ? fsTheme : null)
       ?? (isNonEmpty(fbDbTheme) ? fbDbTheme : null)
       ?? fbFsTheme
+      ?? embeddedTheme
 
     // Images should MERGE across sources so DB can override but FS can provide defaults (important for demo).
     // Precedence (highest last): draft FS < draft DB < live FS < live DB
@@ -109,17 +127,20 @@ export async function GET(request: NextRequest) {
       ...(isNonEmpty(fbDbImages) ? (fbDbImages as Record<string, unknown>) : {}),
       ...(isNonEmpty(fsImages) ? (fsImages as Record<string, unknown>) : {}),
       ...(isNonEmpty(dbImages) ? (dbImages as Record<string, unknown>) : {}),
+      ...(isNonEmpty(embeddedImages) ? embeddedImages : {}),
     }
 
     const style = (isNonEmpty(dbStyle) ? dbStyle : null)
       ?? (isNonEmpty(fsStyle) ? fsStyle : null)
       ?? (isNonEmpty(fbDbStyle) ? fbDbStyle : null)
       ?? fbFsStyle
+      ?? embeddedStyle
 
     const copy = (isNonEmpty(dbCopy) ? dbCopy : null)
       ?? (isNonEmpty(fsCopy) ? fsCopy : null)
       ?? (isNonEmpty(fbDbCopy) ? fbDbCopy : null)
       ?? fbFsCopy
+      ?? embeddedCopy
 
     return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {

@@ -239,6 +239,21 @@ export async function readMenu(tenant: string): Promise<MenuResponse> {
       const draft = await tryRead(fallbackTenant)
       if (draft) return draft
     }
+
+    // Production bundling safety (tenant-scoped):
+    // Vercel output file tracing may exclude dynamically-read tenant JSON files.
+    // For the Independent live slug, include an embedded JSON fallback so live matches preview exactly.
+    if (tenant === 'independentbarandgrille') {
+      try {
+        const mod = await import('@/data/tenants/independentbarandgrille/menu.json')
+        const embedded = (mod as unknown as { default?: RawMenu }).default
+        if (embedded && Array.isArray(embedded.categories)) {
+          return maybeEnrich(tenant, normalizeMenu(embedded))
+        }
+      } catch {
+        // ignore
+      }
+    }
     // no FS data
     return tenant === 'demo' ? STUB : { categories: [] };
   } catch {

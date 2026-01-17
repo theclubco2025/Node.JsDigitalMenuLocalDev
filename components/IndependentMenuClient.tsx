@@ -195,7 +195,7 @@ export default function MenuClient() {
       setToast('Saved changes')
     } catch (error) {
       const needsToken = typeof window !== 'undefined' && !adminToken && process.env.NODE_ENV === 'production'
-      const suffix = needsToken ? ' ΓÇö add &token=YOUR_ADMIN_TOKEN to the URL once, then Save again.' : ''
+      const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL once, then Save again.' : ''
       const message = (error instanceof Error ? error.message : 'Error saving changes') + suffix
       setToast(message)
     }
@@ -541,7 +541,7 @@ export default function MenuClient() {
             <div className="relative w-full max-w-md">
               <input
                 type="text"
-                placeholder="Search the menuΓÇª"
+                placeholder="Search the menu..."
                 className="w-full px-4 py-2.5 pr-10 rounded-full text-sm text-black bg-white placeholder-gray-500 focus:ring-2 transition-colors"
                 style={{ border: '1px solid rgba(196,167,106,0.45)', boxShadow: '0 10px 28px rgba(0,0,0,0.22)' }}
                 value={searchQuery}
@@ -656,8 +656,8 @@ export default function MenuClient() {
             {typeof copy?.specials === 'string'
               ? copy.specials
               : (isIndependentDraft
-                ? "Ask your server for this weekΓÇÖs specials & cocktail pairings."
-                : "Tonight's Specials are available ΓÇö ask your server."
+                ? "Ask your server for this week's specials & cocktail pairings."
+                : "Tonight's Specials are available — ask your server."
               )
             }
           </div>
