@@ -56,7 +56,6 @@ export default function MenuClient() {
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [cartBump, setCartBump] = useState(false)
-  const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   // plate button removed
@@ -173,56 +172,7 @@ export default function MenuClient() {
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
-
-  const updateItemField = (
-    categoryId: string,
-    itemId: string,
-    field: keyof MenuItem,
-    value: MenuItem[keyof MenuItem] | undefined
-  ) => {
-    if (!editableMenu) return
-    setEditableMenu(prev => {
-      if (!prev) return prev
-      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
-      for (const cat of next.categories) {
-        if (cat.id === categoryId) {
-          const idx = cat.items.findIndex(i => i.id === itemId)
-          if (idx !== -1) {
-            const item = cat.items[idx]
-            switch (field) {
-              case 'price':
-                item.price = typeof value === 'number' ? value : Number(value ?? item.price)
-                break
-              case 'calories':
-                item.calories = value === undefined
-                  ? undefined
-                  : typeof value === 'number'
-                    ? value
-                    : Number(value)
-                break
-              case 'tags':
-                item.tags = Array.isArray(value) ? value : item.tags ?? []
-                break
-              case 'name':
-                item.name = value === undefined ? '' : String(value)
-                break
-              case 'description':
-                item.description = value === undefined ? undefined : String(value)
-                break
-              case 'imageUrl':
-                item.imageUrl = value === undefined ? undefined : String(value)
-                break
-              default:
-                item[field] = value as typeof item[typeof field]
-            }
-          }
-          break
-        }
-      }
-      return next
-    })
-  }
+  }, [baseMenu, isIndependentDraft, searchQuery, selectedCategory, selectedDietaryFilters])
 
   const saveAllEdits = async () => {
     if (!isAdmin || !editableMenu) return
@@ -249,46 +199,6 @@ export default function MenuClient() {
     }
   }
 
-  const addTag = (categoryId: string, itemId: string, rawTag: string) => {
-    const tag = (rawTag || '').trim()
-    if (!tag) return
-    if (!editableMenu) return
-    setEditableMenu(prev => {
-      if (!prev) return prev
-      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
-      for (const cat of next.categories) {
-        if (cat.id === categoryId) {
-          const item = cat.items.find(i => i.id === itemId)
-          if (item) {
-            const tags = new Set(item.tags ?? [])
-            tags.add(tag)
-            item.tags = Array.from(tags)
-          }
-          break
-        }
-      }
-      return next
-    })
-  }
-
-  const removeTag = (categoryId: string, itemId: string, tag: string) => {
-    if (!editableMenu) return
-    setEditableMenu(prev => {
-      if (!prev) return prev
-      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
-      for (const cat of next.categories) {
-        if (cat.id === categoryId) {
-          const item = cat.items.find(i => i.id === itemId)
-          if (item) {
-            item.tags = (item.tags || []).filter(t => t !== tag)
-          }
-          break
-        }
-      }
-      return next
-    })
-  }
-
   const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const highlightText = (text: string | undefined, query: string) => {
     const safeText = text ?? ''
@@ -299,22 +209,6 @@ export default function MenuClient() {
         ? <mark key={`highlight-${index}`} className="bg-yellow-200 px-1 rounded">{part}</mark>
         : <span key={`text-${index}`}>{part}</span>
     )
-  }
-
-  const launchFlyToPlate = () => {}
-
-  const addToCart = (item: MenuItem) => {
-    setCart(prev => {
-      const existing = prev.find(cartItem => cartItem.item.id === item.id)
-      if (existing) {
-        return prev.map(cartItem =>
-          cartItem.item.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        )
-      }
-      return [...prev, { item, quantity: 1 }]
-    })
   }
 
   const removeFromCart = (itemId: string) => {
@@ -572,16 +466,6 @@ export default function MenuClient() {
       }
     }
     return {}
-  }
-  function getItemBadges(item: MenuItem): string[] {
-    const badges: string[] = []
-    const name = (item?.name || '').toLowerCase()
-    const tags: string[] = item?.tags || []
-    if (tags.includes('vegan') || /vegan/.test(name)) badges.push('Vegan')
-    if (tags.includes('gf') || /gluten\s*free|gf/.test(name)) badges.push('GF')
-    if (/spicy|vesuvio|pepperoncini|diavolo/.test(name)) badges.push('Spicy')
-    if (/margherita|bolognese|prosciutto/.test(name)) badges.push('House Favorite')
-    return badges
   }
   function resolveFeatured() {
     const items: Array<MenuItem & { categoryName?: string }> = []
