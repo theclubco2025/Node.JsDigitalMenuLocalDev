@@ -16,6 +16,12 @@ Notes
 - Data edits do not require redeploys; refresh to see changes.
 - Code changes redeploy without altering the live path.
 
+Ordering (optional)
+- Ordering is **off by default**; enable per-tenant via `Tenant.settings.ordering.enabled=true`.
+- Scheduling defaults for testing: PST (`America/Los_Angeles`), 15-min slots, 30-min lead time, 24/7 hours until configured.
+- Stripe food-order webhooks require `STRIPE_ORDERS_WEBHOOK_SECRET` (separate from subscription billing webhook).
+- Admin orders page: `/admin/orders`
+
 # Onboarding Checklist (≤ 60 minutes)
 
 1) Create tenant id

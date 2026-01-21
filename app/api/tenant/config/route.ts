@@ -7,6 +7,55 @@ import type { InputJsonValue } from '@prisma/client/runtime/library'
 
 type TenantConfigJson = Record<string, unknown> | null
 
+const DEFAULT_ORDERING = {
+  enabled: false,
+  fulfillment: 'pickup',
+  timezone: 'America/Los_Angeles', // PST default
+  scheduling: {
+    enabled: true,
+    slotMinutes: 15,
+    leadTimeMinutes: 30,
+  },
+  // If hours are unset, we assume 24/7 for testing.
+  hours: null,
+} as const
+
+function normalizeOrdering(raw: unknown): Record<string, unknown> {
+  const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {}
+  const schedulingRaw = (obj.scheduling && typeof obj.scheduling === 'object')
+    ? (obj.scheduling as Record<string, unknown>)
+    : {}
+
+  const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : DEFAULT_ORDERING.enabled
+  const fulfillment = (obj.fulfillment === 'pickup') ? 'pickup' : DEFAULT_ORDERING.fulfillment
+  const timezone = typeof obj.timezone === 'string' && obj.timezone.trim() ? obj.timezone.trim() : DEFAULT_ORDERING.timezone
+
+  const schedulingEnabled =
+    typeof schedulingRaw.enabled === 'boolean' ? schedulingRaw.enabled : DEFAULT_ORDERING.scheduling.enabled
+  const slotMinutes =
+    typeof schedulingRaw.slotMinutes === 'number' && Number.isFinite(schedulingRaw.slotMinutes)
+      ? schedulingRaw.slotMinutes
+      : DEFAULT_ORDERING.scheduling.slotMinutes
+  const leadTimeMinutes =
+    typeof schedulingRaw.leadTimeMinutes === 'number' && Number.isFinite(schedulingRaw.leadTimeMinutes)
+      ? schedulingRaw.leadTimeMinutes
+      : DEFAULT_ORDERING.scheduling.leadTimeMinutes
+
+  const hours = Object.prototype.hasOwnProperty.call(obj, 'hours') ? (obj.hours ?? null) : DEFAULT_ORDERING.hours
+
+  return {
+    enabled,
+    fulfillment,
+    timezone,
+    scheduling: {
+      enabled: schedulingEnabled,
+      slotMinutes,
+      leadTimeMinutes,
+    },
+    hours,
+  }
+}
+
 async function readJson(filePath: string): Promise<TenantConfigJson> {
   try {
     const buf = await fs.readFile(filePath, 'utf8')
@@ -42,12 +91,25 @@ export async function GET(request: NextRequest) {
       let images: Record<string, unknown> | null = null
       let style: Record<string, unknown> | null = null
       let copy: Record<string, unknown> | null = null
+      let orderingRaw: Record<string, unknown> | null = null
       try { brand = (await import('@/data/tenants/independentbarandgrille/brand.json')).default as Record<string, unknown> } catch {}
       try { theme = (await import('@/data/tenants/independentbarandgrille/theme.json')).default as Record<string, unknown> } catch {}
       try { images = (await import('@/data/tenants/independentbarandgrille/images.json')).default as Record<string, unknown> } catch {}
       try { style = (await import('@/data/tenants/independentbarandgrille/style.json')).default as Record<string, unknown> } catch {}
       try { copy = (await import('@/data/tenants/independentbarandgrille/copy.json')).default as Record<string, unknown> } catch {}
-      return NextResponse.json({ brand, theme, images: images || {}, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
+      // Ordering settings should still come from DB so we can enable it per-tenant without redeploying.
+      if (process.env.DATABASE_URL) {
+        try {
+          const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
+          if (prisma) {
+            const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { settings: true } })
+            const s = (row?.settings as Record<string, unknown>) || {}
+            orderingRaw = (s.ordering as Record<string, unknown>) || null
+          }
+        } catch {}
+      }
+      const ordering = normalizeOrdering(orderingRaw)
+      return NextResponse.json({ brand, theme, images: images || {}, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
     // Load DB settings first (if available)
@@ -56,6 +118,7 @@ export async function GET(request: NextRequest) {
     let dbImages: Record<string, unknown> | null = null
     let dbStyle: Record<string, unknown> | null = null
     let dbCopy: Record<string, unknown> | null = null
+    let dbOrdering: Record<string, unknown> | null = null
 
     // Fallback (draft) DB settings
     let fbDbBrand: Record<string, unknown> | null = null
@@ -63,6 +126,7 @@ export async function GET(request: NextRequest) {
     let fbDbImages: Record<string, unknown> | null = null
     let fbDbStyle: Record<string, unknown> | null = null
     let fbDbCopy: Record<string, unknown> | null = null
+    let fbDbOrdering: Record<string, unknown> | null = null
     if (process.env.DATABASE_URL) {
       try {
         const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
@@ -74,6 +138,7 @@ export async function GET(request: NextRequest) {
           dbImages = (s.images as Record<string, unknown>) || null
           dbStyle = (s.style as Record<string, unknown>) || null
           dbCopy = (s.copy as Record<string, unknown>) || null
+          dbOrdering = (s.ordering as Record<string, unknown>) || null
 
           // If any are missing, try draft tenant as fallback (DB) â€” preview only
           if (fallbackTenant && (!dbBrand || !dbTheme || !dbImages || !dbStyle || !dbCopy)) {
@@ -84,6 +149,7 @@ export async function GET(request: NextRequest) {
             fbDbImages = (fs.images as Record<string, unknown>) || null
             fbDbStyle = (fs.style as Record<string, unknown>) || null
             fbDbCopy = (fs.copy as Record<string, unknown>) || null
+            fbDbOrdering = (fs.ordering as Record<string, unknown>) || null
           }
         }
       } catch {}
@@ -158,7 +224,8 @@ export async function GET(request: NextRequest) {
       ?? fbFsCopy
       ?? embeddedCopy
 
-    return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
+    const ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
+    return NextResponse.json({ brand, theme, images, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
     return NextResponse.json({ error: 'config_error', detail }, { status: 500, headers: { 'Cache-Control': 'no-store' } })
@@ -189,8 +256,9 @@ export async function POST(request: NextRequest) {
     const nextImages = body?.images as Record<string, unknown> | undefined
     const nextStyle = body?.style as Record<string, unknown> | undefined
     const nextCopy = body?.copy as Record<string, unknown> | undefined
+    const nextOrdering = body?.ordering as Record<string, unknown> | undefined
 
-    if (!nextBrand && !nextImages && !nextStyle && !nextCopy) {
+    if (!nextBrand && !nextImages && !nextStyle && !nextCopy && !nextOrdering) {
       return NextResponse.json({ error: 'No settings provided' }, { status: 400 })
     }
 
@@ -204,6 +272,7 @@ export async function POST(request: NextRequest) {
       ...(nextImages ? { images: nextImages } : {}),
       ...(nextStyle ? { style: nextStyle } : {}),
       ...(nextCopy ? { copy: nextCopy } : {}),
+      ...(nextOrdering ? { ordering: normalizeOrdering(nextOrdering) } : {}),
     }
 
     await prisma.tenant.upsert({

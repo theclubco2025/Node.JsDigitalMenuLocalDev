@@ -30,23 +30,12 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
         return
       }
 
-      // Redirect unauthorized users
-      if (session.user?.role === 'RESTAURANT_OWNER') {
-        router.push('/admin/restaurant')
-      } else {
-        router.push('/auth/login')
-      }
+      // Redirect unauthorized users (keep this stable; do not rely on pages that may not exist)
+      router.push('/auth/login')
       return
     }
 
-    // Redirect based on role if no specific page requested
-    if (pathname === '/admin' || pathname === '/admin/') {
-      if (session.user?.role === 'SUPER_ADMIN') {
-        router.push('/admin/super')
-      } else {
-        router.push('/admin/restaurant')
-      }
-    }
+    // No automatic role redirects; pages decide their own navigation.
   }, [session, status, router, pathname, requiredRole])
 
   if (status === 'loading') {

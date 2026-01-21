@@ -26,6 +26,11 @@ export default async function MenuPage({ searchParams }: Props) {
       process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
       'demo')
 
+  // Preview: render Independent premium UI for the independent-draft branch/tenant
+  if (isPreview && (tenant === 'independent-draft' || tenant === 'independentbarandgrille')) {
+    return <IndependentMenuClient />
+  }
+
   // In preview we want clients to be able to review work without being paywalled.
   if (isPreview) return <MenuClient />
 
@@ -34,7 +39,7 @@ export default async function MenuPage({ searchParams }: Props) {
 
   // Independent: render the exact premium UI used in independent-draft previews.
   // Tenant-scoped so it won't impact any other menus.
-  if (tenant === 'independentbarandgrille') return <IndependentMenuClient />
+  if (tenant === 'independentbarandgrille' || tenant === 'independent-draft') return <IndependentMenuClient />
 
   // TEMP tenant-scoped bypass: allow specific tenants to view the menu without activation.
   // This is intentionally tenant-scoped so it won't affect any other live menus.

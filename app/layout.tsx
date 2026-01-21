@@ -4,6 +4,7 @@ import './globals.css'
 import { resolveTenant } from '@/lib/tenant'
 import { getTheme } from '@/lib/theme'
 import { type CSSProperties, Suspense } from 'react'
+import Providers from '@/components/Providers'
 
 const inter = Inter({ subsets: ['latin'] })
 const italiana = Italiana({ weight: '400', subsets: ['latin'] })
@@ -40,7 +41,7 @@ export default async function RootLayout({
         <Suspense>
           <ThemeSync />
         </Suspense>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

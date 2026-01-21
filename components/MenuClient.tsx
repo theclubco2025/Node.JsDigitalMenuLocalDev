@@ -48,12 +48,27 @@ type TenantCopy = {
   specials?: string | boolean
 }
 
+type OrderingScheduling = {
+  enabled?: boolean
+  slotMinutes?: number
+  leadTimeMinutes?: number
+}
+
+type OrderingSettings = {
+  enabled?: boolean
+  fulfillment?: 'pickup'
+  timezone?: string
+  scheduling?: OrderingScheduling
+  hours?: unknown
+}
+
 type TenantConfig = {
   brand?: TenantBrand
   theme?: TenantTheme
   images?: Record<string, string>
   style?: TenantStyleFlags
   copy?: TenantCopy
+  ordering?: OrderingSettings
 }
 
 type ThemeCSSVariables = React.CSSProperties & Record<'--bg' | '--text' | '--ink' | '--card' | '--muted' | '--accent', string | undefined>
@@ -135,6 +150,7 @@ export default function MenuClient() {
   const imageMap = useMemo(() => cfg?.images ?? {}, [cfg?.images])
   const copy = cfg?.copy as TenantCopy | undefined
   const styleCfg = cfg?.style
+  const orderingCfg = cfg?.ordering
   const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
   const accentSecondary = styleCfg?.accentSecondary || undefined
   const categoryIntros: Record<string, string | undefined> = copy?.categoryIntros ?? {}
@@ -457,6 +473,76 @@ export default function MenuClient() {
   }
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
+
+  const orderingEnabled = orderingCfg?.enabled === true
+  const orderingTimezone = (typeof orderingCfg?.timezone === 'string' && orderingCfg?.timezone.trim())
+    ? orderingCfg.timezone.trim()
+    : 'America/Los_Angeles'
+  const slotMinutes = typeof orderingCfg?.scheduling?.slotMinutes === 'number' ? orderingCfg!.scheduling!.slotMinutes! : 15
+  const leadTimeMinutes = typeof orderingCfg?.scheduling?.leadTimeMinutes === 'number' ? orderingCfg!.scheduling!.leadTimeMinutes! : 30
+  const schedulingEnabled = orderingCfg?.scheduling?.enabled !== false
+  const [pickupWhen, setPickupWhen] = useState<'asap' | 'scheduled'>('asap')
+  const [scheduledForIso, setScheduledForIso] = useState<string>('') // ISO string
+
+  const availableSlots = useMemo(() => {
+    if (!orderingEnabled || !schedulingEnabled) return []
+    const slot = Math.max(1, Math.floor(slotMinutes))
+    const lead = Math.max(0, Math.floor(leadTimeMinutes))
+    const now = Date.now()
+    const startMs = now + lead * 60_000
+    const startMin = Math.ceil(startMs / 60_000)
+    const alignedMin = Math.ceil(startMin / slot) * slot
+    const first = alignedMin * 60_000
+    const count = Math.min(96, Math.ceil((24 * 60) / slot)) // up to next 24h
+    const slots: string[] = []
+    for (let i = 0; i < count; i++) {
+      const d = new Date(first + i * slot * 60_000)
+      slots.push(d.toISOString())
+    }
+    return slots
+  }, [orderingEnabled, schedulingEnabled, slotMinutes, leadTimeMinutes])
+
+  const formatSlot = (iso: string) => {
+    try {
+      const d = new Date(iso)
+      return d.toLocaleString(undefined, {
+        timeZone: orderingTimezone,
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    } catch {
+      return iso
+    }
+  }
+
+  const startCheckout = async () => {
+    try {
+      const payload = {
+        tenant,
+        items: cart.map(ci => ({ id: ci.item.id, quantity: ci.quantity })),
+        scheduledFor: (orderingEnabled && schedulingEnabled && pickupWhen === 'scheduled' && scheduledForIso)
+          ? scheduledForIso
+          : null,
+      }
+      const res = await fetch('/api/orders/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.ok || !data?.url) {
+        const err = data?.error || `Checkout failed (${res.status})`
+        setToast(String(err))
+        return
+      }
+      window.location.href = String(data.url)
+    } catch (e) {
+      setToast((e as Error)?.message || 'Checkout error')
+    }
+  }
   // Hoisted function to avoid TDZ issues when used by useMemo.
   function matchesDietFilter(dietFilter: string, tagList: string[]) {
     const normalized = dietFilter.toLowerCase()
@@ -1615,12 +1701,73 @@ export default function MenuClient() {
                     ${cartTotal.toFixed(2)}
                   </span>
                 </div>
-                <button className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200">
-                  Proceed with Plate
+                {orderingEnabled && schedulingEnabled && (
+                  <div className="mb-4">
+                    <div className="text-sm font-semibold text-black mb-2">Pickup time</div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPickupWhen('asap')}
+                        className="px-3 py-2 rounded-lg text-sm font-bold border"
+                        style={pickupWhen === 'asap'
+                          ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)' }
+                          : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                        }
+                      >
+                        ASAP
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPickupWhen('scheduled')
+                          if (!scheduledForIso && availableSlots[0]) setScheduledForIso(availableSlots[0])
+                        }}
+                        className="px-3 py-2 rounded-lg text-sm font-bold border"
+                        style={pickupWhen === 'scheduled'
+                          ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)' }
+                          : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                        }
+                      >
+                        Schedule
+                      </button>
+                    </div>
+                    {pickupWhen === 'scheduled' && (
+                      <div className="mt-3">
+                        <select
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
+                          value={scheduledForIso}
+                          onChange={(e) => setScheduledForIso(e.target.value)}
+                        >
+                          {availableSlots.map((iso) => (
+                            <option key={iso} value={iso}>{formatSlot(iso)} ({orderingTimezone})</option>
+                          ))}
+                        </select>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Times shown in {orderingTimezone}. (Testing mode assumes 24/7 hours.)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (orderingEnabled) {
+                      void startCheckout()
+                      return
+                    }
+                    setToast('Demo mode — ordering is not enabled for this tenant yet.')
+                  }}
+                  className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 disabled:opacity-60"
+                  disabled={cart.length === 0}
+                >
+                  {orderingEnabled ? 'Checkout' : 'Proceed with Plate'}
                 </button>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  Demo mode - No actual payment processed
-                </p>
+                {!orderingEnabled && (
+                  <p className="text-xs text-gray-500 text-center mt-2">
+                    Demo mode - No actual payment processed
+                  </p>
+                )}
               </div>
             )}
           </div>

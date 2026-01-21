@@ -37,10 +37,26 @@ export type TenantStyleFlags = {
   badges?: Record<string, string>;
 };
 
+export type OrderingScheduling = {
+  enabled?: boolean;
+  slotMinutes?: number; // e.g. 15
+  leadTimeMinutes?: number; // e.g. 30
+};
+
+export type OrderingSettings = {
+  enabled?: boolean; // default false
+  fulfillment?: 'pickup'; // MVP: pickup only
+  timezone?: string; // IANA tz, e.g. America/Los_Angeles
+  scheduling?: OrderingScheduling;
+  // Optional hours definition. If unset, we assume 24/7 for testing.
+  hours?: unknown;
+};
+
 export type TenantSettings = {
   brand?: TenantBrand;
   theme?: TenantTheme;
   images?: Record<string, string>;
   style?: TenantStyleFlags;
   copy?: Record<string, unknown>;
+  ordering?: OrderingSettings;
 };
