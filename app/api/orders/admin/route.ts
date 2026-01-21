@@ -24,19 +24,21 @@ export async function GET(req: NextRequest) {
     const hasAdminToken = !!adminToken && headerToken === adminToken
 
     const session = await getServerSession(authOptions)
-    if (!session && !hasAdminToken) {
+    const { searchParams } = new URL(req.url)
+    const tenantSlug = (searchParams.get('tenant') || '').trim().toLowerCase()
+
+    // Preview-only POC: allow read-only kitchen polling for independent-draft behind Vercel protection.
+    const isPreviewPOC = process.env.VERCEL_ENV === 'preview' && tenantSlug === 'independent-draft'
+    if (!session && !hasAdminToken && !isPreviewPOC) {
       return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
     }
 
     const role = hasAdminToken
       ? 'SUPER_ADMIN'
-      : ((session as unknown as { role?: string }).role || session!.user?.role)
+      : ((session as unknown as { role?: string }).role || session?.user?.role)
     const sessionTenantId = hasAdminToken
       ? null
       : ((session as unknown as { tenantId?: string | null }).tenantId ?? null)
-
-    const { searchParams } = new URL(req.url)
-    const tenantSlug = (searchParams.get('tenant') || '').trim().toLowerCase()
 
     let tenantId: string | null = null
     if (role === 'SUPER_ADMIN') {
@@ -44,6 +46,9 @@ export async function GET(req: NextRequest) {
         const t = await prisma.tenant.findUnique({ where: { slug: tenantSlug }, select: { id: true } })
         tenantId = t?.id || null
       }
+    } else if (isPreviewPOC) {
+      const t = await prisma.tenant.findUnique({ where: { slug: tenantSlug }, select: { id: true } })
+      tenantId = t?.id || null
     } else {
       tenantId = sessionTenantId
     }
