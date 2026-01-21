@@ -7,11 +7,18 @@ import { useState, useMemo, useEffect } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
 
+const DEMO_PASTA_PHOTO_ITEM_IDS = new Set<string>([
+  'i-fettuccine-bolognese',
+  'i-spaghetti-and-meatballs',
+  'i-chicken-fettuccine-alfredo',
+])
+
 type TenantStyleFlags = {
   flags?: Record<string, boolean>
   navVariant?: string
   heroVariant?: string
   accentSecondary?: string
+  featuredIds?: string[]
   badges?: Record<string, string>
   texture?: { vignette?: boolean; paper?: boolean }
 }
@@ -33,21 +40,57 @@ type TenantBrand = {
   header?: { logoUrl?: string }
 }
 
+type TenantCopy = {
+  featuredIds?: string[]
+  categoryIntros?: Record<string, string>
+  heroSubtitle?: string
+  tagline?: string
+  specials?: string | boolean
+}
+
+type OrderingScheduling = {
+  enabled?: boolean
+  slotMinutes?: number
+  leadTimeMinutes?: number
+}
+
+type OrderingSettings = {
+  enabled?: boolean
+  fulfillment?: 'pickup'
+  timezone?: string
+  scheduling?: OrderingScheduling
+  hours?: unknown
+}
+
 type TenantConfig = {
   brand?: TenantBrand
   theme?: TenantTheme
   images?: Record<string, string>
   style?: TenantStyleFlags
-  copy?: Record<string, unknown>
+  copy?: TenantCopy
+  ordering?: OrderingSettings
 }
 
 type ThemeCSSVariables = React.CSSProperties & Record<'--bg' | '--text' | '--ink' | '--card' | '--muted' | '--accent', string | undefined>
 
+type DietaryOption = { key: string; label: string }
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
+
+const DIETARY_OPTIONS_BASE: readonly DietaryOption[] = [
+  { key: 'vegetarian', label: 'Vegetarian' },
+  { key: 'vegan', label: 'Vegan' },
+  { key: 'no-gluten-listed', label: 'No gluten listed' },
+  { key: 'no-dairy-listed', label: 'No dairy listed' },
+  { key: 'no-nuts-listed', label: 'No nuts listed' },
+]
+
 
 export default function MenuClient() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  // South Fork only: allow multi-select of specific categories via dropdown
+  const [selectedCategoryNames, setSelectedCategoryNames] = useState<string[]>([])
   const [selectedDietaryFilters, setSelectedDietaryFilters] = useState<string[]>([])
   const [cart, setCart] = useState<Array<{ item: MenuItem; quantity: number }>>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -56,11 +99,10 @@ export default function MenuClient() {
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [cartBump, setCartBump] = useState(false)
+  const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  // plate button removed
-  // plate pile removed with floating button
-  // fly-to-plate animation removed
+  const [showDemoAcknowledgement, setShowDemoAcknowledgement] = useState(false)
 
   // Get tenant/admin from URL params
   const isBrowser = typeof window !== 'undefined'
@@ -68,9 +110,13 @@ export default function MenuClient() {
   const tenant = isBrowser
     ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
     : 'benes'
+  // Tenant-scoped UI overrides (must not affect other menus)
+  const canonicalTenant = String(tenant || '').trim().toLowerCase() === 'southforkgrille'
+    ? 'south-fork-grille'
+    : String(tenant || '').trim().toLowerCase()
+  const isSouthFork = canonicalTenant === 'south-fork-grille'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
-  // Tenant-scoped UI polish (must not affect other menus)
-  const isIndependentDraft = tenant === 'independent-draft'
+  const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
   useEffect(() => {
@@ -85,26 +131,35 @@ export default function MenuClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Tenant flags
-  const isBenes = false
+  // Demo reminder (first-visit acknowledgement)
+  useEffect(() => {
+    if (!isBrowser) return
+    if (tenant !== 'demo') return
+    try {
+      const ack = localStorage.getItem(demoAcknowledgeKey)
+      if (!ack) setShowDemoAcknowledgement(true)
+    } catch {
+      setShowDemoAcknowledgement(true)
+    }
+  }, [isBrowser, tenant])
 
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
   const brand = cfg?.brand
   const theme = cfg?.theme ?? null
-  const imageMap = cfg?.images ?? {}
-  const copy = cfg?.copy as Record<string, unknown> | undefined
+  const imageMap = useMemo(() => cfg?.images ?? {}, [cfg?.images])
+  const copy = cfg?.copy as TenantCopy | undefined
   const styleCfg = cfg?.style
-  const accentSecondary = styleCfg?.accentSecondary
-  const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
+  const orderingCfg = cfg?.ordering
+  const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
+  const accentSecondary = styleCfg?.accentSecondary || undefined
+  const categoryIntros: Record<string, string | undefined> = copy?.categoryIntros ?? {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
-  const brandName = brand?.name || 'Menu'
+  const brandName = tenant === 'demo' ? 'Demo Menu Experience' : (brand?.name || 'Menu')
   const brandTagline = brand?.tagline || ''
 
-  // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
+  // Ensure themed CSS variables exist on first paint
   const effectiveTheme = useMemo(() => theme ?? null, [theme])
-
-  
 
   // Apply theme from config
   useEffect(() => {
@@ -116,6 +171,7 @@ export default function MenuClient() {
     if (theme.card) document.body.style.setProperty('--card', theme.card)
     if (theme.muted) document.body.style.setProperty('--muted', theme.muted)
     if (theme.accent) document.body.style.setProperty('--accent', theme.accent)
+    if (theme.primary) document.body.style.setProperty('--primary', theme.primary)
   }, [theme])
 
   const { data: menuData, error, isLoading } = useSWR<MenuResponse>(
@@ -123,9 +179,44 @@ export default function MenuClient() {
     fetcher
   )
 
-  // Hide hero/specials for Benes draft per request
-  const showBenesHero = useMemo(() => styleCfg?.heroVariant !== 'none', [styleCfg?.heroVariant])
-  const showSpecials = !!(styleCfg?.flags && (styleCfg.flags as Record<string, boolean>).specials)
+  const specialsText = typeof copy?.specials === 'string' ? copy.specials : ''
+  const flags = (styleCfg?.flags ?? {}) as Record<string, boolean>
+  const showSpecials = Boolean(flags.specials && specialsText)
+  const showSignatureGrid = Boolean(flags.signatureGrid)
+  const hideCart = Boolean(flags.hideCart)
+  // Respect tenant-scoped flags for UI parity between preview and live.
+  // Default to current behavior unless a tenant explicitly disables.
+  const showCategoryBadges = flags.categoryBadges !== false
+  const useMealGroups = String(styleCfg?.navVariant || '').toLowerCase() === 'chipscroller'
+
+  const cleanMojibake = (raw: string) => {
+    // Fix common encoding artifacts that can slip in when copying data through lossy paths.
+    // DISPLAY-only (no data mutation).
+    const s = String(raw || '')
+    return s
+      // sequences like " ?�� " or " �� "
+      .replace(/\s*\?[\uFFFD\?]{2,}\s*/g, ' — ')
+      .replace(/\s*�{2,}\s*/g, ' — ')
+      // common cp1252 mojibake for em/en-dash
+      .replace(/\s*â€”\s*/g, ' — ')
+      .replace(/\s*â€“\s*/g, ' – ')
+      .replace(/\s+—\s+/g, ' — ')
+      .trim()
+  }
+
+  const groupForCategory = (categoryName: string) => {
+    const cleaned = cleanMojibake(categoryName)
+    const lower = cleaned.toLowerCase()
+    if (lower.includes('kids')) return 'Kids'
+    if (lower.includes('dessert')) return 'Dessert'
+    if (lower.includes('drink') || lower.includes('beverage') || lower.includes('cocktail') || lower.includes('wine')) return 'Drinks'
+    const prefix = cleaned.split('—')[0]?.trim() || cleaned
+    if (/^brunch$/i.test(prefix)) return 'Breakfast'
+    if (/^breakfast$/i.test(prefix)) return 'Breakfast'
+    if (/^lunch$/i.test(prefix)) return 'Lunch'
+    if (/^dinner$/i.test(prefix)) return 'Dinner'
+    return prefix.replace(/\b\w/g, (m) => m.toUpperCase())
+  }
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -142,15 +233,26 @@ export default function MenuClient() {
   // Filter logic matching your Canvas app exactly (client-side now to avoid API refiring per keystroke)
   const filteredCategories = useMemo(() => {
     if (!baseMenu?.categories) return []
-    
-    return baseMenu.categories
+    const baseCategories = baseMenu.categories.filter(category => {
+      if (tenant !== 'demo') return true
+      const n = String(category.name || '').toLowerCase()
+      return !(category.id === 'c-signature' || n.includes('signature'))
+    })
+    return baseCategories
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
+          if (typeof item.price === 'number' && item.price <= 0) return false
           // Category filter
-          // Independent draft uses category bar for navigation (scroll), not filtering.
-          if (!isIndependentDraft && selectedCategory && category.name !== selectedCategory) return false
-          
+          if (isSouthFork) {
+            if (selectedCategoryNames.length > 0 && !selectedCategoryNames.includes(category.name)) return false
+          } else if (selectedCategory) {
+            if (!useMealGroups) {
+              if (category.name !== selectedCategory) return false
+            } else {
+              if (groupForCategory(category.name) !== selectedCategory) return false
+            }
+          }
           // Search filter (name and description)
           if (searchQuery) {
             const searchLower = searchQuery.toLowerCase()
@@ -159,20 +261,68 @@ export default function MenuClient() {
             const matchesTags = (item.tags || []).some(tag => tag.toLowerCase().includes(searchLower))
             if (!matchesName && !matchesDescription && !matchesTags) return false
           }
-          
           // Dietary filters (must have all selected dietary tags)
           if (selectedDietaryFilters.length > 0) {
+            const tagList = (item.tags || []).map(t => String(t).toLowerCase())
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
-              (item.tags || []).some(tag => tag.toLowerCase() === dietFilter.toLowerCase())
+              matchesDietFilter(dietFilter, tagList)
             )
             if (!hasAllDietaryFilters) return false
           }
-          
           return true
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, isIndependentDraft, searchQuery, selectedCategory, selectedDietaryFilters])
+  }, [baseMenu, searchQuery, selectedCategory, selectedCategoryNames, selectedDietaryFilters, tenant, useMealGroups, isSouthFork])
+
+  const updateItemField = (
+    categoryId: string,
+    itemId: string,
+    field: keyof MenuItem,
+    value: MenuItem[keyof MenuItem] | undefined
+  ) => {
+    if (!editableMenu) return
+    setEditableMenu(prev => {
+      if (!prev) return prev
+      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
+      for (const cat of next.categories) {
+        if (cat.id === categoryId) {
+          const idx = cat.items.findIndex(i => i.id === itemId)
+          if (idx !== -1) {
+            const item = cat.items[idx]
+            switch (field) {
+              case 'price':
+                item.price = typeof value === 'number' ? value : Number(value ?? item.price)
+                break
+              case 'calories':
+                item.calories = value === undefined
+                  ? undefined
+                  : typeof value === 'number'
+                    ? value
+                    : Number(value)
+                break
+              case 'tags':
+                item.tags = Array.isArray(value) ? value : item.tags ?? []
+                break
+              case 'name':
+                item.name = value === undefined ? '' : String(value)
+                break
+              case 'description':
+                item.description = value === undefined ? undefined : String(value)
+                break
+              case 'imageUrl':
+                item.imageUrl = value === undefined ? undefined : String(value)
+                break
+              default:
+                item[field] = value as typeof item[typeof field]
+            }
+          }
+          break
+        }
+      }
+      return next
+    })
+  }
 
   const saveAllEdits = async () => {
     if (!isAdmin || !editableMenu) return
@@ -199,6 +349,46 @@ export default function MenuClient() {
     }
   }
 
+  const addTag = (categoryId: string, itemId: string, rawTag: string) => {
+    const tag = (rawTag || '').trim()
+    if (!tag) return
+    if (!editableMenu) return
+    setEditableMenu(prev => {
+      if (!prev) return prev
+      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
+      for (const cat of next.categories) {
+        if (cat.id === categoryId) {
+          const item = cat.items.find(i => i.id === itemId)
+          if (item) {
+            const tags = new Set(item.tags ?? [])
+            tags.add(tag)
+            item.tags = Array.from(tags)
+          }
+          break
+        }
+      }
+      return next
+    })
+  }
+
+  const removeTag = (categoryId: string, itemId: string, tag: string) => {
+    if (!editableMenu) return
+    setEditableMenu(prev => {
+      if (!prev) return prev
+      const next: MenuResponse = JSON.parse(JSON.stringify(prev))
+      for (const cat of next.categories) {
+        if (cat.id === categoryId) {
+          const item = cat.items.find(i => i.id === itemId)
+          if (item) {
+            item.tags = (item.tags || []).filter(t => t !== tag)
+          }
+          break
+        }
+      }
+      return next
+    })
+  }
+
   const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const highlightText = (text: string | undefined, query: string) => {
     const safeText = text ?? ''
@@ -209,6 +399,20 @@ export default function MenuClient() {
         ? <mark key={`highlight-${index}`} className="bg-yellow-200 px-1 rounded">{part}</mark>
         : <span key={`text-${index}`}>{part}</span>
     )
+  }
+
+  const addToCart = (item: MenuItem) => {
+    setCart(prev => {
+      const existing = prev.find(cartItem => cartItem.item.id === item.id)
+      if (existing) {
+        return prev.map(cartItem =>
+          cartItem.item.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        )
+      }
+      return [...prev, { item, quantity: 1 }]
+    })
   }
 
   const removeFromCart = (itemId: string) => {
@@ -223,7 +427,6 @@ export default function MenuClient() {
     setCart(prev => prev.map(cartItem =>
       cartItem.item.id === itemId ? { ...cartItem, quantity } : cartItem
     ))
-    // no plate pile visuals anymore
   }
 
   const sendAssistantMessage = async (overrideMessage?: string) => {
@@ -241,9 +444,11 @@ export default function MenuClient() {
           tenantId: tenant,
           query: userMessage,
           filters: {
+            vegetarian: selectedDietaryFilters.includes('vegetarian'),
             vegan: selectedDietaryFilters.includes('vegan'),
-            glutenFree: selectedDietaryFilters.includes('gluten-free'),
-            dairyFree: selectedDietaryFilters.includes('dairy-free')
+            noGlutenListed: selectedDietaryFilters.includes('no-gluten-listed'),
+            noDairyListed: selectedDietaryFilters.includes('no-dairy-listed'),
+            noNutsListed: selectedDietaryFilters.includes('no-nuts-listed'),
           }
         })
       })
@@ -269,8 +474,107 @@ export default function MenuClient() {
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
 
-  const dietaryOptions = ['vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free']
-  
+  const orderingEnabled = orderingCfg?.enabled === true
+  const orderingTimezone = (typeof orderingCfg?.timezone === 'string' && orderingCfg?.timezone.trim())
+    ? orderingCfg.timezone.trim()
+    : 'America/Los_Angeles'
+  const slotMinutes = typeof orderingCfg?.scheduling?.slotMinutes === 'number' ? orderingCfg!.scheduling!.slotMinutes! : 15
+  const leadTimeMinutes = typeof orderingCfg?.scheduling?.leadTimeMinutes === 'number' ? orderingCfg!.scheduling!.leadTimeMinutes! : 30
+  const schedulingEnabled = orderingCfg?.scheduling?.enabled !== false
+  const [pickupWhen, setPickupWhen] = useState<'asap' | 'scheduled'>('asap')
+  const [scheduledForIso, setScheduledForIso] = useState<string>('') // ISO string
+
+  const availableSlots = useMemo(() => {
+    if (!orderingEnabled || !schedulingEnabled) return []
+    const slot = Math.max(1, Math.floor(slotMinutes))
+    const lead = Math.max(0, Math.floor(leadTimeMinutes))
+    const now = Date.now()
+    const startMs = now + lead * 60_000
+    const startMin = Math.ceil(startMs / 60_000)
+    const alignedMin = Math.ceil(startMin / slot) * slot
+    const first = alignedMin * 60_000
+    const count = Math.min(96, Math.ceil((24 * 60) / slot)) // up to next 24h
+    const slots: string[] = []
+    for (let i = 0; i < count; i++) {
+      const d = new Date(first + i * slot * 60_000)
+      slots.push(d.toISOString())
+    }
+    return slots
+  }, [orderingEnabled, schedulingEnabled, slotMinutes, leadTimeMinutes])
+
+  const formatSlot = (iso: string) => {
+    try {
+      const d = new Date(iso)
+      return d.toLocaleString(undefined, {
+        timeZone: orderingTimezone,
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    } catch {
+      return iso
+    }
+  }
+
+  const startCheckout = async () => {
+    try {
+      const payload = {
+        tenant,
+        items: cart.map(ci => ({ id: ci.item.id, quantity: ci.quantity })),
+        scheduledFor: (orderingEnabled && schedulingEnabled && pickupWhen === 'scheduled' && scheduledForIso)
+          ? scheduledForIso
+          : null,
+      }
+      const res = await fetch('/api/orders/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.ok || !data?.url) {
+        const err = data?.error || `Checkout failed (${res.status})`
+        setToast(String(err))
+        return
+      }
+      window.location.href = String(data.url)
+    } catch (e) {
+      setToast((e as Error)?.message || 'Checkout error')
+    }
+  }
+  // Hoisted function to avoid TDZ issues when used by useMemo.
+  function matchesDietFilter(dietFilter: string, tagList: string[]) {
+    const normalized = dietFilter.toLowerCase()
+    switch (normalized) {
+      case 'no-gluten-listed':
+        return tagList.includes('gluten-free') || !tagList.includes('contains-gluten')
+      case 'no-dairy-listed':
+        return tagList.includes('dairy-free') || !tagList.includes('contains-dairy')
+      case 'no-nuts-listed':
+        return tagList.includes('nut-free') || !tagList.includes('contains-nuts')
+      default:
+        return tagList.includes(normalized)
+    }
+  }
+
+  // Demo: only show Vegetarian/Vegan. Others: only show No-X-listed if at least one item matches.
+  const dietaryOptions = useMemo(() => {
+    const vegOnly = DIETARY_OPTIONS_BASE.filter(o => o.key === 'vegetarian' || o.key === 'vegan')
+    if (tenant === 'demo') return vegOnly
+
+    const allItems = (baseMenu?.categories ?? []).flatMap(c => c.items ?? [])
+    const hasAnyMatch = (key: string) => allItems.some(it => {
+      const tagList = (it.tags || []).map(t => String(t).toLowerCase())
+      return matchesDietFilter(key, tagList)
+    })
+
+    return DIETARY_OPTIONS_BASE.filter(o => {
+      if (o.key === 'vegetarian' || o.key === 'vegan') return true
+      return hasAnyMatch(o.key)
+    })
+  }, [tenant, baseMenu])
+
   const scrollTo = (elementId: string) => {
     if (typeof window === 'undefined') return
     const el = document.getElementById(elementId)
@@ -280,7 +584,63 @@ export default function MenuClient() {
   // Note: avoid early returns before hooks to keep hook order stable
 
   const categories = useMemo(() => menuData?.categories ?? [], [menuData])
-  const allCategories = useMemo(() => categories.map(cat => cat.name), [categories])
+  const allCategories = useMemo(() => {
+    const visible = categories.filter(cat => {
+      if (tenant !== 'demo') return true
+      const n = String(cat.name || '').toLowerCase()
+      return !(cat.id === 'c-signature' || n.includes('signature'))
+    })
+    return visible.map(cat => cat.name)
+  }, [categories, tenant])
+
+  const navCategories = useMemo(() => {
+    if (!useMealGroups) return allCategories
+    const seen = new Set<string>()
+    const ordered: string[] = []
+    for (const name of allCategories) {
+      const g = groupForCategory(name)
+      if (!g || seen.has(g)) continue
+      seen.add(g)
+      ordered.push(g)
+    }
+    const preferred = ['Dinner', 'Lunch', 'Breakfast', 'Drinks', 'Kids', 'Dessert']
+    ordered.sort((a, b) => {
+      const ia = preferred.indexOf(a)
+      const ib = preferred.indexOf(b)
+      if (ia === -1 && ib === -1) return a.localeCompare(b)
+      if (ia === -1) return 1
+      if (ib === -1) return -1
+      return ia - ib
+    })
+    return ordered
+  }, [allCategories, useMealGroups])
+
+  const southForkCategoryGroups = useMemo(() => {
+    // group -> full category names, in existing order
+    const groups: Record<string, string[]> = {}
+    for (const name of allCategories) {
+      const g = groupForCategory(name)
+      if (!groups[g]) groups[g] = []
+      groups[g].push(name)
+    }
+    const preferred = ['Dinner', 'Lunch', 'Breakfast', 'Brunch', 'Drinks', 'Kids', 'Dessert', 'Happy Hour']
+    const orderedGroups = Object.keys(groups).sort((a, b) => {
+      const ia = preferred.indexOf(a)
+      const ib = preferred.indexOf(b)
+      if (ia === -1 && ib === -1) return a.localeCompare(b)
+      if (ia === -1) return 1
+      if (ib === -1) return -1
+      return ia - ib
+    })
+    return { groups, orderedGroups }
+  }, [allCategories])
+
+  const shortCategoryLabel = (fullName: string) => {
+    const cleaned = cleanMojibake(fullName)
+    const parts = cleaned.split('—').map(s => s.trim()).filter(Boolean)
+    if (parts.length >= 2) return parts[parts.length - 1]
+    return cleaned
+  }
 
   const getCategoryIcon = (name: string) => {
     const n = name.toLowerCase()
@@ -368,14 +728,24 @@ export default function MenuClient() {
     )
   }
 
+  function getCategoryImage(_name: string): string | null {
+    void _name
+    return null
+  }
+
   const firstImageUrl = useMemo(() => {
+    // Prefer any configured image if items lack imageUrl in DB
+    const fromConfig = Object.values(imageMap || {})[0]
+    if (typeof fromConfig === 'string' && fromConfig) return fromConfig
     for (const cat of categories) {
       for (const item of cat.items) {
         if (item.imageUrl) return item.imageUrl
+        const mapped = imageMap[item.id]
+        if (mapped) return mapped
       }
     }
     return null
-  }, [categories])
+  }, [categories, imageMap])
 
   // Scroll spy to highlight active category
   useEffect(() => {
@@ -431,41 +801,20 @@ export default function MenuClient() {
     ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
   }
 
-  // Benes-specific featured picks and pairings
-  const featuredItemIds: string[] = isBenes ? [
-    'i-margherita-napoletana-14',
-    'i-fettuccine-bolognese',
-    'i-prosciutto-arugula-14'
-  ] : []
-  const pairingsById: Record<string, string> = isBenes ? {
-    'i-fettuccine-bolognese': 'Pairs with Zinfandel',
-    'i-margherita-napoletana-14': 'Pairs with Chianti',
-    'i-prosciutto-arugula-14': 'Pairs with Pinot Grigio',
-    'i-lasagna': 'Pairs with Sangiovese'
-  } : {}
-  function cardStyleForCategory(categoryName: string): React.CSSProperties {
-    if (/pizza/i.test(categoryName)) {
-      return {
-        backgroundColor: '#ffffff',
-        backgroundImage: 'radial-gradient(rgba(16,16,16,0.05) 1px, transparent 1px)',
-        backgroundSize: '8px 8px',
-        borderColor: 'rgba(0,0,0,0.06)'
-      }
-    }
-    if (/pasta/i.test(categoryName)) {
-      return {
-        background: '#fffaf2',
-        borderColor: 'rgba(185,28,28,0.12)',
-        boxShadow: '0 8px 28px rgba(16,16,16,0.08)'
-      }
-    }
-    if (/calzone/i.test(categoryName)) {
-      return {
-        background: '#fffef8',
-        borderColor: 'rgba(0,0,0,0.08)'
-      }
-    }
+  // Featured picks come from config copy.style.flags/featuredIds or fallback later
+  const featuredItemIds: string[] = styleCfg?.featuredIds ?? copy?.featuredIds ?? []
+  function cardStyleForCategory(): React.CSSProperties {
     return {}
+  }
+  function badgeStyle(): React.CSSProperties {
+    // Classic Italian tricolor badge (requested): green / white / red.
+    // Used ONLY for category badges (Pasta / Pizza / Lunch / etc).
+    const italian = {
+      backgroundImage: 'linear-gradient(90deg, #008C45 0%, #008C45 33%, #F4F5F0 33%, #F4F5F0 66%, #CD212A 66%, #CD212A 100%)',
+      color: '#111827',
+      borderColor: 'rgba(0,0,0,0.15)',
+    } satisfies React.CSSProperties
+    return italian
   }
   function resolveFeatured() {
     const items: Array<MenuItem & { categoryName?: string }> = []
@@ -492,6 +841,27 @@ export default function MenuClient() {
     return items
   }
 
+  function resolveDemoSignaturePastaItems(): Array<MenuItem & { categoryName?: string }> {
+    const items: Array<MenuItem & { categoryName?: string }> = []
+    const cats = menuData?.categories ?? []
+
+    const sig = cats.find(c => c.id === 'c-signature' || String(c.name).toLowerCase().includes('signature'))
+    if (sig?.items?.length) {
+      for (const it of sig.items) items.push({ ...it, categoryName: sig.name })
+      return items
+    }
+
+    // Back-compat fallback: older demo data stored these under Pasta
+    const pasta = cats.find(c => c.id === 'c-pasta' || String(c.name).toLowerCase() === 'pasta')
+    if (!pasta) return items
+    const idToItem: Record<string, MenuItem> = {}
+    for (const it of pasta.items) idToItem[it.id] = it
+    const ids = ['i-fettuccine-bolognese', 'i-spaghetti-and-meatballs', 'i-chicken-fettuccine-alfredo']
+    for (const id of ids) if (idToItem[id]) items.push({ ...idToItem[id], categoryName: pasta.name })
+    return items
+  }
+
+
   return (
     <div className="min-h-screen" style={containerStyle}>
       {/* Loading and error states */}
@@ -517,176 +887,131 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Independent draft: top navigation bar with logo + search (no name/description text) */}
-      {isIndependentDraft ? (
-        <div
-          className="sticky top-0 z-50"
-          style={{
-            background: 'rgba(11, 15, 18, 0.92)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid rgba(196, 167, 106, 0.25)',
-          }}
-        >
-          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
-            <img
-              src={brandLogoUrl || 'https://images.squarespace-cdn.com/content/v1/652d775c7dfc3727b42cc773/cd438e8d-6bd2-4053-aa62-3ee8a308ee38/Indy_Logo_Light.png?format=1500w'}
-              alt="The Independent"
-              className="h-9 w-auto"
-              loading="eager"
-              decoding="async"
-            />
-            <div className="flex-1" />
-            <div className="relative w-full max-w-md">
-              <input
-                type="text"
-                placeholder="Search the menu…"
-                className="w-full px-4 py-2.5 pr-10 rounded-full text-sm text-black bg-white placeholder-gray-500 focus:ring-2 transition-colors"
-                style={{ border: '1px solid rgba(196,167,106,0.45)', boxShadow: '0 10px 28px rgba(0,0,0,0.22)' }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
-                  <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+      {/* Demo reminder */}
+      {tenant === 'demo' && showDemoAcknowledgement && (
+        <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-sm font-semibold text-neutral-900">Demo experience</div>
+                <p className="mt-2 text-sm text-neutral-700">
+                  You’re viewing a demo menu. This experience will be customized for your restaurant after onboarding (your branding, your items, your QR link).
+                </p>
               </div>
+              <button
+                onClick={() => {
+                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                  setShowDemoAcknowledgement(false)
+                }}
+                className="shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-500"
+              >
+                Got it
+              </button>
             </div>
           </div>
         </div>
-      ) : (
+      )}
+
+      {/* Fixed Header (South Fork requested: remove this top header; keep hero image header only) */}
+      {!isSouthFork && (
         <>
-          {/* Fixed Header: Benes uses centered logo background; others show title */}
           <div
             className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-            style={isBenes ? {
-              backgroundColor: '#ffffff',
-              backgroundImage: brandLogoUrl ? `url(${brandLogoUrl})` : undefined,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'center',
-              backgroundSize: 'auto 140px'
-            } : { background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+            style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
           >
             <div
               className="px-4"
-              style={{
-                height: 72,
-                borderBottom: '1px solid rgba(255,255,255,0.08)'
-              }}
+              style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
             >
-              {!isBenes && (
-                <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-                  {brandLogoUrl ? (
-                    <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-                  )}
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'var(--font-italiana)' }}>{brandName}</h1>
-                    <p className="text-gray-200 text-xs">{brandTagline}</p>
-                  </div>
+              <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+                {brandLogoUrl ? (
+                  <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+                )}
+                <div className="text-center">
+                  <h1
+                    className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
+                    style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
+                  >
+                    {brandName}
+                  </h1>
+                  <p className="text-gray-200 text-xs">{brandTagline}</p>
                 </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Spacer to offset fixed header height */}
-      {/* Optional hero subtitle from copy */}
-      {!isIndependentDraft && (
-        <>
-          <div style={{ height: isBenes ? 160 : 80 }} />
-          {showBenesHero && (
-            <div className="w-full" style={{height:6, background:'linear-gradient(90deg, var(--accent), #ffffff, var(--accent))'}} />
-          )}
-          {showBenesHero && typeof copy?.heroSubtitle === 'string' && (
-            <div className="max-w-7xl mx-auto px-4 mt-2 mb-4">
-              <p className="text-sm text-gray-500 italic">{copy.heroSubtitle}</p>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Category chip scroller removed for Benes */}
-
-      {/* Benes hero banner */}
-      {showBenesHero && (
-        <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div
-            className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
-            style={{ borderColor: 'rgba(0,0,0,0.08)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
-          >
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))', opacity: 0.22 }} />
-            {brandLogoUrl && (
-              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
-            )}
-            <div className="relative h-full flex items-center justify-between px-5">
-              <div className="max-w-lg">
-                {typeof copy?.tagline === 'string' && (
-                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#FFFFFF' }}>{copy.tagline}</div>
-                )}
-                {typeof copy?.heroSubtitle === 'string' && (
-                  <div className="text-sm md:text-base text-gray-100 mt-1">{copy.heroSubtitle}</div>
-                )}
               </div>
-              <div className="hidden md:flex items-center gap-2" />
             </div>
           </div>
-        </div>
+
+          {/* Spacer to offset fixed header height */}
+          <div style={{ height: 80 }} />
+        </>
       )}
+
+      {/* Category chip scroller (optional - enable via future flag) */}
+
+      {/* No special-case banner */}
 
       {/* Subtle Specials ribbon */}
       {showSpecials && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
-          <div
-            className="rounded-lg px-3 py-2 text-sm"
-            style={{
-              background: isIndependentDraft
-                ? 'linear-gradient(90deg, rgba(196,167,106,0.16), rgba(255,255,255,0.02))'
-                : 'linear-gradient(90deg, rgba(196,167,106,0.10), rgba(255,255,255,0))',
-              border: isIndependentDraft
-                ? '1px solid rgba(255,255,255,0.14)'
-                : '1px solid rgba(196,167,106,0.28)',
-              color: isIndependentDraft ? 'rgba(248,250,252,0.92)' : '#101010'
-            }}
-          >
-            {typeof copy?.specials === 'string'
-              ? copy.specials
-              : (isIndependentDraft
-                ? "Ask your server for this week’s specials & cocktail pairings."
-                : "Tonight's Specials are available — ask your server."
-              )
-            }
+          <div className="rounded-lg px-3 py-2 text-sm" style={{ background:'linear-gradient(90deg, rgba(185,28,28,0.08), rgba(255,255,255,0))', border:'1px solid rgba(185,28,28,0.18)', color:'#101010' }}>
+            {specialsText}
           </div>
         </div>
       )}
 
-      {/* Signature Picks (Benes) */}
-      {false && (
+      {/* Signature (data-flagged) */}
+      {!isSouthFork && showSignatureGrid && tenant !== 'demo' && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
-            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+          <div className="flex flex-col items-center mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
+            </div>
+            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {resolveFeatured().map((it) => {
-              const src = imageMap[it.id] || it.imageUrl || ''
               return (
-                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'#fffdf5' }}>
-                  {src && (
-                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
-                  )}
-                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.06), rgba(255,255,255,.02), rgba(185,28,28,.06))' }} />
+                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'var(--muted)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'var(--card)' }}>
+                  {(() => {
+                    const sigSrc = (imageMap[it.id] as string | undefined) || it.imageUrl || ''
+                    if (!sigSrc) {
+                      return (
+                        <div
+                          className="h-28 sm:h-32 w-full"
+                          style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.02))' }}
+                        />
+                      )
+                    }
+                    return (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={sigSrc}
+                        alt={it.name}
+                        className="h-28 sm:h-32 w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )
+})()}
                   <div className="p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
-                        {pairingsById[it.id] && (
-                          <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
-                        )}
+                        {/* optional pairing copy can be added via copy data */}
                       </div>
-                  <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'var(--accent)' }}>${Number(it.price ?? 0).toFixed(2)}</div>
+                      {typeof it.price === 'number' && it.price > 0 && (
+                        <div className="text-sm font-semibold text-neutral-900">${it.price.toFixed(2)}</div>
+                      )}
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${it.name}`) }}
+                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
+                        aria-label={`Ask about ${it.name}`}
+                      >
+                        Ask AI
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -696,8 +1021,8 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Hero section (hidden for Benes to keep a single compact header) */}
-      {!isBenes && !isIndependentDraft && (
+      {/* Hero section (variant-driven) */}
+      {heroVariant !== 'none' && (
         <div className="relative">
           <div
             className="w-full h-56 md:h-64 lg:h-72"
@@ -708,15 +1033,34 @@ export default function MenuClient() {
               borderBottom: '1px solid var(--muted)'
             }}
           >
-            <div className="w-full h-full" style={{ background: 'linear-gradient(90deg, rgba(30,30,30,0.45), rgba(196,167,106,0.20), rgba(30,30,30,0.45))' }} />
+            {/* Overlay tuned by tenant style */}
+            <div className="w-full h-full" style={{
+              background: 'linear-gradient(90deg, rgba(0,0,0,0.28), rgba(255,255,255,0.14), rgba(0,0,0,0.28))'
+            }} />
+            {heroVariant === 'logo' && brandLogoUrl && (
+              <div
+                className="absolute inset-0 opacity-10"
+                style={{
+                  backgroundImage: `url(${brandLogoUrl})`,
+                  backgroundRepeat: 'repeat',
+                  backgroundSize: '160px 160px'
+                }}
+              />
+            )}
           </div>
           <div className="absolute inset-0 flex items-center justify-center px-4">
             <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
-                  <h2 className="text-xl md:text-2xl font-bold" style={{ color: 'var(--ink)' }}>{brandName}</h2>
-              <p className="text-xs md:text-sm" style={{ color: 'var(--accent)' }}>{brandTagline}</p>
+                  <h2
+                    className={`text-2xl md:text-3xl font-bold tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
+                    style={{ color: 'var(--ink)' }}
+                  >
+                    {brandName}
+                  </h2>
+                  <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
             </div>
           </div>
-          <div className="w-full h-1.5" style={{ background: 'var(--accent)' }} />
+            {/* Divider */}
+            <div className="w-full h-1.5" style={{ background: 'var(--muted)' }} />
         </div>
       )}
 
@@ -737,10 +1081,15 @@ export default function MenuClient() {
                   const res = await fetch('/api/tenant/promote', {
                     method: 'POST', headers, body: JSON.stringify({ from, to })
                   })
-                  if (!res.ok) throw new Error('Publish failed')
+                  if (!res.ok) {
+                    const detail = await res.text().catch(() => '')
+                    throw new Error(detail || `Publish failed (${res.status})`)
+                  }
                   setToast('Published to live')
                 } catch (e) {
-                  setToast(e instanceof Error ? e.message : 'Publish failed')
+                  const needsToken = typeof window !== 'undefined' && process.env.NODE_ENV === 'production' && !adminToken
+                  const suffix = needsToken ? ' — add &token=YOUR_ADMIN_TOKEN to the URL and retry.' : ''
+                  setToast((e instanceof Error ? e.message : 'Publish failed') + suffix)
                 }
               }}
               className="px-3 py-1 rounded text-sm border border-yellow-300"
@@ -753,90 +1102,107 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Independent draft: sticky category bar (only navigation) */}
-      {isIndependentDraft ? (
-        <div
-          className="sticky z-40"
-          style={{
-            top: 64,
-            background: 'rgba(11, 15, 18, 0.86)',
-            backdropFilter: 'blur(12px)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
-          <div className="max-w-6xl mx-auto px-4 py-3">
-            <div className="flex gap-2 overflow-x-auto no-scrollbar">
-              <button
-                onClick={() => { setSelectedCategory(null); scrollTo('top') }}
-                className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition"
-                style={selectedCategory === null
-                  ? { background: 'var(--accent)', color: '#0b0b0b' }
-                  : { background: 'rgba(255,255,255,0.08)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.14)' }
-                }
-              >
-                All
-              </button>
-              {filteredCategories.map(c => {
-                const isActive = activeCategoryId === c.id
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => { setSelectedCategory(c.name); scrollTo(`cat-${c.id}`) }}
-                    className="shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition"
-                    style={isActive
-                      ? { background: 'rgba(196,167,106,0.18)', color: '#f8fafc', border: '1px solid rgba(196,167,106,0.55)' }
-                      : { background: 'rgba(255,255,255,0.08)', color: '#f8fafc', border: '1px solid rgba(255,255,255,0.14)' }
-                    }
-                  >
-                    {c.name}
-                  </button>
-                )
-              })}
+      {/* Search & Filters (scroll with page) */}
+      <div className="max-w-7xl mx-auto px-4 py-2">
+        {/* Search Bar */}
+        <div className="mb-3">
+          <div className="flex items-center gap-2 max-w-2xl mx-auto">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search menu items, tags, or categories..."
+                className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
+                style={{ border: '1px solid var(--muted)' }}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
+                  <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
             </div>
+            <button
+              onClick={() => setFiltersOpen(o => !o)}
+              className="px-3 py-2 rounded-md text-sm font-medium"
+              style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+            >
+              {filtersOpen ? 'Hide Filters' : 'Filters'}
+            </button>
           </div>
         </div>
-      ) : (
-        // Search & Filters (scroll with page)
-        <div className="max-w-7xl mx-auto px-4 py-2">
-          {/* Search Bar */}
-          <div className="mb-3">
-            <div className="flex items-center gap-2 max-w-2xl mx-auto">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="Search menu items, tags, or categories..."
-                  className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
-                  style={{ border: '1px solid var(--muted)' }}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
-                    <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+
+        {/* Category Filters */}
+        {isSouthFork ? (
+          <div className="mb-4 flex justify-center">
+            <details className="w-full max-w-2xl rounded-lg bg-white/90" style={{ border: '1px solid var(--muted)' }}>
+              <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-neutral-900 flex items-center justify-between">
+                <span>
+                  Categories
+                  {selectedCategoryNames.length > 0 ? (
+                    <span className="ml-2 text-xs font-medium text-neutral-600">
+                      ({selectedCategoryNames.length} selected)
+                    </span>
+                  ) : (
+                    <span className="ml-2 text-xs font-medium text-neutral-600">(All)</span>
+                  )}
+                </span>
+                <span className="text-xs text-neutral-500">▼</span>
+              </summary>
+              <div className="px-4 pb-4 pt-2">
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategoryNames([])}
+                    className="text-xs font-medium underline"
+                    style={{ color: 'var(--ink)' }}
+                  >
+                    Clear categories
+                  </button>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {southForkCategoryGroups.orderedGroups.map((g) => (
+                    <details key={g} className="rounded-md bg-white" style={{ border: '1px solid rgba(0,0,0,0.06)' }}>
+                      <summary className="cursor-pointer list-none px-3 py-2 text-sm font-bold" style={{ color: 'var(--ink)' }}>
+                        {g}
+                      </summary>
+                      <div className="px-3 pb-3 pt-1 space-y-2">
+                        {(southForkCategoryGroups.groups[g] || []).map((full) => {
+                          const checked = selectedCategoryNames.includes(full)
+                          return (
+                            <label key={full} className="flex items-center gap-2 text-sm text-neutral-900">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  setSelectedCategoryNames((prev) => {
+                                    if (prev.includes(full)) return prev.filter((x) => x !== full)
+                                    return [...prev, full]
+                                  })
+                                }}
+                              />
+                              <span>{shortCategoryLabel(full)}</span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </details>
+                  ))}
                 </div>
               </div>
-              <button
-                onClick={() => setFiltersOpen(o => !o)}
-                className="px-3 py-2 rounded-md text-sm font-medium"
-                style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
-              >
-                {filtersOpen ? 'Hide Filters' : 'Filters'}
-              </button>
-            </div>
+            </details>
           </div>
-
-          {/* Category Filters */}
+        ) : (
           <div className="flex gap-2 justify-center flex-wrap mb-4">
             <button
               onClick={() => setSelectedCategory(null)}
               className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200"
               style={selectedCategory===null?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--accent)'} }
             >
-              All Categories
+              {useMealGroups ? 'All' : 'All Categories'}
             </button>
-            {allCategories.map(category => (
+            {navCategories.map(category => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
@@ -844,61 +1210,143 @@ export default function MenuClient() {
                 style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
               >
                 <span className="inline-flex items-center gap-2">
-                  {getCategoryIcon(category)}
+                  {getCategoryImage(category) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={getCategoryImage(category) as string}
+                      alt=""
+                      className="h-6 w-6 rounded-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    getCategoryIcon(category)
+                  )}
                   <span>{category}</span>
                 </span>
               </button>
             ))}
           </div>
+        )}
 
-          {/* Dietary Filters (compact dropdown) */}
-          {filtersOpen && (
-            <div className="flex gap-2 justify-center flex-wrap">
-              {dietaryOptions.map(option => (
-                <button
-                  key={option}
-                  onClick={() => {
-                    setSelectedDietaryFilters(prev =>
-                      prev.includes(option)
-                        ? prev.filter(f => f !== option)
-                        : [...prev, option]
-                    )
-                  }}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
-                  style={selectedDietaryFilters.includes(option)
-                    ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
-                    : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
-                  }
-                >
-                  {option}
-                </button>
-              ))}
-              {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory) && (
-                <button
-                  onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
-                  className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
-                >
-                  Clear all
-                </button>
-              )}
+        {/* Dietary Filters (compact dropdown) */}
+        {filtersOpen && (
+          <div className="flex gap-2 justify-center flex-wrap">
+            {dietaryOptions.map(option => (
+              <button
+                key={option.key}
+                onClick={() => {
+                  setSelectedDietaryFilters(prev => 
+                    prev.includes(option.key)
+                      ? prev.filter(f => f !== option.key)
+                      : [...prev, option.key]
+                  )
+                }}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-200`}
+                style={selectedDietaryFilters.includes(option.key)
+                  ? { background: 'var(--accent)', color: '#0b0b0b', border: '1px solid var(--accent)' }
+                  : { background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }
+                }
+              >
+                {option.label}
+              </button>
+            ))}
+            {(searchQuery || selectedDietaryFilters.length>0 || selectedCategory || selectedCategoryNames.length>0) && (
+              <button
+                onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedCategoryNames([]); setSelectedDietaryFilters([]) }}
+                className="px-3 py-1 rounded-full text-xs font-medium"
+                style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Demo Signature (Pasta only) */}
+      {tenant === 'demo' && showSignatureGrid && (
+        <div className="max-w-7xl mx-auto px-4 mb-6">
+          <div className="flex flex-col items-center mb-4">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
+              <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Dishes</h3>
             </div>
-          )}
+            <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
+          </div>
+
+          {/* Use the same card layout as the Pasta category items (with description). */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {resolveDemoSignaturePastaItems().map((it) => {
+              const canShow = DEMO_PASTA_PHOTO_ITEM_IDS.has(it.id)
+              const sigSrc = canShow ? (((imageMap[it.id] as string | undefined) || it.imageUrl || '')) : ''
+              return (
+                <div
+                  key={it.id}
+                  className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                  style={{
+                    borderRadius: 'var(--radius)',
+                    background: 'var(--card)',
+                    borderColor: 'var(--muted)',
+                    ...cardStyleForCategory()
+                  }}
+                >
+                  {sigSrc ? (
+                    <div className="bg-gray-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={sigSrc}
+                        alt={it.name}
+                        className="w-full h-48 object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+                        {it.name}
+                      </h3>
+                      {typeof it.price === 'number' && (
+                        <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>
+                          ${it.price.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+
+                    {it.description && (
+                      <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
+                        {it.description}
+                      </p>
+                    )}
+
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage('Tell me about ' + it.name) }}
+                        className="px-3 py-2 rounded-lg text-xs font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"
+                        aria-label={'Ask about ' + it.name}
+                      >
+                        Ask AI
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
       {/* Main Content */}
-      <div className={isIndependentDraft ? 'max-w-6xl mx-auto px-4 py-10' : 'max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8'} style={{ color: 'var(--ink)' }}>
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
         {/* Current Category Chip */}
-        {!isIndependentDraft && (
-          <div className="lg:col-span-12 mb-4">
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
-              Browsing: {selectedCategory || 'All'}
-            </span>
-          </div>
-        )}
+        <div className="lg:col-span-12 mb-4">
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
+            Browsing: {selectedCategory || 'All'}
+          </span>
+        </div>
         {/* Category Sidebar */}
-        {!isIndependentDraft && (
         <aside className="hidden lg:block lg:col-span-3">
           <div className="sticky top-24 lux-card rounded-xl p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)' }}>
             <h3 className="text-sm font-semibold text-gray-200 mb-3">Categories</h3>
@@ -918,167 +1366,252 @@ export default function MenuClient() {
                   style={activeCategoryId===category.id?{ color: '#0b0b0b', background: 'var(--accent)' }:{ color: '#e5e5e5', background: '#1a1a1a' }}
                 >
                   <span className="inline-flex items-center gap-2">
-                    {getCategoryIcon(category.name)}
-                    <span>{category.name}</span>
+                    {getCategoryImage(category.name) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={getCategoryImage(category.name) as string}
+                        alt=""
+                        className="h-6 w-6 rounded-md object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      getCategoryIcon(category.name)
+                    )}
+                    <span>{cleanMojibake(category.name)}</span>
                   </span>
                 </button>
               ))}
             </nav>
           </div>
         </aside>
-        )}
 
         {/* Menu Grid */}
-        <div className={isIndependentDraft ? 'space-y-12' : 'space-y-12 lg:col-span-9'} id="top">
+        <div className="space-y-12 lg:col-span-9" id="top">
+          {filteredCategories.length === 0 && (
+            <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--muted)' }}>
+              <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+                No items match your filters
+              </div>
+              <div className="mt-1 text-xs" style={{ color: 'var(--ink)', opacity: 0.78 }}>
+                This menu may not list enough ingredient details to filter reliably. Try removing the â€œNo gluten/dairy/nuts listedâ€ filters,
+                or use <span className="font-semibold">Ask AI</span> / ask staff for allergy needs.
+              </div>
+              <div className="mt-3 flex justify-center">
+                <button
+                  onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
+                  className="px-3 py-2 rounded-md text-xs font-semibold"
+                  style={{ background: 'var(--accent)', color: '#0b0b0b' }}
+                >
+                  Clear all filters
+                </button>
+              </div>
+            </div>
+          )}
           {filteredCategories.map((category, idx) => (
             <div
               key={category.id}
               id={`cat-${category.id}`}
-              className={`category-section scroll-mt-24 ${idx > 0 ? (isIndependentDraft ? 'pt-10 border-t border-white/10' : 'pt-8 border-t border-white/10') : ''}`}
+              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t' : ''}`}
               style={{
+                background: 'var(--card)',
+                borderColor: 'var(--muted)',
                 borderRadius: 12,
-                padding: isIndependentDraft ? 20 : 12
+                padding: 12
               }}
             >
-              <div className={`flex items-center justify-between ${isIndependentDraft ? 'mb-8' : 'mb-6'}`}>
-                <h2
-                  className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3"
-                  style={{
-                    fontFamily: 'var(--font-serif)',
-                    color: isIndependentDraft ? '#f8fafc' : (isBenes ? '#101010' : 'var(--ink)')
-                  }}
-                >
-                  <span>{category.name}</span>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+                  {getCategoryImage(category.name) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={getCategoryImage(category.name) as string}
+                      alt=""
+                      className="h-9 w-9 rounded-lg object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    getCategoryIcon(category.name)
+                  )}
+                  <span>{cleanMojibake(category.name)}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
-              {isBenes && typeof categoryIntros[category.name] === 'string' && (
-                <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
+              {typeof categoryIntros[category.name] === 'string' && (
+                <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
               )}
               
-              {isIndependentDraft ? (
-                <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)' }}>
-                  {category.items.map((item, itemIdx) => {
-                    const tags = (item.tags || [])
-                    const dietary = tags.filter(t => ['vegetarian','vegan','gluten-free','dairy-free','nut-free'].includes(t.toLowerCase()))
-                    return (
-                      <div
-                        key={item.id}
-                        className="px-6 py-6"
-                        style={itemIdx === 0 ? undefined : { borderTop: '1px solid rgba(255,255,255,0.08)' }}
-                      >
-                        <div className="flex items-start justify-between gap-6">
-                          <div className="min-w-0">
-                            <h3 className="text-lg md:text-xl font-semibold tracking-tight" style={{ color: '#f8fafc' }}>
-                              {highlightText(item.name, searchQuery)}
-                            </h3>
-                            {item.description ? (
-                              <p className="mt-2 text-sm leading-relaxed" style={{ color: 'rgba(248,250,252,0.72)' }}>
-                                {highlightText(item.description, searchQuery)}
-                              </p>
-                            ) : null}
-                            {dietary.length > 0 ? (
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                {dietary.map(tag => (
-                                  <span
-                                    key={tag}
-                                    className="px-2.5 py-1 rounded-full text-[11px] font-medium"
-                                    style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(248,250,252,0.86)', border: '1px solid rgba(255,255,255,0.14)' }}
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                          <div className="shrink-0 text-right">
-                            <div className="text-base font-semibold" style={{ color: 'rgba(196,167,106,0.95)' }}>
-                              ${Number(item.price ?? 0).toFixed(2)}
-                            </div>
-                            <button
-                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition"
-                              style={{
-                                background: 'rgba(196,167,106,0.16)',
-                                border: '1px solid rgba(196,167,106,0.55)',
-                                color: '#f8fafc'
-                              }}
-                              aria-label={`Ask about ${item.name}`}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M6 10c0-3 2.7-5 6-5s6 2 6 5-2.7 5-6 5c-.9 0-1.8-.1-2.6-.3L6 17v-2.3C6 13.5 6 12.3 6 10Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                              </svg>
-                              Ask
-                            </button>
-                          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {category.items.map(item => (
+                  <div 
+                    key={item.id} 
+                    className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                    style={{ 
+                      borderRadius: 'var(--radius)', 
+                      background: 'var(--card)', 
+                      borderColor: 'var(--muted)',
+                      ...cardStyleForCategory()
+                    }}
+                  >
+                    {(() => {
+                      const canShow = tenant !== 'demo' || DEMO_PASTA_PHOTO_ITEM_IDS.has(item.id)
+                      const src = canShow ? (imageMap[item.id] || item.imageUrl || '') : ''
+                      if (!src) return null
+                      return (
+                        <div className="bg-gray-100">
+                          <img
+                            id={`img-${item.id}`}
+                            src={src}
+                            alt={item.name}
+                            className="w-full h-48 object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6`}>
-                  {category.items.map(item => (
-                    <div
-                      key={item.id}
-                      className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                      style={{
-                        borderRadius: 'var(--radius)',
-                        background: isBenes ? '#fffdf5' : 'var(--card)',
-                        borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
-                        boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
-                        ...cardStyleForCategory(category.name)
-                      }}
-                    >
-                      {(() => {
-                        const src = imageMap[item.id] || item.imageUrl || ''
-                        if (!src) return null
-                        return (
-                          <div className="bg-gray-100">
-                            <img
-                              id={`img-${item.id}`}
-                              src={src}
-                              alt={item.name}
-                              className="w-full h-48 object-cover"
-                              loading="lazy"
-                              decoding="async"
-                            />
-                          </div>
-                        )
-                      })()}
-                      <div className="p-6">
-                        <div className="flex justify-between items-start mb-3">
+                      )
+                    })()}
+                    
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        {isAdmin ? (
+                          <input
+                            className="text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
+                            value={item.name}
+                            onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
+                          />
+                        ) : (
                           <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
                             {highlightText(item.name, searchQuery)}
+                            {typeof item.calories === 'number' && (
+                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
+                            )}
                           </h3>
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${Number(item.price ?? 0).toFixed(2)}</span>
+                        )}
+                        {isAdmin ? (
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="w-28 text-right text-xl font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
+                            value={Number(item.price).toString()}
+                            onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
+                          />
+                        ) : (
+                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                        )}
+                      </div>
+                      {(!isAdmin && showCategoryBadges) && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {[cleanMojibake(category.name).toUpperCase()].map(badge => (
+                            <span
+                              key={badge}
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold border"
+                              style={badgeStyle()}
+                            >
+                              {badge}
+                            </span>
+                          ))}
                         </div>
+                      )}
+                      
+                      {isAdmin ? (
+                        <div className="space-y-2 mb-4">
+                          <textarea
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
+                            placeholder="Description"
+                            value={item.description || ''}
+                            onChange={e => updateItemField(category.id, item.id, 'description', e.target.value)}
+                          />
+                          <input
+                            className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
+                            placeholder="Image URL"
+                            value={item.imageUrl || ''}
+                            onChange={e => updateItemField(category.id, item.id, 'imageUrl', e.target.value)}
+                          />
+                        </div>
+                      ) : (
                         <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
                           {highlightText(item.description, searchQuery)}
                         </p>
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0 flex flex-wrap gap-1">
-                            {(item.tags || []).map(tag => (
-                              <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                          <div className="shrink-0 flex items-center gap-2">
+                      )}
+                      
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0 flex flex-wrap gap-1">
+                          {isAdmin ? (
+                            <>
+                              <input
+                                type="number"
+                                placeholder="cal"
+                                className="w-20 px-2 py-1 text-xs border border-gray-300 rounded text-black"
+                                value={item.calories ?? ''}
+                                onChange={e => updateItemField(category.id, item.id, 'calories', e.target.value === '' ? undefined : Number(e.target.value))}
+                              />
+                              {(item.tags || []).map(tag => (
+                                <span key={tag} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-700 border border-gray-300 bg-gray-100">
+                                  {tag}
+                                  <button aria-label="Remove tag" onClick={() => removeTag(category.id, item.id, tag)} className="ml-1 text-gray-500 hover:text-black">×</button>
+                                </span>
+                              ))}
+                              <input
+                                className="px-2 py-1 text-xs border border-gray-300 rounded text-black"
+                                placeholder="Add tag (Enter)"
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') {
+                                    const v = (e.target as HTMLInputElement).value
+                                    addTag(category.id, item.id, v)
+                                    ;(e.target as HTMLInputElement).value = ''
+                                  }
+                                }}
+                              />
+                            </>
+                          ) : (
+                            <>
+                              {item.calories && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent">
+                                  {item.calories} cal
+                                </span>
+                              )}
+                              {(item.tags || []).map(tag => (
+                                <span 
+                                  key={tag} 
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="shrink-0 flex items-center gap-2">
+                          {!hideCart && (
                             <button
-                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                              className="px-3 py-2 rounded-lg text-sm font-medium border border-gray-300 bg-white hover:bg-gray-100 text-black flex items-center gap-2 whitespace-nowrap"
-                              aria-label={`Ask about ${item.name}`}
+                              onClick={() => {
+                                addToCart(item)
+                                setRecentlyAddedId(item.id)
+                                setCartBump(true)
+                                setToast(`Added ${item.name}`)
+                                setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
+                              }}
+                              className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                              style={{ background: 'var(--accent)' }}
                             >
-                              <span>Ask</span>
+                              {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
                             </button>
-                          </div>
+                          )}
+                          <button
+                            onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                            className="px-4 py-2 rounded-lg text-sm font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 whitespace-nowrap"
+                            aria-label={`Ask about ${item.name}`}
+                          >
+                            <span>Ask AI</span>
+                          </button>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
@@ -1092,25 +1625,15 @@ export default function MenuClient() {
         </p>
       </div>
 
-      {/* Floating Plate Button removed */}
-
       {/* AI Assistant Button */}
-      {!isIndependentDraft && (
-        <button
-          onClick={() => setIsAssistantOpen(true)}
-          className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
-          style={{background:'var(--accent)', color:'#0b0b0b'}}
-          aria-label="Open assistant"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 12 C 7 6, 17 6, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M3 12 C 7 18, 17 18, 21 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="12" cy="12" r="1.6" fill="currentColor"/>
-          </svg>
-        </button>
-      )}
-
-      {/* Floating flyers removed */}
+      <button
+        onClick={() => setIsAssistantOpen(true)}
+        className="fixed bottom-6 left-6 p-3 rounded-full shadow-lg transition-all duration-200 z-50"
+        style={{ background: '#059669', color: '#ffffff' }}
+        aria-label="Open assistant"
+      >
+        <span className="font-extrabold tracking-widest">Ask AI</span>
+      </button>
 
       {/* Plate Drawer */}
       {isCartOpen && (
@@ -1140,7 +1663,7 @@ export default function MenuClient() {
                     <div key={cartItem.item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div className="flex-1">
                         <h4 className="font-medium text-black">{cartItem.item.name}</h4>
-                <p className="text-sm text-gray-600">${Number(cartItem.item.price ?? 0).toFixed(2)} each</p>
+                        <p className="text-sm text-gray-600">${cartItem.item.price.toFixed(2)} each</p>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
@@ -1160,7 +1683,7 @@ export default function MenuClient() {
                         </div>
                         <div className="text-right">
                           <div className="font-bold text-black">
-                            ${(Number(cartItem.item.price ?? 0) * cartItem.quantity).toFixed(2)}
+                            ${(cartItem.item.price * cartItem.quantity).toFixed(2)}
                           </div>
                         </div>
                       </div>
@@ -1175,15 +1698,76 @@ export default function MenuClient() {
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-xl font-semibold text-black">Total:</span>
                   <span className="text-2xl font-bold text-black">
-                  ${Number(cartTotal ?? 0).toFixed(2)}
+                    ${cartTotal.toFixed(2)}
                   </span>
                 </div>
-                <button className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200">
-                  Proceed with Plate
+                {orderingEnabled && schedulingEnabled && (
+                  <div className="mb-4">
+                    <div className="text-sm font-semibold text-black mb-2">Pickup time</div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPickupWhen('asap')}
+                        className="px-3 py-2 rounded-lg text-sm font-bold border"
+                        style={pickupWhen === 'asap'
+                          ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)' }
+                          : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                        }
+                      >
+                        ASAP
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPickupWhen('scheduled')
+                          if (!scheduledForIso && availableSlots[0]) setScheduledForIso(availableSlots[0])
+                        }}
+                        className="px-3 py-2 rounded-lg text-sm font-bold border"
+                        style={pickupWhen === 'scheduled'
+                          ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)' }
+                          : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                        }
+                      >
+                        Schedule
+                      </button>
+                    </div>
+                    {pickupWhen === 'scheduled' && (
+                      <div className="mt-3">
+                        <select
+                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
+                          value={scheduledForIso}
+                          onChange={(e) => setScheduledForIso(e.target.value)}
+                        >
+                          {availableSlots.map((iso) => (
+                            <option key={iso} value={iso}>{formatSlot(iso)} ({orderingTimezone})</option>
+                          ))}
+                        </select>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Times shown in {orderingTimezone}. (Testing mode assumes 24/7 hours.)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (orderingEnabled) {
+                      void startCheckout()
+                      return
+                    }
+                    setToast('Demo mode — ordering is not enabled for this tenant yet.')
+                  }}
+                  className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 disabled:opacity-60"
+                  disabled={cart.length === 0}
+                >
+                  {orderingEnabled ? 'Checkout' : 'Proceed with Plate'}
                 </button>
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  Demo mode - No actual payment processed
-                </p>
+                {!orderingEnabled && (
+                  <p className="text-xs text-gray-500 text-center mt-2">
+                    Demo mode - No actual payment processed
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -1192,9 +1776,9 @@ export default function MenuClient() {
 
       {/* AI Assistant Drawer */}
       {isAssistantOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 z-50 flex md:justify-end">
+          <div className="w-full md:max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
+            <div className="px-4 py-4 md:p-6 border-b border-gray-200 bg-white" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-black">Menu Assistant</h2>
                 <button
@@ -1209,7 +1793,7 @@ export default function MenuClient() {
               </p>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6">
               {chatHistory.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">
                   <div className="text-4xl mb-4">🤖</div>
@@ -1239,19 +1823,26 @@ export default function MenuClient() {
               )}
             </div>
             
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
+            <div className="px-4 py-4 md:p-6 border-t border-gray-200 bg-white" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
               <div className="flex gap-2">
                 <input
                   type="text"
                   placeholder="Ask about our menu..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-colors text-base text-black bg-white placeholder-gray-500"
+                  style={{ fontSize: 16 }}
+                  inputMode="text"
                   value={assistantMessage}
                   onChange={(e) => setAssistantMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      void sendAssistantMessage()
+                    }
+                  }}
                 />
                 <button
                   onClick={() => { void sendAssistantMessage() }}
-                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+                  className="bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-500 transition-colors text-sm font-bold"
                 >
                   Send
                 </button>

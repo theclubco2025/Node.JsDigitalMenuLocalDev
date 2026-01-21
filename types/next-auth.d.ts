@@ -10,5 +10,8 @@ declare module 'next-auth' {
 
   interface Session {
     user?: User
+    userId?: string
+    tenantId?: string | null
+    role?: 'SUPER_ADMIN' | 'RESTAURANT_OWNER'
   }
 }

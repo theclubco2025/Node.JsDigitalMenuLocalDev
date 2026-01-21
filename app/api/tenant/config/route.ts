@@ -2,9 +2,59 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { promises as fs } from 'fs'
 import path from 'path'
-import type { PrismaClient, Prisma } from '@prisma/client'
+import type { PrismaClient } from '@prisma/client'
+import type { InputJsonValue } from '@prisma/client/runtime/library'
 
 type TenantConfigJson = Record<string, unknown> | null
+
+const DEFAULT_ORDERING = {
+  enabled: false,
+  fulfillment: 'pickup',
+  timezone: 'America/Los_Angeles', // PST default
+  scheduling: {
+    enabled: true,
+    slotMinutes: 15,
+    leadTimeMinutes: 30,
+  },
+  // If hours are unset, we assume 24/7 for testing.
+  hours: null,
+} as const
+
+function normalizeOrdering(raw: unknown): Record<string, unknown> {
+  const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {}
+  const schedulingRaw = (obj.scheduling && typeof obj.scheduling === 'object')
+    ? (obj.scheduling as Record<string, unknown>)
+    : {}
+
+  const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : DEFAULT_ORDERING.enabled
+  const fulfillment = (obj.fulfillment === 'pickup') ? 'pickup' : DEFAULT_ORDERING.fulfillment
+  const timezone = typeof obj.timezone === 'string' && obj.timezone.trim() ? obj.timezone.trim() : DEFAULT_ORDERING.timezone
+
+  const schedulingEnabled =
+    typeof schedulingRaw.enabled === 'boolean' ? schedulingRaw.enabled : DEFAULT_ORDERING.scheduling.enabled
+  const slotMinutes =
+    typeof schedulingRaw.slotMinutes === 'number' && Number.isFinite(schedulingRaw.slotMinutes)
+      ? schedulingRaw.slotMinutes
+      : DEFAULT_ORDERING.scheduling.slotMinutes
+  const leadTimeMinutes =
+    typeof schedulingRaw.leadTimeMinutes === 'number' && Number.isFinite(schedulingRaw.leadTimeMinutes)
+      ? schedulingRaw.leadTimeMinutes
+      : DEFAULT_ORDERING.scheduling.leadTimeMinutes
+
+  const hours = Object.prototype.hasOwnProperty.call(obj, 'hours') ? (obj.hours ?? null) : DEFAULT_ORDERING.hours
+
+  return {
+    enabled,
+    fulfillment,
+    timezone,
+    scheduling: {
+      enabled: schedulingEnabled,
+      slotMinutes,
+      leadTimeMinutes,
+    },
+    hours,
+  }
+}
 
 async function readJson(filePath: string): Promise<TenantConfigJson> {
   try {
@@ -18,8 +68,49 @@ async function readJson(filePath: string): Promise<TenantConfigJson> {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const tenant = (searchParams.get('tenant') || '').trim() || 'demo'
+    // Normalize tenant slug so callers can pass BUTTERCUPPANTRY and still resolve
+    // data/tenants/buttercuppantry/* consistently.
+    const rawTenant = ((searchParams.get('tenant') || '').trim() || 'demo').toLowerCase()
+    const tenant = rawTenant === 'southforkgrille' ? 'south-fork-grille' : rawTenant
+
+    const isPreview = process.env.VERCEL_ENV === 'preview'
+    // Safety: never serve draft tenants on production
+    if (!isPreview && tenant.endsWith('-draft')) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+    }
+
+    const allowDraftFallback = isPreview
+    const fallbackTenant = (allowDraftFallback && !tenant.endsWith('-draft')) ? `${tenant}-draft` : ''
     // Always prefer DB (Neon) so preview reflects live edits instantly; fallback to repo files
+
+    // Independent live slug: force embedded JSON so live matches preview exactly and avoids any DB mojibake.
+    // Tenant-scoped so it won't affect any other menus.
+    if (tenant === 'independentbarandgrille') {
+      let brand: Record<string, unknown> | null = null
+      let theme: Record<string, unknown> | null = null
+      let images: Record<string, unknown> | null = null
+      let style: Record<string, unknown> | null = null
+      let copy: Record<string, unknown> | null = null
+      let orderingRaw: Record<string, unknown> | null = null
+      try { brand = (await import('@/data/tenants/independentbarandgrille/brand.json')).default as Record<string, unknown> } catch {}
+      try { theme = (await import('@/data/tenants/independentbarandgrille/theme.json')).default as Record<string, unknown> } catch {}
+      try { images = (await import('@/data/tenants/independentbarandgrille/images.json')).default as Record<string, unknown> } catch {}
+      try { style = (await import('@/data/tenants/independentbarandgrille/style.json')).default as Record<string, unknown> } catch {}
+      try { copy = (await import('@/data/tenants/independentbarandgrille/copy.json')).default as Record<string, unknown> } catch {}
+      // Ordering settings should still come from DB so we can enable it per-tenant without redeploying.
+      if (process.env.DATABASE_URL) {
+        try {
+          const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
+          if (prisma) {
+            const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { settings: true } })
+            const s = (row?.settings as Record<string, unknown>) || {}
+            orderingRaw = (s.ordering as Record<string, unknown>) || null
+          }
+        } catch {}
+      }
+      const ordering = normalizeOrdering(orderingRaw)
+      return NextResponse.json({ brand, theme, images: images || {}, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
+    }
 
     // Load DB settings first (if available)
     let dbBrand: Record<string, unknown> | null = null
@@ -27,6 +118,15 @@ export async function GET(request: NextRequest) {
     let dbImages: Record<string, unknown> | null = null
     let dbStyle: Record<string, unknown> | null = null
     let dbCopy: Record<string, unknown> | null = null
+    let dbOrdering: Record<string, unknown> | null = null
+
+    // Fallback (draft) DB settings
+    let fbDbBrand: Record<string, unknown> | null = null
+    let fbDbTheme: Record<string, unknown> | null = null
+    let fbDbImages: Record<string, unknown> | null = null
+    let fbDbStyle: Record<string, unknown> | null = null
+    let fbDbCopy: Record<string, unknown> | null = null
+    let fbDbOrdering: Record<string, unknown> | null = null
     if (process.env.DATABASE_URL) {
       try {
         const { prisma } = await import('@/lib/prisma').catch(() => ({ prisma: undefined as PrismaClient | undefined }))
@@ -38,6 +138,19 @@ export async function GET(request: NextRequest) {
           dbImages = (s.images as Record<string, unknown>) || null
           dbStyle = (s.style as Record<string, unknown>) || null
           dbCopy = (s.copy as Record<string, unknown>) || null
+          dbOrdering = (s.ordering as Record<string, unknown>) || null
+
+          // If any are missing, try draft tenant as fallback (DB) â€” preview only
+          if (fallbackTenant && (!dbBrand || !dbTheme || !dbImages || !dbStyle || !dbCopy)) {
+            const fbRow = await prisma.tenant.findUnique({ where: { slug: fallbackTenant }, select: { settings: true } })
+            const fs = (fbRow?.settings as Record<string, unknown>) || {}
+            fbDbTheme = (fs.theme as Record<string, unknown>) || null
+            fbDbBrand = (fs.brand as Record<string, unknown>) || null
+            fbDbImages = (fs.images as Record<string, unknown>) || null
+            fbDbStyle = (fs.style as Record<string, unknown>) || null
+            fbDbCopy = (fs.copy as Record<string, unknown>) || null
+            fbDbOrdering = (fs.ordering as Record<string, unknown>) || null
+          }
         }
       } catch {}
     }
@@ -49,14 +162,70 @@ export async function GET(request: NextRequest) {
     const fsImages = await readJson(path.join(base, 'images.json'))
     const fsStyle = await readJson(path.join(base, 'style.json'))
     const fsCopy = await readJson(path.join(base, 'copy.json'))
+    // Filesystem fallback from draft tenant (preview only)
+    const fbFsBrand = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'brand.json')) : null
+    const fbFsTheme = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'theme.json')) : null
+    const fbFsImages = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'images.json')) : null
+    const fbFsStyle = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'style.json')) : null
+    const fbFsCopy = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'copy.json')) : null
 
-    const brand = dbBrand ?? fsBrand
-    const theme = dbTheme ?? fsTheme
-    const images = dbImages ?? fsImages
-    const style = dbStyle ?? fsStyle
-    const copy = dbCopy ?? fsCopy
+    // Production bundling safety (tenant-scoped):
+    // Vercel output file tracing may exclude dynamically-read tenant JSON files.
+    // For the Independent live slug, include embedded JSON fallbacks so live matches preview exactly.
+    let embeddedBrand: Record<string, unknown> | null = null
+    let embeddedTheme: Record<string, unknown> | null = null
+    let embeddedImages: Record<string, unknown> | null = null
+    let embeddedStyle: Record<string, unknown> | null = null
+    let embeddedCopy: Record<string, unknown> | null = null
+    if (tenant === 'independentbarandgrille') {
+      try { embeddedBrand = (await import('@/data/tenants/independentbarandgrille/brand.json')).default as Record<string, unknown> } catch {}
+      try { embeddedTheme = (await import('@/data/tenants/independentbarandgrille/theme.json')).default as Record<string, unknown> } catch {}
+      try { embeddedImages = (await import('@/data/tenants/independentbarandgrille/images.json')).default as Record<string, unknown> } catch {}
+      try { embeddedStyle = (await import('@/data/tenants/independentbarandgrille/style.json')).default as Record<string, unknown> } catch {}
+      try { embeddedCopy = (await import('@/data/tenants/independentbarandgrille/copy.json')).default as Record<string, unknown> } catch {}
+    }
 
-    return NextResponse.json({ brand, theme, images, style, copy }, { headers: { 'Cache-Control': 'no-store' } })
+    const isNonEmpty = (obj: unknown) => !!(obj && typeof obj === 'object' && Object.keys(obj as Record<string, unknown>).length > 0)
+    const hasName = (obj: unknown) => !!(obj && typeof (obj as Record<string, unknown>)['name'] === 'string' && ((obj as Record<string, unknown>)['name'] as string).trim() !== '')
+
+    // Prefer DB only when it actually contains meaningful values; otherwise fall back to FS
+    // Prefer live DB when non-empty, then live FS; if still missing, fall back to draft (DB then FS)
+    const brand = (hasName(dbBrand) ? dbBrand : null)
+      ?? (hasName(fsBrand) ? fsBrand : null)
+      ?? (hasName(fbDbBrand) ? fbDbBrand : null)
+      ?? fbFsBrand
+      ?? embeddedBrand
+
+    const theme = (isNonEmpty(dbTheme) ? dbTheme : null)
+      ?? (isNonEmpty(fsTheme) ? fsTheme : null)
+      ?? (isNonEmpty(fbDbTheme) ? fbDbTheme : null)
+      ?? fbFsTheme
+      ?? embeddedTheme
+
+    // Images should MERGE across sources so DB can override but FS can provide defaults (important for demo).
+    // Precedence (highest last): draft FS < draft DB < live FS < live DB
+    const images = {
+      ...(isNonEmpty(fbFsImages) ? (fbFsImages as Record<string, unknown>) : {}),
+      ...(isNonEmpty(fbDbImages) ? (fbDbImages as Record<string, unknown>) : {}),
+      ...(isNonEmpty(fsImages) ? (fsImages as Record<string, unknown>) : {}),
+      ...(isNonEmpty(dbImages) ? (dbImages as Record<string, unknown>) : {}),
+      ...(isNonEmpty(embeddedImages) ? embeddedImages : {}),
+    }
+
+    const style = (isNonEmpty(dbStyle) ? dbStyle : null)
+      ?? (isNonEmpty(fsStyle) ? fsStyle : null)
+      ?? (isNonEmpty(fbDbStyle) ? fbDbStyle : null)
+      ?? fbFsStyle
+      ?? embeddedStyle
+
+    const copy = (isNonEmpty(dbCopy) ? dbCopy : null)
+      ?? (isNonEmpty(fsCopy) ? fsCopy : null)
+      ?? (isNonEmpty(fbDbCopy) ? fbDbCopy : null)
+      ?? fbFsCopy
+      ?? embeddedCopy
+
+    const ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
+    return NextResponse.json({ brand, theme, images, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
     return NextResponse.json({ error: 'config_error', detail }, { status: 500, headers: { 'Cache-Control': 'no-store' } })
@@ -79,7 +248,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const tenant = (searchParams.get('tenant') || '').trim()
+    const tenant = (searchParams.get('tenant') || '').trim().toLowerCase()
     if (!tenant) return NextResponse.json({ error: 'Missing tenant' }, { status: 400 })
 
     const body = await request.json().catch(() => ({}))
@@ -87,8 +256,9 @@ export async function POST(request: NextRequest) {
     const nextImages = body?.images as Record<string, unknown> | undefined
     const nextStyle = body?.style as Record<string, unknown> | undefined
     const nextCopy = body?.copy as Record<string, unknown> | undefined
+    const nextOrdering = body?.ordering as Record<string, unknown> | undefined
 
-    if (!nextBrand && !nextImages && !nextStyle && !nextCopy) {
+    if (!nextBrand && !nextImages && !nextStyle && !nextCopy && !nextOrdering) {
       return NextResponse.json({ error: 'No settings provided' }, { status: 400 })
     }
 
@@ -102,12 +272,13 @@ export async function POST(request: NextRequest) {
       ...(nextImages ? { images: nextImages } : {}),
       ...(nextStyle ? { style: nextStyle } : {}),
       ...(nextCopy ? { copy: nextCopy } : {}),
+      ...(nextOrdering ? { ordering: normalizeOrdering(nextOrdering) } : {}),
     }
 
     await prisma.tenant.upsert({
       where: { slug: tenant },
-      update: { settings: merged as Prisma.InputJsonValue },
-      create: { slug: tenant, name: tenant, settings: merged as Prisma.InputJsonValue },
+      update: { settings: merged as InputJsonValue },
+      create: { slug: tenant, name: tenant, settings: merged as InputJsonValue },
     })
 
     return NextResponse.json({ ok: true })
