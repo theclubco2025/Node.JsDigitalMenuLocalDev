@@ -75,7 +75,10 @@ export async function POST(req: NextRequest) {
       select: { id: true, settings: true },
     })
     const ordering = getOrderingSettings(tenantRow?.settings)
-    if (!ordering.enabled) {
+    const isPreview = process.env.VERCEL_ENV === 'preview'
+    // Preview-only POC: allow independent-draft ordering without DB settings.
+    // This does NOT affect production and does NOT affect the live independentbarandgrille tenant.
+    if (!ordering.enabled && !(isPreview && tenant === 'independent-draft')) {
       return NextResponse.json({ ok: false, error: 'ordering_disabled' }, { status: 403 })
     }
 

@@ -224,7 +224,12 @@ export async function GET(request: NextRequest) {
       ?? fbFsCopy
       ?? embeddedCopy
 
-    const ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
+    let ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
+    // Preview-only POC: allow ordering for independent-draft without requiring DB settings.
+    // This does NOT affect production and does NOT affect the live independentbarandgrille tenant.
+    if (isPreview && tenant === 'independent-draft') {
+      ordering = { ...(ordering as Record<string, unknown>), enabled: true }
+    }
     return NextResponse.json({ brand, theme, images, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
