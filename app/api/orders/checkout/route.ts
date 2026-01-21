@@ -236,6 +236,12 @@ export async function POST(req: NextRequest) {
       scheduledFor = d
     }
 
+    // Preview-only POC: some preview deployments point at a DB without migrations applied.
+    // Ensure the schema exists before creating the first order.
+    if (process.env.VERCEL_ENV === 'preview' && tenant === 'independent-draft') {
+      await ensureOrdersSchemaPreview()
+    }
+
     let order: { id: string }
     try {
       order = await prisma.order.create({
@@ -255,7 +261,11 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       // Preview-only: auto-create missing schema then retry once.
       const msg = (e as Error)?.message || ''
-      if (process.env.VERCEL_ENV === 'preview' && msg.includes('The table `public.orders` does not exist')) {
+      if (
+        process.env.VERCEL_ENV === 'preview'
+        && msg.includes('public.orders')
+        && msg.includes('does not exist')
+      ) {
         await ensureOrdersSchemaPreview()
         order = await prisma.order.create({
           data: {
