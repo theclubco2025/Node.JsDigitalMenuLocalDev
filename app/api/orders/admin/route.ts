@@ -19,11 +19,21 @@ export async function GET(req: NextRequest) {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required' }, { status: 501 })
     }
-    const session = await getServerSession(authOptions)
-    if (!session) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    const adminToken = (process.env.ADMIN_TOKEN || '').trim()
+    const headerToken = (req.headers.get('x-admin-token') || req.headers.get('X-Admin-Token') || '').trim()
+    const hasAdminToken = !!adminToken && headerToken === adminToken
 
-    const role = (session as unknown as { role?: string }).role || session.user?.role
-    const sessionTenantId = (session as unknown as { tenantId?: string | null }).tenantId ?? null
+    const session = await getServerSession(authOptions)
+    if (!session && !hasAdminToken) {
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const role = hasAdminToken
+      ? 'SUPER_ADMIN'
+      : ((session as unknown as { role?: string }).role || session!.user?.role)
+    const sessionTenantId = hasAdminToken
+      ? null
+      : ((session as unknown as { tenantId?: string | null }).tenantId ?? null)
 
     const { searchParams } = new URL(req.url)
     const tenantSlug = (searchParams.get('tenant') || '').trim().toLowerCase()
@@ -63,11 +73,21 @@ export async function POST(req: NextRequest) {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required' }, { status: 501 })
     }
-    const session = await getServerSession(authOptions)
-    if (!session) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    const adminToken = (process.env.ADMIN_TOKEN || '').trim()
+    const headerToken = (req.headers.get('x-admin-token') || req.headers.get('X-Admin-Token') || '').trim()
+    const hasAdminToken = !!adminToken && headerToken === adminToken
 
-    const role = (session as unknown as { role?: string }).role || session.user?.role
-    const sessionTenantId = (session as unknown as { tenantId?: string | null }).tenantId ?? null
+    const session = await getServerSession(authOptions)
+    if (!session && !hasAdminToken) {
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const role = hasAdminToken
+      ? 'SUPER_ADMIN'
+      : ((session as unknown as { role?: string }).role || session!.user?.role)
+    const sessionTenantId = hasAdminToken
+      ? null
+      : ((session as unknown as { tenantId?: string | null }).tenantId ?? null)
 
     const raw = await req.json().catch(() => ({}))
     const parsed = UpdateSchema.safeParse(raw)
