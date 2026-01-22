@@ -91,8 +91,6 @@ CREATE TABLE IF NOT EXISTS "public"."orders" (
   "customerEmail" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL
-  ,
-  CONSTRAINT "orders_pkey" PRIMARY KEY ("id")
 );`),
     prisma.$executeRawUnsafe(`
 CREATE TABLE IF NOT EXISTS "public"."order_items" (
@@ -102,9 +100,33 @@ CREATE TABLE IF NOT EXISTS "public"."order_items" (
   "name" TEXT NOT NULL,
   "unitPriceCents" INTEGER NOT NULL,
   "quantity" INTEGER NOT NULL
-  ,
-  CONSTRAINT "order_items_pkey" PRIMARY KEY ("id")
 );`),
+
+    // Primary keys (idempotent)
+    prisma.$executeRawUnsafe(`
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.orders'::regclass
+      AND contype = 'p'
+  ) THEN
+    ALTER TABLE "public"."orders" ADD CONSTRAINT "orders_pkey" PRIMARY KEY ("id");
+  END IF;
+END $$;`),
+    prisma.$executeRawUnsafe(`
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.order_items'::regclass
+      AND contype = 'p'
+  ) THEN
+    ALTER TABLE "public"."order_items" ADD CONSTRAINT "order_items_pkey" PRIMARY KEY ("id");
+  END IF;
+END $$;`),
 
     // Indexes/uniques (idempotent)
     prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "orders_stripeCheckoutSessionId_key" ON "public"."orders"("stripeCheckoutSessionId");`),
