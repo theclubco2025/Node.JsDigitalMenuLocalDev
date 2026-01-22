@@ -12,10 +12,17 @@ export function getStripe(): Stripe {
   // Preview safety: prefer explicit test key if provided so we never accidentally charge live cards.
   const testKey = (process.env.STRIPE_TEST_KEY || '').trim()
   const secretKey = (process.env.STRIPE_SECRET_KEY || '').trim()
-  const key = (
-    (isPreview && isStripeSecretKey(testKey) ? testKey : '')
-    || (isStripeSecretKey(secretKey) ? secretKey : '')
-  )
+  const key = (() => {
+    if (isPreview) {
+      // In Preview, we MUST use a test secret key. Never fall back to a live secret key.
+      if (isStripeSecretKey(testKey)) return testKey
+      if (isStripeSecretKey(secretKey) && secretKey.includes('_test_')) return secretKey
+      throw new Error('Preview requires a Stripe test secret key (set STRIPE_TEST_KEY=sk_test_...)')
+    }
+    // Non-preview: use the normal secret key.
+    if (isStripeSecretKey(secretKey)) return secretKey
+    throw new Error('Missing Stripe secret key (set STRIPE_SECRET_KEY=sk_...)')
+  })()
   if (!key) {
     throw new Error('Missing Stripe secret key (use sk_...; STRIPE_SECRET_KEY or STRIPE_TEST_KEY in preview)')
   }
