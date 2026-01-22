@@ -2,16 +2,22 @@ import Stripe from 'stripe'
 
 let cached: Stripe | null = null
 
+function isStripeSecretKey(k: string) {
+  return k.startsWith('sk_')
+}
+
 export function getStripe(): Stripe {
   if (cached) return cached
   const isPreview = process.env.VERCEL_ENV === 'preview'
   // Preview safety: prefer explicit test key if provided so we never accidentally charge live cards.
+  const testKey = (process.env.STRIPE_TEST_KEY || '').trim()
+  const secretKey = (process.env.STRIPE_SECRET_KEY || '').trim()
   const key = (
-    (isPreview ? (process.env.STRIPE_TEST_KEY || '').trim() : '')
-    || (process.env.STRIPE_SECRET_KEY || '').trim()
+    (isPreview && isStripeSecretKey(testKey) ? testKey : '')
+    || (isStripeSecretKey(secretKey) ? secretKey : '')
   )
   if (!key) {
-    throw new Error('Missing STRIPE_SECRET_KEY (or STRIPE_TEST_KEY in preview)')
+    throw new Error('Missing Stripe secret key (use sk_...; STRIPE_SECRET_KEY or STRIPE_TEST_KEY in preview)')
   }
   cached = new Stripe(key, { apiVersion: '2023-10-16' })
   return cached
