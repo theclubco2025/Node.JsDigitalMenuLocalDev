@@ -23,8 +23,14 @@ function expectedKitchenPin(tenantSlug: string): string {
   const fromEnv = (process.env.KITCHEN_PIN || '').trim()
   if (fromEnv) return fromEnv
   // Preview-only default for Independent draft POC (still behind Vercel protection).
-  if (process.env.VERCEL_ENV === 'preview' && tenantSlug === 'independent-draft') return '1234'
+  if (process.env.VERCEL_ENV === 'preview' && (tenantSlug === 'independent-draft' || tenantSlug === 'independent-kitchen-draft')) return '1234'
   return ''
+}
+
+function resolveKitchenTenantSlug(raw: string): string {
+  const t = (raw || '').trim().toLowerCase()
+  if (t === 'independent-kitchen-draft') return 'independent-draft'
+  return t
 }
 
 function isAuthorized(req: NextRequest, tenantSlug: string): boolean {
@@ -40,7 +46,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required' }, { status: 501 })
     }
     const { searchParams } = new URL(req.url)
-    const tenant = (searchParams.get('tenant') || '').trim().toLowerCase()
+    const tenant = resolveKitchenTenantSlug(searchParams.get('tenant') || '')
     if (!tenant) return NextResponse.json({ ok: false, error: 'Missing tenant' }, { status: 400 })
     if (!isAuthorized(req, tenant)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 
@@ -97,7 +103,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required' }, { status: 501 })
     }
     const { searchParams } = new URL(req.url)
-    const tenant = (searchParams.get('tenant') || '').trim().toLowerCase()
+    const tenant = resolveKitchenTenantSlug(searchParams.get('tenant') || '')
     if (!tenant) return NextResponse.json({ ok: false, error: 'Missing tenant' }, { status: 400 })
     if (!isAuthorized(req, tenant)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 

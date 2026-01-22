@@ -12,7 +12,11 @@ export function resolveTenant(url: string): string {
   try {
     const parsed = new URL(url);
     const fromQuery = sanitizeTenantId(parsed.searchParams.get("tenant"));
-    if (fromQuery) return fromQuery;
+    if (fromQuery) {
+      // Tenant aliases (preview/dev convenience). Keeps production tenant slugs stable.
+      if (fromQuery === "independent-kitchen-draft") return "independent-draft";
+      return fromQuery;
+    }
   } catch {
     // ignore URL parse errors; fall back to env/default
   }
