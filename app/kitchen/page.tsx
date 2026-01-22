@@ -43,10 +43,17 @@ function formatTime(iso: string | null, tz: string) {
   }
 }
 
+function resolveKitchenTenant(raw: string) {
+  const t = (raw || '').trim().toLowerCase()
+  if (t === 'independent-kitchen-draft') return 'independent-draft'
+  return t || 'independent-draft'
+}
+
 export default function KitchenPage() {
   const isBrowser = typeof window !== 'undefined'
   const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
-  const tenant = isBrowser ? (searchParams!.get('tenant') || 'independent-draft') : 'independent-draft'
+  const rawTenant = isBrowser ? (searchParams!.get('tenant') || 'independent-draft') : 'independent-draft'
+  const tenant = resolveKitchenTenant(rawTenant)
 
   const [pin, setPin] = useState('')
   const [pinReady, setPinReady] = useState(false)

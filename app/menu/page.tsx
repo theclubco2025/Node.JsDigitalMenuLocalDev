@@ -16,6 +16,8 @@ function firstString(v: string | string[] | undefined): string | undefined {
 function canonicalTenant(tenant: string) {
   const t = (tenant || '').toLowerCase()
   if (t === 'southforkgrille') return 'south-fork-grille'
+  // Preview convenience alias: a kitchen-only deploy may pass this slug.
+  if (t === 'independent-kitchen-draft') return 'independent-draft'
   return tenant
 }
 
@@ -25,6 +27,12 @@ export default async function MenuPage({ searchParams }: Props) {
     canonicalTenant(firstString(searchParams?.tenant)?.trim().toLowerCase() ||
       process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
       'demo')
+
+  // Guardrail: kitchen deploys should never land on the customer menu UI.
+  // If a kitchen tenant alias is used, send the user to the KDS route instead.
+  if (tenant === 'independent-draft' && firstString(searchParams?.tenant)?.trim().toLowerCase() === 'independent-kitchen-draft') {
+    redirect(`/kitchen?tenant=${encodeURIComponent(tenant)}`)
+  }
 
   // Preview: render Independent premium UI for the independent-draft branch/tenant
   if (isPreview && (tenant === 'independent-draft' || tenant === 'independentbarandgrille')) {
