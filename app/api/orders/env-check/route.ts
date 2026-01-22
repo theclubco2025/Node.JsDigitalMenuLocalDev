@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,7 +13,7 @@ function classifyKey(key: string) {
   return { present: true as const, kind: 'unknown' as const }
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   const vercelEnv = (process.env.VERCEL_ENV || '').trim() || null
 
   const stripeTestKey = classifyKey(process.env.STRIPE_TEST_KEY || '')
