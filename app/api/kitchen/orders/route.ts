@@ -9,7 +9,6 @@ const StatusSchema = z.enum(['PENDING_PAYMENT', 'NEW', 'PREPARING', 'READY', 'CO
 
 function computePickupCode(orderId: string): string {
   // Deterministic 6-digit code derived from orderId (no extra DB column needed).
-  // Simple FNV-1a hash -> 000000..999999
   let h = 2166136261
   for (let i = 0; i < orderId.length; i++) {
     h ^= orderId.charCodeAt(i)
@@ -22,16 +21,16 @@ function computePickupCode(orderId: string): string {
 function expectedKitchenPin(tenantSlug: string): string {
   const fromEnv = (process.env.KITCHEN_PIN || '').trim()
   if (fromEnv) return fromEnv
-  // Preview-only default for the Independent kitchen draft POC (behind Vercel protection).
+  // Preview-only default for Independent draft POC (still behind Vercel protection).
   if (process.env.VERCEL_ENV === 'preview' && tenantSlug === 'independent-draft') return '1234'
   return ''
 }
 
-function assertKitchenPin(req: NextRequest, tenantSlug: string): string | null {
+function isAuthorized(req: NextRequest, tenantSlug: string): boolean {
   const pin = expectedKitchenPin(tenantSlug)
-  if (!pin) return null
+  if (!pin) return false
   const provided = (req.headers.get('x-kitchen-pin') || '').trim()
-  return provided === pin ? pin : null
+  return provided === pin
 }
 
 export async function GET(req: NextRequest) {
@@ -42,9 +41,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const tenant = (searchParams.get('tenant') || '').trim().toLowerCase()
     if (!tenant) return NextResponse.json({ ok: false, error: 'Missing tenant' }, { status: 400 })
-
-    const okPin = assertKitchenPin(req, tenant)
-    if (!okPin) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    if (!isAuthorized(req, tenant)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 
     const t = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { id: true, slug: true, name: true } })
     if (!t) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
@@ -68,9 +65,14 @@ export async function GET(req: NextRequest) {
         paidAt: o.paidAt,
         createdAt: o.createdAt,
         pickupCode: computePickupCode(o.id),
-        items: o.items.map(it => ({ id: it.id, name: it.name, quantity: it.quantity, unitPriceCents: it.unitPriceCents })),
-      }))
-    }, { status: 200 })
+        items: o.items.map(it => ({
+          id: it.id,
+          name: it.name,
+          quantity: it.quantity,
+          unitPriceCents: it.unitPriceCents,
+        })),
+      })),
+    }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error)?.message || 'Kitchen orders error' }, { status: 500 })
   }
@@ -84,9 +86,7 @@ export async function POST(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const tenant = (searchParams.get('tenant') || '').trim().toLowerCase()
     if (!tenant) return NextResponse.json({ ok: false, error: 'Missing tenant' }, { status: 400 })
-
-    const okPin = assertKitchenPin(req, tenant)
-    if (!okPin) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    if (!isAuthorized(req, tenant)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 
     const Body = z.object({
       orderId: z.string().min(1),
@@ -113,4 +113,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: (e as Error)?.message || 'Kitchen update error' }, { status: 500 })
   }
 }
-

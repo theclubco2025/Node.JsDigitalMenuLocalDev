@@ -64,9 +64,7 @@ export default function KitchenPage() {
 
   const fetcher = async (url: string): Promise<KitchenResponse> => {
     const res = await fetch(url, {
-      headers: {
-        'X-Kitchen-Pin': pin,
-      },
+      headers: { 'X-Kitchen-Pin': pin },
       cache: 'no-store',
     })
     const json = await res.json().catch(() => null)
@@ -146,7 +144,7 @@ export default function KitchenPage() {
             </button>
           </div>
           <div className="mt-2 text-xs text-neutral-300">
-            Tip: For the Independent kitchen draft preview, if you didn’t set a PIN yet, the temporary default is <span className="font-bold">1234</span>.
+            For the Independent draft preview, the temporary default PIN is <span className="font-bold">1234</span> (unless you set `KITCHEN_PIN`).
           </div>
           {data?.ok === false && (
             <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
@@ -233,4 +231,3 @@ export default function KitchenPage() {
     </div>
   )
 }
-
