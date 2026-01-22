@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import type { OrderStatus } from '@prisma/client'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -46,9 +47,20 @@ export async function GET(req: NextRequest) {
     const t = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { id: true, slug: true, name: true } })
     if (!t) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
 
+    const view = (searchParams.get('view') || 'active').trim().toLowerCase()
+    const inStatus = (values: OrderStatus[]) => ({ in: values })
+    const where =
+      view === 'all'
+        ? { tenantId: t.id }
+        : view === 'history'
+          ? { tenantId: t.id, status: inStatus(['COMPLETED', 'CANCELED']) }
+          : view === 'unpaid'
+            ? { tenantId: t.id, status: 'PENDING_PAYMENT' as OrderStatus }
+            : { tenantId: t.id, status: inStatus(['NEW', 'PREPARING', 'READY']) }
+
     const orders = await prisma.order.findMany({
-      where: { tenantId: t.id },
-      orderBy: { createdAt: 'desc' },
+      where,
+      orderBy: view === 'active' ? { createdAt: 'asc' } : { createdAt: 'desc' },
       take: 50,
       include: { items: true },
     })
@@ -56,6 +68,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       tenant: { slug: t.slug, name: t.name },
+      view,
       orders: orders.map(o => ({
         id: o.id,
         status: o.status,

@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 
+type TenantBrand = { name?: string; header?: { logoUrl?: string }; logoUrl?: string }
+type TenantTheme = { bg?: string; text?: string; ink?: string; card?: string; muted?: string; accent?: string; primary?: string }
+type TenantConfig = { brand?: TenantBrand; theme?: TenantTheme }
+
 type OrderItem = { id: string; name: string; quantity: number; unitPriceCents: number }
 type KitchenOrder = {
   id: string
@@ -20,6 +24,7 @@ type KitchenResponse = {
   ok: boolean
   error?: string
   tenant?: { slug: string; name: string }
+  view?: string
   orders?: KitchenOrder[]
 }
 
@@ -46,6 +51,7 @@ export default function KitchenPage() {
   const [pin, setPin] = useState('')
   const [pinReady, setPinReady] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [view, setView] = useState<'active' | 'history' | 'unpaid'>('active')
 
   useEffect(() => {
     if (!isBrowser) return
@@ -73,8 +79,23 @@ export default function KitchenPage() {
   }
 
   const shouldFetch = pinReady && pin.trim().length > 0
+  const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${encodeURIComponent(tenant)}`, (u: string) => fetch(u).then(r => r.json()))
+
+  // Apply theme (match tenant branding)
+  useEffect(() => {
+    const theme = cfg?.theme
+    if (!theme) return
+    const bg = theme.bg || theme.primary
+    if (bg) document.body.style.setProperty('--bg', bg)
+    if (theme.text) document.body.style.setProperty('--text', theme.text)
+    if (theme.ink) document.body.style.setProperty('--ink', theme.ink)
+    if (theme.card) document.body.style.setProperty('--card', theme.card)
+    if (theme.muted) document.body.style.setProperty('--muted', theme.muted)
+    if (theme.accent) document.body.style.setProperty('--accent', theme.accent)
+  }, [cfg?.theme])
+
   const { data, isLoading, mutate } = useSWR<KitchenResponse>(
-    shouldFetch ? `/api/kitchen/orders?tenant=${encodeURIComponent(tenant)}` : null,
+    shouldFetch ? `/api/kitchen/orders?tenant=${encodeURIComponent(tenant)}&view=${encodeURIComponent(view)}` : null,
     fetcher,
     { refreshInterval: 2000 }
   )
@@ -108,11 +129,29 @@ export default function KitchenPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white">
+    <div
+      className="min-h-screen text-white"
+      style={{ background: 'var(--bg, #070707)', color: 'var(--text, #f8fafc)' }}
+    >
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold">Kitchen</h1>
+            <div className="flex items-center gap-3">
+              {(cfg?.brand?.header?.logoUrl || cfg?.brand?.logoUrl) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={(cfg?.brand?.header?.logoUrl || cfg?.brand?.logoUrl) as string}
+                  alt={cfg?.brand?.name || tenant}
+                  className="h-10 w-10 rounded-xl object-cover border border-white/10"
+                />
+              ) : null}
+              <div>
+                <h1 className="text-2xl font-extrabold">Kitchen</h1>
+                <p className="text-sm text-neutral-300 mt-1">
+                  {cfg?.brand?.name || tenant}
+                </p>
+              </div>
+            </div>
             <p className="text-sm text-neutral-300 mt-1">
               Live incoming orders for <span className="font-semibold">{tenant}</span>
             </p>
@@ -161,10 +200,38 @@ export default function KitchenPage() {
             </div>
           </div>
 
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setView('active')}
+              className={`rounded-xl px-3 py-2 text-xs font-extrabold border ${view === 'active' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:bg-white/10'}`}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('history')}
+              className={`rounded-xl px-3 py-2 text-xs font-extrabold border ${view === 'history' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:bg-white/10'}`}
+            >
+              History
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('unpaid')}
+              className={`rounded-xl px-3 py-2 text-xs font-extrabold border ${view === 'unpaid' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:bg-white/10'}`}
+            >
+              Unpaid (debug)
+            </button>
+          </div>
+
           <div className="mt-3 space-y-3">
             {orders.length === 0 && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-neutral-300">
-                No orders yet.
+                {view === 'active'
+                  ? 'No paid active orders yet.'
+                  : view === 'history'
+                    ? 'No completed/canceled orders yet.'
+                    : 'No unpaid orders.'}
               </div>
             )}
 
