@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 function classifyKey(key: string) {
   const k = (key || '').trim()
   if (!k) return { present: false as const, kind: 'missing' as const }
+  if (k.startsWith('whsec_')) return { present: true as const, kind: 'whsec' as const }
   if (k.startsWith('sk_test_')) return { present: true as const, kind: 'sk_test' as const }
   if (k.startsWith('sk_live_')) return { present: true as const, kind: 'sk_live' as const }
   if (k.startsWith('pk_test_')) return { present: true as const, kind: 'pk_test' as const }
