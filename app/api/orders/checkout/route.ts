@@ -106,16 +106,26 @@ CREATE TABLE IF NOT EXISTS "public"."order_items" (
     prisma.$executeRawUnsafe(`
 DO $$
 BEGIN
-  ALTER TABLE "public"."orders" ADD CONSTRAINT "orders_pkey" PRIMARY KEY ("id");
-EXCEPTION
-  WHEN duplicate_object THEN null;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.orders'::regclass
+      AND contype = 'p'
+  ) THEN
+    ALTER TABLE "public"."orders" ADD CONSTRAINT "orders_pkey" PRIMARY KEY ("id");
+  END IF;
 END $$;`),
     prisma.$executeRawUnsafe(`
 DO $$
 BEGIN
-  ALTER TABLE "public"."order_items" ADD CONSTRAINT "order_items_pkey" PRIMARY KEY ("id");
-EXCEPTION
-  WHEN duplicate_object THEN null;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.order_items'::regclass
+      AND contype = 'p'
+  ) THEN
+    ALTER TABLE "public"."order_items" ADD CONSTRAINT "order_items_pkey" PRIMARY KEY ("id");
+  END IF;
 END $$;`),
 
     // Indexes/uniques (idempotent)
