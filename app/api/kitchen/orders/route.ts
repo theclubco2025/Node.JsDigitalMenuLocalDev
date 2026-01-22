@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import type { OrderStatus } from '@prisma/client'
+import { ensureOrdersSchemaPreview } from '@/lib/server/preview-orders-schema'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -64,12 +65,29 @@ export async function GET(req: NextRequest) {
             ? { tenantId: t.id, status: 'PENDING_PAYMENT' as OrderStatus }
             : { tenantId: t.id, status: inStatus(['NEW', 'PREPARING', 'READY']) }
 
-    const orders = await prisma.order.findMany({
-      where,
-      orderBy: view === 'active' ? { createdAt: 'asc' } : { createdAt: 'desc' },
-      take: 50,
-      include: { items: true },
-    })
+    let orders
+    try {
+      orders = await prisma.order.findMany({
+        where,
+        orderBy: view === 'active' ? { createdAt: 'asc' } : { createdAt: 'desc' },
+        take: 50,
+        include: { items: true },
+      })
+    } catch (e) {
+      const msg = (e as Error)?.message || ''
+      // Preview-only: auto-create missing schema then retry once (kitchen-only deploy may not have run checkout yet).
+      if (msg.includes('The table `public.orders` does not exist')) {
+        await ensureOrdersSchemaPreview({ host: req.headers.get('host') || '' })
+        orders = await prisma.order.findMany({
+          where,
+          orderBy: view === 'active' ? { createdAt: 'asc' } : { createdAt: 'desc' },
+          take: 50,
+          include: { items: true },
+        })
+      } else {
+        throw e
+      }
+    }
 
     return NextResponse.json({
       ok: true,
