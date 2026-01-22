@@ -153,9 +153,7 @@ export async function POST(req: NextRequest) {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required for ordering' }, { status: 501 })
     }
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return NextResponse.json({ ok: false, error: 'Missing STRIPE_SECRET_KEY' }, { status: 501 })
-    }
+    // Stripe key is resolved inside getStripe() (supports STRIPE_TEST_KEY in preview).
 
     const raw = await req.json().catch(() => ({}))
     const parsed = BodySchema.safeParse(raw)

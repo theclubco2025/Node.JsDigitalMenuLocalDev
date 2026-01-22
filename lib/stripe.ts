@@ -4,9 +4,14 @@ let cached: Stripe | null = null
 
 export function getStripe(): Stripe {
   if (cached) return cached
-  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  const isPreview = process.env.VERCEL_ENV === 'preview'
+  // Preview safety: prefer explicit test key if provided so we never accidentally charge live cards.
+  const key = (
+    (isPreview ? (process.env.STRIPE_TEST_KEY || '').trim() : '')
+    || (process.env.STRIPE_SECRET_KEY || '').trim()
+  )
   if (!key) {
-    throw new Error('Missing STRIPE_SECRET_KEY')
+    throw new Error('Missing STRIPE_SECRET_KEY (or STRIPE_TEST_KEY in preview)')
   }
   cached = new Stripe(key, { apiVersion: '2023-10-16' })
   return cached

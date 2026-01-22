@@ -1254,8 +1254,10 @@ export default function MenuClient() {
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="text-gray-500 hover:text-black transition-colors"
+                  aria-label="Close cart"
+                  type="button"
                 >
-                  Γ£ò
+                  X
                 </button>
               </div>
             </div>
@@ -1263,7 +1265,7 @@ export default function MenuClient() {
             <div className="flex-1 overflow-y-auto p-6">
               {cart.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">
-                  <div className="text-4xl mb-4">≡ƒ¢Æ</div>
+                  <div className="text-4xl mb-4">Cart</div>
                   <p>Your plate is empty</p>
                 </div>
               ) : (
@@ -1279,13 +1281,17 @@ export default function MenuClient() {
                           <button
                             onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
                             className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
+                            aria-label="Decrease quantity"
+                            type="button"
                           >
-                            ΓêÆ
+                            -
                           </button>
                           <span className="w-8 h-8 inline-flex items-center justify-center text-center font-medium text-black">{cartItem.quantity}</span>
                           <button
                             onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
                             className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
+                            aria-label="Increase quantity"
+                            type="button"
                           >
                             +
                           </button>
@@ -1392,8 +1398,10 @@ export default function MenuClient() {
                 <button
                   onClick={() => setIsAssistantOpen(false)}
                   className="text-gray-500 hover:text-black transition-colors"
+                  aria-label="Close assistant"
+                  type="button"
                 >
-                  Γ£ò
+                  X
                 </button>
               </div>
               <p className="text-sm text-gray-600 mt-2">
@@ -1404,7 +1412,7 @@ export default function MenuClient() {
             <div className="flex-1 overflow-y-auto p-6">
               {chatHistory.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">
-                  <div className="text-4xl mb-4">≡ƒñû</div>
+                  <div className="text-4xl mb-4">Assistant</div>
                   <p>Start a conversation!</p>
                   <p className="text-sm mt-2">Try asking:</p>
                   <ul className="text-xs mt-2 space-y-1 text-left">

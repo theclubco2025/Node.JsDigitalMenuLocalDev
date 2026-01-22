@@ -7,7 +7,12 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 function webhookSecret() {
-  return (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
+  const isPreview = process.env.VERCEL_ENV === 'preview'
+  // Preview: allow a dedicated *_TEST secret without renaming env vars.
+  return (
+    (isPreview ? (process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST || '').trim() : '')
+    || (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
+  )
 }
 
 async function markPaidFromSession(session: Stripe.Checkout.Session) {
