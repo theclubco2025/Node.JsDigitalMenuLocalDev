@@ -3,9 +3,12 @@ import { prisma } from '@/lib/prisma'
 export async function ensureOrdersSchemaPreview(opts?: { host?: string }) {
   // Preview-only safety valve: if a preview deployment points at a DB without the orders migration,
   // create the minimal schema on-demand so POC can run. This will NOT run in production.
-  const host = (opts?.host || '').trim().toLowerCase()
-  const isLikelyPreviewHost = host.includes('-git-') && host.endsWith('.vercel.app')
-  const isPreview = process.env.VERCEL_ENV === 'preview' || isLikelyPreviewHost
+  if (process.env.VERCEL_ENV === 'production') return
+
+  const hostRaw = (opts?.host || '').trim().toLowerCase()
+  const host = hostRaw.split(':')[0] || '' // strip port if present
+  const isLikelyVercelPreviewHost = host.includes('-git-') && host.endsWith('.vercel.app')
+  const isPreview = process.env.VERCEL_ENV === 'preview' || isLikelyVercelPreviewHost
   if (!isPreview) return
 
   await prisma.$transaction([
