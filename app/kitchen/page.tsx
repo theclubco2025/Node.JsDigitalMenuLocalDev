@@ -6,6 +6,7 @@ import useSWR from 'swr'
 type TenantBrand = { name?: string; header?: { logoUrl?: string }; logoUrl?: string }
 type TenantTheme = { bg?: string; text?: string; ink?: string; card?: string; muted?: string; accent?: string; primary?: string }
 type TenantConfig = { brand?: TenantBrand; theme?: TenantTheme }
+type Fingerprint = { ok: boolean; host?: string; vercelEnv?: string; git?: { ref?: string | null; sha?: string | null }; db?: string }
 
 type OrderItem = { id: string; name: string; quantity: number; unitPriceCents: number }
 type KitchenOrder = {
@@ -88,6 +89,7 @@ export default function KitchenPage() {
 
   const shouldFetch = pinReady && pin.trim().length > 0
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${encodeURIComponent(tenant)}`, (u: string) => fetch(u).then(r => r.json()))
+  const { data: fp } = useSWR<Fingerprint>('/api/debug/fingerprint', (u: string) => fetch(u, { cache: 'no-store' }).then(r => r.json()))
 
   // Apply theme (match tenant branding)
   useEffect(() => {
@@ -133,6 +135,24 @@ export default function KitchenPage() {
       await mutate()
     } catch (e) {
       setToast((e as Error)?.message || 'Create error')
+    }
+  }
+
+  const confirmUnpaid = async (orderId: string) => {
+    try {
+      const res = await fetch('/api/orders/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId }),
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.ok) throw new Error(json?.error || `Confirm failed (${res.status})`)
+      setToast(json?.already ? 'Already confirmed' : 'Confirmed payment')
+      await mutate()
+    } catch (e) {
+      setToast((e as Error)?.message || 'Confirm error')
     }
   }
 
@@ -182,6 +202,13 @@ export default function KitchenPage() {
             <p className="text-sm text-neutral-300 mt-1">
               Live incoming orders for <span className="font-semibold">{tenant}</span>
             </p>
+            {fp?.ok && (
+              <div className="mt-2 text-[11px] text-neutral-400">
+                {fp.vercelEnv ? <span className="mr-2">env={fp.vercelEnv}</span> : null}
+                {fp.git?.sha ? <span className="mr-2">sha={fp.git.sha}</span> : null}
+                {fp.db ? <span className="mr-2">db={fp.db}</span> : null}
+              </div>
+            )}
           </div>
           <a
             href={`/menu?tenant=${encodeURIComponent(tenant)}`}
@@ -314,6 +341,16 @@ export default function KitchenPage() {
                           {s}
                         </button>
                       ))}
+                      {isLikelyPreview && view === 'unpaid' && o.status === 'PENDING_PAYMENT' && (
+                        <button
+                          type="button"
+                          onClick={() => confirmUnpaid(o.id)}
+                          className="rounded-xl px-3 py-2 text-xs font-extrabold border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
+                          title="Preview-only: confirm payment using stored Stripe session id"
+                        >
+                          Confirm payment
+                        </button>
+                      )}
                     </div>
                   </div>
 
