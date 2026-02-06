@@ -9,7 +9,10 @@ export const dynamic = 'force-dynamic'
 
 const BodySchema = z.object({
   orderId: z.string().min(1),
-  session_id: z.string().min(1),
+  // Accept either session_id (preferred, matches Stripe redirect query param)
+  // or sessionId (older client payloads).
+  session_id: z.string().min(1).optional(),
+  sessionId: z.string().min(1).optional(),
 })
 
 async function markPaidFromSession(orderId: string, session: Stripe.Checkout.Session) {
@@ -46,10 +49,24 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return NextResponse.json({ ok: false, error: 'Invalid payload' }, { status: 400 })
 
     const orderId = parsed.data.orderId.trim()
-    const sessionId = parsed.data.session_id.trim()
+    const sessionId =
+      String(parsed.data.session_id || parsed.data.sessionId || '').trim()
+
+    // If caller didn't provide session_id, try the one we stored when creating checkout.
+    // This is especially useful for the KDS "Confirm payment" action.
+    const effectiveSessionId = sessionId
+      ? sessionId
+      : (await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { stripeCheckoutSessionId: true },
+      }))?.stripeCheckoutSessionId || ''
+
+    if (!effectiveSessionId) {
+      return NextResponse.json({ ok: false, error: 'Missing session_id' }, { status: 400 })
+    }
 
     const stripe = getStripe()
-    const session = await stripe.checkout.sessions.retrieve(sessionId)
+    const session = await stripe.checkout.sessions.retrieve(effectiveSessionId)
 
     // Make sure the session is for this order (prevents confirming someone else’s session_id)
     const sessionOrderId = String(session.metadata?.orderId || '').trim()
