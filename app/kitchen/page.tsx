@@ -54,6 +54,7 @@ export default function KitchenPage() {
   const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
   const rawTenant = isBrowser ? (searchParams!.get('tenant') || 'independent-draft') : 'independent-draft'
   const tenant = resolveKitchenTenant(rawTenant)
+  const isLikelyPreview = isBrowser ? window.location.hostname.includes('-git-') : false
 
   const [pin, setPin] = useState('')
   const [pinReady, setPinReady] = useState(false)
@@ -114,6 +115,25 @@ export default function KitchenPage() {
     if (!p) return
     try { localStorage.setItem(`kitchen_pin:${tenant}`, p) } catch {}
     setToast('PIN saved')
+  }
+
+  const createTestPaidOrder = async () => {
+    try {
+      const res = await fetch('/api/orders/dev/create-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Kitchen-Pin': pin,
+        },
+        body: JSON.stringify({ tenant }),
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.ok) throw new Error(json?.error || `Create failed (${res.status})`)
+      setToast(`Created test order: ${String(json.orderId).slice(0, 8)}…`)
+      await mutate()
+    } catch (e) {
+      setToast((e as Error)?.message || 'Create error')
+    }
   }
 
   const updateStatus = async (orderId: string, status: string) => {
@@ -192,9 +212,29 @@ export default function KitchenPage() {
           <div className="mt-2 text-xs text-neutral-300">
             For the Independent draft preview, the temporary default PIN is <span className="font-bold">1234</span> (unless you set `KITCHEN_PIN`).
           </div>
+          {data?.ok && (
+            <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
+              Connected
+            </div>
+          )}
           {data?.ok === false && (
             <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
               {data.error || 'Unauthorized'}
+            </div>
+          )}
+
+          {isLikelyPreview && tenant === 'independent-draft' && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={createTestPaidOrder}
+                className="rounded-xl bg-white text-black px-4 py-2 text-sm font-extrabold hover:bg-neutral-200"
+              >
+                Create test paid order (preview only)
+              </button>
+              <div className="mt-2 text-xs text-neutral-300">
+                This is a preview-only tool to verify KDS flow without Stripe.
+              </div>
             </div>
           )}
         </div>
