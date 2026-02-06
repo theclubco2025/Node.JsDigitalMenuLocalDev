@@ -15,6 +15,26 @@ const BodySchema = z.object({
   sessionId: z.string().min(1).optional(),
 })
 
+function isPreviewRequest(req: NextRequest) {
+  if (process.env.VERCEL_ENV === 'preview') return true
+  const host = (req.headers.get('host') || '').trim().toLowerCase().split(':')[0] || ''
+  return host.includes('-git-') && host.endsWith('.vercel.app')
+}
+
+function expectedKitchenPin(tenantSlug: string): string {
+  const fromEnv = (process.env.KITCHEN_PIN || '').trim()
+  if (fromEnv) return fromEnv
+  if (process.env.VERCEL_ENV === 'preview' && (tenantSlug === 'independent-draft' || tenantSlug === 'independent-kitchen-draft')) return '1234'
+  return ''
+}
+
+function hasKitchenPin(req: NextRequest, tenantSlug: string): boolean {
+  const expected = expectedKitchenPin(tenantSlug)
+  if (!expected) return false
+  const provided = (req.headers.get('x-kitchen-pin') || '').trim()
+  return provided === expected
+}
+
 async function markPaidFromSession(orderId: string, session: Stripe.Checkout.Session) {
   const paid = session.payment_status === 'paid' || session.payment_status === 'no_payment_required'
   if (!paid) return { ok: false, error: `Session not paid (payment_status=${session.payment_status})` } as const
@@ -56,10 +76,18 @@ export async function POST(req: NextRequest) {
     // This is especially useful for the KDS "Confirm payment" action.
     const effectiveSessionId = sessionId
       ? sessionId
-      : (await prisma.order.findUnique({
-        where: { id: orderId },
-        select: { stripeCheckoutSessionId: true },
-      }))?.stripeCheckoutSessionId || ''
+      : (await (async () => {
+        // Extra protection: only allow "session_id omitted" flow in preview + with kitchen PIN.
+        if (!isPreviewRequest(req)) return ''
+        const row = await prisma.order.findUnique({
+          where: { id: orderId },
+          select: { stripeCheckoutSessionId: true, tenant: { select: { slug: true } } },
+        })
+        const tenantSlug = row?.tenant?.slug || ''
+        if (!tenantSlug) return ''
+        if (!hasKitchenPin(req, tenantSlug)) return ''
+        return row?.stripeCheckoutSessionId || ''
+      })())
 
     if (!effectiveSessionId) {
       return NextResponse.json({ ok: false, error: 'Missing session_id' }, { status: 400 })

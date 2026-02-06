@@ -144,6 +144,7 @@ export default function KitchenPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Kitchen-Pin': pin,
         },
         body: JSON.stringify({ orderId }),
       })
