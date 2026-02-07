@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
-import { getStripe } from '@/lib/stripe'
+import { getStripeOrders } from '@/lib/stripe'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Missing session_id' }, { status: 400 })
     }
 
-    const stripe = getStripe()
+    const stripe = getStripeOrders()
     const session = await stripe.checkout.sessions.retrieve(effectiveSessionId)
 
     // Make sure the session is for this order (prevents confirming someone else’s session_id)

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { readMenu } from '@/lib/data/menu'
-import { getStripe } from '@/lib/stripe'
+import { getStripeOrders } from '@/lib/stripe'
 import { ensureOrdersSchemaPreview } from '@/lib/server/preview-orders-schema'
 
 export const runtime = 'nodejs'
@@ -187,7 +187,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const stripe = getStripe()
+    const stripe = getStripeOrders()
     const baseUrl = baseUrlFromRequest(req)
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
