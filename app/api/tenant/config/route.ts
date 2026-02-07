@@ -20,6 +20,17 @@ const DEFAULT_ORDERING = {
   hours: null,
 } as const
 
+function pocOrderingTenants(): string[] {
+  const raw = (process.env.ORDERING_POC_TENANTS || '').trim()
+  if (!raw) return []
+  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+}
+
+function isOrderingPocEnabledForTenant(tenant: string): boolean {
+  const list = pocOrderingTenants()
+  return list.includes((tenant || '').toLowerCase())
+}
+
 function normalizeOrdering(raw: unknown): Record<string, unknown> {
   const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {}
   const schedulingRaw = (obj.scheduling && typeof obj.scheduling === 'object')
@@ -108,7 +119,11 @@ export async function GET(request: NextRequest) {
           }
         } catch {}
       }
-      const ordering = normalizeOrdering(orderingRaw)
+      let ordering = normalizeOrdering(orderingRaw)
+      // Live POC toggle (env-driven): allow enabling ordering without DB edits for a specific tenant.
+      if (isOrderingPocEnabledForTenant(tenant)) {
+        ordering = { ...(ordering as Record<string, unknown>), enabled: true }
+      }
       return NextResponse.json({ brand, theme, images: images || {}, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
@@ -224,7 +239,16 @@ export async function GET(request: NextRequest) {
       ?? fbFsCopy
       ?? embeddedCopy
 
-    const ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
+    let ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
+    // Preview-only POC: allow ordering for independent-draft without requiring DB settings.
+    // This does NOT affect production and does NOT affect the live independentbarandgrille tenant.
+    if (isPreview && tenant === 'independent-draft') {
+      ordering = { ...(ordering as Record<string, unknown>), enabled: true }
+    }
+    // Live POC toggle (env-driven): allow enabling ordering without DB edits for specific tenants.
+    if (isOrderingPocEnabledForTenant(tenant)) {
+      ordering = { ...(ordering as Record<string, unknown>), enabled: true }
+    }
     return NextResponse.json({ brand, theme, images, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
