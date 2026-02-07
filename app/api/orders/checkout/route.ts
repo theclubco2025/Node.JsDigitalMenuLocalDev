@@ -46,6 +46,16 @@ function getOrderingSettings(settings: unknown) {
   return { enabled, timezone, slotMinutes, leadTimeMinutes }
 }
 
+function pocOrderingTenants(): string[] {
+  const raw = (process.env.ORDERING_POC_TENANTS || '').trim()
+  if (!raw) return []
+  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+}
+
+function isOrderingPocEnabledForTenant(tenant: string): boolean {
+  return pocOrderingTenants().includes((tenant || '').toLowerCase())
+}
+
 function roundMoneyToCents(amount: number): number {
   // Avoid float drift by rounding to nearest cent.
   return Math.round(amount * 100)
@@ -77,7 +87,8 @@ export async function POST(req: NextRequest) {
     const isPreview = process.env.VERCEL_ENV === 'preview'
     // Preview-only POC: allow independent-draft ordering without DB settings.
     // This does NOT affect production and does NOT affect the live independentbarandgrille tenant.
-    if (!ordering.enabled && !(isPreview && tenant === 'independent-draft')) {
+    const pocEnabled = isOrderingPocEnabledForTenant(tenant)
+    if (!ordering.enabled && !(isPreview && tenant === 'independent-draft') && !pocEnabled) {
       return NextResponse.json({ ok: false, error: 'ordering_disabled' }, { status: 403 })
     }
 
