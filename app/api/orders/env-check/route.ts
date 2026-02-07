@@ -19,8 +19,11 @@ export async function GET() {
 
   const stripeTestKey = classifyKey(process.env.STRIPE_TEST_KEY || '')
   const stripeSecretKey = classifyKey(process.env.STRIPE_SECRET_KEY || '')
+  const stripeOrdersSecretKey = classifyKey(process.env.STRIPE_ORDERS_SECRET_KEY || '')
   const ordersWebhookTest = classifyKey(process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST || '')
   const ordersWebhook = classifyKey(process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '')
+  const orderingPocTenants = ((process.env.ORDERING_POC_TENANTS || '').trim() || null)
+  const kitchenPinPresent = !!((process.env.KITCHEN_PIN || '').trim())
 
   // This endpoint intentionally does NOT return actual key values.
   return NextResponse.json({
@@ -30,9 +33,18 @@ export async function GET() {
       STRIPE_TEST_KEY: stripeTestKey,
       STRIPE_SECRET_KEY: stripeSecretKey,
     },
+    orders: {
+      STRIPE_ORDERS_SECRET_KEY: stripeOrdersSecretKey,
+    },
     ordersWebhook: {
       STRIPE_ORDERS_WEBHOOK_SECRET_TEST: ordersWebhookTest,
       STRIPE_ORDERS_WEBHOOK_SECRET: ordersWebhook,
+    },
+    poc: {
+      ORDERING_POC_TENANTS: orderingPocTenants,
+    },
+    kitchen: {
+      KITCHEN_PIN_present: kitchenPinPresent,
     },
   }, { headers: { 'Cache-Control': 'no-store' } })
 }
