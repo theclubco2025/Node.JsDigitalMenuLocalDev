@@ -139,10 +139,10 @@ export default function OrderSuccessPage({ searchParams }: Props) {
             Back to menu
           </a>
           <a
-            href="/admin/orders"
+            href={`/kitchen?tenant=${encodeURIComponent(tenantSlug || 'independentbarandgrille')}`}
             className="inline-flex items-center justify-center rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-bold text-neutral-900 hover:bg-neutral-50"
           >
-            Kitchen/Admin view
+            View kitchen screen
           </a>
         </div>
       </div>
