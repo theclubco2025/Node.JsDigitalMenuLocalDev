@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 
 let cached: Stripe | null = null
+let cachedOrders: Stripe | null = null
 
 export function getStripe(): Stripe {
   if (cached) return cached
@@ -10,6 +11,24 @@ export function getStripe(): Stripe {
   }
   cached = new Stripe(key, { apiVersion: '2023-10-16' })
   return cached
+}
+
+// Stripe client used specifically for customer food orders.
+// This is intentionally separated from SaaS billing so you can run POC with a test key on a live domain.
+export function getStripeOrders(): Stripe {
+  if (cachedOrders) return cachedOrders
+
+  const ordersKey =
+    (process.env.STRIPE_ORDERS_SECRET_KEY || '').trim()
+    || (process.env.STRIPE_TEST_KEY || '').trim()
+    || (process.env.STRIPE_SECRET_KEY || '').trim()
+
+  if (!isStripeSecretKey(ordersKey)) {
+    throw new Error('Missing Stripe orders secret key (set STRIPE_ORDERS_SECRET_KEY=sk_test_... for POC)')
+  }
+
+  cachedOrders = new Stripe(ordersKey, { apiVersion: '2023-10-16' })
+  return cachedOrders
 }
 
 export type StripePlanKey = 'basic' | 'premium' | 'enterprise'
