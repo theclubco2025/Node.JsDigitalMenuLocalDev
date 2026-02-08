@@ -11,7 +11,8 @@ function LoginContent() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') || '/admin'
+  // Default to a real admin page (not "/admin", which may not exist).
+  const callbackUrl = searchParams.get('callbackUrl') || '/admin/menu'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -30,7 +31,8 @@ function LoginContent() {
       if (res?.error) {
         setError('Invalid credentials or tenant')
       } else {
-        window.location.href = callbackUrl
+        // NextAuth returns the resolved redirect URL in res.url (can differ from callbackUrl).
+        window.location.href = res?.url || callbackUrl
       }
     } finally {
       setLoading(false)
