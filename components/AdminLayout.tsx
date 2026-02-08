@@ -15,6 +15,10 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
   const router = useRouter()
   const pathname = usePathname()
 
+  const role = (session as unknown as { role?: string } | null)?.role
+    || (session?.user as unknown as { role?: string } | undefined)?.role
+    || null
+
   useEffect(() => {
     if (status === 'loading') return // Still loading
 
@@ -24,9 +28,9 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
     }
 
     // Role-based access control
-    if (requiredRole && session.user?.role !== requiredRole) {
+    if (requiredRole && role !== requiredRole) {
       // Super admin can access everything
-      if (session.user?.role === 'SUPER_ADMIN') {
+      if (role === 'SUPER_ADMIN') {
         return
       }
 
@@ -36,7 +40,7 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
     }
 
     // No automatic role redirects; pages decide their own navigation.
-  }, [session, status, router, pathname, requiredRole])
+  }, [session, status, router, pathname, requiredRole, role])
 
   if (status === 'loading') {
     return (
@@ -58,7 +62,7 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
   }
 
   // Role check failed
-  if (requiredRole && session.user?.role !== requiredRole && session.user?.role !== 'SUPER_ADMIN') {
+  if (requiredRole && role !== requiredRole && role !== 'SUPER_ADMIN') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -77,7 +81,7 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
               <h1 className="text-lg font-semibold text-gray-900">
-                {session.user?.role === 'SUPER_ADMIN' ? 'Super Admin' : 'Restaurant Admin'}
+                {role === 'SUPER_ADMIN' ? 'Super Admin' : 'Restaurant Admin'}
               </h1>
               <span className="text-sm text-gray-500">
                 {session.user?.name} ({session.user?.email})
