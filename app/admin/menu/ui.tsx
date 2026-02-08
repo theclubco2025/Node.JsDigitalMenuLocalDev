@@ -277,7 +277,10 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                       if (!q) return true
                       return `${it.name || ''} ${it.description || ''}`.toLowerCase().includes(q)
                     })
-                    .map((it, itemIdx) => (
+                    .map((it) => {
+                      const itemIdx = (cat.items || []).findIndex((x) => x.id === it.id)
+                      if (itemIdx < 0) return null
+                      return (
                     <div key={it.id || itemIdx} className="rounded-lg border border-gray-200 p-3">
                       <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex-1">
@@ -393,7 +396,8 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                         </button>
                       </div>
                     </div>
-                  ))}
+                      )
+                    })}
                   {(cat.items || []).length === 0 && (
                     <div className="text-sm text-gray-500">
                       No items yet.
