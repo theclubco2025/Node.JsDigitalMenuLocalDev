@@ -113,6 +113,11 @@ export function middleware(request: NextRequest) {
       'api',
       't',
       'menu',
+      // Kitchen Display System routes (must not be treated as tenant slugs)
+      'kitchen',
+      'kds',
+      // Ordering success page
+      'order',
       // Dedicated landing for demo acknowledgement (do not treat as tenant slug)
       'demo',
       'billing',
