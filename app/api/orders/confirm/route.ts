@@ -21,6 +21,16 @@ function isPreviewRequest(req: NextRequest) {
   return host.includes('-git-') && host.endsWith('.vercel.app')
 }
 
+function pocOrderingTenants(): string[] {
+  const raw = (process.env.ORDERING_POC_TENANTS || '').trim()
+  if (!raw) return []
+  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+}
+
+function isOrderingPocEnabledForTenant(tenant: string): boolean {
+  return pocOrderingTenants().includes((tenant || '').toLowerCase())
+}
+
 function expectedKitchenPin(tenantSlug: string): string {
   const fromEnv = (process.env.KITCHEN_PIN || '').trim()
   if (fromEnv) return fromEnv
@@ -72,25 +82,38 @@ export async function POST(req: NextRequest) {
     const sessionId =
       String(parsed.data.session_id || parsed.data.sessionId || '').trim()
 
+    const row = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: { stripeCheckoutSessionId: true, tenant: { select: { slug: true } } },
+    })
+    const tenantSlug = row?.tenant?.slug || ''
+    if (!tenantSlug) {
+      return NextResponse.json({ ok: false, error: 'Order not found' }, { status: 404 })
+    }
+
     // If caller didn't provide session_id, try the one we stored when creating checkout.
     // This is especially useful for the KDS "Confirm payment" action.
     const effectiveSessionId = sessionId
       ? sessionId
-      : (await (async () => {
-        // Extra protection: only allow "session_id omitted" flow in preview + with kitchen PIN.
-        if (!isPreviewRequest(req)) return ''
-        const row = await prisma.order.findUnique({
-          where: { id: orderId },
-          select: { stripeCheckoutSessionId: true, tenant: { select: { slug: true } } },
-        })
-        const tenantSlug = row?.tenant?.slug || ''
-        if (!tenantSlug) return ''
-        if (!hasKitchenPin(req, tenantSlug)) return ''
-        return row?.stripeCheckoutSessionId || ''
-      })())
+      : String(row?.stripeCheckoutSessionId || '').trim()
 
     if (!effectiveSessionId) {
-      return NextResponse.json({ ok: false, error: 'Missing session_id' }, { status: 400 })
+      // Manual confirm fallback (PIN-gated): allow restaurant to move an unpaid POC order into the KDS flow
+      // when Stripe isn't configured yet (in-restaurant first iteration).
+      if (!hasKitchenPin(req, tenantSlug)) {
+        return NextResponse.json({ ok: false, error: 'Missing session_id' }, { status: 400 })
+      }
+      const isPoc = isOrderingPocEnabledForTenant(tenantSlug)
+      const isPreview = isPreviewRequest(req)
+      if (!isPoc && !isPreview) {
+        return NextResponse.json({ ok: false, error: 'Missing session_id' }, { status: 400 })
+      }
+
+      await prisma.order.update({
+        where: { id: orderId },
+        data: { status: 'NEW' },
+      })
+      return NextResponse.json({ ok: true, manual: true }, { status: 200 })
     }
 
     const stripe = getStripeOrders()

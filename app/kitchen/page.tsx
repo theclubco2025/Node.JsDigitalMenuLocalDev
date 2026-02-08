@@ -342,12 +342,12 @@ export default function KitchenPage() {
                           {s}
                         </button>
                       ))}
-                      {isLikelyPreview && view === 'unpaid' && o.status === 'PENDING_PAYMENT' && (
+                      {view === 'unpaid' && o.status === 'PENDING_PAYMENT' && (
                         <button
                           type="button"
                           onClick={() => confirmUnpaid(o.id)}
                           className="rounded-xl px-3 py-2 text-xs font-extrabold border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
-                          title="Preview-only: confirm payment using stored Stripe session id"
+                          title="Confirm payment (PIN required). If Stripe isn't configured yet, this will move the order into Active for in-restaurant use."
                         >
                           Confirm payment
                         </button>

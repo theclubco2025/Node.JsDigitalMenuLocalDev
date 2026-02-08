@@ -198,38 +198,57 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const stripe = getStripeOrders()
     const baseUrl = baseUrlFromRequest(req)
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: { name: `${tenant} order` },
-            unit_amount: totalCents,
-          },
-          quantity: 1,
-        }
-      ],
-      success_url: `${baseUrl}/order/success?order=${encodeURIComponent(order.id)}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/menu?tenant=${encodeURIComponent(tenant)}`,
-      metadata: {
-        tenant,
-        orderId: order.id,
-        kind: 'food_order',
-      },
-    })
-
-    // Store session id for idempotent webhook handling
-    if (session.id) {
-      await prisma.order.update({
-        where: { id: order.id },
-        data: { stripeCheckoutSessionId: session.id, customerEmail: session.customer_details?.email || undefined },
+    try {
+      const stripe = getStripeOrders()
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: { name: `${tenant} order` },
+              unit_amount: totalCents,
+            },
+            quantity: 1,
+          }
+        ],
+        success_url: `${baseUrl}/order/success?order=${encodeURIComponent(order.id)}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/menu?tenant=${encodeURIComponent(tenant)}`,
+        metadata: {
+          tenant,
+          orderId: order.id,
+          kind: 'food_order',
+        },
       })
-    }
 
-    return NextResponse.json({ ok: true, orderId: order.id, url: session.url }, { status: 200 })
+      // Store session id for idempotent webhook handling
+      if (session.id) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { stripeCheckoutSessionId: session.id, customerEmail: session.customer_details?.email || undefined },
+        })
+      }
+
+      return NextResponse.json({ ok: true, orderId: order.id, url: session.url }, { status: 200 })
+    } catch (e) {
+      const msg = (e as Error)?.message || ''
+      // In-restaurant first iteration fallback (POC only):
+      // If Stripe ordering isn't configured yet, still place the order and move it into the KDS "Active" flow.
+      if (pocEnabled && msg.toLowerCase().includes('missing stripe orders secret key')) {
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { status: 'NEW' },
+        })
+        return NextResponse.json({
+          ok: true,
+          orderId: order.id,
+          url: `${baseUrl}/order/success?order=${encodeURIComponent(order.id)}`,
+          payAtCounter: true,
+        }, { status: 200 })
+      }
+      throw e
+    }
   } catch (e) {
     const msg = (e as Error)?.message || 'Order checkout error'
     return NextResponse.json({ ok: false, error: msg }, { status: 500 })
