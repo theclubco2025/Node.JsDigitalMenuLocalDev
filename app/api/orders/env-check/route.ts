@@ -9,6 +9,8 @@ function classifyKey(key: string) {
   if (k.startsWith('whsec_')) return { present: true as const, kind: 'whsec' as const }
   if (k.startsWith('sk_test_')) return { present: true as const, kind: 'sk_test' as const }
   if (k.startsWith('sk_live_')) return { present: true as const, kind: 'sk_live' as const }
+  if (k.startsWith('rk_test_')) return { present: true as const, kind: 'rk_test' as const }
+  if (k.startsWith('rk_live_')) return { present: true as const, kind: 'rk_live' as const }
   if (k.startsWith('pk_test_')) return { present: true as const, kind: 'pk_test' as const }
   if (k.startsWith('pk_live_')) return { present: true as const, kind: 'pk_live' as const }
   return { present: true as const, kind: 'unknown' as const }

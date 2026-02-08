@@ -4,7 +4,8 @@ let cached: Stripe | null = null
 let cachedOrders: Stripe | null = null
 
 function isStripeSecretKey(k: string) {
-  return k.startsWith('sk_')
+  // Stripe secret keys can be full (sk_*) or restricted (rk_*).
+  return k.startsWith('sk_') || k.startsWith('rk_')
 }
 
 export function getStripe(): Stripe {
