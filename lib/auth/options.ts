@@ -23,6 +23,35 @@ export const authOptions: NextAuthOptions = {
         const password = String(credentials?.password || '')
         const tenantSlug = String(credentials?.tenant || '').trim() || null
         if (!email || !password) return null
+
+        // Production-gated test owner login (POC convenience).
+        // Enabled only when TEST_OWNER_LOGIN_ENABLED=1 to avoid accidental exposure.
+        const testEnabled = (process.env.TEST_OWNER_LOGIN_ENABLED || '').trim() === '1'
+        const testEmail = (process.env.TEST_OWNER_EMAIL || '1234@1234').toLowerCase().trim()
+        const testPassword = String(process.env.TEST_OWNER_PASSWORD || '1234')
+        const testTenant = (process.env.TEST_OWNER_TENANT || 'independentbarandgrille').toLowerCase().trim()
+        if (testEnabled && email === testEmail && password === testPassword) {
+          const expectedTenant = testTenant
+          const providedTenant = (tenantSlug || '').toLowerCase()
+          if (providedTenant && providedTenant !== expectedTenant) return null
+
+          const t = await prisma.tenant.upsert({
+            where: { slug: expectedTenant },
+            update: {},
+            create: { slug: expectedTenant, name: expectedTenant },
+            select: { id: true },
+          })
+
+          const result: AppUser = {
+            id: 'test-owner',
+            email: testEmail,
+            name: 'Test Owner',
+            tenantId: t.id,
+            role: 'RESTAURANT_OWNER',
+          }
+          return result
+        }
+
         const user = await prisma.user.findUnique({ where: { email } })
         if (!user || !user.passwordHash) return null
         if (tenantSlug && user.tenantId) {
