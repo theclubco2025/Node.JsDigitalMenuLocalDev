@@ -28,6 +28,8 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [dirty, setDirty] = useState(false)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     if (!toast) return
@@ -40,6 +42,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
     async function load() {
       setLoading(true)
       setError(null)
+      setDirty(false)
       try {
         const res = await fetch(`/api/menu?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
         const json = await res.json().catch(() => null)
@@ -68,6 +71,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) throw new Error(json?.error || `Save failed (${res.status})`)
       setToast('Saved')
+      setDirty(false)
     } catch (e) {
       setError((e as Error)?.message || 'Save error')
     } finally {
@@ -83,7 +87,11 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
           Tenant: <span className="font-mono">{tenant}</span>
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="mt-3 text-sm text-gray-600">
+          Edit your menu here, then click <span className="font-semibold">Save</span>. Changes show up on the customer menu instantly (no redeploy).
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={save}
@@ -92,6 +100,11 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
+          {dirty && (
+            <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1">
+              Unsaved changes
+            </span>
+          )}
           <a
             href={editorUrl}
             className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50"
@@ -124,6 +137,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                     const next = deepClone(prev)
                     next.categories = next.categories || []
                     next.categories.push({ id: newId('c'), name: 'New Category', items: [] })
+                    setDirty(true)
                     return next
                   })
                 }}
@@ -131,6 +145,16 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
               >
                 + Add category
               </button>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <label className="block text-xs font-semibold text-gray-700">Search items</label>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name or description…"
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
             </div>
 
             {(menu.categories || []).map((cat, catIdx) => (
@@ -146,6 +170,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                           if (!prev) return prev
                           const next = deepClone(prev)
                           next.categories[catIdx].name = v
+                          setDirty(true)
                           return next
                         })
                       }}
@@ -167,6 +192,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                             price: 0,
                             tags: [],
                           })
+                          setDirty(true)
                           return next
                         })
                       }}
@@ -181,6 +207,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                           if (!prev) return prev
                           const next = deepClone(prev)
                           next.categories.splice(catIdx, 1)
+                          setDirty(true)
                           return next
                         })
                       }}
@@ -192,7 +219,13 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                 </div>
 
                 <div className="mt-4 space-y-3">
-                  {(cat.items || []).map((it, itemIdx) => (
+                  {(cat.items || [])
+                    .filter((it) => {
+                      const q = query.trim().toLowerCase()
+                      if (!q) return true
+                      return `${it.name || ''} ${it.description || ''}`.toLowerCase().includes(q)
+                    })
+                    .map((it, itemIdx) => (
                     <div key={it.id || itemIdx} className="rounded-lg border border-gray-200 p-3">
                       <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex-1">
@@ -205,6 +238,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                                 if (!prev) return prev
                                 const next = deepClone(prev)
                                 next.categories[catIdx].items[itemIdx].name = v
+                                setDirty(true)
                                 return next
                               })
                             }}
@@ -223,6 +257,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                                 if (!prev) return prev
                                 const next = deepClone(prev)
                                 next.categories[catIdx].items[itemIdx].price = Number.isFinite(v) ? v : 0
+                                setDirty(true)
                                 return next
                               })
                             }}
@@ -241,6 +276,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                               if (!prev) return prev
                               const next = deepClone(prev)
                               next.categories[catIdx].items[itemIdx].description = v
+                              setDirty(true)
                               return next
                             })
                           }}
@@ -260,6 +296,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                                 if (!prev) return prev
                                 const next = deepClone(prev)
                                 next.categories[catIdx].items[itemIdx].tags = parseTags(v)
+                              setDirty(true)
                                 return next
                               })
                             }}
@@ -277,6 +314,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                                 if (!prev) return prev
                                 const next = deepClone(prev)
                                 next.categories[catIdx].items[itemIdx].calories = (v !== undefined && Number.isFinite(v)) ? Math.round(v) : undefined
+                              setDirty(true)
                                 return next
                               })
                             }}
@@ -293,6 +331,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                               if (!prev) return prev
                               const next = deepClone(prev)
                               next.categories[catIdx].items.splice(itemIdx, 1)
+                              setDirty(true)
                               return next
                             })
                           }}

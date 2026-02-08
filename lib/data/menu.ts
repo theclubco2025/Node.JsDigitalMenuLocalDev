@@ -281,10 +281,13 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
         // Create a new Menu and replace categories/items
         const newMenu = await tx.menu.create({ data: { tenantId: tenantRow.id, name: `${tenant} menu` } })
         for (const cat of normalized.categories) {
-          const createdCat = await tx.menuCategory.create({ data: { menuId: newMenu.id, name: cat.name } })
+          const createdCat = await tx.menuCategory.create({
+            data: { id: cat.id, menuId: newMenu.id, name: cat.name }
+          })
           for (const item of cat.items) {
             const createdItem = await tx.menuItem.create({
               data: {
+                id: item.id,
                 categoryId: createdCat.id,
                 name: item.name,
                 description: item.description || '',
