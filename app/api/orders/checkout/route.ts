@@ -61,6 +61,15 @@ function roundMoneyToCents(amount: number): number {
   return Math.round(amount * 100)
 }
 
+function dateKeyInTz(ms: number, tz: string) {
+  const d = new Date(ms)
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d)
+  const y = parts.find(p => p.type === 'year')?.value || '0000'
+  const m = parts.find(p => p.type === 'month')?.value || '00'
+  const day = parts.find(p => p.type === 'day')?.value || '00'
+  return `${y}-${m}-${day}`
+}
+
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.DATABASE_URL) {
@@ -138,6 +147,12 @@ export async function POST(req: NextRequest) {
       const minTime = now + Math.max(0, ordering.leadTimeMinutes) * 60_000
       if (d.getTime() < minTime) {
         return NextResponse.json({ ok: false, error: 'scheduled_too_soon' }, { status: 400 })
+      }
+      // Same-day only in tenant timezone (PT by default).
+      const todayKey = dateKeyInTz(now, ordering.timezone)
+      const scheduledKey = dateKeyInTz(d.getTime(), ordering.timezone)
+      if (scheduledKey !== todayKey) {
+        return NextResponse.json({ ok: false, error: 'scheduled_must_be_same_day' }, { status: 400 })
       }
       // Require slot alignment relative to epoch (matches client slot generation)
       const mins = Math.floor(d.getTime() / 60_000)
@@ -224,29 +239,21 @@ export async function POST(req: NextRequest) {
 
       // Store session id for idempotent webhook handling
       if (session.id) {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { stripeCheckoutSessionId: session.id, customerEmail: session.customer_details?.email || undefined },
-        })
+        // Best-effort: even if this update fails, success_url includes session_id for confirm fallback.
+        try {
+          await prisma.order.update({
+            where: { id: order.id },
+            data: { stripeCheckoutSessionId: session.id, customerEmail: session.customer_details?.email || undefined },
+          })
+        } catch {
+          // ignore
+        }
       }
 
       return NextResponse.json({ ok: true, orderId: order.id, url: session.url }, { status: 200 })
     } catch (e) {
-      const msg = (e as Error)?.message || ''
-      // In-restaurant first iteration fallback (POC only):
-      // If Stripe ordering isn't configured yet, still place the order and move it into the KDS "Active" flow.
-      if (pocEnabled && msg.toLowerCase().includes('missing stripe orders secret key')) {
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { status: 'NEW' },
-        })
-        return NextResponse.json({
-          ok: true,
-          orderId: order.id,
-          url: `${baseUrl}/order/success?order=${encodeURIComponent(order.id)}`,
-          payAtCounter: true,
-        }, { status: 200 })
-      }
+      // Cleanup: if Stripe session creation failed, don't leave a stuck unpaid order behind.
+      try { await prisma.order.delete({ where: { id: order.id } }) } catch {}
       throw e
     }
   } catch (e) {

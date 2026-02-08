@@ -29,7 +29,7 @@ type KitchenResponse = {
   orders?: KitchenOrder[]
 }
 
-const STATUS_CHOICES = ['PENDING_PAYMENT', 'NEW', 'PREPARING', 'READY', 'COMPLETED', 'CANCELED'] as const
+const STATUS_CHOICES = ['NEW', 'PREPARING', 'READY', 'COMPLETED', 'CANCELED'] as const
 
 function money(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
@@ -60,7 +60,7 @@ export default function KitchenPage() {
   const [pin, setPin] = useState('')
   const [pinReady, setPinReady] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
-  const [view, setView] = useState<'active' | 'history' | 'unpaid'>('active')
+  const [view, setView] = useState<'active' | 'history'>('active')
 
   useEffect(() => {
     if (!isBrowser) return
@@ -138,25 +138,6 @@ export default function KitchenPage() {
     }
   }
 
-  const confirmUnpaid = async (orderId: string) => {
-    try {
-      const res = await fetch('/api/orders/confirm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Kitchen-Pin': pin,
-        },
-        body: JSON.stringify({ orderId }),
-      })
-      const json = await res.json().catch(() => null)
-      if (!res.ok || !json?.ok) throw new Error(json?.error || `Confirm failed (${res.status})`)
-      setToast(json?.already ? 'Already confirmed' : 'Confirmed payment')
-      await mutate()
-    } catch (e) {
-      setToast((e as Error)?.message || 'Confirm error')
-    }
-  }
-
   const updateStatus = async (orderId: string, status: string) => {
     try {
       const res = await fetch(`/api/kitchen/orders?tenant=${encodeURIComponent(tenant)}`, {
@@ -211,12 +192,6 @@ export default function KitchenPage() {
               </div>
             )}
           </div>
-          <a
-            href={`/menu?tenant=${encodeURIComponent(tenant)}`}
-            className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/15"
-          >
-            Back to menu
-          </a>
         </div>
 
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -290,40 +265,27 @@ export default function KitchenPage() {
             >
               History
             </button>
-            <button
-              type="button"
-              onClick={() => setView('unpaid')}
-              className={`rounded-xl px-3 py-2 text-xs font-extrabold border ${view === 'unpaid' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:bg-white/10'}`}
-            >
-              Unpaid (debug)
-            </button>
           </div>
 
           <div className="mt-3 space-y-3">
             {orders.length === 0 && (
               <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-neutral-300">
-                {view === 'active'
-                  ? 'No paid active orders yet.'
-                  : view === 'history'
-                    ? 'No completed/canceled orders yet.'
-                    : 'No unpaid orders.'}
+                {view === 'active' ? 'No active orders yet.' : 'No completed/canceled orders in the last 24 hours.'}
               </div>
             )}
 
-            {orders.map((o) => {
-              const paid = !!o.paidAt && o.status !== 'PENDING_PAYMENT'
+            {orders.map((o, idx) => {
               return (
                 <div key={o.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-sm text-neutral-300">Order</div>
-                      <div className="font-mono text-sm break-all">{o.id}</div>
+                      <div className="text-sm text-neutral-300">Order #{idx + 1}</div>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
                         <span className="rounded-full bg-white/10 px-2 py-1">Status: {o.status}</span>
                         <span className="rounded-full bg-white/10 px-2 py-1">Total: {money(o.totalCents)}</span>
                         <span className="rounded-full bg-white/10 px-2 py-1">Pickup: {formatTime(o.scheduledFor, o.timezone)}</span>
-                        <span className={`rounded-full px-2 py-1 ${paid ? 'bg-emerald-500/20 text-emerald-200' : 'bg-amber-500/20 text-amber-200'}`}>
-                          {paid ? 'PAID' : 'NOT PAID'}
+                        <span className="rounded-full px-2 py-1 bg-emerald-500/20 text-emerald-200">
+                          PAID
                         </span>
                         <span className="rounded-full bg-white/10 px-2 py-1">Pickup code: {o.pickupCode}</span>
                       </div>
@@ -342,16 +304,6 @@ export default function KitchenPage() {
                           {s}
                         </button>
                       ))}
-                      {view === 'unpaid' && o.status === 'PENDING_PAYMENT' && (
-                        <button
-                          type="button"
-                          onClick={() => confirmUnpaid(o.id)}
-                          className="rounded-xl px-3 py-2 text-xs font-extrabold border border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
-                          title="Confirm payment (PIN required). If Stripe isn't configured yet, this will move the order into Active for in-restaurant use."
-                        >
-                          Confirm payment
-                        </button>
-                      )}
                     </div>
                   </div>
 

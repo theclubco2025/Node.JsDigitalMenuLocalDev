@@ -151,10 +151,8 @@ export default function MenuClient() {
   const copy = cfg?.copy as TenantCopy | undefined
   const styleCfg = cfg?.style
   const orderingCfg = cfg?.ordering
-  const heroVariant = (styleCfg?.heroVariant || 'image').toLowerCase()
   const accentSecondary = styleCfg?.accentSecondary || undefined
   const categoryIntros: Record<string, string | undefined> = copy?.categoryIntros ?? {}
-  const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = tenant === 'demo' ? 'Demo Menu Experience' : (brand?.name || 'Menu')
   const brandTagline = brand?.tagline || ''
 
@@ -253,13 +251,12 @@ export default function MenuClient() {
               if (groupForCategory(category.name) !== selectedCategory) return false
             }
           }
-          // Search filter (name and description)
+          // Search filter (name + tags; descriptions are hidden)
           if (searchQuery) {
             const searchLower = searchQuery.toLowerCase()
             const matchesName = item.name.toLowerCase().includes(searchLower)
-            const matchesDescription = (item.description || '').toLowerCase().includes(searchLower)
             const matchesTags = (item.tags || []).some(tag => tag.toLowerCase().includes(searchLower))
-            if (!matchesName && !matchesDescription && !matchesTags) return false
+            if (!matchesName && !matchesTags) return false
           }
           // Dietary filters (must have all selected dietary tags)
           if (selectedDietaryFilters.length > 0) {
@@ -484,6 +481,15 @@ export default function MenuClient() {
   const [pickupWhen, setPickupWhen] = useState<'asap' | 'scheduled'>('asap')
   const [scheduledForIso, setScheduledForIso] = useState<string>('') // ISO string
 
+  const dateKeyInTz = (ms: number, tz: string) => {
+    const d = new Date(ms)
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d)
+    const y = parts.find(p => p.type === 'year')?.value || '0000'
+    const m = parts.find(p => p.type === 'month')?.value || '00'
+    const day = parts.find(p => p.type === 'day')?.value || '00'
+    return `${y}-${m}-${day}`
+  }
+
   const availableSlots = useMemo(() => {
     if (!orderingEnabled || !schedulingEnabled) return []
     const slot = Math.max(1, Math.floor(slotMinutes))
@@ -499,24 +505,27 @@ export default function MenuClient() {
       const d = new Date(first + i * slot * 60_000)
       slots.push(d.toISOString())
     }
-    return slots
-  }, [orderingEnabled, schedulingEnabled, slotMinutes, leadTimeMinutes])
+    // Same-day only in the tenant timezone (PT by default).
+    const todayKey = dateKeyInTz(now, orderingTimezone)
+    return slots.filter((iso) => dateKeyInTz(Date.parse(iso), orderingTimezone) === todayKey)
+  }, [orderingEnabled, schedulingEnabled, slotMinutes, leadTimeMinutes, orderingTimezone])
 
   const formatSlot = (iso: string) => {
     try {
       const d = new Date(iso)
-      return d.toLocaleString(undefined, {
+      const t = d.toLocaleTimeString(undefined, {
         timeZone: orderingTimezone,
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
+        timeZoneName: 'short',
       })
+      return `Today ${t}`
     } catch {
       return iso
     }
   }
+
+  const canScheduleToday = orderingEnabled && schedulingEnabled && availableSlots.length > 0
 
   const startCheckout = async () => {
     try {
@@ -733,20 +742,6 @@ export default function MenuClient() {
     return null
   }
 
-  const firstImageUrl = useMemo(() => {
-    // Prefer any configured image if items lack imageUrl in DB
-    const fromConfig = Object.values(imageMap || {})[0]
-    if (typeof fromConfig === 'string' && fromConfig) return fromConfig
-    for (const cat of categories) {
-      for (const item of cat.items) {
-        if (item.imageUrl) return item.imageUrl
-        const mapped = imageMap[item.id]
-        if (mapped) return mapped
-      }
-    }
-    return null
-  }, [categories, imageMap])
-
   // Scroll spy to highlight active category
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -924,11 +919,7 @@ export default function MenuClient() {
               style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
             >
               <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-                {brandLogoUrl ? (
-                  <img src={brandLogoUrl} alt={brandName} className="w-8 h-8 rounded-full bg-white object-cover" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-                )}
+                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
                 <div className="text-center">
                   <h1
                     className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
@@ -1018,49 +1009,6 @@ export default function MenuClient() {
               )
             })}
           </div>
-        </div>
-      )}
-
-      {/* Hero section (variant-driven) */}
-      {heroVariant !== 'none' && (
-        <div className="relative">
-          <div
-            className="w-full h-56 md:h-64 lg:h-72"
-            style={{
-              backgroundImage: firstImageUrl ? `url(${firstImageUrl})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              borderBottom: '1px solid var(--muted)'
-            }}
-          >
-            {/* Overlay tuned by tenant style */}
-            <div className="w-full h-full" style={{
-              background: 'linear-gradient(90deg, rgba(0,0,0,0.28), rgba(255,255,255,0.14), rgba(0,0,0,0.28))'
-            }} />
-            {heroVariant === 'logo' && brandLogoUrl && (
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage: `url(${brandLogoUrl})`,
-                  backgroundRepeat: 'repeat',
-                  backgroundSize: '160px 160px'
-                }}
-              />
-            )}
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center px-4">
-            <div className="backdrop-blur-sm/20 text-center px-4 py-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.65)' }}>
-                  <h2
-                    className={`text-2xl md:text-3xl font-bold tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
-                    style={{ color: 'var(--ink)' }}
-                  >
-                    {brandName}
-                  </h2>
-                  <p className="text-xs md:text-sm" style={{ color: '#b91c1c' }}>{brandTagline}</p>
-            </div>
-          </div>
-            {/* Divider */}
-            <div className="w-full h-1.5" style={{ background: 'var(--muted)' }} />
         </div>
       )}
 
@@ -1274,7 +1222,7 @@ export default function MenuClient() {
             <div className="mt-3 h-0.5 w-full max-w-xl" style={{ background: 'linear-gradient(90deg, transparent, var(--accent), transparent)' }} />
           </div>
 
-          {/* Use the same card layout as the Pasta category items (with description). */}
+          {/* Use the same card layout as the Pasta category items. */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {resolveDemoSignaturePastaItems().map((it) => {
               const canShow = DEMO_PASTA_PHOTO_ITEM_IDS.has(it.id)
@@ -1314,12 +1262,6 @@ export default function MenuClient() {
                         </span>
                       )}
                     </div>
-
-                    {it.description && (
-                      <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
-                        {it.description}
-                      </p>
-                    )}
 
                     <div className="flex justify-end">
                       <button
@@ -1530,9 +1472,7 @@ export default function MenuClient() {
                           />
                         </div>
                       ) : (
-                        <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
-                          {highlightText(item.description, searchQuery)}
-                        </p>
+                        <div className="mb-4" />
                       )}
                       
                       <div className="flex items-center justify-between gap-3">
@@ -1718,17 +1658,19 @@ export default function MenuClient() {
                       </button>
                       <button
                         type="button"
+                        disabled={!canScheduleToday}
                         onClick={() => {
+                          if (!canScheduleToday) return
                           setPickupWhen('scheduled')
                           if (!scheduledForIso && availableSlots[0]) setScheduledForIso(availableSlots[0])
                         }}
                         className="px-3 py-2 rounded-lg text-sm font-bold border"
                         style={pickupWhen === 'scheduled'
-                          ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)' }
-                          : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                          ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)', opacity: canScheduleToday ? 1 : 0.5 }
+                          : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)', opacity: canScheduleToday ? 1 : 0.5 }
                         }
                       >
-                        Schedule
+                        Schedule today
                       </button>
                     </div>
                     {pickupWhen === 'scheduled' && (
@@ -1739,11 +1681,11 @@ export default function MenuClient() {
                           onChange={(e) => setScheduledForIso(e.target.value)}
                         >
                           {availableSlots.map((iso) => (
-                            <option key={iso} value={iso}>{formatSlot(iso)} ({orderingTimezone})</option>
+                            <option key={iso} value={iso}>{formatSlot(iso)}</option>
                           ))}
                         </select>
                         <div className="mt-2 text-xs text-gray-500">
-                          Times shown in {orderingTimezone}. (Testing mode assumes 24/7 hours.)
+                          Times shown in PT. Same-day only.
                         </div>
                       </div>
                     )}

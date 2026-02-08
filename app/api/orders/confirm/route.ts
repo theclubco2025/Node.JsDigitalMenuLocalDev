@@ -31,15 +31,21 @@ function isOrderingPocEnabledForTenant(tenant: string): boolean {
   return pocOrderingTenants().includes((tenant || '').toLowerCase())
 }
 
-function expectedKitchenPin(tenantSlug: string): string {
-  const fromEnv = (process.env.KITCHEN_PIN || '').trim()
-  if (fromEnv) return fromEnv
+function kitchenPinFromSettings(settings: unknown): string {
+  if (!settings || typeof settings !== 'object') return ''
+  const v = (settings as Record<string, unknown>).kitchenPin
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+function expectedKitchenPin(tenantSlug: string, settings: unknown): string {
+  const fromSettings = kitchenPinFromSettings(settings)
+  if (fromSettings) return fromSettings
   if (process.env.VERCEL_ENV === 'preview' && (tenantSlug === 'independent-draft' || tenantSlug === 'independent-kitchen-draft')) return '1234'
   return ''
 }
 
-function hasKitchenPin(req: NextRequest, tenantSlug: string): boolean {
-  const expected = expectedKitchenPin(tenantSlug)
+function hasKitchenPin(req: NextRequest, tenantSlug: string, settings: unknown): boolean {
+  const expected = expectedKitchenPin(tenantSlug, settings)
   if (!expected) return false
   const provided = (req.headers.get('x-kitchen-pin') || '').trim()
   return provided === expected
@@ -84,9 +90,10 @@ export async function POST(req: NextRequest) {
 
     const row = await prisma.order.findUnique({
       where: { id: orderId },
-      select: { stripeCheckoutSessionId: true, tenant: { select: { slug: true } } },
+      select: { stripeCheckoutSessionId: true, tenant: { select: { slug: true, settings: true } } },
     })
     const tenantSlug = row?.tenant?.slug || ''
+    const tenantSettings = row?.tenant?.settings
     if (!tenantSlug) {
       return NextResponse.json({ ok: false, error: 'Order not found' }, { status: 404 })
     }
@@ -100,7 +107,7 @@ export async function POST(req: NextRequest) {
     if (!effectiveSessionId) {
       // Manual confirm fallback (PIN-gated): allow restaurant to move an unpaid POC order into the KDS flow
       // when Stripe isn't configured yet (in-restaurant first iteration).
-      if (!hasKitchenPin(req, tenantSlug)) {
+      if (!hasKitchenPin(req, tenantSlug, tenantSettings)) {
         return NextResponse.json({ ok: false, error: 'Missing session_id' }, { status: 400 })
       }
       const isPoc = isOrderingPocEnabledForTenant(tenantSlug)

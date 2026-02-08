@@ -30,6 +30,8 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   const [toast, setToast] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [query, setQuery] = useState('')
+  const [kitchenPin, setKitchenPin] = useState('')
+  const [pinSaving, setPinSaving] = useState(false)
 
   useEffect(() => {
     if (!toast) return
@@ -84,6 +86,27 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
     }
   }
 
+  const saveKitchenPin = async () => {
+    const p = kitchenPin.trim()
+    if (!p) return
+    setPinSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/tenant/kitchen-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant, kitchenPin: p }),
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.ok) throw new Error(json?.error || `Save failed (${res.status})`)
+      setToast('Kitchen PIN saved')
+    } catch (e) {
+      setError((e as Error)?.message || 'Kitchen PIN save error')
+    } finally {
+      setPinSaving(false)
+    }
+  }
+
   return (
     <AdminLayout requiredRole="RESTAURANT_OWNER">
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -116,6 +139,30 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
           >
             View customer menu
           </a>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+          <div className="text-sm font-semibold text-gray-900">Kitchen PIN (for `/kds`)</div>
+          <div className="mt-2 flex flex-col sm:flex-row gap-2">
+            <input
+              type="password"
+              value={kitchenPin}
+              onChange={(e) => setKitchenPin(e.target.value)}
+              placeholder="Set kitchen PIN"
+              className="w-full sm:max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            <button
+              type="button"
+              onClick={saveKitchenPin}
+              disabled={pinSaving || kitchenPin.trim().length === 0}
+              className="inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+            >
+              {pinSaving ? 'Saving…' : 'Save PIN'}
+            </button>
+          </div>
+          <div className="mt-2 text-xs text-gray-600">
+            Staff can go to <span className="font-mono">/kds</span>, enter this PIN, and it will open the correct kitchen screen.
+          </div>
         </div>
 
         {error && (
