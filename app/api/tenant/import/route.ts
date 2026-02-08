@@ -40,10 +40,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Try to persist to filesystem in dev; otherwise fall back to memory
+    // Persist menu. In production with a DB, do NOT silently fall back to memory
+    // (that would look like "saved" but won't reflect on other lambdas/page refresh).
     try {
       await writeMenu(tenant, menu)
-    } catch {
+    } catch (e) {
+      const hasDb = !!(process.env.DATABASE_URL || '').trim()
+      if (process.env.NODE_ENV === 'production' && hasDb) {
+        return NextResponse.json({ error: (e as Error)?.message || 'Save failed' }, { status: 500 })
+      }
       setMemoryMenu(tenant, menu)
     }
 

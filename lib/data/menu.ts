@@ -268,44 +268,52 @@ export async function writeMenu(tenant: string, menu: MenuResponse): Promise<voi
   const normalized = normalizeMenu(menu as unknown as RawMenu)
   // If DB present, write there; else write file (fallback to memory)
   if (process.env.DATABASE_URL) {
-    try {
-      const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
-      if (!prisma) throw new Error('prisma-not-ready')
-      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        // Ensure tenant exists
-        const tenantRow = await tx.tenant.upsert({
-          where: { slug: tenant },
-          update: {},
-          create: { slug: tenant, name: tenant },
+    const { prisma } = await import("@/lib/prisma").catch(() => ({ prisma: undefined as PrismaClient | undefined }))
+    if (!prisma) throw new Error('prisma-not-ready')
+
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      // Ensure tenant exists
+      const tenantRow = await tx.tenant.upsert({
+        where: { slug: tenant },
+        update: {},
+        create: { slug: tenant, name: tenant },
+        select: { id: true },
+      })
+
+      // IMPORTANT: remove previous menu rows first so we can reuse stable item/category ids
+      // without primary key collisions.
+      await tx.menu.deleteMany({ where: { tenantId: tenantRow.id } })
+
+      const newMenu = await tx.menu.create({ data: { tenantId: tenantRow.id, name: `${tenant} menu` } })
+      for (const cat of normalized.categories) {
+        const catId = String(cat.id || '').trim()
+        const createdCat = await tx.menuCategory.create({
+          data: {
+            ...(catId ? { id: catId } : {}),
+            menuId: newMenu.id,
+            name: cat.name,
+          }
         })
-        // Create a new Menu and replace categories/items
-        const newMenu = await tx.menu.create({ data: { tenantId: tenantRow.id, name: `${tenant} menu` } })
-        for (const cat of normalized.categories) {
-          const createdCat = await tx.menuCategory.create({
-            data: { id: cat.id, menuId: newMenu.id, name: cat.name }
-          })
-          for (const item of cat.items) {
-            const createdItem = await tx.menuItem.create({
-              data: {
-                id: item.id,
-                categoryId: createdCat.id,
-                name: item.name,
-                description: item.description || '',
-                price: item.price,
-                imageUrl: item.imageUrl || null,
-                calories: item.calories || null,
-              }
-            })
-            for (const tag of item.tags || []) {
-              await tx.menuItemTag.create({ data: { itemId: createdItem.id, tag } })
+        for (const item of cat.items) {
+          const itemId = String(item.id || '').trim()
+          const createdItem = await tx.menuItem.create({
+            data: {
+              ...(itemId ? { id: itemId } : {}),
+              categoryId: createdCat.id,
+              name: item.name,
+              description: item.description || '',
+              price: item.price,
+              imageUrl: item.imageUrl || null,
+              calories: item.calories || null,
             }
+          })
+          for (const tag of item.tags || []) {
+            await tx.menuItemTag.create({ data: { itemId: createdItem.id, tag } })
           }
         }
-      })
-      return
-    } catch {
-      // fall through to FS
-    }
+      }
+    })
+    return
   }
   const dir = path.join(process.cwd(), "data", "tenants", tenant)
   const file = path.join(dir, "menu.json")

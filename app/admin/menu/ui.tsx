@@ -70,6 +70,11 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
       })
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) throw new Error(json?.error || `Save failed (${res.status})`)
+      // Re-load from the live source of truth to confirm persistence.
+      const reload = await fetch(`/api/menu?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
+      const reJson = await reload.json().catch(() => null)
+      if (!reload.ok) throw new Error(reJson?.error || `Reload failed (${reload.status})`)
+      setMenu(deepClone(reJson as DraftMenu))
       setToast('Saved')
       setDirty(false)
     } catch (e) {
