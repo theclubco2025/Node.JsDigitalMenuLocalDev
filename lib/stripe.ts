@@ -8,6 +8,16 @@ function isStripeSecretKey(k: string) {
   return k.startsWith('sk_') || k.startsWith('rk_')
 }
 
+function isStripePublishableKey(k: string) {
+  return k.startsWith('pk_')
+}
+
+function keyPrefix(k: string) {
+  const s = (k || '').trim()
+  if (!s) return 'missing'
+  return (s.split('_')[0] || '').slice(0, 12) || 'unknown'
+}
+
 export function getStripe(): Stripe {
   if (cached) return cached
   const isPreview = process.env.VERCEL_ENV === 'preview'
@@ -37,13 +47,28 @@ export function getStripe(): Stripe {
 export function getStripeOrders(): Stripe {
   if (cachedOrders) return cachedOrders
 
-  const ordersKey =
-    (process.env.STRIPE_ORDERS_SECRET_KEY || '').trim()
-    || (process.env.STRIPE_TEST_KEY || '').trim()
-    || (process.env.STRIPE_SECRET_KEY || '').trim()
+  const fromOrders = (process.env.STRIPE_ORDERS_SECRET_KEY || '').trim()
+  const fromTest = (process.env.STRIPE_TEST_KEY || '').trim()
+  const fromSecret = (process.env.STRIPE_SECRET_KEY || '').trim()
+  const ordersKey = fromOrders || fromTest || fromSecret
 
   if (!isStripeSecretKey(ordersKey)) {
-    throw new Error('Missing Stripe orders secret key (set STRIPE_ORDERS_SECRET_KEY=sk_test_... for POC)')
+    const picked =
+      fromOrders ? 'STRIPE_ORDERS_SECRET_KEY'
+        : fromTest ? 'STRIPE_TEST_KEY'
+          : fromSecret ? 'STRIPE_SECRET_KEY'
+            : 'none'
+
+    // Most common misconfig: publishable key used on the server.
+    if (isStripePublishableKey(ordersKey)) {
+      throw new Error(
+        `Stripe ordering is misconfigured: ${picked} is a publishable key (prefix=pk). Use a secret key (sk_test_... for POC).`
+      )
+    }
+
+    throw new Error(
+      `Stripe ordering is misconfigured: expected a secret key (sk_*/rk_*), but ${picked} has prefix=${keyPrefix(ordersKey)}. Set STRIPE_ORDERS_SECRET_KEY=sk_test_...`
+    )
   }
 
   cachedOrders = new Stripe(ordersKey, { apiVersion: '2023-10-16' })
