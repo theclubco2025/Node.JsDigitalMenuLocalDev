@@ -622,7 +622,7 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Independent draft: top navigation bar (no header images) */}
+      {/* Independent draft: top navigation bar with logo + search */}
       {isIndependentDraft ? (
         <div
           className="sticky top-0 z-50"
@@ -633,9 +633,17 @@ export default function MenuClient() {
           }}
         >
           <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
-            <div className="text-base font-extrabold tracking-wide" style={{ color: '#f8fafc' }}>
-              {brandName}
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={
+                brandLogoUrl
+                || 'https://images.squarespace-cdn.com/content/v1/652d775c7dfc3727b42cc773/cd438e8d-6bd2-4053-aa62-3ee8a308ee38/Indy_Logo_Light.png?format=1500w'
+              }
+              alt={brandName || 'The Independent'}
+              className="h-9 w-auto"
+              loading="eager"
+              decoding="async"
+            />
             <div className="flex-1" />
             <div className="relative w-full max-w-md">
               <input
@@ -699,8 +707,8 @@ export default function MenuClient() {
 
       {/* Category chip scroller removed for Benes */}
 
-      {/* Benes hero banner */}
-      {showBenesHero && (
+      {/* Benes hero banner (Benes-only) */}
+      {!isIndependentDraft && isBenes && showBenesHero && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div
             className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
