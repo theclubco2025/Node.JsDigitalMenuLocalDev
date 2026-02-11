@@ -24,10 +24,16 @@
 3) Verify assistant
 - Use the Ask button. Assistant only recommends items from this tenant, respects dietary filters.
 
-3.5) (Optional) Enable Ordering (preview-only until approved)
+3.5) (Optional) Enable Ordering
 - Ordering is **disabled by default** and must be enabled per-tenant via `Tenant.settings.ordering.enabled=true`.
 - Defaults (for testing): timezone **PST** (`America/Los_Angeles`) and **24/7 hours** if hours are not configured yet.
 - Stripe orders webhook uses a separate secret: `STRIPE_ORDERS_WEBHOOK_SECRET` (do not reuse the billing webhook secret).
+  - Endpoint URL: `https://YOURDOMAIN.com/api/orders/stripe-webhook`
+  - Required events:
+    - `checkout.session.completed`
+    - `checkout.session.async_payment_succeeded`
+- In **production**, ordering requires `STRIPE_ORDERS_WEBHOOK_SECRET` to be set (checkout is blocked without it).
+- Health check: `/api/orders/health`
 - Admin orders queue (after login): `/admin/orders`
 
 4) Publish

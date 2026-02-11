@@ -9,6 +9,8 @@ type TenantConfigJson = Record<string, unknown> | null
 
 const DEFAULT_ORDERING = {
   enabled: false,
+  paused: false,
+  pauseMessage: '',
   fulfillment: 'pickup',
   timezone: 'America/Los_Angeles', // PST default
   scheduling: {
@@ -38,6 +40,8 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
     : {}
 
   const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : DEFAULT_ORDERING.enabled
+  const paused = typeof obj.paused === 'boolean' ? obj.paused : DEFAULT_ORDERING.paused
+  const pauseMessage = typeof obj.pauseMessage === 'string' ? obj.pauseMessage : DEFAULT_ORDERING.pauseMessage
   const fulfillment = (obj.fulfillment === 'pickup') ? 'pickup' : DEFAULT_ORDERING.fulfillment
   const timezone = typeof obj.timezone === 'string' && obj.timezone.trim() ? obj.timezone.trim() : DEFAULT_ORDERING.timezone
 
@@ -56,6 +60,8 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
 
   return {
     enabled,
+    paused,
+    pauseMessage,
     fulfillment,
     timezone,
     scheduling: {

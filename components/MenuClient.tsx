@@ -3,7 +3,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
 
@@ -92,7 +92,7 @@ export default function MenuClient() {
   // South Fork only: allow multi-select of specific categories via dropdown
   const [selectedCategoryNames, setSelectedCategoryNames] = useState<string[]>([])
   const [selectedDietaryFilters, setSelectedDietaryFilters] = useState<string[]>([])
-  const [cart, setCart] = useState<Array<{ item: MenuItem; quantity: number }>>([])
+  const [cart, setCart] = useState<Array<{ item: MenuItem; quantity: number; addOns: Array<{ name: string; priceDeltaCents: number }>; note: string }>>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [assistantMessage, setAssistantMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'assistant', message: string}>>([])
@@ -187,7 +187,7 @@ export default function MenuClient() {
   const showCategoryBadges = flags.categoryBadges !== false
   const useMealGroups = String(styleCfg?.navVariant || '').toLowerCase() === 'chipscroller'
 
-  const cleanMojibake = (raw: string) => {
+  const cleanMojibake = useCallback((raw: string) => {
     // Fix common encoding artifacts that can slip in when copying data through lossy paths.
     // DISPLAY-only (no data mutation).
     const s = String(raw || '')
@@ -200,9 +200,9 @@ export default function MenuClient() {
       .replace(/\s*â€“\s*/g, ' – ')
       .replace(/\s+—\s+/g, ' — ')
       .trim()
-  }
+  }, [])
 
-  const groupForCategory = (categoryName: string) => {
+  const groupForCategory = useCallback((categoryName: string) => {
     const cleaned = cleanMojibake(categoryName)
     const lower = cleaned.toLowerCase()
     if (lower.includes('kids')) return 'Kids'
@@ -214,7 +214,7 @@ export default function MenuClient() {
     if (/^lunch$/i.test(prefix)) return 'Lunch'
     if (/^dinner$/i.test(prefix)) return 'Dinner'
     return prefix.replace(/\b\w/g, (m) => m.toUpperCase())
-  }
+  }, [cleanMojibake])
 
   // Admin inline edit state
   const [editableMenu, setEditableMenu] = useState<MenuResponse | null>(null)
@@ -270,7 +270,7 @@ export default function MenuClient() {
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, searchQuery, selectedCategory, selectedCategoryNames, selectedDietaryFilters, tenant, useMealGroups, isSouthFork])
+  }, [baseMenu, searchQuery, selectedCategory, selectedCategoryNames, selectedDietaryFilters, tenant, useMealGroups, isSouthFork, groupForCategory])
 
   const updateItemField = (
     categoryId: string,
@@ -398,6 +398,47 @@ export default function MenuClient() {
     )
   }
 
+  const isAddOnTag = (tag: string) => {
+    const t = String(tag || '').trim().toLowerCase()
+    return t.startsWith('addon:') || t.startsWith('add-on:')
+  }
+
+  const visibleTags = (tags: string[] | undefined) => (tags || []).filter(t => !isAddOnTag(t))
+
+  const parseAddOnDefs = (tags: string[] | undefined) => {
+    const out: Array<{ name: string; priceDeltaCents: number }> = []
+    for (const raw of tags || []) {
+      const t = String(raw || '').trim()
+      if (!t || !isAddOnTag(t)) continue
+      const rest = t.split(':').slice(1).join(':').trim()
+      if (!rest) continue
+      let name = rest
+      let pricePart = ''
+      if (rest.includes('|')) {
+        const [n, p] = rest.split('|')
+        name = (n || '').trim()
+        pricePart = (p || '').trim()
+      } else if (rest.includes('=')) {
+        const [n, p] = rest.split('=')
+        name = (n || '').trim()
+        pricePart = (p || '').trim()
+      }
+      if (!name) continue
+      const priceRaw = pricePart.replace(/^\$/, '').trim()
+      let priceDeltaCents = 0
+      if (priceRaw) {
+        const asNum = Number(priceRaw)
+        if (Number.isFinite(asNum)) {
+          if (Number.isInteger(asNum) && asNum >= 50) priceDeltaCents = Math.max(0, Math.floor(asNum))
+          else priceDeltaCents = Math.max(0, Math.round(asNum * 100))
+        }
+      }
+      out.push({ name, priceDeltaCents })
+    }
+    out.sort((a, b) => a.name.localeCompare(b.name) || a.priceDeltaCents - b.priceDeltaCents)
+    return out
+  }
+
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
       const existing = prev.find(cartItem => cartItem.item.id === item.id)
@@ -408,7 +449,7 @@ export default function MenuClient() {
             : cartItem
         )
       }
-      return [...prev, { item, quantity: 1 }]
+      return [...prev, { item, quantity: 1, addOns: [], note: '' }]
     })
   }
 
@@ -469,9 +510,20 @@ export default function MenuClient() {
     }
   }
 
-  const cartTotal = cart.reduce((sum, item) => sum + (item.item.price * item.quantity), 0)
+  const cartTotalCents = cart.reduce((sum, line) => {
+    const base = Math.round((line.item.price || 0) * 100)
+    const addOnCents = (line.addOns || []).reduce((s, a) => s + (a.priceDeltaCents || 0), 0)
+    return sum + (base + addOnCents) * line.quantity
+  }, 0)
+  const cartTotal = cartTotalCents / 100
 
   const orderingEnabled = orderingCfg?.enabled === true
+  const orderingPaused = (orderingCfg as unknown as { paused?: boolean } | undefined)?.paused === true
+  const orderingPauseMessage =
+    (orderingCfg as unknown as { pauseMessage?: unknown } | undefined)?.pauseMessage
+  const orderingPauseText = typeof orderingPauseMessage === 'string' && orderingPauseMessage.trim()
+    ? orderingPauseMessage.trim()
+    : 'Ordering is temporarily paused. Please try again later.'
   const orderingTimezone = (typeof orderingCfg?.timezone === 'string' && orderingCfg?.timezone.trim())
     ? orderingCfg.timezone.trim()
     : 'America/Los_Angeles'
@@ -480,6 +532,43 @@ export default function MenuClient() {
   const schedulingEnabled = orderingCfg?.scheduling?.enabled !== false
   const [pickupWhen, setPickupWhen] = useState<'asap' | 'scheduled'>('asap')
   const [scheduledForIso, setScheduledForIso] = useState<string>('') // ISO string
+  const [customerEmail, setCustomerEmail] = useState('')
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [orderNote, setOrderNote] = useState('')
+
+  const contactStorageKey = useMemo(() => `order_contact_v1:${tenant}`, [tenant])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = localStorage.getItem(contactStorageKey)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as { email?: string; name?: string; phone?: string }
+      if (typeof parsed.email === 'string') setCustomerEmail(parsed.email)
+      if (typeof parsed.name === 'string') setCustomerName(parsed.name)
+      if (typeof parsed.phone === 'string') setCustomerPhone(parsed.phone)
+    } catch {
+      // ignore
+    }
+  }, [contactStorageKey])
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(contactStorageKey, JSON.stringify({
+        email: customerEmail,
+        name: customerName,
+        phone: customerPhone,
+      }))
+    } catch {
+      // ignore
+    }
+  }, [contactStorageKey, customerEmail, customerName, customerPhone])
+
+  const emailOk = useMemo(() => {
+    const e = customerEmail.trim()
+    if (!e) return false
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
+  }, [customerEmail])
 
   const dateKeyInTz = (ms: number, tz: string) => {
     const d = new Date(ms)
@@ -529,12 +618,29 @@ export default function MenuClient() {
 
   const startCheckout = async () => {
     try {
+      if (orderingEnabled && orderingPaused) {
+        setToast(orderingPauseText)
+        return
+      }
+      if (orderingEnabled && !emailOk) {
+        setToast('Email is required for your receipt.')
+        return
+      }
       const payload = {
         tenant,
-        items: cart.map(ci => ({ id: ci.item.id, quantity: ci.quantity })),
+        items: cart.map(ci => ({
+          id: ci.item.id,
+          quantity: ci.quantity,
+          addOns: ci.addOns || [],
+          note: (ci.note || '').trim() || null,
+        })),
         scheduledFor: (orderingEnabled && schedulingEnabled && pickupWhen === 'scheduled' && scheduledForIso)
           ? scheduledForIso
           : null,
+        customerEmail: customerEmail.trim(),
+        customerName: customerName.trim() || null,
+        customerPhone: customerPhone.trim() || null,
+        orderNote: orderNote.trim() || null,
       }
       const res = await fetch('/api/orders/checkout', {
         method: 'POST',
@@ -543,7 +649,7 @@ export default function MenuClient() {
       })
       const data = await res.json().catch(() => null)
       if (!res.ok || !data?.ok || !data?.url) {
-        const err = data?.error || `Checkout failed (${res.status})`
+        const err = data?.message || data?.error || `Checkout failed (${res.status})`
         setToast(String(err))
         return
       }
@@ -622,7 +728,7 @@ export default function MenuClient() {
       return ia - ib
     })
     return ordered
-  }, [allCategories, useMealGroups])
+  }, [allCategories, useMealGroups, groupForCategory])
 
   const southForkCategoryGroups = useMemo(() => {
     // group -> full category names, in existing order
@@ -642,7 +748,7 @@ export default function MenuClient() {
       return ia - ib
     })
     return { groups, orderedGroups }
-  }, [allCategories])
+  }, [allCategories, groupForCategory])
 
   const shortCategoryLabel = (fullName: string) => {
     const cleaned = cleanMojibake(fullName)
@@ -1511,7 +1617,7 @@ export default function MenuClient() {
                                   {item.calories} cal
                                 </span>
                               )}
-                              {(item.tags || []).map(tag => (
+                              {visibleTags(item.tags).map(tag => (
                                 <span 
                                   key={tag} 
                                   className="inline-flex items-center px-2 py-1 rounded-full text-xs font-normal text-gray-500 border border-gray-300 bg-transparent"
@@ -1599,36 +1705,93 @@ export default function MenuClient() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {cart.map(cartItem => (
-                    <div key={cartItem.item.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div className="flex-1">
-                        <h4 className="font-medium text-black">{cartItem.item.name}</h4>
-                        <p className="text-sm text-gray-600">${cartItem.item.price.toFixed(2)} each</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
-                            className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
-                          >
-                            −
-                          </button>
-                          <span className="w-8 h-8 inline-flex items-center justify-center text-center font-medium text-black">{cartItem.quantity}</span>
-                          <button
-                            onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
-                            className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
-                          >
-                            +
-                          </button>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-black">
-                            ${(cartItem.item.price * cartItem.quantity).toFixed(2)}
+                  {cart.map(cartItem => {
+                    const defs = parseAddOnDefs(cartItem.item.tags)
+                    const base = Math.round((cartItem.item.price || 0) * 100)
+                    const addOnCents = (cartItem.addOns || []).reduce((s, a) => s + (a.priceDeltaCents || 0), 0)
+                    const unitCents = base + addOnCents
+                    const lineCents = unitCents * cartItem.quantity
+                    return (
+                      <div key={cartItem.item.id} className="p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-black">{cartItem.item.name}</h4>
+                            <p className="text-sm text-gray-600">${(unitCents / 100).toFixed(2)} each</p>
+
+                            {defs.length > 0 && (
+                              <div className="mt-3">
+                                <div className="text-xs font-semibold text-gray-700">Add-ons</div>
+                                <div className="mt-2 space-y-1">
+                                  {defs.map((opt) => {
+                                    const checked = (cartItem.addOns || []).some(a => a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents)
+                                    return (
+                                      <label key={`${opt.name}:${opt.priceDeltaCents}`} className="flex items-center gap-2 text-sm text-gray-800">
+                                        <input
+                                          type="checkbox"
+                                          checked={checked}
+                                          onChange={(e) => {
+                                            const nextChecked = e.target.checked
+                                            setCart(prev => prev.map(ci => {
+                                              if (ci.item.id !== cartItem.item.id) return ci
+                                              const existing = ci.addOns || []
+                                              const without = existing.filter(a => !(a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents))
+                                              return {
+                                                ...ci,
+                                                addOns: nextChecked ? [...without, opt] : without,
+                                              }
+                                            }))
+                                          }}
+                                          className="h-4 w-4"
+                                        />
+                                        <span className="flex-1">{opt.name}</span>
+                                        <span className="font-mono text-gray-600">+${(opt.priceDeltaCents / 100).toFixed(2)}</span>
+                                      </label>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="mt-3">
+                              <label className="block text-xs font-semibold text-gray-700">Item note (optional)</label>
+                              <input
+                                value={cartItem.note || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value
+                                  setCart(prev => prev.map(ci => ci.item.id === cartItem.item.id ? { ...ci, note: v } : ci))
+                                }}
+                                placeholder="Example: no onions"
+                                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
+                                className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
+                              >
+                                −
+                              </button>
+                              <span className="w-8 h-8 inline-flex items-center justify-center text-center font-medium text-black">{cartItem.quantity}</span>
+                              <button
+                                onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
+                                className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-black">
+                                ${(lineCents / 100).toFixed(2)}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -1641,6 +1804,56 @@ export default function MenuClient() {
                     ${cartTotal.toFixed(2)}
                   </span>
                 </div>
+                {orderingEnabled && orderingPaused && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {orderingPauseText}
+                  </div>
+                )}
+                {orderingEnabled && (
+                  <div className="mb-4">
+                    <div className="text-sm font-semibold text-black mb-2">Special instructions</div>
+                    <textarea
+                      value={orderNote}
+                      onChange={(e) => setOrderNote(e.target.value)}
+                      placeholder="Anything the kitchen should know?"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
+                      rows={2}
+                    />
+                  </div>
+                )}
+                {orderingEnabled && (
+                  <div className="mb-4">
+                    <div className="text-sm font-semibold text-black mb-2">Receipt & updates</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="email"
+                        value={customerEmail}
+                        onChange={(e) => setCustomerEmail(e.target.value)}
+                        placeholder="Email (required)"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
+                      />
+                      <input
+                        type="text"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Name (optional)"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
+                      />
+                      <input
+                        type="tel"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        placeholder="Phone (optional)"
+                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black sm:col-span-2"
+                      />
+                    </div>
+                    {!emailOk && (
+                      <div className="mt-2 text-xs text-amber-700">
+                        Please enter a valid email to continue.
+                      </div>
+                    )}
+                  </div>
+                )}
                 {orderingEnabled && schedulingEnabled && (
                   <div className="mb-4">
                     <div className="text-sm font-semibold text-black mb-2">Pickup time</div>
@@ -1701,7 +1914,7 @@ export default function MenuClient() {
                     setToast('Demo mode — ordering is not enabled for this tenant yet.')
                   }}
                   className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 disabled:opacity-60"
-                  disabled={cart.length === 0}
+                  disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused))}
                 >
                   {orderingEnabled ? 'Checkout' : 'Proceed with Plate'}
                 </button>

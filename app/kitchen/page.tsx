@@ -8,7 +8,8 @@ type TenantTheme = { bg?: string; text?: string; ink?: string; card?: string; mu
 type TenantConfig = { brand?: TenantBrand; theme?: TenantTheme }
 type Fingerprint = { ok: boolean; host?: string; vercelEnv?: string; git?: { ref?: string | null; sha?: string | null }; db?: string }
 
-type OrderItem = { id: string; name: string; quantity: number; unitPriceCents: number }
+type AddOn = { name: string; priceDeltaCents: number }
+type OrderItem = { id: string; name: string; quantity: number; unitPriceCents: number; note?: string | null; addOns?: AddOn[] | null }
 type KitchenOrder = {
   id: string
   status: string
@@ -18,6 +19,7 @@ type KitchenOrder = {
   paidAt: string | null
   createdAt: string
   pickupCode: string
+  note?: string | null
   items: OrderItem[]
 }
 
@@ -212,14 +214,6 @@ export default function KitchenPage() {
               Save
             </button>
           </div>
-          <div className="mt-2 text-xs text-neutral-300">
-            For the Independent draft preview, the temporary default PIN is <span className="font-bold">1234</span> (unless you set `KITCHEN_PIN`).
-          </div>
-          {data?.ok && (
-            <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200">
-              Connected
-            </div>
-          )}
           {data?.ok === false && (
             <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
               {data.error || 'Unauthorized'}
@@ -307,6 +301,13 @@ export default function KitchenPage() {
                     </div>
                   </div>
 
+                  {o.note && (
+                    <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                      <div className="text-xs font-extrabold uppercase tracking-wide text-amber-200">Special instructions</div>
+                      <div className="mt-1 whitespace-pre-wrap">{o.note}</div>
+                    </div>
+                  )}
+
                   {o.items?.length ? (
                     <div className="mt-4 rounded-xl border border-white/10 bg-black/20">
                       {o.items.map((it) => (
@@ -314,6 +315,16 @@ export default function KitchenPage() {
                           <div className="min-w-0">
                             <div className="font-semibold truncate">{it.name}</div>
                             <div className="text-xs text-neutral-400">Qty {it.quantity}</div>
+                            {Array.isArray(it.addOns) && it.addOns.length > 0 && (
+                              <div className="mt-1 text-xs text-neutral-300">
+                                Add-ons: {it.addOns.map(a => a.name).join(', ')}
+                              </div>
+                            )}
+                            {it.note && (
+                              <div className="mt-1 text-xs text-amber-200 whitespace-pre-wrap">
+                                Note: {it.note}
+                              </div>
+                            )}
                           </div>
                           <div className="font-semibold">{money(it.unitPriceCents * it.quantity)}</div>
                         </div>

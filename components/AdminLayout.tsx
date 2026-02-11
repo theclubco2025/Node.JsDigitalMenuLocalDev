@@ -83,6 +83,20 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
               <h1 className="text-lg font-semibold text-gray-900">
                 {role === 'SUPER_ADMIN' ? 'Super Admin' : 'Restaurant Admin'}
               </h1>
+              <nav className="hidden sm:flex items-center gap-2 text-sm">
+                <a
+                  href="/admin/menu"
+                  className="rounded-md px-2 py-1 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                >
+                  Menu
+                </a>
+                <a
+                  href="/admin/orders"
+                  className="rounded-md px-2 py-1 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                >
+                  Orders
+                </a>
+              </nav>
               <span className="text-sm text-gray-500">
                 {session.user?.name} ({session.user?.email})
               </span>

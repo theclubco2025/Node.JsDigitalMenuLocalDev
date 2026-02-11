@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { readMenu } from '@/lib/data/menu'
 import { getStripeOrders } from '@/lib/stripe'
 import { ensureOrdersSchemaPreview } from '@/lib/server/preview-orders-schema'
+import type { Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,8 +14,20 @@ const BodySchema = z.object({
   items: z.array(z.object({
     id: z.string().min(1),
     quantity: z.number().int().min(1).max(99),
+    // Optional add-ons/modifiers (priced) derived from menu item tags.
+    addOns: z.array(z.object({
+      name: z.string().min(1).max(120),
+      priceDeltaCents: z.number().int().min(0).max(25_000),
+    })).optional().default([]),
+    // Optional note for kitchen (per-item)
+    note: z.string().max(500).optional().nullable(),
   })).min(1),
   scheduledFor: z.string().datetime().optional().nullable(),
+  customerEmail: z.string().email().optional().nullable(),
+  customerName: z.string().max(100).optional().nullable(),
+  customerPhone: z.string().max(40).optional().nullable(),
+  // Optional order-level note for kitchen
+  orderNote: z.string().max(800).optional().nullable(),
 })
 
 function baseUrlFromRequest(req: NextRequest) {
@@ -33,6 +46,8 @@ function getOrderingSettings(settings: unknown) {
     : {}
 
   const enabled = ordering.enabled === true
+  const paused = ordering.paused === true
+  const pauseMessage = typeof ordering.pauseMessage === 'string' ? ordering.pauseMessage : ''
   const timezone = typeof ordering.timezone === 'string' && ordering.timezone.trim()
     ? ordering.timezone.trim()
     : 'America/Los_Angeles'
@@ -43,7 +58,7 @@ function getOrderingSettings(settings: unknown) {
     ? scheduling.leadTimeMinutes
     : 30
 
-  return { enabled, timezone, slotMinutes, leadTimeMinutes }
+  return { enabled, paused, pauseMessage, timezone, slotMinutes, leadTimeMinutes }
 }
 
 function pocOrderingTenants(): string[] {
@@ -61,6 +76,52 @@ function roundMoneyToCents(amount: number): number {
   return Math.round(amount * 100)
 }
 
+type AddOnDef = { name: string; priceDeltaCents: number }
+function parseAddOnDefs(tags: string[]): AddOnDef[] {
+  const out: AddOnDef[] = []
+  for (const raw of tags || []) {
+    const t = String(raw || '').trim()
+    if (!t) continue
+    const lower = t.toLowerCase()
+    if (!(lower.startsWith('addon:') || lower.startsWith('add-on:'))) continue
+    const rest = t.split(':').slice(1).join(':').trim()
+    if (!rest) continue
+
+    // Supported:
+    // - addon:Extra cheese=$1.00
+    // - addon:Extra cheese|1.00
+    // - addon:Extra cheese|100 (interpreted as cents if integer >= 50 and no decimal)
+    let name = rest
+    let pricePart = ''
+    if (rest.includes('|')) {
+      const [n, p] = rest.split('|')
+      name = (n || '').trim()
+      pricePart = (p || '').trim()
+    } else if (rest.includes('=')) {
+      const [n, p] = rest.split('=')
+      name = (n || '').trim()
+      pricePart = (p || '').trim()
+    }
+    if (!name) continue
+
+    const priceRaw = pricePart.replace(/^\$/, '').trim()
+    let priceDeltaCents = 0
+    if (priceRaw) {
+      const asNum = Number(priceRaw)
+      if (Number.isFinite(asNum)) {
+        // Heuristic: if integer and >= 50, treat as cents; else treat as dollars.
+        if (Number.isInteger(asNum) && asNum >= 50) priceDeltaCents = Math.max(0, Math.floor(asNum))
+        else priceDeltaCents = Math.max(0, roundMoneyToCents(asNum))
+      }
+    }
+
+    out.push({ name, priceDeltaCents })
+  }
+  // Sort stable for deterministic matching
+  out.sort((a, b) => a.name.localeCompare(b.name) || a.priceDeltaCents - b.priceDeltaCents)
+  return out
+}
+
 function dateKeyInTz(ms: number, tz: string) {
   const d = new Date(ms)
   const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d)
@@ -75,6 +136,16 @@ export async function POST(req: NextRequest) {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required for ordering' }, { status: 501 })
     }
+    // Sales-ready constraint: in production, Stripe webhook confirmation must be configured.
+    if (process.env.VERCEL_ENV === 'production') {
+      const ordersWebhook = (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
+      if (!ordersWebhook) {
+        return NextResponse.json({
+          ok: false,
+          error: 'Ordering is not configured: STRIPE_ORDERS_WEBHOOK_SECRET (whsec_...) is required in production.',
+        }, { status: 501 })
+      }
+    }
     // Stripe key is resolved inside getStripe() (supports STRIPE_TEST_KEY in preview).
 
     const raw = await req.json().catch(() => ({}))
@@ -86,6 +157,10 @@ export async function POST(req: NextRequest) {
     const tenant = parsed.data.tenant.trim().toLowerCase()
     const items = parsed.data.items
     const scheduledForRaw = parsed.data.scheduledFor ?? null
+    const customerEmail = (parsed.data.customerEmail || '').trim() || null
+    const customerName = (parsed.data.customerName || '').trim() || null
+    const customerPhone = (parsed.data.customerPhone || '').trim() || null
+    const orderNote = (parsed.data.orderNote || '').trim() || null
 
     // Load tenant settings and gate ordering
     const tenantRow = await prisma.tenant.findUnique({
@@ -100,6 +175,17 @@ export async function POST(req: NextRequest) {
     if (!ordering.enabled && !(isPreview && tenant === 'independent-draft') && !pocEnabled) {
       return NextResponse.json({ ok: false, error: 'ordering_disabled' }, { status: 403 })
     }
+    if (ordering.paused) {
+      return NextResponse.json({
+        ok: false,
+        error: 'ordering_paused',
+        message: ordering.pauseMessage || 'Ordering is temporarily paused. Please try again later.',
+      }, { status: 403 })
+    }
+    // Sales-ready: always collect customer email so Stripe can send receipts and staff can contact if needed.
+    if (!customerEmail) {
+      return NextResponse.json({ ok: false, error: 'customer_email_required' }, { status: 400 })
+    }
 
     // Ensure tenant exists (so we can relate orders even if menu is file-based)
     const ensuredTenant = tenantRow?.id
@@ -108,31 +194,53 @@ export async function POST(req: NextRequest) {
 
     // Compute totals server-side from the canonical menu
     const menu = await readMenu(tenant)
-    const priceById = new Map<string, number>()
+    const itemById = new Map<string, { price: number; name: string; tags: string[] }>()
     for (const cat of menu.categories || []) {
       for (const it of cat.items || []) {
         if (typeof it?.id === 'string' && typeof it?.price === 'number') {
-          priceById.set(it.id, it.price)
+          itemById.set(it.id, { price: it.price, name: it.name, tags: (it.tags || []).map(String) })
         }
       }
     }
 
     let subtotalCents = 0
-    const orderItems: Array<{ menuItemId: string; name: string; unitPriceCents: number; quantity: number }> = []
+    const orderItems: Prisma.OrderItemCreateWithoutOrderInput[] = []
     for (const line of items) {
-      const price = priceById.get(line.id)
+      const row = itemById.get(line.id)
+      const price = row?.price
       if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) {
         return NextResponse.json({ ok: false, error: `invalid_item:${line.id}` }, { status: 400 })
       }
-      // Find name (display snapshot)
-      let name = line.id
-      for (const cat of menu.categories || []) {
-        const found = (cat.items || []).find(i => i.id === line.id)
-        if (found) { name = found.name; break }
+      const name = row?.name || line.id
+      const baseUnitPriceCents = roundMoneyToCents(price)
+
+      const defs = parseAddOnDefs(row?.tags || [])
+      const selected = (line.addOns || []).map(a => ({ name: String(a.name || '').trim(), priceDeltaCents: Number(a.priceDeltaCents) }))
+        .filter(a => a.name && Number.isFinite(a.priceDeltaCents) && a.priceDeltaCents >= 0)
+
+      // Validate selected add-ons against defs (exact name + price match)
+      const normalizedSelected: AddOnDef[] = []
+      for (const s of selected) {
+        const match = defs.find(d => d.name === s.name && d.priceDeltaCents === Math.floor(s.priceDeltaCents))
+        if (!match) {
+          return NextResponse.json({ ok: false, error: `invalid_addon:${line.id}:${s.name}` }, { status: 400 })
+        }
+        normalizedSelected.push(match)
       }
-      const unitPriceCents = roundMoneyToCents(price)
+
+      const addOnsCents = normalizedSelected.reduce((sum, a) => sum + a.priceDeltaCents, 0)
+      const unitPriceCents = baseUnitPriceCents + addOnsCents
       subtotalCents += unitPriceCents * line.quantity
-      orderItems.push({ menuItemId: line.id, name, unitPriceCents, quantity: line.quantity })
+
+      const note = (line.note || '').trim()
+      orderItems.push({
+        menuItemId: line.id,
+        name,
+        unitPriceCents,
+        quantity: line.quantity,
+        ...(note ? { note } : {}),
+        ...(normalizedSelected.length ? { addOns: (normalizedSelected as unknown as Prisma.InputJsonValue) } : {}),
+      })
     }
     const totalCents = subtotalCents
 
@@ -181,6 +289,10 @@ export async function POST(req: NextRequest) {
           totalCents,
           scheduledFor: scheduledFor || undefined,
           timezone: ordering.timezone,
+          customerEmail,
+          customerName: customerName || undefined,
+          customerPhone: customerPhone || undefined,
+          note: orderNote || undefined,
           items: { create: orderItems },
         },
         select: { id: true },
@@ -204,6 +316,10 @@ export async function POST(req: NextRequest) {
             totalCents,
             scheduledFor: scheduledFor || undefined,
             timezone: ordering.timezone,
+            customerEmail,
+            customerName: customerName || undefined,
+            customerPhone: customerPhone || undefined,
+            note: orderNote || undefined,
             items: { create: orderItems },
           },
           select: { id: true },
@@ -218,6 +334,7 @@ export async function POST(req: NextRequest) {
       const stripe = getStripeOrders()
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
+        customer_email: customerEmail,
         line_items: [
           {
             price_data: {
@@ -234,6 +351,9 @@ export async function POST(req: NextRequest) {
           tenant,
           orderId: order.id,
           kind: 'food_order',
+          customerEmail,
+          customerName: customerName || '',
+          customerPhone: customerPhone || '',
         },
       })
 
@@ -243,7 +363,12 @@ export async function POST(req: NextRequest) {
         try {
           await prisma.order.update({
             where: { id: order.id },
-            data: { stripeCheckoutSessionId: session.id, customerEmail: session.customer_details?.email || undefined },
+            data: {
+              stripeCheckoutSessionId: session.id,
+              customerEmail,
+              customerName: customerName || undefined,
+              customerPhone: customerPhone || undefined,
+            },
           })
         } catch {
           // ignore

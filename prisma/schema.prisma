@@ -134,6 +134,18 @@ model Order {
 
   // Optional customer context
   customerEmail          String?
+  customerName           String?
+  customerPhone          String?
+
+  // Kitchen note / special instructions
+  note                   String?
+
+  // Refund metadata (audit)
+  refundedAt             DateTime?
+  refundAmountCents      Int?
+  stripeRefundId         String?
+  stripeRefundStatus     String?
+  refundReason           String?
 
   createdAt              DateTime         @default(now())
   updatedAt              DateTime         @updatedAt
@@ -153,6 +165,10 @@ model OrderItem {
   name           String
   unitPriceCents Int
   quantity       Int
+  // Customer note for this item (e.g., "no onions")
+  note           String?
+  // Selected add-ons/modifiers snapshot for this item
+  addOns         Json?
 
   @@index([orderId])
   @@map("order_items")

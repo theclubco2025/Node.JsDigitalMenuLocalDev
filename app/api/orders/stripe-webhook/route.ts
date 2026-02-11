@@ -24,6 +24,7 @@ async function markPaidFromSession(session: Stripe.Checkout.Session) {
   if (!paid) return
 
   const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null
+  const emailFromSession = (session.customer_details?.email || session.customer_email || '').trim() || null
 
   const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, paidAt: true, status: true } })
   if (!order) return
@@ -39,7 +40,7 @@ async function markPaidFromSession(session: Stripe.Checkout.Session) {
       paidAt: new Date(),
       stripeCheckoutSessionId: session.id || undefined,
       stripePaymentIntentId: paymentIntentId || undefined,
-      customerEmail: session.customer_details?.email || undefined,
+      customerEmail: emailFromSession || undefined,
     },
   })
 }

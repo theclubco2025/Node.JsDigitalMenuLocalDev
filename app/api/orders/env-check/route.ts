@@ -18,6 +18,7 @@ function classifyKey(key: string) {
 
 export async function GET() {
   const vercelEnv = (process.env.VERCEL_ENV || '').trim() || null
+  const ordersWebhookRequired = vercelEnv === 'production'
 
   const stripeTestKey = classifyKey(process.env.STRIPE_TEST_KEY || '')
   const stripeSecretKey = classifyKey(process.env.STRIPE_SECRET_KEY || '')
@@ -41,6 +42,8 @@ export async function GET() {
     ordersWebhook: {
       STRIPE_ORDERS_WEBHOOK_SECRET_TEST: ordersWebhookTest,
       STRIPE_ORDERS_WEBHOOK_SECRET: ordersWebhook,
+      required_in_production: ordersWebhookRequired,
+      ok: ordersWebhookRequired ? ordersWebhook.present : true,
     },
     poc: {
       ORDERING_POC_TENANTS: orderingPocTenants,

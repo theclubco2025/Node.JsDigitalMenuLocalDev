@@ -21,3 +21,6 @@ tmp/
 *.log
 # Cursor / IDE metadata
 .cursor/
+
+# Vercel local project metadata
+.vercel/

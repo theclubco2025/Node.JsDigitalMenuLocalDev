@@ -20,6 +20,12 @@ Ordering (optional)
 - Ordering is **off by default**; enable per-tenant via `Tenant.settings.ordering.enabled=true`.
 - Scheduling defaults for testing: PST (`America/Los_Angeles`), 15-min slots, 30-min lead time, 24/7 hours until configured.
 - Stripe food-order webhooks require `STRIPE_ORDERS_WEBHOOK_SECRET` (separate from subscription billing webhook).
+  - Endpoint URL: `https://YOURDOMAIN.com/api/orders/stripe-webhook`
+  - Required events:
+    - `checkout.session.completed`
+    - `checkout.session.async_payment_succeeded`
+- Production guardrail: checkout is blocked if `STRIPE_ORDERS_WEBHOOK_SECRET` is missing.
+- Health check: `/api/orders/health`
 - Admin orders page: `/admin/orders`
 
 # Onboarding Checklist (≤ 60 minutes)

@@ -32,6 +32,12 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   const [query, setQuery] = useState('')
   const [kitchenPin, setKitchenPin] = useState('')
   const [pinSaving, setPinSaving] = useState(false)
+  const [orderingPaused, setOrderingPaused] = useState(false)
+  const [pauseMessage, setPauseMessage] = useState('')
+  const [schedulingEnabled, setSchedulingEnabled] = useState(true)
+  const [slotMinutes, setSlotMinutes] = useState<number>(15)
+  const [leadTimeMinutes, setLeadTimeMinutes] = useState<number>(30)
+  const [orderingSaving, setOrderingSaving] = useState(false)
 
   useEffect(() => {
     if (!toast) return
@@ -57,6 +63,31 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
       }
     }
     void load()
+    return () => { cancelled = true }
+  }, [tenant])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadOrdering() {
+      try {
+        const res = await fetch(`/api/tenant/ordering?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
+        const json = await res.json().catch(() => null)
+        if (!res.ok || !json?.ok) return
+        const ordering = (json.ordering || {}) as Record<string, unknown>
+        const scheduling = (ordering.scheduling && typeof ordering.scheduling === 'object')
+          ? (ordering.scheduling as Record<string, unknown>)
+          : {}
+        if (cancelled) return
+        setOrderingPaused(ordering.paused === true)
+        setPauseMessage(typeof ordering.pauseMessage === 'string' ? ordering.pauseMessage : '')
+        setSchedulingEnabled(scheduling.enabled !== false)
+        setSlotMinutes(typeof scheduling.slotMinutes === 'number' ? scheduling.slotMinutes : 15)
+        setLeadTimeMinutes(typeof scheduling.leadTimeMinutes === 'number' ? scheduling.leadTimeMinutes : 30)
+      } catch {
+        // ignore
+      }
+    }
+    void loadOrdering()
     return () => { cancelled = true }
   }, [tenant])
 
@@ -107,6 +138,36 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
     }
   }
 
+  const saveOrdering = async () => {
+    setOrderingSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/tenant/ordering', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenant,
+          ordering: {
+            paused: orderingPaused,
+            pauseMessage,
+            scheduling: {
+              enabled: schedulingEnabled,
+              slotMinutes,
+              leadTimeMinutes,
+            },
+          }
+        }),
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.ok) throw new Error(json?.error || `Save failed (${res.status})`)
+      setToast('Ordering settings saved')
+    } catch (e) {
+      setError((e as Error)?.message || 'Ordering settings save error')
+    } finally {
+      setOrderingSaving(false)
+    }
+  }
+
   return (
     <AdminLayout requiredRole="RESTAURANT_OWNER">
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -141,27 +202,117 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
           </a>
         </div>
 
-        <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
-          <div className="text-sm font-semibold text-gray-900">Kitchen PIN (for `/kds`)</div>
-          <div className="mt-2 flex flex-col sm:flex-row gap-2">
-            <input
-              type="password"
-              value={kitchenPin}
-              onChange={(e) => setKitchenPin(e.target.value)}
-              placeholder="Set kitchen PIN"
-              className="w-full sm:max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm"
-            />
-            <button
-              type="button"
-              onClick={saveKitchenPin}
-              disabled={pinSaving || kitchenPin.trim().length === 0}
-              className="inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+        <div className="mt-5 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+            <div>
+              <div className="text-sm font-extrabold text-gray-900">Restaurant settings</div>
+              <div className="mt-1 text-xs text-gray-700">
+                These settings affect live kitchen access and ordering behavior.
+              </div>
+            </div>
+            <a
+              href="/kds"
+              className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-900 hover:bg-indigo-100"
             >
-              {pinSaving ? 'Saving…' : 'Save PIN'}
-            </button>
+              Open /kds PIN screen
+            </a>
           </div>
-          <div className="mt-2 text-xs text-gray-600">
-            Staff can go to <span className="font-mono">/kds</span>, enter this PIN, and it will open the correct kitchen screen.
+
+          <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-4">
+            <div className="text-sm font-semibold text-gray-900">Kitchen PIN (powers `/kds` routing)</div>
+            <div className="mt-2 flex flex-col sm:flex-row gap-2">
+              <input
+                type="password"
+                value={kitchenPin}
+                onChange={(e) => setKitchenPin(e.target.value)}
+                placeholder="Set kitchen PIN (share with staff)"
+                className="w-full sm:max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={saveKitchenPin}
+                disabled={pinSaving || kitchenPin.trim().length === 0}
+                className="inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+              >
+                {pinSaving ? 'Saving…' : 'Save PIN'}
+              </button>
+            </div>
+            <div className="mt-2 text-xs text-gray-700">
+              Staff goes to <span className="font-mono">tccmenus.com/kds</span>, enters this PIN, and it opens the correct kitchen screen.
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <div className="text-sm font-semibold text-gray-900">Pause ordering</div>
+                <div className="mt-1 text-xs text-gray-700">
+                  Turn this on if the kitchen is slammed or closed. Checkout will be blocked and customers will see the message below.
+                </div>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 select-none">
+                <input
+                  type="checkbox"
+                  checked={orderingPaused}
+                  onChange={(e) => setOrderingPaused(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                Paused
+              </label>
+            </div>
+
+            <div className="mt-3">
+              <label className="block text-xs font-semibold text-gray-700">Pause message</label>
+              <input
+                value={pauseMessage}
+                onChange={(e) => setPauseMessage(e.target.value)}
+                placeholder="Example: Ordering paused — we’ll be back at 5pm."
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700">Lead time (minutes)</label>
+                <input
+                  type="number"
+                  value={leadTimeMinutes}
+                  onChange={(e) => setLeadTimeMinutes(Number(e.target.value))}
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700">Slot size (minutes)</label>
+                <input
+                  type="number"
+                  value={slotMinutes}
+                  onChange={(e) => setSlotMinutes(Number(e.target.value))}
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex items-end">
+                <label className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 select-none">
+                  <input
+                    type="checkbox"
+                    checked={schedulingEnabled}
+                    onChange={(e) => setSchedulingEnabled(e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  Scheduling enabled
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={saveOrdering}
+                disabled={orderingSaving}
+                className="inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+              >
+                {orderingSaving ? 'Saving…' : 'Save ordering settings'}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -204,7 +355,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name or description…"
+                placeholder="Search by name or tags…"
                 className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               />
             </div>
@@ -275,7 +426,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                     .filter((it) => {
                       const q = query.trim().toLowerCase()
                       if (!q) return true
-                      return `${it.name || ''} ${it.description || ''}`.toLowerCase().includes(q)
+                      return `${it.name || ''} ${(it.tags || []).join(' ')}`.toLowerCase().includes(q)
                     })
                     .map((it) => {
                       const itemIdx = (cat.items || []).findIndex((x) => x.id === it.id)

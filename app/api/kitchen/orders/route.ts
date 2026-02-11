@@ -117,11 +117,14 @@ export async function GET(req: NextRequest) {
         paidAt: o.paidAt,
         createdAt: o.createdAt,
         pickupCode: computePickupCode(o.id),
+        note: (o as unknown as { note?: string | null }).note || null,
         items: o.items.map(it => ({
           id: it.id,
           name: it.name,
           quantity: it.quantity,
           unitPriceCents: it.unitPriceCents,
+          note: (it as unknown as { note?: string | null }).note || null,
+          addOns: (it as unknown as { addOns?: unknown }).addOns ?? null,
         })),
       })),
     }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
