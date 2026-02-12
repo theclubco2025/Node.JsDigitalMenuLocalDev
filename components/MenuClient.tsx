@@ -202,6 +202,13 @@ export default function MenuClient() {
       .trim()
   }, [])
 
+  const minimalDescription = useCallback((raw: string) => {
+    const s = cleanMojibake(raw).replace(/\s+/g, ' ').trim()
+    if (!s) return ''
+    // Keep it short and kitchen/menu-friendly (not a full paragraph).
+    return s.length > 140 ? `${s.slice(0, 137)}…` : s
+  }, [cleanMojibake])
+
   const groupForCategory = useCallback((categoryName: string) => {
     const cleaned = cleanMojibake(categoryName)
     const lower = cleaned.toLowerCase()
@@ -1561,6 +1568,19 @@ export default function MenuClient() {
                           ))}
                         </div>
                       )}
+                      {!isAdmin && typeof item.description === 'string' && item.description.trim() !== '' && (
+                        <p
+                          className="mb-3 text-sm text-gray-700"
+                          style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          {minimalDescription(item.description)}
+                        </p>
+                      )}
                       
                       {isAdmin ? (
                         <div className="space-y-2 mb-4">
@@ -1629,7 +1649,7 @@ export default function MenuClient() {
                           )}
                         </div>
                         
-                        <div className="shrink-0 flex items-center gap-2">
+                        <div className="shrink-0 flex flex-col items-stretch gap-2">
                           {!hideCart && (
                             <button
                               onClick={() => {
@@ -1637,9 +1657,10 @@ export default function MenuClient() {
                                 setRecentlyAddedId(item.id)
                                 setCartBump(true)
                                 setToast(`Added ${item.name}`)
+                                setIsCartOpen(true)
                                 setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
                               }}
-                              className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[140px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                              className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[160px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
                               style={{ background: 'var(--accent)' }}
                             >
                               {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
@@ -1647,10 +1668,10 @@ export default function MenuClient() {
                           )}
                           <button
                             onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                            className="px-4 py-2 rounded-lg text-sm font-bold border border-emerald-700 bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-2 whitespace-nowrap"
+                            className="px-4 py-2 rounded-lg text-sm font-bold border border-gray-300 bg-white hover:bg-gray-50 text-black flex items-center justify-center whitespace-nowrap"
                             aria-label={`Ask about ${item.name}`}
                           >
-                            <span>Ask AI</span>
+                            <span>Ask</span>
                           </button>
                         </div>
                       </div>

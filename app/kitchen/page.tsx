@@ -6,7 +6,6 @@ import useSWR from 'swr'
 type TenantBrand = { name?: string; header?: { logoUrl?: string }; logoUrl?: string }
 type TenantTheme = { bg?: string; text?: string; ink?: string; card?: string; muted?: string; accent?: string; primary?: string }
 type TenantConfig = { brand?: TenantBrand; theme?: TenantTheme }
-type Fingerprint = { ok: boolean; host?: string; vercelEnv?: string; git?: { ref?: string | null; sha?: string | null }; db?: string }
 
 type AddOn = { name: string; priceDeltaCents: number }
 type OrderItem = { id: string; name: string; quantity: number; unitPriceCents: number; note?: string | null; addOns?: AddOn[] | null }
@@ -57,7 +56,6 @@ export default function KitchenPage() {
   const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
   const rawTenant = isBrowser ? (searchParams!.get('tenant') || 'independent-draft') : 'independent-draft'
   const tenant = resolveKitchenTenant(rawTenant)
-  const isLikelyPreview = isBrowser ? window.location.hostname.includes('-git-') : false
 
   const [pin, setPin] = useState('')
   const [pinReady, setPinReady] = useState(false)
@@ -91,7 +89,6 @@ export default function KitchenPage() {
 
   const shouldFetch = pinReady && pin.trim().length > 0
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${encodeURIComponent(tenant)}`, (u: string) => fetch(u).then(r => r.json()))
-  const { data: fp } = useSWR<Fingerprint>('/api/debug/fingerprint', (u: string) => fetch(u, { cache: 'no-store' }).then(r => r.json()))
 
   // Apply theme (match tenant branding)
   useEffect(() => {
@@ -121,24 +118,7 @@ export default function KitchenPage() {
     setToast('PIN saved')
   }
 
-  const createTestPaidOrder = async () => {
-    try {
-      const res = await fetch('/api/orders/dev/create-test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Kitchen-Pin': pin,
-        },
-        body: JSON.stringify({ tenant }),
-      })
-      const json = await res.json().catch(() => null)
-      if (!res.ok || !json?.ok) throw new Error(json?.error || `Create failed (${res.status})`)
-      setToast(`Created test order: ${String(json.orderId).slice(0, 8)}…`)
-      await mutate()
-    } catch (e) {
-      setToast((e as Error)?.message || 'Create error')
-    }
-  }
+  // Note: preview-only debug actions removed to keep KDS kitchen-focused.
 
   const updateStatus = async (orderId: string, status: string) => {
     try {
@@ -183,16 +163,6 @@ export default function KitchenPage() {
                 </p>
               </div>
             </div>
-            <p className="text-sm text-neutral-300 mt-1">
-              Live incoming orders for <span className="font-semibold">{tenant}</span>
-            </p>
-            {fp?.ok && (
-              <div className="mt-2 text-[11px] text-neutral-400">
-                {fp.vercelEnv ? <span className="mr-2">env={fp.vercelEnv}</span> : null}
-                {fp.git?.sha ? <span className="mr-2">sha={fp.git.sha}</span> : null}
-                {fp.db ? <span className="mr-2">db={fp.db}</span> : null}
-              </div>
-            )}
           </div>
         </div>
 
@@ -220,20 +190,6 @@ export default function KitchenPage() {
             </div>
           )}
 
-          {isLikelyPreview && tenant === 'independent-draft' && (
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={createTestPaidOrder}
-                className="rounded-xl bg-white text-black px-4 py-2 text-sm font-extrabold hover:bg-neutral-200"
-              >
-                Create test paid order (preview only)
-              </button>
-              <div className="mt-2 text-xs text-neutral-300">
-                This is a preview-only tool to verify KDS flow without Stripe.
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="mt-6">

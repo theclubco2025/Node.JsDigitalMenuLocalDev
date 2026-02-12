@@ -205,6 +205,7 @@ export async function POST(req: NextRequest) {
 
     let subtotalCents = 0
     const orderItems: Prisma.OrderItemCreateWithoutOrderInput[] = []
+    const orderItemsMinimal: Array<{ menuItemId: string; name: string; unitPriceCents: number; quantity: number }> = []
     for (const line of items) {
       const row = itemById.get(line.id)
       const price = row?.price
@@ -240,6 +241,12 @@ export async function POST(req: NextRequest) {
         quantity: line.quantity,
         ...(note ? { note } : {}),
         ...(normalizedSelected.length ? { addOns: (normalizedSelected as unknown as Prisma.InputJsonValue) } : {}),
+      })
+      orderItemsMinimal.push({
+        menuItemId: line.id,
+        name,
+        unitPriceCents,
+        quantity: line.quantity,
       })
     }
     const totalCents = subtotalCents
@@ -321,6 +328,23 @@ export async function POST(req: NextRequest) {
             customerPhone: customerPhone || undefined,
             note: orderNote || undefined,
             items: { create: orderItems },
+          },
+          select: { id: true },
+        })
+      } else if ((e as { code?: string } | null)?.code === 'P2022' || msg.includes('does not exist')) {
+        // Production safety: if migrations haven't applied yet, retry without newer columns.
+        order = await prisma.order.create({
+          data: {
+            tenantId: ensuredTenant.id,
+            status: 'PENDING_PAYMENT',
+            fulfillment: 'PICKUP',
+            currency: 'usd',
+            subtotalCents,
+            totalCents,
+            scheduledFor: scheduledFor || undefined,
+            timezone: ordering.timezone,
+            customerEmail,
+            items: { create: orderItemsMinimal },
           },
           select: { id: true },
         })

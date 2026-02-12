@@ -1151,7 +1151,20 @@ export default function MenuClient() {
                             <h3 className="text-lg md:text-xl font-semibold tracking-tight" style={{ color: '#f8fafc' }}>
                               {highlightText(item.name, searchQuery)}
                             </h3>
-                            <div className="mt-2" />
+                            {typeof item.description === 'string' && item.description.trim() !== '' && (
+                              <div
+                                className="mt-2 text-sm"
+                                style={{
+                                  color: 'rgba(248,250,252,0.78)',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                {item.description.trim()}
+                              </div>
+                            )}
                             {dietary.length > 0 ? (
                               <div className="mt-3 flex flex-wrap gap-2">
                                 {dietary.map(tag => (
@@ -1173,10 +1186,10 @@ export default function MenuClient() {
                             {orderingEnabled && (
                               <button
                                 onClick={() => { addToCart(item); setIsCartOpen(true) }}
-                                className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition"
+                                className="mt-3 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition"
                                 style={{
-                                  background: 'rgba(255,255,255,0.08)',
-                                  border: '1px solid rgba(255,255,255,0.14)',
+                                  background: 'rgba(196,167,106,0.18)',
+                                  border: '1px solid rgba(196,167,106,0.55)',
                                   color: '#f8fafc'
                                 }}
                                 aria-label={`Add ${item.name} to order`}
@@ -1186,10 +1199,10 @@ export default function MenuClient() {
                             )}
                             <button
                               onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition"
+                              className="mt-2 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition"
                               style={{
-                                background: 'rgba(196,167,106,0.16)',
-                                border: '1px solid rgba(196,167,106,0.55)',
+                                background: 'rgba(255,255,255,0.06)',
+                                border: '1px solid rgba(255,255,255,0.14)',
                                 color: '#f8fafc'
                               }}
                               aria-label={`Ask about ${item.name}`}
@@ -1242,7 +1255,21 @@ export default function MenuClient() {
                           </h3>
                           <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${Number(item.price ?? 0).toFixed(2)}</span>
                         </div>
-                        <div className="mb-4" />
+                        {typeof item.description === 'string' && item.description.trim() !== '' ? (
+                          <p
+                            className="mb-4 text-sm text-gray-700"
+                            style={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            {item.description.trim()}
+                          </p>
+                        ) : (
+                          <div className="mb-4" />
+                        )}
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex-1 min-w-0 flex flex-wrap gap-1">
                             {visibleTags(item.tags).map(tag => (

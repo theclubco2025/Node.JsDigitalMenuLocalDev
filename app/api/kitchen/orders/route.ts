@@ -80,25 +80,47 @@ export async function GET(req: NextRequest) {
             }
           : { ...baseWhere, status: inStatus(['NEW', 'PREPARING', 'READY']) }
 
-    let orders
-    try {
-      orders = await prisma.order.findMany({
+    const fetchOrders = async (withExtras: boolean) => {
+      return await prisma.order.findMany({
         where,
         orderBy: view === 'active' ? { createdAt: 'asc' } : { createdAt: 'desc' },
         take: 50,
-        include: { items: true },
+        select: {
+          id: true,
+          status: true,
+          totalCents: true,
+          scheduledFor: true,
+          timezone: true,
+          paidAt: true,
+          createdAt: true,
+          ...(withExtras ? { note: true } : {}),
+          items: {
+            select: {
+              id: true,
+              name: true,
+              quantity: true,
+              unitPriceCents: true,
+              ...(withExtras ? { note: true, addOns: true } : {}),
+            },
+          },
+        },
       })
+    }
+
+    let orders
+    try {
+      // Prefer the richer payload (notes + add-ons) when the DB supports it.
+      orders = await fetchOrders(true)
     } catch (e) {
       const msg = (e as Error)?.message || ''
+      const code = (e as { code?: string } | null)?.code
       // Preview-only: auto-create missing schema then retry once (kitchen-only deploy may not have run checkout yet).
       if (msg.includes('The table `public.orders` does not exist')) {
         await ensureOrdersSchemaPreview({ host: req.headers.get('host') || '' })
-        orders = await prisma.order.findMany({
-          where,
-          orderBy: view === 'active' ? { createdAt: 'asc' } : { createdAt: 'desc' },
-          take: 50,
-          include: { items: true },
-        })
+        orders = await fetchOrders(true)
+      } else if (code === 'P2022' || msg.includes('does not exist')) {
+        // Production safety: if migrations haven't applied yet, fall back to a minimal select.
+        orders = await fetchOrders(false)
       } else {
         throw e
       }

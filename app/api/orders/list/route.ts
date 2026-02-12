@@ -46,53 +46,62 @@ export async function GET(req: NextRequest) {
     const status = (parsed.data.status || '').trim().toUpperCase()
     const limit = parsed.data.limit ?? 50
 
-    const where: Record<string, unknown> = {
-      tenant: { slug: tenantSlug },
-    }
-    if (status) where.status = status
-    if (q) {
-      where.OR = [
-        { id: { contains: q, mode: 'insensitive' } },
-        { customerEmail: { contains: q, mode: 'insensitive' } },
-        { customerName: { contains: q, mode: 'insensitive' } },
-      ]
+    const fetchOrders = async (withExtras: boolean) => {
+      const where: Record<string, unknown> = { tenant: { slug: tenantSlug } }
+      if (status) where.status = status
+      if (q) {
+        where.OR = [
+          { id: { contains: q, mode: 'insensitive' } },
+          { customerEmail: { contains: q, mode: 'insensitive' } },
+          ...(withExtras ? [{ customerName: { contains: q, mode: 'insensitive' } }] : []),
+        ]
+      }
+      return await prisma.order.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          status: true,
+          currency: true,
+          subtotalCents: true,
+          totalCents: true,
+          scheduledFor: true,
+          timezone: true,
+          paidAt: true,
+          refundedAt: true,
+          refundAmountCents: true,
+          stripeRefundId: true,
+          stripeRefundStatus: true,
+          ...(withExtras ? { note: true, customerName: true, customerPhone: true } : {}),
+          customerEmail: true,
+          createdAt: true,
+          items: {
+            select: {
+              id: true,
+              name: true,
+              quantity: true,
+              unitPriceCents: true,
+              ...(withExtras ? { note: true, addOns: true } : {}),
+            },
+            orderBy: { id: 'asc' },
+          },
+        },
+      })
     }
 
-    const orders = await prisma.order.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      select: {
-        id: true,
-        status: true,
-        currency: true,
-        subtotalCents: true,
-        totalCents: true,
-        scheduledFor: true,
-        timezone: true,
-        paidAt: true,
-        refundedAt: true,
-        refundAmountCents: true,
-        stripeRefundId: true,
-        stripeRefundStatus: true,
-        note: true,
-        customerEmail: true,
-        customerName: true,
-        customerPhone: true,
-        createdAt: true,
-        items: {
-          select: {
-            id: true,
-            name: true,
-            quantity: true,
-            unitPriceCents: true,
-            note: true,
-            addOns: true,
-          },
-          orderBy: { id: 'asc' },
-        },
-      },
-    })
+    let orders
+    try {
+      orders = await fetchOrders(true)
+    } catch (e) {
+      const msg = (e as Error)?.message || ''
+      const code = (e as { code?: string } | null)?.code
+      if (code === 'P2022' || msg.includes('does not exist')) {
+        orders = await fetchOrders(false)
+      } else {
+        throw e
+      }
+    }
 
     return NextResponse.json({ ok: true, tenant: tenantSlug, orders }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {
