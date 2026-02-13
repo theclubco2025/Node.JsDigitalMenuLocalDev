@@ -1,18 +1,22 @@
 import { spawnSync } from 'node:child_process'
 
-function run(cmd, args, { inherit = true } = {}) {
+function run(cmd, args) {
+  // Always capture output so we can inspect errors like P3005,
+  // but also stream it to Vercel logs.
   const res = spawnSync(cmd, args, {
-    stdio: inherit ? 'inherit' : 'pipe',
-    encoding: inherit ? undefined : 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    encoding: 'utf8',
     env: process.env,
     shell: process.platform === 'win32',
   })
+
+  if (res.stdout) process.stdout.write(res.stdout)
+  if (res.stderr) process.stderr.write(res.stderr)
+
   if (res.status !== 0) {
-    const out = inherit ? '' : `${res.stdout || ''}\n${res.stderr || ''}`
+    const out = `${res.stdout || ''}\n${res.stderr || ''}`.trim()
     const err = new Error(`Command failed: ${cmd} ${args.join(' ')}${out ? `\n\n${out}` : ''}`)
-    // @ts-expect-error attach status
     err.status = res.status
-    // @ts-expect-error attach output
     err.output = out
     throw err
   }
@@ -37,7 +41,6 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim()) {
         '20250211120000_p0_patch_modifiers_allergens_audit',
       ]
       for (const m of baselineMigrations) {
-        // Use inherit to show progress in build logs
         run('npx', ['prisma', 'migrate', 'resolve', '--applied', m])
       }
       run('npx', ['prisma', 'migrate', 'deploy'])
