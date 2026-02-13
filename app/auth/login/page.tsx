@@ -2,6 +2,7 @@
 "use client"
 
 import { Suspense, useState, FormEvent } from 'react'
+import Image from 'next/image'
 import { signIn } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 
@@ -43,8 +44,15 @@ function LoginContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-black text-white grid place-items-center shadow-sm">
-            <span className="text-sm font-extrabold tracking-wide">ME</span>
+          <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-white grid place-items-center shadow-sm border border-gray-200 overflow-hidden">
+            <Image
+              src="/assets/tcc-club.png"
+              alt="The Club"
+              width={48}
+              height={48}
+              className="h-10 w-10 object-contain"
+              priority
+            />
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900">Menu Editor</h2>
           <p className="mt-2 text-sm text-gray-600">Menu editor login</p>
@@ -107,62 +115,16 @@ function LoginContent() {
             </div>
           </form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+          {process.env.GOOGLE_CLIENT_ID && (
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or</span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo Accounts</span>
-              </div>
-            </div>
-
-            {process.env.NODE_ENV !== 'production' && (
-              <div className="mt-6 space-y-3">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      const res = await fetch('/api/auth/demo-login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'super' })
-                      })
-                      if (!res.ok) throw new Error('Demo login failed')
-                      window.location.href = '/admin'
-                  } catch (error) {
-                      setError(error instanceof Error ? error.message : 'Demo login failed')
-                    }
-                  }}
-                  className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                >
-                  <div className="font-medium text-gray-900">Login as Demo Super Admin</div>
-                  <div className="text-sm text-gray-500">Dev-only shortcut using server env</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      const res = await fetch('/api/auth/demo-login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'owner' })
-                      })
-                      if (!res.ok) throw new Error('Demo login failed')
-                      window.location.href = '/admin'
-                    } catch (error) {
-                      setError(error instanceof Error ? error.message : 'Demo login failed')
-                    }
-                  }}
-                  className="w-full text-left px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                >
-                  <div className="font-medium text-gray-900">Login as Demo Owner</div>
-                  <div className="text-sm text-gray-500">Dev-only shortcut using server env</div>
-                </button>
-              </div>
-            )}
-            {process.env.GOOGLE_CLIENT_ID && (
               <div className="mt-4">
                 <button
                   type="button"
@@ -176,8 +138,8 @@ function LoginContent() {
                   <div className="text-sm text-gray-500">Uses project Google OAuth (optional)</div>
                 </button>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

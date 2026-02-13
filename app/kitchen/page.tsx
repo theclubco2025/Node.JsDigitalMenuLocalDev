@@ -151,10 +151,8 @@ export default function KitchenPage() {
                 />
               ) : null}
               <div>
-                <h1 className="text-2xl font-extrabold">Kitchen</h1>
-                <p className="text-sm text-neutral-300 mt-1">
-                  {cfg?.brand?.name || tenant}
-                </p>
+                <h1 className="text-2xl font-extrabold">{cfg?.brand?.name || tenant}</h1>
+                <p className="text-sm text-neutral-300 mt-1">Incoming orders</p>
               </div>
             </div>
           </div>
@@ -177,7 +175,9 @@ export default function KitchenPage() {
 
         <div className="mt-6">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-semibold text-neutral-200">Orders</div>
+            <div className="text-sm font-semibold text-neutral-200">
+              {view === 'active' ? 'Incoming orders' : 'Recent history'}
+            </div>
             <div className="text-xs text-neutral-400">
               {isLoading ? 'Loading…' : `Showing ${orders.length}`}
             </div>
