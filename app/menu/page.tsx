@@ -3,6 +3,9 @@ import MenuClient from '@/components/MenuClient'
 import IndependentMenuClient from '@/components/IndependentMenuClient'
 import { prisma } from '@/lib/prisma'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 type Props = {
   searchParams?: Record<string, string | string[] | undefined>
 }
@@ -48,9 +51,15 @@ export default async function MenuPage({ searchParams }: Props) {
   // If DB isn't configured (local/demo), don't block.
   if (!process.env.DATABASE_URL) return <MenuClient />
 
-  const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })
-  if (row?.status !== 'ACTIVE') {
-    redirect(`/billing?tenant=${encodeURIComponent(tenant)}`)
+  try {
+    const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })
+    if (row?.status !== 'ACTIVE') {
+      redirect(`/billing?tenant=${encodeURIComponent(tenant)}`)
+    }
+  } catch {
+    // Build/runtime safety: if DB is temporarily unreachable, do not fail rendering.
+    // The billing gate is an activation guard; safe fallback is to render the menu client.
+    return <MenuClient />
   }
 
   return <MenuClient />

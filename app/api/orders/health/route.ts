@@ -13,7 +13,8 @@ export async function GET(req: NextRequest) {
   const vercelEnv = (process.env.VERCEL_ENV || '').trim() || 'unknown'
 
   const ordersWebhookRequired = vercelEnv === 'production'
-  const ordersWebhookConfigured = bool(process.env.STRIPE_ORDERS_WEBHOOK_SECRET)
+  // Allow *_TEST in production for test-mode POC on a live domain.
+  const ordersWebhookConfigured = bool(process.env.STRIPE_ORDERS_WEBHOOK_SECRET || process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST)
   const ordersSecretKeyConfigured = bool(process.env.STRIPE_ORDERS_SECRET_KEY || process.env.STRIPE_TEST_KEY || process.env.STRIPE_SECRET_KEY)
 
   return NextResponse.json({
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
     ],
     notes: [
       'Food-order payments are confirmed via Stripe webhooks and then shown in KDS (paid-only).',
-      'In production, STRIPE_ORDERS_WEBHOOK_SECRET is required to place orders.',
+      'In production, a Stripe orders webhook secret is required to place orders (STRIPE_ORDERS_WEBHOOK_SECRET or STRIPE_ORDERS_WEBHOOK_SECRET_TEST).',
     ],
   }, { headers: { 'Cache-Control': 'no-store' } })
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { computePickupCode } from '@/lib/orders/pickupCode'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
     })
     if (!order) return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404 })
 
-    return NextResponse.json({ ok: true, order }, { status: 200 })
+    return NextResponse.json({ ok: true, order: { ...order, pickupCode: computePickupCode(order.id) } }, { status: 200 })
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error)?.message || 'Status error' }, { status: 500 })
   }

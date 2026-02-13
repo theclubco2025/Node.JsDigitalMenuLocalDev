@@ -1660,7 +1660,7 @@ export default function MenuClient() {
                                 setIsCartOpen(true)
                                 setTimeout(() => setRecentlyAddedId(prev => (prev===item.id?null:prev)), 600)
                               }}
-                              className={`text-white px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[160px] ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
+                              className={`text-white px-5 py-2.5 rounded-full text-sm font-extrabold transition-all duration-200 flex items-center gap-1 justify-center whitespace-nowrap min-w-[160px] shadow-sm ${recentlyAddedId===item.id ? 'animate-bump ring-2 ring-red-500' : ''}`}
                               style={{ background: 'var(--accent)' }}
                             >
                               {recentlyAddedId===item.id ? '✓ Added' : 'Add to Plate'}
@@ -1668,7 +1668,7 @@ export default function MenuClient() {
                           )}
                           <button
                             onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                            className="px-4 py-2 rounded-lg text-sm font-bold border border-gray-300 bg-white hover:bg-gray-50 text-black flex items-center justify-center whitespace-nowrap"
+                            className="px-5 py-2.5 rounded-full text-sm font-extrabold border border-gray-300 bg-white hover:bg-gray-50 text-black flex items-center justify-center whitespace-nowrap min-w-[160px] shadow-sm"
                             aria-label={`Ask about ${item.name}`}
                           >
                             <span>Ask</span>
@@ -1704,9 +1704,9 @@ export default function MenuClient() {
 
       {/* Plate Drawer */}
       {isCartOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex">
-          <div className="ml-auto w-full max-w-md bg-gray-50 h-full shadow-xl flex flex-col">
-            <div className="p-6 border-b border-gray-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex">
+          <div className="ml-auto w-full max-w-md bg-white h-full shadow-2xl border-l border-black/5 flex flex-col">
+            <div className="p-6 border-b border-gray-200 bg-white/95 backdrop-blur">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-black">Your Plate</h2>
                 <button
@@ -1718,227 +1718,271 @@ export default function MenuClient() {
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto px-6 py-6 bg-white overscroll-contain">
               {cart.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">
                   <div className="text-4xl mb-4">🛒</div>
                   <p>Your plate is empty</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {cart.map(cartItem => {
-                    const defs = parseAddOnDefs(cartItem.item.tags)
-                    const base = Math.round((cartItem.item.price || 0) * 100)
-                    const addOnCents = (cartItem.addOns || []).reduce((s, a) => s + (a.priceDeltaCents || 0), 0)
-                    const unitCents = base + addOnCents
-                    const lineCents = unitCents * cartItem.quantity
-                    return (
-                      <div key={cartItem.item.id} className="p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-black">{cartItem.item.name}</h4>
-                            <p className="text-sm text-gray-600">${(unitCents / 100).toFixed(2)} each</p>
+                <div className="space-y-8">
+                  {/* Your Order */}
+                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="text-sm font-extrabold tracking-wide text-black">Your Order</div>
+                    <div className="mt-4 space-y-4">
+                      {cart.map(cartItem => {
+                        const defs = parseAddOnDefs(cartItem.item.tags)
+                        const base = Math.round((cartItem.item.price || 0) * 100)
+                        const addOnCents = (cartItem.addOns || []).reduce((s, a) => s + (a.priceDeltaCents || 0), 0)
+                        const unitCents = base + addOnCents
+                        const lineCents = unitCents * cartItem.quantity
+                        return (
+                          <div key={cartItem.item.id} className="rounded-2xl border border-gray-200 bg-white p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <div className="font-semibold text-black truncate">{cartItem.item.name}</div>
+                                  </div>
+                                  <div className="shrink-0 text-right">
+                                    <div className="text-xs text-gray-500">Per item</div>
+                                    <div className="font-semibold text-black">${(unitCents / 100).toFixed(2)}</div>
+                                  </div>
+                                </div>
 
-                            {defs.length > 0 && (
-                              <div className="mt-3">
-                                <div className="text-xs font-semibold text-gray-700">Add-ons</div>
-                                <div className="mt-2 space-y-1">
-                                  {defs.map((opt) => {
-                                    const checked = (cartItem.addOns || []).some(a => a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents)
-                                    return (
-                                      <label key={`${opt.name}:${opt.priceDeltaCents}`} className="flex items-center gap-2 text-sm text-gray-800">
-                                        <input
-                                          type="checkbox"
-                                          checked={checked}
-                                          onChange={(e) => {
-                                            const nextChecked = e.target.checked
-                                            setCart(prev => prev.map(ci => {
-                                              if (ci.item.id !== cartItem.item.id) return ci
-                                              const existing = ci.addOns || []
-                                              const without = existing.filter(a => !(a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents))
-                                              return {
-                                                ...ci,
-                                                addOns: nextChecked ? [...without, opt] : without,
-                                              }
-                                            }))
-                                          }}
-                                          className="h-4 w-4"
-                                        />
-                                        <span className="flex-1">{opt.name}</span>
-                                        <span className="font-mono text-gray-600">+${(opt.priceDeltaCents / 100).toFixed(2)}</span>
-                                      </label>
-                                    )
-                                  })}
+                                {(defs.length > 0 || cartItem.note) && (
+                                  <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                                    <div className="text-xs font-bold text-gray-800">Item customization</div>
+
+                                    {defs.length > 0 && (
+                                      <div className="mt-2 space-y-1">
+                                        {defs.map((opt) => {
+                                          const checked = (cartItem.addOns || []).some(a => a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents)
+                                          return (
+                                            <label key={`${opt.name}:${opt.priceDeltaCents}`} className="flex items-center gap-2 text-sm text-gray-900">
+                                              <input
+                                                type="checkbox"
+                                                checked={checked}
+                                                onChange={(e) => {
+                                                  const nextChecked = e.target.checked
+                                                  setCart(prev => prev.map(ci => {
+                                                    if (ci.item.id !== cartItem.item.id) return ci
+                                                    const existing = ci.addOns || []
+                                                    const without = existing.filter(a => !(a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents))
+                                                    return {
+                                                      ...ci,
+                                                      addOns: nextChecked ? [...without, opt] : without,
+                                                    }
+                                                  }))
+                                                }}
+                                                className="h-4 w-4"
+                                              />
+                                              <span className="flex-1">{opt.name}</span>
+                                              <span className="font-mono text-gray-600">+${(opt.priceDeltaCents / 100).toFixed(2)}</span>
+                                            </label>
+                                          )
+                                        })}
+                                      </div>
+                                    )}
+
+                                    <div className="mt-3">
+                                      <input
+                                        inputMode="text"
+                                        value={cartItem.note || ''}
+                                        onChange={(e) => {
+                                          const v = e.target.value
+                                          setCart(prev => prev.map(ci => ci.item.id === cartItem.item.id ? { ...ci, note: v } : ci))
+                                        }}
+                                        placeholder="Add a note for this item (optional)"
+                                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="shrink-0 flex flex-col items-end gap-3">
+                                {/* Branded quantity stepper */}
+                                <div className="inline-flex items-center rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                                  <button
+                                    onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
+                                    className="h-11 w-11 flex items-center justify-center text-base font-black text-black hover:bg-gray-50"
+                                    aria-label={`Decrease quantity for ${cartItem.item.name}`}
+                                  >
+                                    −
+                                  </button>
+                                  <div className="h-11 w-12 flex items-center justify-center text-base font-extrabold text-black">
+                                    {cartItem.quantity}
+                                  </div>
+                                  <button
+                                    onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
+                                    className="h-11 w-11 flex items-center justify-center text-base font-black text-black hover:bg-gray-50"
+                                    aria-label={`Increase quantity for ${cartItem.item.name}`}
+                                  >
+                                    +
+                                  </button>
+                                </div>
+
+                                <div className="text-right">
+                                  <div className="text-xs text-gray-500">Line total</div>
+                                  <div className="text-lg font-extrabold text-black">${(lineCents / 100).toFixed(2)}</div>
                                 </div>
                               </div>
-                            )}
-
-                            <div className="mt-3">
-                              <label className="block text-xs font-semibold text-gray-700">Item note (optional)</label>
-                              <input
-                                value={cartItem.note || ''}
-                                onChange={(e) => {
-                                  const v = e.target.value
-                                  setCart(prev => prev.map(ci => ci.item.id === cartItem.item.id ? { ...ci, note: v } : ci))
-                                }}
-                                placeholder="Example: no onions"
-                                className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
-                              />
                             </div>
                           </div>
+                        )
+                      })}
+                    </div>
+                  </div>
 
-                          <div className="flex flex-col items-end gap-2">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
-                                className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
-                              >
-                                −
-                              </button>
-                              <span className="w-8 h-8 inline-flex items-center justify-center text-center font-medium text-black">{cartItem.quantity}</span>
-                              <button
-                                onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
-                                className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-200 transition-colors text-black"
-                              >
-                                +
-                              </button>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-bold text-black">
-                                ${(lineCents / 100).toFixed(2)}
-                              </div>
-                            </div>
+                  {/* Order-wide notes */}
+                  {orderingEnabled && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-black">Order-wide notes</div>
+                      <div className="mt-2 text-sm text-gray-600">Anything the kitchen should know for the whole order.</div>
+                      <textarea
+                        value={orderNote}
+                        onChange={(e) => setOrderNote(e.target.value)}
+                        placeholder="Example: allergy note, extra napkins, etc."
+                        className="mt-4 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        rows={3}
+                      />
+                    </div>
+                  )}
+
+                  {/* Contact Info */}
+                  {orderingEnabled && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-black">Contact Info</div>
+                      <div className="mt-2 text-sm text-gray-600">Receipt & updates. We’ll send your receipt and pickup updates here.</div>
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          value={customerEmail}
+                          onChange={(e) => setCustomerEmail(e.target.value)}
+                          placeholder="Email (required)"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        />
+                        <input
+                          type="text"
+                          inputMode="text"
+                          autoComplete="name"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="Name (optional)"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        />
+                        <input
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel"
+                          value={customerPhone}
+                          onChange={(e) => setCustomerPhone(e.target.value)}
+                          placeholder="Phone (optional)"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black sm:col-span-2"
+                        />
+                      </div>
+                      {!emailOk && (
+                        <div className="mt-3 text-sm font-semibold text-amber-700">
+                          Please enter a valid email to place your order.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Pickup Time */}
+                  {orderingEnabled && schedulingEnabled && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-extrabold tracking-wide text-black">
+                        <span aria-hidden="true">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+                            <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                          </svg>
+                        </span>
+                        Pickup Time
+                      </div>
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setPickupWhen('asap')}
+                          className="px-4 py-2.5 rounded-xl text-sm font-extrabold border transition"
+                          style={pickupWhen === 'asap'
+                            ? { background: 'var(--accent)', color: '#ffffff', borderColor: 'var(--accent)' }
+                            : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                          }
+                        >
+                          ASAP
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!canScheduleToday}
+                          onClick={() => {
+                            if (!canScheduleToday) return
+                            setPickupWhen('scheduled')
+                            if (!scheduledForIso && availableSlots[0]) setScheduledForIso(availableSlots[0])
+                          }}
+                          className="px-4 py-2.5 rounded-xl text-sm font-extrabold border transition"
+                          style={pickupWhen === 'scheduled'
+                            ? { background: 'var(--accent)', color: '#ffffff', borderColor: 'var(--accent)', opacity: canScheduleToday ? 1 : 0.5 }
+                            : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)', opacity: canScheduleToday ? 1 : 0.5 }
+                          }
+                        >
+                          Schedule today
+                        </button>
+                      </div>
+                      {pickupWhen === 'scheduled' && (
+                        <div className="mt-4">
+                          <select
+                            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                            value={scheduledForIso}
+                            onChange={(e) => setScheduledForIso(e.target.value)}
+                          >
+                            {availableSlots.map((iso) => (
+                              <option key={iso} value={iso}>{formatSlot(iso)}</option>
+                            ))}
+                          </select>
+                          <div className="mt-2 text-xs text-gray-500">
+                            Times shown in PT. Same-day only.
                           </div>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )}
+                    </div>
+                  )}
+
+                  {orderingEnabled && orderingPaused && (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                      {orderingPauseText}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
             
             {cart.length > 0 && (
-              <div className="p-6 border-t border-gray-200 bg-gray-50">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-xl font-semibold text-black">Total:</span>
-                  <span className="text-2xl font-bold text-black">
-                    ${cartTotal.toFixed(2)}
-                  </span>
+              <div className="p-5 border-t border-gray-200 bg-white shadow-[0_-10px_24px_rgba(0,0,0,0.08)]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-semibold text-gray-600">Order total</div>
+                    <div className="text-2xl font-extrabold text-black">${cartTotal.toFixed(2)}</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (orderingEnabled) {
+                        void startCheckout()
+                        return
+                      }
+                      setToast('Demo mode — ordering is not enabled for this tenant yet.')
+                    }}
+                    className="rounded-2xl px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
+                    style={{ background: 'var(--accent)' }}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused))}
+                  >
+                    {orderingEnabled ? 'Place order' : 'Proceed with Plate'}
+                  </button>
                 </div>
-                {orderingEnabled && orderingPaused && (
-                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                    {orderingPauseText}
-                  </div>
-                )}
-                {orderingEnabled && (
-                  <div className="mb-4">
-                    <div className="text-sm font-semibold text-black mb-2">Special instructions</div>
-                    <textarea
-                      value={orderNote}
-                      onChange={(e) => setOrderNote(e.target.value)}
-                      placeholder="Anything the kitchen should know?"
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
-                      rows={2}
-                    />
-                  </div>
-                )}
-                {orderingEnabled && (
-                  <div className="mb-4">
-                    <div className="text-sm font-semibold text-black mb-2">Receipt & updates</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <input
-                        type="email"
-                        value={customerEmail}
-                        onChange={(e) => setCustomerEmail(e.target.value)}
-                        placeholder="Email (required)"
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
-                      />
-                      <input
-                        type="text"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="Name (optional)"
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
-                      />
-                      <input
-                        type="tel"
-                        value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
-                        placeholder="Phone (optional)"
-                        className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black sm:col-span-2"
-                      />
-                    </div>
-                    {!emailOk && (
-                      <div className="mt-2 text-xs text-amber-700">
-                        Please enter a valid email to continue.
-                      </div>
-                    )}
-                  </div>
-                )}
-                {orderingEnabled && schedulingEnabled && (
-                  <div className="mb-4">
-                    <div className="text-sm font-semibold text-black mb-2">Pickup time</div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setPickupWhen('asap')}
-                        className="px-3 py-2 rounded-lg text-sm font-bold border"
-                        style={pickupWhen === 'asap'
-                          ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)' }
-                          : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
-                        }
-                      >
-                        ASAP
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!canScheduleToday}
-                        onClick={() => {
-                          if (!canScheduleToday) return
-                          setPickupWhen('scheduled')
-                          if (!scheduledForIso && availableSlots[0]) setScheduledForIso(availableSlots[0])
-                        }}
-                        className="px-3 py-2 rounded-lg text-sm font-bold border"
-                        style={pickupWhen === 'scheduled'
-                          ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)', opacity: canScheduleToday ? 1 : 0.5 }
-                          : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)', opacity: canScheduleToday ? 1 : 0.5 }
-                        }
-                      >
-                        Schedule today
-                      </button>
-                    </div>
-                    {pickupWhen === 'scheduled' && (
-                      <div className="mt-3">
-                        <select
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black"
-                          value={scheduledForIso}
-                          onChange={(e) => setScheduledForIso(e.target.value)}
-                        >
-                          {availableSlots.map((iso) => (
-                            <option key={iso} value={iso}>{formatSlot(iso)}</option>
-                          ))}
-                        </select>
-                        <div className="mt-2 text-xs text-gray-500">
-                          Times shown in PT. Same-day only.
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <button
-                  onClick={() => {
-                    if (orderingEnabled) {
-                      void startCheckout()
-                      return
-                    }
-                    setToast('Demo mode — ordering is not enabled for this tenant yet.')
-                  }}
-                  className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200 disabled:opacity-60"
-                  disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused))}
-                >
-                  {orderingEnabled ? 'Checkout' : 'Proceed with Plate'}
-                </button>
                 {!orderingEnabled && (
                   <p className="text-xs text-gray-500 text-center mt-2">
                     Demo mode - No actual payment processed

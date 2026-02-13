@@ -9,9 +9,10 @@ export const dynamic = 'force-dynamic'
 function webhookSecret() {
   const isPreview = process.env.VERCEL_ENV === 'preview'
   // Preview: allow a dedicated *_TEST secret without renaming env vars.
+  // Production: allow *_TEST as fallback to support test-mode POC on a live domain.
   return (
-    (isPreview ? (process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST || '').trim() : '')
-    || (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
+    (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
+    || ((isPreview || process.env.VERCEL_ENV === 'production') ? (process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST || '').trim() : '')
   )
 }
 

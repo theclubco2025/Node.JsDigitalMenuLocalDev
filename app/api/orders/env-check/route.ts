@@ -27,6 +27,7 @@ export async function GET() {
   const ordersWebhook = classifyKey(process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '')
   const orderingPocTenants = ((process.env.ORDERING_POC_TENANTS || '').trim() || null)
   const kitchenPinPresent = !!((process.env.KITCHEN_PIN || '').trim())
+  const ordersWebhookEffectivePresent = ordersWebhook.present || ordersWebhookTest.present
 
   // This endpoint intentionally does NOT return actual key values.
   return NextResponse.json({
@@ -43,7 +44,7 @@ export async function GET() {
       STRIPE_ORDERS_WEBHOOK_SECRET_TEST: ordersWebhookTest,
       STRIPE_ORDERS_WEBHOOK_SECRET: ordersWebhook,
       required_in_production: ordersWebhookRequired,
-      ok: ordersWebhookRequired ? ordersWebhook.present : true,
+      ok: ordersWebhookRequired ? ordersWebhookEffectivePresent : true,
     },
     poc: {
       ORDERING_POC_TENANTS: orderingPocTenants,

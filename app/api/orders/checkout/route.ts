@@ -138,11 +138,14 @@ export async function POST(req: NextRequest) {
     }
     // Sales-ready constraint: in production, Stripe webhook confirmation must be configured.
     if (process.env.VERCEL_ENV === 'production') {
-      const ordersWebhook = (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
+      // Allow using *_TEST in production for test-mode POC on a live domain.
+      const ordersWebhook =
+        (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
+        || (process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST || '').trim()
       if (!ordersWebhook) {
         return NextResponse.json({
           ok: false,
-          error: 'Ordering is not configured: STRIPE_ORDERS_WEBHOOK_SECRET (whsec_...) is required in production.',
+          error: 'Ordering is not configured: Stripe orders webhook secret is missing (set STRIPE_ORDERS_WEBHOOK_SECRET or STRIPE_ORDERS_WEBHOOK_SECRET_TEST). See /api/orders/health.',
         }, { status: 501 })
       }
     }
