@@ -31,12 +31,17 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim()) {
     const msg = String((e && e.message) || '')
     const isP3005 = msg.includes('P3005') || msg.includes('The database schema is not empty')
     const isP3018 = msg.includes('P3018') || msg.includes('A migration failed to apply')
+    const isP3009 = msg.includes('P3009') || msg.includes('migrate found failed migrations')
 
-    // If this is an existing production database that was created outside of Prisma Migrate,
-    // we need to "baseline" it so new migrations can be deployed.
-    if (isP3005 && process.env.VERCEL_ENV === 'production') {
-      // Mark the historical migrations as applied, then deploy the new ones.
-      // NOTE: This assumes the production DB already matches (or supersets) the init schema.
+    if (process.env.VERCEL_ENV !== 'production') {
+      throw e
+    }
+
+    // Production recovery workflow:
+    // 1) If DB is pre-existing (P3005), baseline historical migrations.
+    // 2) If Prisma sees a failed migration record (P3009/P3018), mark it rolled back.
+    // 3) Re-run migrate deploy.
+    if (isP3005) {
       const baselineMigrations = [
         '20250911053620_init',
         '20250211120000_p0_patch_modifiers_allergens_audit',
@@ -44,18 +49,17 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim()) {
       for (const m of baselineMigrations) {
         run('npx', ['prisma', 'migrate', 'resolve', '--applied', m])
       }
-      // If a previous deploy attempt left a failed migration record, mark it rolled back so it can be re-applied.
-      if (isP3018) {
-        try {
-          run('npx', ['prisma', 'migrate', 'resolve', '--rolled-back', '20260211004624_order_customer_contact'])
-        } catch {
-          // ignore
-        }
-      }
-      run('npx', ['prisma', 'migrate', 'deploy'])
-    } else {
-      throw e
     }
+
+    if (isP3009 || isP3018) {
+      try {
+        run('npx', ['prisma', 'migrate', 'resolve', '--rolled-back', '20260211004624_order_customer_contact'])
+      } catch {
+        // ignore
+      }
+    }
+
+    run('npx', ['prisma', 'migrate', 'deploy'])
   }
 }
 
