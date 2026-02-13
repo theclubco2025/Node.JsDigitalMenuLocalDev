@@ -47,7 +47,7 @@ function LoginContent() {
             <span className="text-sm font-extrabold tracking-wide">ME</span>
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900">Menu Editor</h2>
-          <p className="mt-2 text-sm text-gray-600">Owner login</p>
+          <p className="mt-2 text-sm text-gray-600">Menu editor login</p>
         </div>
       </div>
 
