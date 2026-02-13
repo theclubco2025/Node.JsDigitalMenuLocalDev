@@ -30,6 +30,7 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim()) {
   } catch (e) {
     const msg = String((e && e.message) || '')
     const isP3005 = msg.includes('P3005') || msg.includes('The database schema is not empty')
+    const isP3018 = msg.includes('P3018') || msg.includes('A migration failed to apply')
 
     // If this is an existing production database that was created outside of Prisma Migrate,
     // we need to "baseline" it so new migrations can be deployed.
@@ -42,6 +43,14 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim()) {
       ]
       for (const m of baselineMigrations) {
         run('npx', ['prisma', 'migrate', 'resolve', '--applied', m])
+      }
+      // If a previous deploy attempt left a failed migration record, mark it rolled back so it can be re-applied.
+      if (isP3018) {
+        try {
+          run('npx', ['prisma', 'migrate', 'resolve', '--rolled-back', '20260211004624_order_customer_contact'])
+        } catch {
+          // ignore
+        }
       }
       run('npx', ['prisma', 'migrate', 'deploy'])
     } else {
