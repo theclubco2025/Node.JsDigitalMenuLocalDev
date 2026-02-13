@@ -24,7 +24,7 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim()) {
   try {
     run('npx', ['prisma', 'migrate', 'deploy'])
   } catch (e) {
-    const msg = String((e as Error)?.message || '')
+    const msg = String((e && e.message) || '')
     const isP3005 = msg.includes('P3005') || msg.includes('The database schema is not empty')
 
     // If this is an existing production database that was created outside of Prisma Migrate,
