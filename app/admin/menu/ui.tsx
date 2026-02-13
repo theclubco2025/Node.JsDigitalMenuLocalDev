@@ -38,6 +38,8 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   const [slotMinutes, setSlotMinutes] = useState<number>(15)
   const [leadTimeMinutes, setLeadTimeMinutes] = useState<number>(30)
   const [orderingSaving, setOrderingSaving] = useState(false)
+  const [dineInEnabled, setDineInEnabled] = useState(false)
+  const [dineInLabel, setDineInLabel] = useState('Table number')
 
   useEffect(() => {
     if (!toast) return
@@ -77,12 +79,17 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
         const scheduling = (ordering.scheduling && typeof ordering.scheduling === 'object')
           ? (ordering.scheduling as Record<string, unknown>)
           : {}
+        const dineIn = (ordering.dineIn && typeof ordering.dineIn === 'object')
+          ? (ordering.dineIn as Record<string, unknown>)
+          : {}
         if (cancelled) return
         setOrderingPaused(ordering.paused === true)
         setPauseMessage(typeof ordering.pauseMessage === 'string' ? ordering.pauseMessage : '')
         setSchedulingEnabled(scheduling.enabled !== false)
         setSlotMinutes(typeof scheduling.slotMinutes === 'number' ? scheduling.slotMinutes : 15)
         setLeadTimeMinutes(typeof scheduling.leadTimeMinutes === 'number' ? scheduling.leadTimeMinutes : 30)
+        setDineInEnabled(dineIn.enabled === true)
+        setDineInLabel(typeof dineIn.label === 'string' && dineIn.label.trim() ? dineIn.label.trim() : 'Table number')
       } catch {
         // ignore
       }
@@ -154,6 +161,10 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
               enabled: schedulingEnabled,
               slotMinutes,
               leadTimeMinutes,
+            },
+            dineIn: {
+              enabled: dineInEnabled,
+              label: dineInLabel,
             },
           }
         }),
@@ -300,6 +311,35 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                   />
                   Scheduling enabled
                 </label>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-indigo-100 bg-indigo-50 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">Dine-in ordering (table numbers)</div>
+                  <div className="mt-1 text-xs text-gray-700">
+                    Optional feature: customers can enter a table number at checkout. KDS will show it for in-restaurant orders.
+                  </div>
+                </div>
+                <label className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 select-none">
+                  <input
+                    type="checkbox"
+                    checked={dineInEnabled}
+                    onChange={(e) => setDineInEnabled(e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  Enabled
+                </label>
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs font-semibold text-gray-700">Field label</label>
+                <input
+                  value={dineInLabel}
+                  onChange={(e) => setDineInLabel(e.target.value)}
+                  placeholder="Table number"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
               </div>
             </div>
 

@@ -30,6 +30,7 @@ type OrderRow = {
   customerEmail: string | null
   customerName: string | null
   customerPhone: string | null
+  tableNumber?: string | null
   createdAt: string
   items: OrderItem[]
 }
@@ -177,6 +178,11 @@ export default function AdminOrdersClient({ tenant }: { tenant: string }) {
                       <span className="font-semibold">${formatMoney(o.totalCents)}</span>{' '}
                       <span className="text-gray-500">({o.currency.toUpperCase()})</span>
                     </div>
+                    {o.tableNumber && (
+                      <div className="mt-2 text-xs font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-1 inline-flex">
+                        DINE-IN • Table {o.tableNumber}
+                      </div>
+                    )}
                     <div className="mt-2 text-xs text-gray-600">
                       {o.customerEmail ? <span className="font-mono">{o.customerEmail}</span> : 'No email'}
                       {o.customerName ? <span> · {o.customerName}</span> : null}

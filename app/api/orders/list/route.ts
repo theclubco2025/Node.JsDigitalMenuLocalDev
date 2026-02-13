@@ -73,7 +73,7 @@ export async function GET(req: NextRequest) {
           refundAmountCents: true,
           stripeRefundId: true,
           stripeRefundStatus: true,
-          ...(withExtras ? { note: true, customerName: true, customerPhone: true } : {}),
+          ...(withExtras ? { note: true, customerName: true, customerPhone: true, tableNumber: true } : {}),
           customerEmail: true,
           createdAt: true,
           items: {

@@ -18,6 +18,7 @@ type KitchenOrder = {
   paidAt: string | null
   createdAt: string
   pickupCode: string
+  tableNumber?: string | null
   note?: string | null
   items: OrderItem[]
 }
@@ -111,13 +112,6 @@ export default function KitchenPage() {
 
   const orders = useMemo(() => data?.orders || [], [data?.orders])
 
-  const savePin = () => {
-    const p = pin.trim()
-    if (!p) return
-    try { localStorage.setItem(`kitchen_pin:${tenant}`, p) } catch {}
-    setToast('PIN saved')
-  }
-
   // Note: preview-only debug actions removed to keep KDS kitchen-focused.
 
   const updateStatus = async (orderId: string, status: string) => {
@@ -144,7 +138,7 @@ export default function KitchenPage() {
       className="min-h-screen text-white"
       style={{ background: 'var(--bg, #070707)', color: 'var(--text, #f8fafc)' }}
     >
-      <div className="max-w-5xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
@@ -166,31 +160,20 @@ export default function KitchenPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <div className="text-sm font-semibold">Kitchen PIN</div>
-          <div className="mt-2 flex flex-col sm:flex-row gap-2">
-            <input
-              type="password"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              placeholder="Enter kitchen PIN"
-              className="w-full sm:max-w-xs rounded-xl bg-black/40 border border-white/10 px-3 py-2 text-sm outline-none"
-            />
-            <button
-              type="button"
-              onClick={savePin}
-              className="rounded-xl bg-white text-black px-4 py-2 text-sm font-extrabold hover:bg-neutral-200"
-            >
-              Save
-            </button>
-          </div>
-          {data?.ok === false && (
-            <div className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-              {data.error || 'Unauthorized'}
+        {!shouldFetch && (
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6">
+            <div className="text-lg font-extrabold">Enter kitchen PIN</div>
+            <div className="mt-2 text-sm text-neutral-300">
+              Open the KDS PIN page to access this kitchen screen.
             </div>
-          )}
-
-        </div>
+            <a
+              href="/kds"
+              className="mt-4 inline-flex items-center justify-center rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-black hover:bg-neutral-200"
+            >
+              Go to PIN entry
+            </a>
+          </div>
+        )}
 
         <div className="mt-6">
           <div className="flex items-center justify-between">
@@ -233,7 +216,10 @@ export default function KitchenPage() {
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
                         <span className="rounded-full bg-white/10 px-2 py-1">Status: {o.status}</span>
                         <span className="rounded-full bg-white/10 px-2 py-1">Total: {money(o.totalCents)}</span>
-                        <span className="rounded-full bg-white/10 px-2 py-1">Pickup: {formatTime(o.scheduledFor, o.timezone)}</span>
+                        {o.tableNumber
+                          ? <span className="rounded-full bg-white/10 px-2 py-1">DINE-IN • Table {o.tableNumber}</span>
+                          : <span className="rounded-full bg-white/10 px-2 py-1">Pickup: {formatTime(o.scheduledFor, o.timezone)}</span>
+                        }
                         <span className="rounded-full px-2 py-1 bg-emerald-500/20 text-emerald-200">
                           PAID
                         </span>

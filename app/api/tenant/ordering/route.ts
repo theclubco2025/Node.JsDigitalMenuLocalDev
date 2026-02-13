@@ -19,6 +19,10 @@ const DEFAULT_ORDERING = {
     slotMinutes: 15,
     leadTimeMinutes: 30,
   },
+  dineIn: {
+    enabled: false,
+    label: 'Table number',
+  },
   hours: null as unknown,
 } as const
 
@@ -26,6 +30,9 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
   const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {}
   const schedulingRaw = (obj.scheduling && typeof obj.scheduling === 'object')
     ? (obj.scheduling as Record<string, unknown>)
+    : {}
+  const dineInRaw = (obj.dineIn && typeof obj.dineIn === 'object')
+    ? (obj.dineIn as Record<string, unknown>)
     : {}
 
   const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : DEFAULT_ORDERING.enabled
@@ -58,6 +65,10 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
       slotMinutes,
       leadTimeMinutes,
     },
+    dineIn: {
+      enabled: typeof dineInRaw.enabled === 'boolean' ? dineInRaw.enabled : DEFAULT_ORDERING.dineIn.enabled,
+      label: typeof dineInRaw.label === 'string' && dineInRaw.label.trim() ? dineInRaw.label.trim() : DEFAULT_ORDERING.dineIn.label,
+    },
     hours,
   }
 }
@@ -73,6 +84,10 @@ const Body = z.object({
       enabled: z.boolean().optional(),
       slotMinutes: z.number().int().min(1).max(120).optional(),
       leadTimeMinutes: z.number().int().min(0).max(12 * 60).optional(),
+    }).optional(),
+    dineIn: z.object({
+      enabled: z.boolean().optional(),
+      label: z.string().max(40).optional(),
     }).optional(),
   }),
 })
@@ -143,7 +158,11 @@ export async function POST(req: NextRequest) {
       scheduling: {
         ...(((currentOrdering as Record<string, unknown>).scheduling as Record<string, unknown>) || {}),
         ...(((incoming.scheduling as Record<string, unknown> | undefined) || {})),
-      }
+      },
+      dineIn: {
+        ...(((currentOrdering as Record<string, unknown>).dineIn as Record<string, unknown>) || {}),
+        ...(((incoming.dineIn as Record<string, unknown> | undefined) || {})),
+      },
     })
 
     const nextSettings = {

@@ -537,12 +537,15 @@ export default function MenuClient() {
   const slotMinutes = typeof orderingCfg?.scheduling?.slotMinutes === 'number' ? orderingCfg!.scheduling!.slotMinutes! : 15
   const leadTimeMinutes = typeof orderingCfg?.scheduling?.leadTimeMinutes === 'number' ? orderingCfg!.scheduling!.leadTimeMinutes! : 30
   const schedulingEnabled = orderingCfg?.scheduling?.enabled !== false
+  const dineInEnabled = (orderingCfg as unknown as { dineIn?: { enabled?: boolean } } | undefined)?.dineIn?.enabled === true
+  const dineInLabel = String((orderingCfg as unknown as { dineIn?: { label?: unknown } } | undefined)?.dineIn?.label || 'Table number')
   const [pickupWhen, setPickupWhen] = useState<'asap' | 'scheduled'>('asap')
   const [scheduledForIso, setScheduledForIso] = useState<string>('') // ISO string
   const [customerEmail, setCustomerEmail] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [orderNote, setOrderNote] = useState('')
+  const [tableNumber, setTableNumber] = useState('')
 
   const contactStorageKey = useMemo(() => `order_contact_v1:${tenant}`, [tenant])
   useEffect(() => {
@@ -644,6 +647,7 @@ export default function MenuClient() {
         scheduledFor: (orderingEnabled && schedulingEnabled && pickupWhen === 'scheduled' && scheduledForIso)
           ? scheduledForIso
           : null,
+        tableNumber: (orderingEnabled && dineInEnabled) ? (tableNumber.trim() || null) : null,
         customerEmail: customerEmail.trim(),
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
@@ -1949,6 +1953,23 @@ export default function MenuClient() {
                           </div>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Dine-in (optional) */}
+                  {orderingEnabled && dineInEnabled && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-black">Dine-in</div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        Enter your table number so the kitchen knows you’re dining in.
+                      </div>
+                      <input
+                        inputMode="numeric"
+                        value={tableNumber}
+                        onChange={(e) => setTableNumber(e.target.value)}
+                        placeholder={dineInLabel}
+                        className="mt-4 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                      />
                     </div>
                   )}
 

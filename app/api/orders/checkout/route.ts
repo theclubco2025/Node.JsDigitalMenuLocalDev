@@ -23,6 +23,7 @@ const BodySchema = z.object({
     note: z.string().max(500).optional().nullable(),
   })).min(1),
   scheduledFor: z.string().datetime().optional().nullable(),
+  tableNumber: z.string().max(20).optional().nullable(),
   customerEmail: z.string().email().optional().nullable(),
   customerName: z.string().max(100).optional().nullable(),
   customerPhone: z.string().max(40).optional().nullable(),
@@ -44,6 +45,9 @@ function getOrderingSettings(settings: unknown) {
   const scheduling = (ordering.scheduling && typeof ordering.scheduling === 'object')
     ? (ordering.scheduling as Record<string, unknown>)
     : {}
+  const dineIn = (ordering.dineIn && typeof ordering.dineIn === 'object')
+    ? (ordering.dineIn as Record<string, unknown>)
+    : {}
 
   const enabled = ordering.enabled === true
   const paused = ordering.paused === true
@@ -58,7 +62,8 @@ function getOrderingSettings(settings: unknown) {
     ? scheduling.leadTimeMinutes
     : 30
 
-  return { enabled, paused, pauseMessage, timezone, slotMinutes, leadTimeMinutes }
+  const dineInEnabled = dineIn.enabled === true
+  return { enabled, paused, pauseMessage, timezone, slotMinutes, leadTimeMinutes, dineInEnabled }
 }
 
 function pocOrderingTenants(): string[] {
@@ -160,6 +165,7 @@ export async function POST(req: NextRequest) {
     const tenant = parsed.data.tenant.trim().toLowerCase()
     const items = parsed.data.items
     const scheduledForRaw = parsed.data.scheduledFor ?? null
+    const tableNumberRaw = (parsed.data.tableNumber || '').trim() || null
     const customerEmail = (parsed.data.customerEmail || '').trim() || null
     const customerName = (parsed.data.customerName || '').trim() || null
     const customerPhone = (parsed.data.customerPhone || '').trim() || null
@@ -171,6 +177,7 @@ export async function POST(req: NextRequest) {
       select: { id: true, settings: true },
     })
     const ordering = getOrderingSettings(tenantRow?.settings)
+    const tableNumber = ordering.dineInEnabled ? tableNumberRaw : null
     const isPreview = process.env.VERCEL_ENV === 'preview'
     // Preview-only POC: allow independent-draft ordering without DB settings.
     // This does NOT affect production and does NOT affect the live independentbarandgrille tenant.
@@ -302,6 +309,7 @@ export async function POST(req: NextRequest) {
           customerEmail,
           customerName: customerName || undefined,
           customerPhone: customerPhone || undefined,
+          tableNumber: tableNumber || undefined,
           note: orderNote || undefined,
           items: { create: orderItems },
         },
@@ -329,6 +337,7 @@ export async function POST(req: NextRequest) {
             customerEmail,
             customerName: customerName || undefined,
             customerPhone: customerPhone || undefined,
+            tableNumber: tableNumber || undefined,
             note: orderNote || undefined,
             items: { create: orderItems },
           },

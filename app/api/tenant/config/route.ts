@@ -18,6 +18,10 @@ const DEFAULT_ORDERING = {
     slotMinutes: 15,
     leadTimeMinutes: 30,
   },
+  dineIn: {
+    enabled: false,
+    label: 'Table number',
+  },
   // If hours are unset, we assume 24/7 for testing.
   hours: null,
 } as const
@@ -37,6 +41,9 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
   const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {}
   const schedulingRaw = (obj.scheduling && typeof obj.scheduling === 'object')
     ? (obj.scheduling as Record<string, unknown>)
+    : {}
+  const dineInRaw = (obj.dineIn && typeof obj.dineIn === 'object')
+    ? (obj.dineIn as Record<string, unknown>)
     : {}
 
   const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : DEFAULT_ORDERING.enabled
@@ -68,6 +75,10 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
       enabled: schedulingEnabled,
       slotMinutes,
       leadTimeMinutes,
+    },
+    dineIn: {
+      enabled: typeof dineInRaw.enabled === 'boolean' ? dineInRaw.enabled : DEFAULT_ORDERING.dineIn.enabled,
+      label: typeof dineInRaw.label === 'string' && dineInRaw.label.trim() ? dineInRaw.label.trim() : DEFAULT_ORDERING.dineIn.label,
     },
     hours,
   }

@@ -137,6 +137,9 @@ model Order {
   customerName           String?
   customerPhone          String?
 
+  // Optional dine-in context (e.g., table number)
+  tableNumber            String?
+
   // Kitchen note / special instructions
   note                   String?
 

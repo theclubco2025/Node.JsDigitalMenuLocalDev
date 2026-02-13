@@ -83,6 +83,7 @@ export async function GET(req: NextRequest) {
           timezone: true,
           paidAt: true,
           createdAt: true,
+          ...(withExtras ? { tableNumber: true } : {}),
           ...(withExtras ? { note: true } : {}),
           items: {
             select: {
@@ -129,6 +130,7 @@ export async function GET(req: NextRequest) {
         paidAt: o.paidAt,
         createdAt: o.createdAt,
         pickupCode: computePickupCode(o.id),
+        tableNumber: (o as unknown as { tableNumber?: string | null }).tableNumber ?? null,
         note: (o as unknown as { note?: string | null }).note || null,
         items: o.items.map(it => ({
           id: it.id,
