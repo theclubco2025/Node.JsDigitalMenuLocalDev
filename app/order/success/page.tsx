@@ -129,12 +129,13 @@ export default function OrderSuccessPage({ searchParams }: Props) {
     }
   }, [order?.id, order?.tenant?.slug])
 
-  // Load public tenant config (includes ordering copy) once we know the tenant slug.
+  // Load public tenant config (includes ordering copy) and refresh periodically so edits
+  // in the admin editor show up without a manual page refresh.
   useEffect(() => {
     const tenant = (order?.tenant?.slug || '').trim()
     if (!tenant) return
     let cancelled = false
-    ;(async () => {
+    const load = async () => {
       try {
         const res = await fetch(`/api/tenant/config?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
         const json = await res.json().catch(() => null)
@@ -143,8 +144,10 @@ export default function OrderSuccessPage({ searchParams }: Props) {
       } catch {
         if (!cancelled) setCfgOrdering(null)
       }
-    })()
-    return () => { cancelled = true }
+    }
+    void load()
+    const t = setInterval(load, 12_000)
+    return () => { cancelled = true; clearInterval(t) }
   }, [order?.tenant?.slug])
 
   useEffect(() => {

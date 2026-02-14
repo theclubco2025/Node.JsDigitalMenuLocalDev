@@ -200,7 +200,28 @@ export default function KitchenPage() {
       setToast(`Updated: ${status}`)
       await mutate()
     } catch (e) {
-      setToast((e as Error)?.message || 'Update error')
+      const msg = (e as Error)?.message || ''
+      const isNetwork = msg.toLowerCase().includes('failed to fetch') || e instanceof TypeError
+      if (isNetwork) {
+        try {
+          const url =
+            `/api/kitchen/update-status?tenant=${encodeURIComponent(tenant)}&orderId=${encodeURIComponent(orderId)}&status=${encodeURIComponent(status)}`
+          const res2 = await fetch(url, {
+            method: 'GET',
+            headers: { 'X-Kitchen-Pin': pin },
+            cache: 'no-store',
+          })
+          const json2 = await res2.json().catch(() => null)
+          if (!res2.ok || !json2?.ok) throw new Error(json2?.error || `Update failed (${res2.status})`)
+          setToast(`Updated: ${status}`)
+          await mutate()
+          return
+        } catch (e2) {
+          setToast((e2 as Error)?.message || 'Update error')
+          return
+        }
+      }
+      setToast(msg || 'Update error')
     }
   }
 

@@ -36,6 +36,20 @@
 - Health check: `/api/orders/health`
 - Admin orders queue (after login): `/admin/orders`
 
+3.6) Kitchen Display System (KDS) setup + verification
+- Set a **Kitchen PIN** in the admin editor:
+  - Login → `/admin/menu`
+  - Restaurant settings → **Kitchen PIN** → Save
+- Verify staff flow:
+  - Staff goes to `/kds`, enters the PIN, and lands on `/kitchen?tenant=<slug>`.
+- Verify status transitions (must work before you ship):
+  - Place an order and confirm it appears in **New Orders**.
+  - Tap **Start Preparing** → order moves to **Preparing**.
+  - Tap **Mark Ready** → order moves to **Ready**.
+  - Tap **Complete** (or swipe right) → order clears from the active board and appears in History.
+
+3.7) Customer order-status copy (editable per restaurant)
+- In the admin editor (`/admin/menu`), set:\n+  - Pickup final step label + ready message\n+  - Dine-in final step label + ready message\n+  - Pickup-code helper text\n+- Verify:\n+  - On the customer Order Confirmed screen (`/order/success?order=...`), the final step label and “ready” message reflect your saved copy.\n+  - If you edit this copy while the page is open, it should update automatically within ~15 seconds.\n+
 4) Publish
 - Click Publish in the admin bar to promote `<slug>-draft` → `<slug>`.
 
