@@ -916,7 +916,7 @@ export default function MenuClient() {
       {showSpecials && (
         <div className="max-w-7xl mx-auto px-4 mb-4">
           <div
-            className="rounded-lg px-3 py-2 text-sm"
+            className="rounded-lg px-3 py-2 text-[13px] font-semibold tracking-wide"
             style={{
               background: isIndependentDraft
                 ? 'linear-gradient(90deg, rgba(196,167,106,0.16), rgba(255,255,255,0.02))'
@@ -924,7 +924,8 @@ export default function MenuClient() {
               border: isIndependentDraft
                 ? '1px solid rgba(255,255,255,0.14)'
                 : '1px solid rgba(196,167,106,0.28)',
-              color: isIndependentDraft ? 'rgba(248,250,252,0.92)' : '#101010'
+              color: isIndependentDraft ? 'rgba(248,250,252,0.92)' : '#101010',
+              fontFamily: 'var(--font-serif)',
             }}
           >
             {typeof copy?.specials === 'string'
@@ -1252,42 +1253,44 @@ export default function MenuClient() {
                               </div>
                             ) : null}
                           </div>
-                          <div className="shrink-0 text-right">
+                          <div className="shrink-0 flex flex-col items-end">
                             <div className="text-base font-semibold" style={{ color: 'rgba(196,167,106,0.95)' }}>
                               ${Number(item.price ?? 0).toFixed(2)}
                             </div>
-                            {orderingEnabled && (
+                            <div className="mt-3 flex flex-col gap-2">
+                              {orderingEnabled && (
+                                <button
+                                  onClick={(e) => {
+                                    addToCart(item)
+                                    flyToPlate(e.currentTarget as unknown as HTMLElement, item)
+                                  }}
+                                  className="inline-flex h-10 w-28 items-center justify-center gap-2 rounded-full text-sm font-extrabold transition shadow-sm"
+                                  style={{
+                                    background: 'rgba(196,167,106,0.18)',
+                                    border: '1px solid rgba(196,167,106,0.55)',
+                                    color: '#f8fafc'
+                                  }}
+                                  aria-label={`Add ${item.name} to order`}
+                                >
+                                  Add
+                                </button>
+                              )}
                               <button
-                                onClick={(e) => {
-                                  addToCart(item)
-                                  flyToPlate(e.currentTarget as unknown as HTMLElement, item)
-                                }}
-                                className="mt-3 inline-flex h-10 w-28 items-center justify-center gap-2 rounded-full text-sm font-extrabold transition shadow-sm"
+                                onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                                className="inline-flex h-10 w-28 items-center justify-center gap-2 rounded-full text-sm font-extrabold transition shadow-sm"
                                 style={{
-                                  background: 'rgba(196,167,106,0.18)',
-                                  border: '1px solid rgba(196,167,106,0.55)',
+                                  background: 'rgba(255,255,255,0.06)',
+                                  border: '1px solid rgba(255,255,255,0.14)',
                                   color: '#f8fafc'
                                 }}
-                                aria-label={`Add ${item.name} to order`}
+                                aria-label={`Ask about ${item.name}`}
                               >
-                                Add
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                  <path d="M6 10c0-3 2.7-5 6-5s6 2 6 5-2.7 5-6 5c-.9 0-1.8-.1-2.6-.3L6 17v-2.3C6 13.5 6 12.3 6 10Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                                </svg>
+                                Ask
                               </button>
-                            )}
-                            <button
-                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                              className="mt-2 inline-flex h-10 w-28 items-center justify-center gap-2 rounded-full text-sm font-extrabold transition shadow-sm"
-                              style={{
-                                background: 'rgba(255,255,255,0.06)',
-                                border: '1px solid rgba(255,255,255,0.14)',
-                                color: '#f8fafc'
-                              }}
-                              aria-label={`Ask about ${item.name}`}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                <path d="M6 10c0-3 2.7-5 6-5s6 2 6 5-2.7 5-6 5c-.9 0-1.8-.1-2.6-.3L6 17v-2.3C6 13.5 6 12.3 6 10Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                              </svg>
-                              Ask
-                            </button>
+                            </div>
                           </div>
                         </div>
                       </div>

@@ -59,6 +59,17 @@ function humanizeTenantSlug(slug: string) {
   return s
 }
 
+function looksLikeSlugName(name: string, slug: string) {
+  const n = String(name || '').trim()
+  if (!n) return false
+  const s = String(slug || '').trim()
+  const lower = n.toLowerCase()
+  if (s && lower === s.toLowerCase()) return true
+  // No spaces + mostly lowercase alphanumerics/hyphens = sluggy.
+  if (!n.includes(' ') && /^[a-z0-9-]+$/.test(lower)) return true
+  return false
+}
+
 function formatPickupTime(iso: string | null, tz: string) {
   if (!iso) return 'ASAP'
   try {
@@ -172,8 +183,9 @@ export default function OrderSuccessPage({ searchParams }: Props) {
 
   const total = order ? (order.totalCents / 100).toFixed(2) : ''
   const tenantSlug = order?.tenant?.slug || ''
-  const tenantName = (order?.tenant?.name && order.tenant.name.trim())
-    ? order.tenant.name.trim()
+  const rawTenantName = (order?.tenant?.name && order.tenant.name.trim()) ? order.tenant.name.trim() : ''
+  const tenantName = rawTenantName && !looksLikeSlugName(rawTenantName, tenantSlug)
+    ? rawTenantName
     : (humanizeTenantSlug(tenantSlug) || 'Restaurant')
   const steps = stepState(order?.status)
   const pickupCode = order?.pickupCode ? String(order.pickupCode) : ''

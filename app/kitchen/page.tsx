@@ -161,6 +161,11 @@ export default function KitchenPage() {
   const [dragX, setDragX] = useState<Record<string, number>>({})
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const dragStartXRef = useMemo(() => ({ x: 0, id: '' }), [])
+  const isInteractiveTarget = (target: EventTarget | null) => {
+    const el = target as HTMLElement | null
+    if (!el) return false
+    return !!el.closest('button, a, input, textarea, select, [role="button"], [data-no-drag="true"]')
+  }
 
   const allergyRegex = useMemo(() => /allergy|allergic|gluten|celiac|nut|peanut|tree nut|shellfish|dairy|lactose/i, [])
   const hasAllergyFlag = (o: KitchenOrder) => {
@@ -172,6 +177,13 @@ export default function KitchenPage() {
     }
     return allergyRegex.test(parts.join(' • '))
   }
+
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [detailsOrderId, setDetailsOrderId] = useState<string | null>(null)
+  const detailsOrder = useMemo(() => {
+    if (!detailsOrderId) return null
+    return orders.find(o => o.id === detailsOrderId) || null
+  }, [detailsOrderId, orders])
 
   const updateStatus = async (orderId: string, status: string) => {
     try {
@@ -233,18 +245,23 @@ export default function KitchenPage() {
                   {new Date(nowTick).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
                 </div>
               </div>
-              <button
-                type="button"
-                className="ml-2 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/90 hover:bg-white/10"
-                aria-label="Settings"
-                title="Settings (managers)"
-                onClick={() => setToast('Settings coming soon')}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="2" />
-                  <path d="M19.4 15a8.6 8.6 0 0 0 .1-1 8.6 8.6 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a8.6 8.6 0 0 0-1.7-1l-.3-2.6H11l-.3 2.6a8.6 8.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a8.6 8.6 0 0 0-.1 1 8.6 8.6 0 0 0 .1 1l-2 1.5 2 3.5 2.4-1a8.6 8.6 0 0 0 1.7 1l.3 2.6h4l.3-2.6a8.6 8.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-                </svg>
-              </button>
+              {view === 'history' && (
+                <button
+                  type="button"
+                  className="ml-2 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-transparent text-white/80 hover:bg-white/10 hover:text-white"
+                  aria-label="Settings"
+                  title="Open admin"
+                  onClick={() => {
+                    const cb = '/admin/menu'
+                    window.location.href = `/auth/login?tenant=${encodeURIComponent(tenant)}&callbackUrl=${encodeURIComponent(cb)}`
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="2" />
+                    <path d="M19.4 15a8.6 8.6 0 0 0 .1-1 8.6 8.6 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a8.6 8.6 0 0 0-1.7-1l-.3-2.6H11l-.3 2.6a8.6 8.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a8.6 8.6 0 0 0-.1 1 8.6 8.6 0 0 0 .1 1l-2 1.5 2 3.5 2.4-1a8.6 8.6 0 0 0 1.7 1l.3 2.6h4l.3-2.6a8.6 8.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -344,6 +361,7 @@ export default function KitchenPage() {
                                 }}
                                 onPointerDown={(e) => {
                                   if (!isSwipeable) return
+                                  if (isInteractiveTarget(e.target)) return
                                   setDraggingId(o.id)
                                   dragStartXRef.x = e.clientX
                                   dragStartXRef.id = o.id
@@ -374,16 +392,16 @@ export default function KitchenPage() {
                                   setDragX(prev => ({ ...prev, [o.id]: 0 }))
                                 }}
                               >
-                                <div className="p-4">
+                                <div className="p-3">
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
                                       <div className="flex items-baseline gap-2">
-                                        <div className="text-xl font-extrabold">Order #{n}</div>
-                                        <div className={`text-xs font-semibold ${runningLong ? 'text-amber-200 animate-pulse' : 'text-neutral-300'}`}>
+                                        <div className="text-lg font-extrabold">Order #{n}</div>
+                                        <div className={`text-[11px] font-semibold ${runningLong ? 'text-amber-200 animate-pulse' : 'text-neutral-300'}`}>
                                           {elapsed} elapsed{runningLong ? ' • Running long' : ''}
                                         </div>
                                       </div>
-                                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                                      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
                                         <span className="rounded-full bg-white/10 px-2 py-1">{pickupBadge}</span>
                                         <span className="rounded-full bg-white/10 px-2 py-1">Total {money(o.totalCents)}</span>
                                         <span className="rounded-full bg-emerald-500/20 text-emerald-200 px-2 py-1">PAID</span>
@@ -397,27 +415,27 @@ export default function KitchenPage() {
                                     </div>
                                   </div>
 
-                                  <div className="mt-4 rounded-xl border border-white/10 bg-black/20">
+                                  <div className="mt-3 rounded-xl border border-white/10 bg-black/20 max-h-[220px] overflow-auto">
                                     {(o.items || []).map((it) => (
                                       <div key={it.id} className="px-3 py-2 border-b border-white/5 last:border-b-0">
                                         <div className="flex items-start justify-between gap-3">
                                           <div className="min-w-0">
-                                            <div className="text-sm font-semibold">
+                                            <div className="text-[13px] font-semibold">
                                               <span className="mr-2 rounded-lg bg-white/10 px-2 py-0.5 text-xs font-extrabold">x{it.quantity}</span>
                                               {it.name}
                                             </div>
                                             {Array.isArray(it.addOns) && it.addOns.length > 0 && (
-                                              <div className="mt-1 text-xs text-neutral-300">
+                                              <div className="mt-1 text-[11px] text-neutral-300">
                                                 {it.addOns.map(a => a.name).join(', ')}
                                               </div>
                                             )}
                                             {it.note && (
-                                              <div className="mt-1 text-xs text-amber-200 whitespace-pre-wrap">
+                                              <div className="mt-1 text-[11px] text-amber-200 whitespace-pre-wrap">
                                                 {it.note}
                                               </div>
                                             )}
                                           </div>
-                                          <div className="text-sm font-semibold">{money(it.unitPriceCents * it.quantity)}</div>
+                                          <div className="text-[13px] font-semibold">{money(it.unitPriceCents * it.quantity)}</div>
                                         </div>
                                       </div>
                                     ))}
@@ -430,13 +448,14 @@ export default function KitchenPage() {
                                     </div>
                                   )}
 
-                                  <div className="mt-4 grid grid-cols-2 gap-2">
+                                  <div className="mt-3 grid grid-cols-2 gap-2">
                                     {col.key === 'NEW' && (
                                       <>
                                         <button
                                           type="button"
-                                          onClick={() => updateStatus(o.id, 'PREPARING')}
-                                          className="col-span-2 rounded-2xl px-4 py-3 text-sm font-extrabold border border-sky-300/40 bg-sky-500/20 hover:bg-sky-500/30"
+                                          data-no-drag="true"
+                                          onClick={(e) => { e.stopPropagation(); void updateStatus(o.id, 'PREPARING') }}
+                                          className="col-span-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold border border-sky-300/40 bg-sky-500/20 hover:bg-sky-500/30"
                                         >
                                           Start Preparing
                                         </button>
@@ -446,8 +465,9 @@ export default function KitchenPage() {
                                       <>
                                         <button
                                           type="button"
-                                          onClick={() => updateStatus(o.id, 'READY')}
-                                          className="col-span-2 rounded-2xl px-4 py-3 text-sm font-extrabold border border-amber-300/40 bg-amber-500/20 hover:bg-amber-500/30"
+                                          data-no-drag="true"
+                                          onClick={(e) => { e.stopPropagation(); void updateStatus(o.id, 'READY') }}
+                                          className="col-span-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold border border-amber-300/40 bg-amber-500/20 hover:bg-amber-500/30"
                                         >
                                           Mark Ready
                                         </button>
@@ -457,8 +477,9 @@ export default function KitchenPage() {
                                       <>
                                         <button
                                           type="button"
-                                          onClick={() => updateStatus(o.id, 'COMPLETED')}
-                                          className="col-span-2 rounded-2xl px-4 py-3 text-sm font-extrabold border border-emerald-300/40 bg-emerald-500/20 hover:bg-emerald-500/30"
+                                          data-no-drag="true"
+                                          onClick={(e) => { e.stopPropagation(); void updateStatus(o.id, 'COMPLETED') }}
+                                          className="col-span-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold border border-emerald-300/40 bg-emerald-500/20 hover:bg-emerald-500/30"
                                         >
                                           Complete
                                         </button>
@@ -494,7 +515,16 @@ export default function KitchenPage() {
                   <div key={o.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-sm font-extrabold">Order #{orderNumberById.get(o.id) || ''}</div>
+                        <button
+                          type="button"
+                          className="text-sm font-extrabold underline underline-offset-4 hover:opacity-90"
+                          onClick={() => {
+                            setDetailsOrderId(o.id)
+                            setDetailsOpen(true)
+                          }}
+                        >
+                          Order #{orderNumberById.get(o.id) || ''}
+                        </button>
                         <div className="mt-2 flex flex-wrap gap-2 text-xs">
                           <span className="rounded-full bg-white/10 px-2 py-1">Status: {o.status}</span>
                           <span className="rounded-full bg-white/10 px-2 py-1">Total: {money(o.totalCents)}</span>
@@ -512,6 +542,82 @@ export default function KitchenPage() {
             </div>
           )}
         </div>
+
+        {/* History order details modal */}
+        {detailsOpen && detailsOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+            <div className="w-full max-w-xl rounded-3xl border border-white/10 bg-neutral-950 text-white shadow-2xl">
+              <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-white/10">
+                <div className="min-w-0">
+                  <div className="text-lg font-extrabold">
+                    Order #{orderNumberById.get(detailsOrder.id) || ''}
+                  </div>
+                  <div className="mt-1 text-xs text-neutral-300">
+                    {new Date(detailsOrder.createdAt).toLocaleString(undefined, { hour: 'numeric', minute: '2-digit', month: 'short', day: 'numeric' })}
+                    {' • '}
+                    {formatElapsed(nowTick - Date.parse(detailsOrder.createdAt))} elapsed
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10"
+                  onClick={() => { setDetailsOpen(false); setDetailsOrderId(null) }}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="px-5 py-4 space-y-3">
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-full bg-white/10 px-2 py-1">Status: {detailsOrder.status}</span>
+                  <span className="rounded-full bg-white/10 px-2 py-1">Total: {money(detailsOrder.totalCents)}</span>
+                  {detailsOrder.tableNumber
+                    ? <span className="rounded-full bg-white/10 px-2 py-1">DINE-IN • Table {detailsOrder.tableNumber}</span>
+                    : <span className="rounded-full bg-white/10 px-2 py-1">Pickup: {detailsOrder.scheduledFor ? formatTime(detailsOrder.scheduledFor, detailsOrder.timezone) : 'ASAP'}</span>
+                  }
+                  {!detailsOrder.tableNumber && (
+                    <span className="rounded-full bg-white/10 px-2 py-1">Code: {detailsOrder.pickupCode}</span>
+                  )}
+                  {hasAllergyFlag(detailsOrder) && (
+                    <span className="rounded-full bg-red-500/20 text-red-100 px-2 py-1 font-extrabold">ALLERGY</span>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/30 overflow-hidden">
+                  {(detailsOrder.items || []).map((it) => (
+                    <div key={it.id} className="px-4 py-3 border-b border-white/5 last:border-b-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold">
+                            <span className="mr-2 rounded-lg bg-white/10 px-2 py-0.5 text-xs font-extrabold">x{it.quantity}</span>
+                            {it.name}
+                          </div>
+                          {Array.isArray(it.addOns) && it.addOns.length > 0 && (
+                            <div className="mt-1 text-xs text-neutral-300">
+                              {it.addOns.map(a => a.name).join(', ')}
+                            </div>
+                          )}
+                          {it.note && (
+                            <div className="mt-1 text-xs text-amber-200 whitespace-pre-wrap">{it.note}</div>
+                          )}
+                        </div>
+                        <div className="text-sm font-semibold">{money(it.unitPriceCents * it.quantity)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {detailsOrder.note && (
+                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                    <div className="text-xs font-extrabold uppercase tracking-wide text-amber-200">Order notes</div>
+                    <div className="mt-1 whitespace-pre-wrap">{detailsOrder.note}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {toast && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-xl bg-black/80 border border-white/10 px-4 py-2 text-sm">
