@@ -546,6 +546,14 @@ export default function MenuClient() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [orderNote, setOrderNote] = useState('')
   const [tableNumber, setTableNumber] = useState('')
+  const [fulfillmentMode, setFulfillmentMode] = useState<'pickup' | 'dinein'>('pickup')
+
+  useEffect(() => {
+    if (!dineInEnabled && fulfillmentMode === 'dinein') {
+      setFulfillmentMode('pickup')
+      setTableNumber('')
+    }
+  }, [dineInEnabled, fulfillmentMode])
 
   const contactStorageKey = useMemo(() => `order_contact_v1:${tenant}`, [tenant])
   useEffect(() => {
@@ -632,6 +640,10 @@ export default function MenuClient() {
         setToast(orderingPauseText)
         return
       }
+      if (orderingEnabled && dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) {
+        setToast(`Please enter your ${dineInLabel.toLowerCase()} to place a dine-in order.`)
+        return
+      }
       if (orderingEnabled && !emailOk) {
         setToast('Email is required for your receipt.')
         return
@@ -644,10 +656,10 @@ export default function MenuClient() {
           addOns: ci.addOns || [],
           note: (ci.note || '').trim() || null,
         })),
-        scheduledFor: (orderingEnabled && schedulingEnabled && pickupWhen === 'scheduled' && scheduledForIso)
+        scheduledFor: (orderingEnabled && schedulingEnabled && fulfillmentMode === 'pickup' && pickupWhen === 'scheduled' && scheduledForIso)
           ? scheduledForIso
           : null,
-        tableNumber: (orderingEnabled && dineInEnabled) ? (tableNumber.trim() || null) : null,
+        tableNumber: (orderingEnabled && dineInEnabled && fulfillmentMode === 'dinein') ? (tableNumber.trim() || null) : null,
         customerEmail: customerEmail.trim(),
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
@@ -1730,6 +1742,58 @@ export default function MenuClient() {
                 </div>
               ) : (
                 <div className="space-y-8">
+                  {/* Fulfillment (dine-in vs pickup) */}
+                  {orderingEnabled && dineInEnabled && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-black">Order type</div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        Choose pickup or dine-in so the kitchen routes it correctly.
+                      </div>
+                      <div className="mt-4 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFulfillmentMode('pickup')}
+                          className="px-4 py-2.5 rounded-xl text-sm font-extrabold border transition"
+                          style={fulfillmentMode === 'pickup'
+                            ? { background: 'var(--accent)', color: '#ffffff', borderColor: 'var(--accent)' }
+                            : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                          }
+                        >
+                          To-go pickup
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFulfillmentMode('dinein')}
+                          className="px-4 py-2.5 rounded-xl text-sm font-extrabold border transition"
+                          style={fulfillmentMode === 'dinein'
+                            ? { background: 'var(--accent)', color: '#ffffff', borderColor: 'var(--accent)' }
+                            : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                          }
+                        >
+                          Dine-in
+                        </button>
+                      </div>
+
+                      {fulfillmentMode === 'dinein' && (
+                        <div className="mt-4">
+                          <label className="block text-xs font-semibold text-gray-700">{dineInLabel}</label>
+                          <input
+                            inputMode="numeric"
+                            value={tableNumber}
+                            onChange={(e) => setTableNumber(e.target.value)}
+                            placeholder={dineInLabel}
+                            className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                          />
+                          {!tableNumber.trim() && (
+                            <div className="mt-2 text-xs font-semibold text-amber-700">
+                              Required for dine-in orders.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Your Order */}
                   <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                     <div className="text-sm font-extrabold tracking-wide text-black">Your Order</div>
@@ -1897,7 +1961,7 @@ export default function MenuClient() {
                   )}
 
                   {/* Pickup Time */}
-                  {orderingEnabled && schedulingEnabled && (
+                  {orderingEnabled && schedulingEnabled && fulfillmentMode === 'pickup' && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-extrabold tracking-wide text-black">
                         <span aria-hidden="true">
@@ -1956,22 +2020,7 @@ export default function MenuClient() {
                     </div>
                   )}
 
-                  {/* Dine-in (optional) */}
-                  {orderingEnabled && dineInEnabled && (
-                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <div className="text-sm font-extrabold tracking-wide text-black">Dine-in</div>
-                      <div className="mt-2 text-sm text-gray-600">
-                        Enter your table number so the kitchen knows you’re dining in.
-                      </div>
-                      <input
-                        inputMode="numeric"
-                        value={tableNumber}
-                        onChange={(e) => setTableNumber(e.target.value)}
-                        placeholder={dineInLabel}
-                        className="mt-4 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
-                      />
-                    </div>
-                  )}
+                  {/* Dine-in UI moved to top as the first step */}
 
                   {orderingEnabled && orderingPaused && (
                     <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -1999,7 +2048,7 @@ export default function MenuClient() {
                     }}
                     className="rounded-2xl px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)' }}
-                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused))}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
                   >
                     {orderingEnabled ? 'Place order' : 'Proceed with Plate'}
                   </button>

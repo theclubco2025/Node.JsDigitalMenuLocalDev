@@ -31,10 +31,20 @@ type KitchenResponse = {
   orders?: KitchenOrder[]
 }
 
-const STATUS_CHOICES = ['NEW', 'PREPARING', 'READY', 'COMPLETED', 'CANCELED'] as const
-
 function money(cents: number) {
   return `$${(cents / 100).toFixed(2)}`
+}
+
+function formatElapsed(ms: number) {
+  const totalSec = Math.max(0, Math.floor(ms / 1000))
+  const m = Math.floor(totalSec / 60)
+  const s = totalSec % 60
+  if (m >= 60) {
+    const h = Math.floor(m / 60)
+    const mm = m % 60
+    return `${h}:${String(mm).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+  return `${m}:${String(s).padStart(2, '0')}`
 }
 
 function formatTime(iso: string | null, tz: string) {
@@ -104,7 +114,7 @@ export default function KitchenPage() {
     if (theme.accent) document.body.style.setProperty('--accent', theme.accent)
   }, [cfg?.theme])
 
-  const { data, isLoading, mutate } = useSWR<KitchenResponse>(
+  const { data, mutate } = useSWR<KitchenResponse>(
     shouldFetch ? `/api/kitchen/orders?tenant=${encodeURIComponent(tenant)}&view=${encodeURIComponent(view)}` : null,
     fetcher,
     { refreshInterval: 2000 }
@@ -113,6 +123,55 @@ export default function KitchenPage() {
   const orders = useMemo(() => data?.orders || [], [data?.orders])
 
   // Note: preview-only debug actions removed to keep KDS kitchen-focused.
+  const [nowTick, setNowTick] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [])
+
+  const activeCount = useMemo(() => {
+    return orders.filter(o => ['NEW', 'PREPARING', 'READY'].includes(String(o.status || '').toUpperCase())).length
+  }, [orders])
+
+  const orderNumberById = useMemo(() => {
+    const sorted = [...orders].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))
+    const m = new Map<string, number>()
+    sorted.forEach((o, i) => m.set(o.id, i + 1))
+    return m
+  }, [orders])
+
+  const activeColumns = useMemo(() => {
+    const byStatus = {
+      NEW: [] as KitchenOrder[],
+      PREPARING: [] as KitchenOrder[],
+      READY: [] as KitchenOrder[],
+    }
+    for (const o of orders) {
+      const s = String(o.status || '').toUpperCase()
+      if (s === 'NEW') byStatus.NEW.push(o)
+      else if (s === 'PREPARING') byStatus.PREPARING.push(o)
+      else if (s === 'READY') byStatus.READY.push(o)
+    }
+    for (const k of Object.keys(byStatus) as Array<keyof typeof byStatus>) {
+      byStatus[k].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))
+    }
+    return byStatus
+  }, [orders])
+
+  const [dragX, setDragX] = useState<Record<string, number>>({})
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const dragStartXRef = useMemo(() => ({ x: 0, id: '' }), [])
+
+  const allergyRegex = useMemo(() => /allergy|allergic|gluten|celiac|nut|peanut|tree nut|shellfish|dairy|lactose/i, [])
+  const hasAllergyFlag = (o: KitchenOrder) => {
+    const parts: string[] = []
+    if (o.note) parts.push(String(o.note))
+    for (const it of o.items || []) {
+      if (it.note) parts.push(String(it.note))
+      if (Array.isArray(it.addOns)) parts.push(it.addOns.map(a => a.name).join(' '))
+    }
+    return allergyRegex.test(parts.join(' • '))
+  }
 
   const updateStatus = async (orderId: string, status: string) => {
     try {
@@ -138,10 +197,14 @@ export default function KitchenPage() {
       className="min-h-screen text-white"
       style={{ background: 'var(--bg, #070707)', color: 'var(--text, #f8fafc)' }}
     >
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Persistent top bar */}
+        <div
+          className="sticky top-0 z-40 rounded-2xl border border-white/10 bg-black/40 backdrop-blur px-4 py-3"
+          style={{ boxShadow: '0 12px 28px rgba(0,0,0,0.22)' }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               {(cfg?.brand?.header?.logoUrl || cfg?.brand?.logoUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -149,11 +212,39 @@ export default function KitchenPage() {
                   alt={cfg?.brand?.name || tenant}
                   className="h-10 w-10 rounded-xl object-cover border border-white/10"
                 />
-              ) : null}
-              <div>
-                <h1 className="text-2xl font-extrabold">{cfg?.brand?.name || tenant}</h1>
-                <p className="text-sm text-neutral-300 mt-1">Incoming orders</p>
+              ) : (
+                <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/10" />
+              )}
+              <div className="min-w-0">
+                <div className="text-lg font-extrabold truncate">{cfg?.brand?.name || tenant}</div>
+                <div className="text-xs text-neutral-300">Kitchen Display</div>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="text-right">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Active</div>
+                <div className="text-sm font-extrabold">{activeCount}</div>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div className="text-right">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Time</div>
+                <div className="text-sm font-extrabold">
+                  {new Date(nowTick).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="ml-2 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/90 hover:bg-white/10"
+                aria-label="Settings"
+                title="Settings (managers)"
+                onClick={() => setToast('Settings coming soon')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" strokeWidth="2" />
+                  <path d="M19.4 15a8.6 8.6 0 0 0 .1-1 8.6 8.6 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a8.6 8.6 0 0 0-1.7-1l-.3-2.6H11l-.3 2.6a8.6 8.6 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a8.6 8.6 0 0 0-.1 1 8.6 8.6 0 0 0 .1 1l-2 1.5 2 3.5 2.4-1a8.6 8.6 0 0 0 1.7 1l.3 2.6h4l.3-2.6a8.6 8.6 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -174,22 +265,13 @@ export default function KitchenPage() {
         )}
 
         <div className="mt-6">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-semibold text-neutral-200">
-              {view === 'active' ? 'Incoming orders' : 'Recent history'}
-            </div>
-            <div className="text-xs text-neutral-400">
-              {isLoading ? 'Loading…' : `Showing ${orders.length}`}
-            </div>
-          </div>
-
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setView('active')}
               className={`rounded-xl px-3 py-2 text-xs font-extrabold border ${view === 'active' ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:bg-white/10'}`}
             >
-              Active
+              Active board
             </button>
             <button
               type="button"
@@ -200,83 +282,235 @@ export default function KitchenPage() {
             </button>
           </div>
 
-          <div className="mt-3 space-y-3">
-            {orders.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-neutral-300">
-                {view === 'active' ? 'No active orders yet.' : 'No completed/canceled orders in the last 24 hours.'}
-              </div>
-            )}
+          {view === 'active' ? (
+            <div className="mt-4">
+              {(activeColumns.NEW.length + activeColumns.PREPARING.length + activeColumns.READY.length) === 0 ? (
+                <div className="rounded-3xl border border-white/10 bg-white/5 p-10 text-center">
+                  <div className="mx-auto h-12 w-12 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M6 7h12v8a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4V7Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                      <path d="M9 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div className="mt-4 text-2xl font-extrabold">No Active Orders</div>
+                  <div className="mt-2 text-sm text-neutral-300">New orders will appear here automatically.</div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {([
+                    { key: 'NEW', title: 'New Orders', hint: 'Tap “Start” to begin.' },
+                    { key: 'PREPARING', title: 'Preparing', hint: 'Tap “Ready” when finished.' },
+                    { key: 'READY', title: 'Ready for Pickup', hint: 'Swipe or tap “Complete” at handoff.' },
+                  ] as const).map((col) => {
+                    const colOrders = activeColumns[col.key]
+                    return (
+                      <div key={col.key} className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
+                        <div className="px-4 py-3 border-b border-white/10 bg-black/20">
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-extrabold">{col.title}</div>
+                            <div className="text-xs text-neutral-300">{colOrders.length}</div>
+                          </div>
+                          <div className="mt-1 text-xs text-neutral-400">{col.hint}</div>
+                        </div>
 
-            {orders.map((o, idx) => {
-              return (
-                <div key={o.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-sm text-neutral-300">Order #{idx + 1}</div>
-                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                        <span className="rounded-full bg-white/10 px-2 py-1">Status: {o.status}</span>
-                        <span className="rounded-full bg-white/10 px-2 py-1">Total: {money(o.totalCents)}</span>
-                        {o.tableNumber
-                          ? <span className="rounded-full bg-white/10 px-2 py-1">DINE-IN • Table {o.tableNumber}</span>
-                          : <span className="rounded-full bg-white/10 px-2 py-1">Pickup: {formatTime(o.scheduledFor, o.timezone)}</span>
-                        }
-                        <span className="rounded-full px-2 py-1 bg-emerald-500/20 text-emerald-200">
-                          PAID
-                        </span>
-                        <span className="rounded-full bg-white/10 px-2 py-1">Pickup code: {o.pickupCode}</span>
+                        <div className="p-3 space-y-3">
+                          {colOrders.map((o) => {
+                            const n = orderNumberById.get(o.id) || 0
+                            const elapsed = formatElapsed(nowTick - Date.parse(o.createdAt))
+                            const runningLong = (nowTick - Date.parse(o.createdAt)) >= 10 * 60 * 1000
+                            const allergy = hasAllergyFlag(o)
+                            const isDineIn = !!(o.tableNumber && String(o.tableNumber).trim())
+                            const pickupBadge = isDineIn
+                              ? `DINE-IN • Table ${String(o.tableNumber).trim()}`
+                              : (o.scheduledFor ? `Scheduled • ${formatTime(o.scheduledFor, o.timezone)}` : 'Pickup • ASAP')
+
+                            const border =
+                              col.key === 'NEW'
+                                ? 'border-sky-400/60'
+                                : col.key === 'PREPARING'
+                                  ? 'border-amber-400/60'
+                                  : 'border-emerald-400/60'
+
+                            const swipeX = dragX[o.id] || 0
+                            const isSwipeable = col.key === 'READY'
+
+                            return (
+                              <div
+                                key={o.id}
+                                className={`rounded-2xl border border-white/10 bg-black/30 ${border} border-l-4 overflow-hidden`}
+                                style={{
+                                  transform: isSwipeable ? `translateX(${swipeX}px)` : undefined,
+                                  transition: (isSwipeable && draggingId === o.id) ? 'none' : 'transform 160ms ease',
+                                }}
+                                onPointerDown={(e) => {
+                                  if (!isSwipeable) return
+                                  setDraggingId(o.id)
+                                  dragStartXRef.x = e.clientX
+                                  dragStartXRef.id = o.id
+                                  try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId) } catch {}
+                                }}
+                                onPointerMove={(e) => {
+                                  if (!isSwipeable) return
+                                  if (draggingId !== o.id) return
+                                  const dx = e.clientX - dragStartXRef.x
+                                  const clamped = Math.max(0, Math.min(160, dx))
+                                  setDragX(prev => ({ ...prev, [o.id]: clamped }))
+                                }}
+                                onPointerUp={async () => {
+                                  if (!isSwipeable) return
+                                  if (draggingId !== o.id) return
+                                  const dx = dragX[o.id] || 0
+                                  setDraggingId(null)
+                                  if (dx >= 120) {
+                                    setDragX(prev => ({ ...prev, [o.id]: 0 }))
+                                    await updateStatus(o.id, 'COMPLETED')
+                                    return
+                                  }
+                                  setDragX(prev => ({ ...prev, [o.id]: 0 }))
+                                }}
+                                onPointerCancel={() => {
+                                  if (!isSwipeable) return
+                                  setDraggingId(null)
+                                  setDragX(prev => ({ ...prev, [o.id]: 0 }))
+                                }}
+                              >
+                                <div className="p-4">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <div className="flex items-baseline gap-2">
+                                        <div className="text-xl font-extrabold">Order #{n}</div>
+                                        <div className={`text-xs font-semibold ${runningLong ? 'text-amber-200 animate-pulse' : 'text-neutral-300'}`}>
+                                          {elapsed} elapsed{runningLong ? ' • Running long' : ''}
+                                        </div>
+                                      </div>
+                                      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                                        <span className="rounded-full bg-white/10 px-2 py-1">{pickupBadge}</span>
+                                        <span className="rounded-full bg-white/10 px-2 py-1">Total {money(o.totalCents)}</span>
+                                        <span className="rounded-full bg-emerald-500/20 text-emerald-200 px-2 py-1">PAID</span>
+                                        {!isDineIn && (
+                                          <span className="rounded-full bg-white/10 px-2 py-1">Code {o.pickupCode}</span>
+                                        )}
+                                        {allergy && (
+                                          <span className="rounded-full bg-red-500/20 text-red-100 px-2 py-1 font-extrabold">ALLERGY</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-4 rounded-xl border border-white/10 bg-black/20">
+                                    {(o.items || []).map((it) => (
+                                      <div key={it.id} className="px-3 py-2 border-b border-white/5 last:border-b-0">
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="min-w-0">
+                                            <div className="text-sm font-semibold">
+                                              <span className="mr-2 rounded-lg bg-white/10 px-2 py-0.5 text-xs font-extrabold">x{it.quantity}</span>
+                                              {it.name}
+                                            </div>
+                                            {Array.isArray(it.addOns) && it.addOns.length > 0 && (
+                                              <div className="mt-1 text-xs text-neutral-300">
+                                                {it.addOns.map(a => a.name).join(', ')}
+                                              </div>
+                                            )}
+                                            {it.note && (
+                                              <div className="mt-1 text-xs text-amber-200 whitespace-pre-wrap">
+                                                {it.note}
+                                              </div>
+                                            )}
+                                          </div>
+                                          <div className="text-sm font-semibold">{money(it.unitPriceCents * it.quantity)}</div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {o.note && (
+                                    <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                                      <div className="text-xs font-extrabold uppercase tracking-wide text-amber-200">Order notes</div>
+                                      <div className="mt-1 whitespace-pre-wrap">{o.note}</div>
+                                    </div>
+                                  )}
+
+                                  <div className="mt-4 grid grid-cols-2 gap-2">
+                                    {col.key === 'NEW' && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => updateStatus(o.id, 'PREPARING')}
+                                          className="col-span-2 rounded-2xl px-4 py-3 text-sm font-extrabold border border-sky-300/40 bg-sky-500/20 hover:bg-sky-500/30"
+                                        >
+                                          Start Preparing
+                                        </button>
+                                      </>
+                                    )}
+                                    {col.key === 'PREPARING' && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => updateStatus(o.id, 'READY')}
+                                          className="col-span-2 rounded-2xl px-4 py-3 text-sm font-extrabold border border-amber-300/40 bg-amber-500/20 hover:bg-amber-500/30"
+                                        >
+                                          Mark Ready
+                                        </button>
+                                      </>
+                                    )}
+                                    {col.key === 'READY' && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={() => updateStatus(o.id, 'COMPLETED')}
+                                          className="col-span-2 rounded-2xl px-4 py-3 text-sm font-extrabold border border-emerald-300/40 bg-emerald-500/20 hover:bg-emerald-500/30"
+                                        >
+                                          Complete
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {isSwipeable && (
+                                    <div className="mt-3 text-xs text-neutral-400">
+                                      Tip: swipe right to complete.
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {orders.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
+                  <div className="text-xl font-extrabold">No completed orders</div>
+                  <div className="mt-2 text-sm text-neutral-300">History shows completed/canceled orders from the last 24 hours.</div>
+                </div>
+              ) : (
+                orders.map((o) => (
+                  <div key={o.id} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-sm font-extrabold">Order #{orderNumberById.get(o.id) || ''}</div>
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                          <span className="rounded-full bg-white/10 px-2 py-1">Status: {o.status}</span>
+                          <span className="rounded-full bg-white/10 px-2 py-1">Total: {money(o.totalCents)}</span>
+                          {o.tableNumber
+                            ? <span className="rounded-full bg-white/10 px-2 py-1">DINE-IN • Table {o.tableNumber}</span>
+                            : <span className="rounded-full bg-white/10 px-2 py-1">Pickup: {formatTime(o.scheduledFor, o.timezone)}</span>
+                          }
+                          {!o.tableNumber && <span className="rounded-full bg-white/10 px-2 py-1">Code: {o.pickupCode}</span>}
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {STATUS_CHOICES.map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => updateStatus(o.id, s)}
-                          className={`rounded-xl px-3 py-2 text-xs font-extrabold border ${
-                            o.status === s ? 'bg-white text-black border-white' : 'bg-transparent text-white border-white/20 hover:bg-white/10'
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
                   </div>
-
-                  {o.note && (
-                    <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-                      <div className="text-xs font-extrabold uppercase tracking-wide text-amber-200">Special instructions</div>
-                      <div className="mt-1 whitespace-pre-wrap">{o.note}</div>
-                    </div>
-                  )}
-
-                  {o.items?.length ? (
-                    <div className="mt-4 rounded-xl border border-white/10 bg-black/20">
-                      {o.items.map((it) => (
-                        <div key={it.id} className="flex items-center justify-between px-3 py-2 text-sm border-b border-white/5 last:border-b-0">
-                          <div className="min-w-0">
-                            <div className="font-semibold truncate">{it.name}</div>
-                            <div className="text-xs text-neutral-400">Qty {it.quantity}</div>
-                            {Array.isArray(it.addOns) && it.addOns.length > 0 && (
-                              <div className="mt-1 text-xs text-neutral-300">
-                                Add-ons: {it.addOns.map(a => a.name).join(', ')}
-                              </div>
-                            )}
-                            {it.note && (
-                              <div className="mt-1 text-xs text-amber-200 whitespace-pre-wrap">
-                                Note: {it.note}
-                              </div>
-                            )}
-                          </div>
-                          <div className="font-semibold">{money(it.unitPriceCents * it.quantity)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              )
-            })}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         {toast && (

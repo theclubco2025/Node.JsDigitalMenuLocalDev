@@ -40,6 +40,11 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   const [orderingSaving, setOrderingSaving] = useState(false)
   const [dineInEnabled, setDineInEnabled] = useState(false)
   const [dineInLabel, setDineInLabel] = useState('Table number')
+  const [pickupStep3Label, setPickupStep3Label] = useState('Ready for Pickup')
+  const [pickupReadyMessage, setPickupReadyMessage] = useState('Your order is ready for pickup at the bar.')
+  const [dineInStep3Label, setDineInStep3Label] = useState('Ready for Table')
+  const [dineInReadyMessage, setDineInReadyMessage] = useState('Your order is ready — we’ll bring it to your table.')
+  const [pickupCodeHelper, setPickupCodeHelper] = useState('Save this pickup code — you’ll need it when you arrive.')
 
   useEffect(() => {
     if (!toast) return
@@ -82,6 +87,18 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
         const dineIn = (ordering.dineIn && typeof ordering.dineIn === 'object')
           ? (ordering.dineIn as Record<string, unknown>)
           : {}
+        const statusCopy = (ordering.statusCopy && typeof ordering.statusCopy === 'object')
+          ? (ordering.statusCopy as Record<string, unknown>)
+          : {}
+        const pickupCopy = (statusCopy.pickup && typeof statusCopy.pickup === 'object')
+          ? (statusCopy.pickup as Record<string, unknown>)
+          : {}
+        const dineInCopy = (statusCopy.dineIn && typeof statusCopy.dineIn === 'object')
+          ? (statusCopy.dineIn as Record<string, unknown>)
+          : {}
+        const pickupCodeCopy = (ordering.pickupCodeCopy && typeof ordering.pickupCodeCopy === 'object')
+          ? (ordering.pickupCodeCopy as Record<string, unknown>)
+          : {}
         if (cancelled) return
         setOrderingPaused(ordering.paused === true)
         setPauseMessage(typeof ordering.pauseMessage === 'string' ? ordering.pauseMessage : '')
@@ -90,6 +107,11 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
         setLeadTimeMinutes(typeof scheduling.leadTimeMinutes === 'number' ? scheduling.leadTimeMinutes : 30)
         setDineInEnabled(dineIn.enabled === true)
         setDineInLabel(typeof dineIn.label === 'string' && dineIn.label.trim() ? dineIn.label.trim() : 'Table number')
+        setPickupStep3Label(typeof pickupCopy.step3Label === 'string' && pickupCopy.step3Label.trim() ? pickupCopy.step3Label.trim() : 'Ready for Pickup')
+        setPickupReadyMessage(typeof pickupCopy.readyMessage === 'string' && pickupCopy.readyMessage.trim() ? pickupCopy.readyMessage.trim() : 'Your order is ready for pickup at the bar.')
+        setDineInStep3Label(typeof dineInCopy.step3Label === 'string' && dineInCopy.step3Label.trim() ? dineInCopy.step3Label.trim() : 'Ready for Table')
+        setDineInReadyMessage(typeof dineInCopy.readyMessage === 'string' && dineInCopy.readyMessage.trim() ? dineInCopy.readyMessage.trim() : 'Your order is ready — we’ll bring it to your table.')
+        setPickupCodeHelper(typeof pickupCodeCopy.helper === 'string' && pickupCodeCopy.helper.trim() ? pickupCodeCopy.helper.trim() : 'Save this pickup code — you’ll need it when you arrive.')
       } catch {
         // ignore
       }
@@ -165,6 +187,19 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
             dineIn: {
               enabled: dineInEnabled,
               label: dineInLabel,
+            },
+            statusCopy: {
+              pickup: {
+                step3Label: pickupStep3Label,
+                readyMessage: pickupReadyMessage,
+              },
+              dineIn: {
+                step3Label: dineInStep3Label,
+                readyMessage: dineInReadyMessage,
+              },
+            },
+            pickupCodeCopy: {
+              helper: pickupCodeHelper,
             },
           }
         }),
@@ -338,6 +373,64 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
                   value={dineInLabel}
                   onChange={(e) => setDineInLabel(e.target.value)}
                   placeholder="Table number"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-4">
+              <div className="text-sm font-semibold text-gray-900">Customer order status copy</div>
+              <div className="mt-1 text-xs text-gray-700">
+                These labels/messages appear on the customer “Order Confirmed” page and update live as the kitchen changes status.
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-xs font-extrabold uppercase tracking-wide text-gray-700">To-go pickup</div>
+                  <label className="mt-3 block text-xs font-semibold text-gray-700">Final step label</label>
+                  <input
+                    value={pickupStep3Label}
+                    onChange={(e) => setPickupStep3Label(e.target.value)}
+                    placeholder="Ready for Pickup"
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                  <label className="mt-3 block text-xs font-semibold text-gray-700">Ready message</label>
+                  <textarea
+                    value={pickupReadyMessage}
+                    onChange={(e) => setPickupReadyMessage(e.target.value)}
+                    placeholder="Your order is ready for pickup at the bar."
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-xs font-extrabold uppercase tracking-wide text-gray-700">Dine-in</div>
+                  <label className="mt-3 block text-xs font-semibold text-gray-700">Final step label</label>
+                  <input
+                    value={dineInStep3Label}
+                    onChange={(e) => setDineInStep3Label(e.target.value)}
+                    placeholder="Ready for Table"
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                  <label className="mt-3 block text-xs font-semibold text-gray-700">Ready message</label>
+                  <textarea
+                    value={dineInReadyMessage}
+                    onChange={(e) => setDineInReadyMessage(e.target.value)}
+                    placeholder="Your order is ready — we’ll bring it to your table."
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-lg border border-gray-200 p-3">
+                <div className="text-xs font-extrabold uppercase tracking-wide text-gray-700">Pickup code helper</div>
+                <label className="mt-3 block text-xs font-semibold text-gray-700">Text shown under the pickup code (to-go only)</label>
+                <input
+                  value={pickupCodeHelper}
+                  onChange={(e) => setPickupCodeHelper(e.target.value)}
+                  placeholder="Save this pickup code — you’ll need it when you arrive."
                   className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 />
               </div>

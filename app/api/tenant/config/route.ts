@@ -22,6 +22,19 @@ const DEFAULT_ORDERING = {
     enabled: false,
     label: 'Table number',
   },
+  statusCopy: {
+    pickup: {
+      step3Label: 'Ready for Pickup',
+      readyMessage: 'Your order is ready for pickup at the bar.',
+    },
+    dineIn: {
+      step3Label: 'Ready for Table',
+      readyMessage: 'Your order is ready — we’ll bring it to your table.',
+    },
+  },
+  pickupCodeCopy: {
+    helper: 'Save this pickup code — you’ll need it when you arrive.',
+  },
   // If hours are unset, we assume 24/7 for testing.
   hours: null,
 } as const
@@ -44,6 +57,18 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
     : {}
   const dineInRaw = (obj.dineIn && typeof obj.dineIn === 'object')
     ? (obj.dineIn as Record<string, unknown>)
+    : {}
+  const statusCopyRaw = (obj.statusCopy && typeof obj.statusCopy === 'object')
+    ? (obj.statusCopy as Record<string, unknown>)
+    : {}
+  const statusCopyPickupRaw = (statusCopyRaw.pickup && typeof statusCopyRaw.pickup === 'object')
+    ? (statusCopyRaw.pickup as Record<string, unknown>)
+    : {}
+  const statusCopyDineInRaw = (statusCopyRaw.dineIn && typeof statusCopyRaw.dineIn === 'object')
+    ? (statusCopyRaw.dineIn as Record<string, unknown>)
+    : {}
+  const pickupCodeCopyRaw = (obj.pickupCodeCopy && typeof obj.pickupCodeCopy === 'object')
+    ? (obj.pickupCodeCopy as Record<string, unknown>)
     : {}
 
   const enabled = typeof obj.enabled === 'boolean' ? obj.enabled : DEFAULT_ORDERING.enabled
@@ -79,6 +104,34 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
     dineIn: {
       enabled: typeof dineInRaw.enabled === 'boolean' ? dineInRaw.enabled : DEFAULT_ORDERING.dineIn.enabled,
       label: typeof dineInRaw.label === 'string' && dineInRaw.label.trim() ? dineInRaw.label.trim() : DEFAULT_ORDERING.dineIn.label,
+    },
+    statusCopy: {
+      pickup: {
+        step3Label:
+          typeof statusCopyPickupRaw.step3Label === 'string' && statusCopyPickupRaw.step3Label.trim()
+            ? statusCopyPickupRaw.step3Label.trim()
+            : DEFAULT_ORDERING.statusCopy.pickup.step3Label,
+        readyMessage:
+          typeof statusCopyPickupRaw.readyMessage === 'string' && statusCopyPickupRaw.readyMessage.trim()
+            ? statusCopyPickupRaw.readyMessage.trim()
+            : DEFAULT_ORDERING.statusCopy.pickup.readyMessage,
+      },
+      dineIn: {
+        step3Label:
+          typeof statusCopyDineInRaw.step3Label === 'string' && statusCopyDineInRaw.step3Label.trim()
+            ? statusCopyDineInRaw.step3Label.trim()
+            : DEFAULT_ORDERING.statusCopy.dineIn.step3Label,
+        readyMessage:
+          typeof statusCopyDineInRaw.readyMessage === 'string' && statusCopyDineInRaw.readyMessage.trim()
+            ? statusCopyDineInRaw.readyMessage.trim()
+            : DEFAULT_ORDERING.statusCopy.dineIn.readyMessage,
+      },
+    },
+    pickupCodeCopy: {
+      helper:
+        typeof pickupCodeCopyRaw.helper === 'string' && pickupCodeCopyRaw.helper.trim()
+          ? pickupCodeCopyRaw.helper.trim()
+          : DEFAULT_ORDERING.pickupCodeCopy.helper,
     },
     hours,
   }
