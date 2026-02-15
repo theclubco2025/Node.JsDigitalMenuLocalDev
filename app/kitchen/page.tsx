@@ -239,12 +239,14 @@ export default function KitchenPage() {
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               {(cfg?.brand?.header?.logoUrl || cfg?.brand?.logoUrl) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={(cfg?.brand?.header?.logoUrl || cfg?.brand?.logoUrl) as string}
-                  alt={cfg?.brand?.name || tenant}
-                  className="h-10 w-10 rounded-xl object-cover border border-white/10"
-                />
+                <div className="h-10 max-w-[160px] px-2 rounded-xl bg-white/5 border border-white/10 flex items-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={(cfg?.brand?.header?.logoUrl || cfg?.brand?.logoUrl) as string}
+                    alt={cfg?.brand?.name || tenant}
+                    className="h-8 w-auto max-w-[140px] object-contain"
+                  />
+                </div>
               ) : (
                 <div className="h-10 w-10 rounded-xl bg-white/10 border border-white/10" />
               )}

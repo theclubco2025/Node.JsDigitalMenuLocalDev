@@ -3,8 +3,13 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/options'
 import { prisma } from '@/lib/prisma'
 import AdminMenuClient from './ui'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Admin Menu',
+}
 
 export default async function AdminMenuPage({ searchParams }: { searchParams?: { tenant?: string } }) {
   const session = await getServerSession(authOptions)

@@ -22,6 +22,14 @@ function parseTags(raw: string): string[] {
 }
 
 export default function AdminMenuClient({ tenant }: { tenant: string }) {
+  const humanTenant = useMemo(() => {
+    const t = (tenant || '').trim()
+    if (!t) return ''
+    if (t === 'independentbarandgrille' || t === 'independent-draft') return 'Independent Bar & Grille'
+    const parts = t.split('-').filter(Boolean)
+    if (parts.length <= 1) return t
+    return parts.map(w => w.slice(0, 1).toUpperCase() + w.slice(1)).join(' ')
+  }, [tenant])
   const editorUrl = useMemo(() => `/menu?tenant=${encodeURIComponent(tenant)}&admin=1`, [tenant])
   const [menu, setMenu] = useState<DraftMenu | null>(null)
   const [loading, setLoading] = useState(true)
@@ -219,7 +227,10 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
       <div className="max-w-5xl mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold text-gray-900">Menu Editor</h2>
         <p className="mt-2 text-gray-600">
-          Tenant: <span className="font-mono">{tenant}</span>
+          Tenant: <span className="font-semibold text-gray-900">{humanTenant || tenant}</span>
+          {humanTenant && humanTenant !== tenant && (
+            <span className="ml-2 text-xs text-gray-500 font-mono">({tenant})</span>
+          )}
         </p>
 
         <div className="mt-3 text-sm text-gray-600">

@@ -11,7 +11,7 @@ const italiana = Italiana({ weight: '400', subsets: ['latin'] })
 const lora = Lora({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Menu Editor',
+  title: 'Menu',
   description: 'Smart restaurant menu system with AI assistant',
 }
 

@@ -74,7 +74,7 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Header with logout */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-2">
@@ -112,7 +112,9 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
           </div>
         </div>
       </div>
-      {children}
+      <main className="min-h-[calc(100vh-52px)]">
+        {children}
+      </main>
     </div>
   )
 }

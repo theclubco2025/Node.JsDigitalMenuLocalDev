@@ -2,9 +2,14 @@ import { redirect } from 'next/navigation'
 import MenuClient from '@/components/MenuClient'
 import IndependentMenuClient from '@/components/IndependentMenuClient'
 import { prisma } from '@/lib/prisma'
+import type { Metadata } from 'next'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Menu',
+}
 
 type Props = {
   searchParams?: Record<string, string | string[] | undefined>
