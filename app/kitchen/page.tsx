@@ -197,7 +197,14 @@ export default function KitchenPage() {
       })
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) throw new Error(json?.error || `Update failed (${res.status})`)
-      setToast(`Updated: ${status}`)
+      if (String(status).toUpperCase() === 'READY' && json?.sms) {
+        const s = json.sms as { status?: string; error?: string }
+        if (s.status === 'sent') setToast('Updated: READY • Text sent')
+        else if (s.status === 'failed') setToast(`Updated: READY • SMS failed: ${String(s.error || 'unknown')}`)
+        else setToast('Updated: READY')
+      } else {
+        setToast(`Updated: ${status}`)
+      }
       await mutate()
     } catch (e) {
       const msg = (e as Error)?.message || ''
@@ -213,7 +220,14 @@ export default function KitchenPage() {
           })
           const json2 = await res2.json().catch(() => null)
           if (!res2.ok || !json2?.ok) throw new Error(json2?.error || `Update failed (${res2.status})`)
-          setToast(`Updated: ${status}`)
+          if (String(status).toUpperCase() === 'READY' && json2?.sms) {
+            const s = json2.sms as { status?: string; error?: string }
+            if (s.status === 'sent') setToast('Updated: READY • Text sent')
+            else if (s.status === 'failed') setToast(`Updated: READY • SMS failed: ${String(s.error || 'unknown')}`)
+            else setToast('Updated: READY')
+          } else {
+            setToast(`Updated: ${status}`)
+          }
           await mutate()
           return
         } catch (e2) {
