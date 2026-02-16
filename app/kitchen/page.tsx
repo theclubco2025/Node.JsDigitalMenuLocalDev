@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
 
 type TenantBrand = { name?: string; header?: { logoUrl?: string }; logoUrl?: string }
@@ -73,6 +73,11 @@ export default function KitchenPage() {
   const [pinReady, setPinReady] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [view, setView] = useState<'active' | 'history'>('active')
+  const [soundEnabled, setSoundEnabled] = useState(false)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const seenIdsRef = useRef<Set<string>>(new Set())
+  const hasHydratedSeenRef = useRef(false)
+  const hasFetchedOnceRef = useRef(false)
 
   useEffect(() => {
     if (!isBrowser) return
@@ -82,6 +87,49 @@ export default function KitchenPage() {
     } catch {}
     setPinReady(true)
   }, [isBrowser, tenant])
+
+  useEffect(() => {
+    if (!isBrowser) return
+    try {
+      const raw = localStorage.getItem(`kds_sound_enabled:${tenant}`)
+      setSoundEnabled(raw === '1')
+    } catch {}
+  }, [isBrowser, tenant])
+
+  const playDing = useCallback(async () => {
+    if (!isBrowser) return
+    try {
+      const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)
+      if (!Ctx) return
+      if (!audioCtxRef.current) audioCtxRef.current = new Ctx()
+      const ctx = audioCtxRef.current
+      if (ctx.state === 'suspended') await ctx.resume()
+
+      const t0 = ctx.currentTime
+      const o = ctx.createOscillator()
+      const g = ctx.createGain()
+      o.type = 'sine'
+      o.frequency.setValueAtTime(880, t0)
+      g.gain.setValueAtTime(0.0001, t0)
+      g.gain.exponentialRampToValueAtTime(0.12, t0 + 0.01)
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14)
+      o.connect(g)
+      g.connect(ctx.destination)
+      o.start(t0)
+      o.stop(t0 + 0.16)
+    } catch {
+      // ignore
+    }
+  }, [isBrowser])
+
+  const setSound = async (next: boolean) => {
+    setSoundEnabled(next)
+    try {
+      localStorage.setItem(`kds_sound_enabled:${tenant}`, next ? '1' : '0')
+    } catch {}
+    // User gesture unlock: play a tiny ding immediately.
+    if (next) await playDing()
+  }
 
   useEffect(() => {
     if (!toast) return
@@ -122,6 +170,60 @@ export default function KitchenPage() {
   )
 
   const orders = useMemo(() => data?.orders || [], [data?.orders])
+
+  useEffect(() => {
+    if (!isBrowser) return
+    // Hydrate seen set once per tenant.
+    if (!hasHydratedSeenRef.current) {
+      hasHydratedSeenRef.current = true
+      try {
+        const raw = localStorage.getItem(`kds_seen_orders:${tenant}`) || ''
+        if (raw) {
+          const parsed = JSON.parse(raw) as unknown
+          if (Array.isArray(parsed)) {
+            seenIdsRef.current = new Set(parsed.map(String).filter(Boolean))
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    if (!shouldFetch) return
+    if (view !== 'active') return
+    if (!data?.ok) return
+    if (!Array.isArray(data.orders)) return
+
+    const incomingNew = data.orders
+      .filter(o => String(o.status || '').toUpperCase() === 'NEW')
+      .map(o => String(o.id))
+      .filter(Boolean)
+
+    // Don’t ding on the initial fetch (prevents noise on load).
+    if (!hasFetchedOnceRef.current) {
+      hasFetchedOnceRef.current = true
+      // Still mark as seen so subsequent polls only ding for truly new orders.
+      for (const id of incomingNew) seenIdsRef.current.add(id)
+      try {
+        const arr = Array.from(seenIdsRef.current).slice(-500)
+        localStorage.setItem(`kds_seen_orders:${tenant}`, JSON.stringify(arr))
+      } catch {}
+      return
+    }
+
+    const unseen = incomingNew.filter(id => !seenIdsRef.current.has(id))
+    if (unseen.length > 0) {
+      for (const id of unseen) seenIdsRef.current.add(id)
+      try {
+        const arr = Array.from(seenIdsRef.current).slice(-500)
+        localStorage.setItem(`kds_seen_orders:${tenant}`, JSON.stringify(arr))
+      } catch {}
+      if (soundEnabled && !document.hidden) {
+        // Ding once per batch of new orders.
+        void playDing()
+      }
+    }
+  }, [isBrowser, tenant, shouldFetch, view, data?.ok, data?.orders, soundEnabled, playDing])
 
   // Note: preview-only debug actions removed to keep KDS kitchen-focused.
   const [nowTick, setNowTick] = useState(() => Date.now())
@@ -333,6 +435,20 @@ export default function KitchenPage() {
                   {new Date(nowTick).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
                 </div>
               </div>
+              <div className="w-px h-8 bg-white/10" />
+              <button
+                type="button"
+                onClick={() => { void setSound(!soundEnabled) }}
+                className={`inline-flex h-10 items-center justify-center rounded-xl border px-3 text-xs font-extrabold ${
+                  soundEnabled
+                    ? 'border-emerald-300/40 bg-emerald-500/15 text-emerald-100 hover:bg-emerald-500/20'
+                    : 'border-white/15 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+                aria-label={soundEnabled ? 'Disable sound' : 'Enable sound'}
+                title={soundEnabled ? 'Sound on' : 'Sound off'}
+              >
+                Sound {soundEnabled ? 'On' : 'Off'}
+              </button>
               {view === 'history' && (
                 <button
                   type="button"

@@ -45,11 +45,51 @@ function formatMoney(cents: number) {
   return (cents / 100).toFixed(2)
 }
 
+type AnalyticsTopItem = { name: string; qty: number; revenueCents: number; customCount: number }
+type AnalyticsCustomization = { name: string; count: number }
+type AnalyticsKeyword = { keyword: string; count: number }
+type AnalyticsCategory = { category: string; count: number }
+type AnalyticsMatchedItem = { id: string; name: string | null; count: number }
+type AnalyticsSampleQ = { createdAt: string; category: string | null; question: string; fallback: boolean }
+type AnalyticsOk = {
+  ok: true
+  tenant: { slug: string; name: string }
+  range: { start: string; end: string; days: number }
+  orders: {
+    totalPaidOrders: number
+    dineInCount: number
+    pickupCount: number
+    topItemsByQty: AnalyticsTopItem[]
+    topItemsByRevenue: AnalyticsTopItem[]
+    topCustomizations: AnalyticsCustomization[]
+    ordersByHour: number[]
+  }
+  assistant: {
+    totalQuestions: number
+    topCategories: AnalyticsCategory[]
+    topKeywords: AnalyticsKeyword[]
+    topMatchedItems: AnalyticsMatchedItem[]
+    sampleQuestions: AnalyticsSampleQ[]
+  }
+}
+type AnalyticsResponse = AnalyticsOk | { ok: false; error: string }
+
 export default function AdminOrdersClient({ tenant }: { tenant: string }) {
+  const [tab, setTab] = useState<'orders' | 'analytics'>('orders')
   const [q, setQ] = useState('')
   const [status, setStatus] = useState('')
+  const [days, setDays] = useState(30)
   const [toast, setToast] = useState<string | null>(null)
   const [busyOrderId, setBusyOrderId] = useState<string | null>(null)
+  const [insightsLoading, setInsightsLoading] = useState(false)
+  const [insights, setInsights] = useState<null | {
+    highlights?: string[]
+    wasteRisks?: string[]
+    menuFixes?: string[]
+    upsellIdeas?: string[]
+    trainingNotes?: string[]
+  }>(null)
+  const [insightsRaw, setInsightsRaw] = useState<string | null>(null)
 
   const url = useMemo(() => {
     const sp = new URLSearchParams()
@@ -64,6 +104,38 @@ export default function AdminOrdersClient({ tenant }: { tenant: string }) {
 
   const orders = (data && 'ok' in data && data.ok) ? data.orders : []
   const error = (data && 'ok' in data && !data.ok) ? data.error : null
+
+  const analyticsUrl = useMemo(() => {
+    const sp = new URLSearchParams()
+    sp.set('tenant', tenant)
+    sp.set('days', String(days))
+    return `/api/admin/analytics?${sp.toString()}`
+  }, [tenant, days])
+
+  const { data: analytics, isLoading: analyticsLoading, mutate: mutateAnalytics } =
+    useSWR<AnalyticsResponse>(tab === 'analytics' ? analyticsUrl : null, fetcher)
+
+  const generateInsights = async () => {
+    try {
+      setInsightsLoading(true)
+      setInsights(null)
+      setInsightsRaw(null)
+      const res = await fetch('/api/admin/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant, days }),
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok || !json?.ok) throw new Error(json?.error || `Insights failed (${res.status})`)
+      setInsights(json?.insights || null)
+      setInsightsRaw(json?.raw || null)
+      setToast('Insights generated')
+    } catch (e) {
+      setToast((e as Error)?.message || 'Insights error')
+    } finally {
+      setInsightsLoading(false)
+    }
+  }
 
   const refund = async (order: OrderRow) => {
     if (!order.paidAt) {
@@ -107,10 +179,27 @@ export default function AdminOrdersClient({ tenant }: { tenant: string }) {
           </div>
           <button
             type="button"
-            onClick={() => void mutate()}
+            onClick={() => { void mutate(); void mutateAnalytics() }}
             className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50"
           >
             Refresh
+          </button>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setTab('orders')}
+            className={`rounded-lg px-3 py-2 text-sm font-bold border ${tab === 'orders' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'}`}
+          >
+            Orders
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('analytics')}
+            className={`rounded-lg px-3 py-2 text-sm font-bold border ${tab === 'analytics' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-900 border-gray-300 hover:bg-gray-50'}`}
+          >
+            Analytics
           </button>
         </div>
 
@@ -142,25 +231,25 @@ export default function AdminOrdersClient({ tenant }: { tenant: string }) {
           </div>
         </div>
 
-        {error && (
+        {error && tab === 'orders' && (
           <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        {isLoading && (
+        {isLoading && tab === 'orders' && (
           <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
             Loading orders…
           </div>
         )}
 
-        {!isLoading && orders.length === 0 && (
+        {!isLoading && tab === 'orders' && orders.length === 0 && (
           <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-700">
             No orders found.
           </div>
         )}
 
-        {!isLoading && orders.length > 0 && (
+        {!isLoading && tab === 'orders' && orders.length > 0 && (
           <div className="mt-6 space-y-3">
             {orders.map((o) => (
               <div key={o.id} className="rounded-xl border border-gray-200 bg-white p-4">
@@ -238,6 +327,144 @@ export default function AdminOrdersClient({ tenant }: { tenant: string }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {tab === 'analytics' && (
+          <div className="mt-6 space-y-4">
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                <div>
+                  <div className="text-sm font-bold text-gray-900">Analytics</div>
+                  <div className="mt-1 text-xs text-gray-600">Default range: last {days} days</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-semibold text-gray-700">Days</label>
+                  <select
+                    value={days}
+                    onChange={(e) => setDays(Number(e.target.value))}
+                    className="rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm"
+                  >
+                    <option value={7}>7</option>
+                    <option value={30}>30</option>
+                    <option value={90}>90</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => void mutateAnalytics()}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-900 hover:bg-gray-50"
+                  >
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {analyticsLoading && (
+              <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
+                Loading analytics…
+              </div>
+            )}
+
+            {!analyticsLoading && analytics?.ok && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">Paid orders</div>
+                    <div className="mt-1 text-2xl font-extrabold text-gray-900">{analytics.orders?.totalPaidOrders ?? 0}</div>
+                    <div className="mt-2 text-xs text-gray-600">
+                      Pickup: {analytics.orders?.pickupCount ?? 0} · Dine-in: {analytics.orders?.dineInCount ?? 0}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">AI questions</div>
+                    <div className="mt-1 text-2xl font-extrabold text-gray-900">{analytics.assistant?.totalQuestions ?? 0}</div>
+                    <div className="mt-2 text-xs text-gray-600">Last {days} days</div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">Top customization</div>
+                    <div className="mt-2 text-sm font-bold text-gray-900">
+                      {analytics.orders?.topCustomizations?.[0]?.name || '—'}
+                    </div>
+                    <div className="mt-1 text-xs text-gray-600">
+                      {analytics.orders?.topCustomizations?.[0]?.count ? `${analytics.orders.topCustomizations[0].count} times` : ''}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="text-sm font-bold text-gray-900">Top items (qty)</div>
+                    <div className="mt-3 space-y-2">
+                      {(analytics.orders?.topItemsByQty || []).slice(0, 8).map((it) => (
+                        <div key={it.name} className="flex items-center justify-between gap-3 text-sm">
+                          <div className="truncate text-gray-900">{it.name}</div>
+                          <div className="font-mono text-gray-700">{it.qty}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 bg-white p-4">
+                    <div className="text-sm font-bold text-gray-900">Top AI keywords</div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(analytics.assistant?.topKeywords || []).slice(0, 12).map((k) => (
+                        <span key={k.keyword} className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-bold text-gray-800">
+                          {k.keyword} · {k.count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-bold text-gray-900">AI insights</div>
+                      <div className="mt-1 text-xs text-gray-600">
+                        Uses your existing AI key. Generates a concise ops summary.
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => { void generateInsights() }}
+                      disabled={insightsLoading}
+                      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-extrabold text-white hover:bg-black disabled:opacity-60"
+                    >
+                      {insightsLoading ? 'Generating…' : 'Generate insights'}
+                    </button>
+                  </div>
+
+                  {(insights || insightsRaw) && (
+                    <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
+                      {insights ? (
+                        <>
+                          {(['highlights', 'wasteRisks', 'menuFixes', 'upsellIdeas', 'trainingNotes'] as const).map((k) => (
+                            <div key={k} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                              <div className="text-xs font-bold uppercase tracking-wide text-gray-600">{k}</div>
+                              <ul className="mt-2 list-disc pl-5 text-sm text-gray-900 space-y-1">
+                                {(insights[k] || []).slice(0, 8).map((line, idx) => (
+                                  <li key={idx}>{line}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-900 whitespace-pre-wrap">
+                          {insightsRaw}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {!analyticsLoading && analytics && !analytics.ok && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                {analytics.error || 'Analytics error'}
+              </div>
+            )}
           </div>
         )}
 

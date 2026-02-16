@@ -189,6 +189,23 @@ model OrderItem {
   @@map("order_items")
 }
 
+model AssistantEvent {
+  id             String   @id @default(cuid())
+  tenantSlug     String
+  createdAt      DateTime @default(now())
+
+  question       String
+  answerSnippet  String?
+  category       String?
+  matchedItemIds String[] @default([])
+  latencyMs      Int?
+  model          String?
+  fallback       Boolean  @default(false)
+
+  @@index([tenantSlug, createdAt])
+  @@map("assistant_events")
+}
+
 enum Role {
   SUPER_ADMIN
   RESTAURANT_OWNER

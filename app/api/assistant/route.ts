@@ -5,6 +5,7 @@ import { getMenuForTenant, filterMenuByDiet, snippet } from '@/lib/data/menu'
 import { buildPrompt } from '@/lib/ai/prompt'
 import { generate } from '@/lib/ai/model'
 import { resolveTenant } from '@/lib/tenant'
+import { prisma } from '@/lib/prisma'
 import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
 import type { MenuResponse } from '@/types/api'
 
@@ -29,6 +30,48 @@ function canonicalTenantSlug(raw: string): string {
   const t = (raw || '').trim().toLowerCase()
   if (t === 'southforkgrille') return 'south-fork-grille'
   return t
+}
+
+function classifyAssistantCategory(query: string): string {
+  const q = normalize(query)
+  if (!q) return 'general'
+  if (q.includes('allerg') || q.includes('gluten') || q.includes('celiac') || q.includes('dairy') || q.includes('lactose') || q.includes('nut') || q.includes('shellfish') || q.includes('soy') || q.includes('egg')) return 'allergens'
+  if (q.includes('wine') || q.includes('beer') || q.includes('cocktail') || q.includes('drink') || q.includes('happy hour')) return 'drinks'
+  if (q.includes('price') || q.includes('cost') || q.includes('$')) return 'pricing'
+  if (q.includes('recommend') || q.includes('popular') || q.includes('best') || q.includes('favorite') || q.includes('suggest')) return 'recommendations'
+  if (q.includes('spicy') || q.includes('heat')) return 'spice'
+  if (q.includes('vegan') || q.includes('vegetarian') || q.includes('gluten-free') || q.includes('dairy-free') || q.includes('nut-free')) return 'diet'
+  return 'general'
+}
+
+async function logAssistantEvent(args: {
+  tenantSlug: string
+  question: string
+  answerSnippet: string | null
+  category: string
+  matchedItemIds: string[]
+  latencyMs: number | null
+  model: string | null
+  fallback: boolean
+}) {
+  try {
+    if (!process.env.DATABASE_URL) return
+    await prisma.assistantEvent.create({
+      data: {
+        tenantSlug: args.tenantSlug,
+        question: args.question.slice(0, 2000),
+        answerSnippet: args.answerSnippet ? args.answerSnippet.slice(0, 1200) : null,
+        category: args.category.slice(0, 80),
+        matchedItemIds: args.matchedItemIds.slice(0, 30),
+        latencyMs: args.latencyMs ?? null,
+        model: args.model ?? null,
+        fallback: args.fallback,
+      },
+      select: { id: true },
+    })
+  } catch {
+    // best-effort; never break assistant
+  }
 }
 
 function isWineQuery(query: string): boolean {
@@ -374,6 +417,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: false, message: 'Missing query' }, { status: 400 })
     }
 
+    const requestStarted = Date.now()
     const tenantId = providedTenant || resolveTenant(request.url)
     const canonical = canonicalTenantSlug(tenantId)
     const isSouthFork = canonical === 'south-fork-grille'
@@ -406,6 +450,16 @@ export async function POST(request: NextRequest) {
         const text = isWineItem
           ? wineItemResponse(filtered, query)
           : (wineListMode(query) === 'full' ? wineListResponse(filtered) : wineSummaryResponse(filtered))
+        await logAssistantEvent({
+          tenantSlug: canonical,
+          question: query,
+          answerSnippet: text,
+          category: classifyAssistantCategory(query),
+          matchedItemIds: [],
+          latencyMs: Date.now() - requestStarted,
+          model: process.env.AI_MODEL || null,
+          fallback: true,
+        })
         return NextResponse.json(
           { ok: true, tenantId, text, fallback: true },
           { headers: corsHeaders(request.headers.get('origin') || '*') }
@@ -415,8 +469,19 @@ export async function POST(request: NextRequest) {
       // South Fork: handle broader drink questions deterministically so we never rely on limited MENU SNAPSHOT.
       const isDrinkIntent = isDrinkQuery(query)
       if (isDrinkIntent) {
+        const text = beverageSummaryResponse(filtered)
+        await logAssistantEvent({
+          tenantSlug: canonical,
+          question: query,
+          answerSnippet: text,
+          category: classifyAssistantCategory(query),
+          matchedItemIds: [],
+          latencyMs: Date.now() - requestStarted,
+          model: process.env.AI_MODEL || null,
+          fallback: true,
+        })
         return NextResponse.json(
-          { ok: true, tenantId, text: beverageSummaryResponse(filtered), fallback: true },
+          { ok: true, tenantId, text, fallback: true },
           { headers: corsHeaders(request.headers.get('origin') || '*') }
         )
       }
@@ -470,6 +535,16 @@ export async function POST(request: NextRequest) {
       const keys = (process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').split(',').map(s=>s.trim()).filter(Boolean)
       if (keys.length === 0) {
         // Fallback: simple retrieval-only answer when no keys (returns top-k menu items)
+        await logAssistantEvent({
+          tenantSlug: canonical,
+          question: query,
+          answerSnippet: fallbackText,
+          category: classifyAssistantCategory(query),
+          matchedItemIds: matches.slice(0, 8).map((m) => String((m as unknown as { item?: { id?: unknown } }).item?.id || '')).filter(Boolean),
+          latencyMs: Date.now() - requestStarted,
+          model: process.env.AI_MODEL || null,
+          fallback: true,
+        })
         return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
       }
     }
@@ -480,6 +555,16 @@ export async function POST(request: NextRequest) {
       recordSuccess(tenantId)
       const ms = Date.now() - started
       console.log(`[assistant] tenant=${tenantId} ok latency=${ms}ms`)
+      await logAssistantEvent({
+        tenantSlug: canonical,
+        question: query,
+        answerSnippet: text,
+        category: classifyAssistantCategory(query),
+        matchedItemIds: matches.slice(0, 12).map((m) => String((m as unknown as { item?: { id?: unknown } }).item?.id || '')).filter(Boolean),
+        latencyMs: ms,
+        model: process.env.AI_MODEL || null,
+        fallback: false,
+      })
       return NextResponse.json({ ok: true, tenantId, text }, { headers: corsHeaders(request.headers.get('origin') || '*') })
     } catch (e) {
       recordFailure(tenantId)

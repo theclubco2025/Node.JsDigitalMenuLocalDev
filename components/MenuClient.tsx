@@ -1727,22 +1727,22 @@ export default function MenuClient() {
       {/* Plate Drawer */}
       {isCartOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex">
-          <div className="ml-auto w-full max-w-md bg-white h-full shadow-2xl border-l border-black/5 flex flex-col">
-            <div className="p-6 border-b border-gray-200 bg-white/95 backdrop-blur">
+          <div className="ml-auto w-full max-w-md bg-neutral-950 text-white h-full shadow-2xl border-l border-white/10 flex flex-col">
+            <div className="p-6 border-b border-white/10 bg-neutral-950/90 backdrop-blur">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-black">Your Plate</h2>
+                <h2 className="text-2xl font-bold text-white">Your Plate</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="text-gray-500 hover:text-black transition-colors"
+                  className="text-white/70 hover:text-white transition-colors"
                 >
                   ✕
                 </button>
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto px-6 py-6 bg-white overscroll-contain">
+            <div className="flex-1 overflow-y-auto px-6 py-6 bg-neutral-950 overscroll-contain">
               {cart.length === 0 ? (
-                <div className="text-center text-gray-500 mt-8">
+                <div className="text-center text-white/70 mt-8">
                   <div className="text-4xl mb-4">🛒</div>
                   <p>Your plate is empty</p>
                 </div>
@@ -1750,9 +1750,9 @@ export default function MenuClient() {
                 <div className="space-y-8">
                   {/* Fulfillment (dine-in vs pickup) */}
                   {orderingEnabled && dineInEnabled && (
-                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <div className="text-sm font-extrabold tracking-wide text-black">Order type</div>
-                      <div className="mt-2 text-sm text-gray-600">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-white">Order type</div>
+                      <div className="mt-2 text-sm text-white/70">
                         Choose pickup or dine-in so the kitchen routes it correctly.
                       </div>
                       <div className="mt-4 flex gap-2">
@@ -1762,7 +1762,7 @@ export default function MenuClient() {
                           className="px-4 py-2.5 rounded-xl text-sm font-extrabold border transition"
                           style={fulfillmentMode === 'pickup'
                             ? { background: 'var(--accent)', color: '#ffffff', borderColor: 'var(--accent)' }
-                            : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                            : { background: 'rgba(255,255,255,0.06)', color: '#fff', borderColor: 'rgba(255,255,255,0.14)' }
                           }
                         >
                           To-go pickup
@@ -1773,7 +1773,7 @@ export default function MenuClient() {
                           className="px-4 py-2.5 rounded-xl text-sm font-extrabold border transition"
                           style={fulfillmentMode === 'dinein'
                             ? { background: 'var(--accent)', color: '#ffffff', borderColor: 'var(--accent)' }
-                            : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                            : { background: 'rgba(255,255,255,0.06)', color: '#fff', borderColor: 'rgba(255,255,255,0.14)' }
                           }
                         >
                           Dine-in
@@ -1782,13 +1782,13 @@ export default function MenuClient() {
 
                       {fulfillmentMode === 'dinein' && (
                         <div className="mt-4">
-                          <label className="block text-xs font-semibold text-gray-700">{dineInLabel}</label>
+                          <label className="block text-xs font-semibold text-white/80">{dineInLabel}</label>
                           <input
                             inputMode="numeric"
                             value={tableNumber}
                             onChange={(e) => setTableNumber(e.target.value)}
                             placeholder={dineInLabel}
-                            className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                            className="mt-2 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
                           />
                           {!tableNumber.trim() && (
                             <div className="mt-2 text-xs font-semibold text-amber-700">
@@ -1801,8 +1801,8 @@ export default function MenuClient() {
                   )}
 
                   {/* Your Order */}
-                  <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                    <div className="text-sm font-extrabold tracking-wide text-black">Your Order</div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                    <div className="text-sm font-extrabold tracking-wide text-white">Your Order</div>
                     <div className="mt-4 space-y-4">
                       {cart.map(cartItem => {
                         const defs = parseAddOnDefs(cartItem.item.tags)
@@ -2059,11 +2059,11 @@ export default function MenuClient() {
             </div>
             
             {cart.length > 0 && (
-              <div className="p-5 border-t border-gray-200 bg-white shadow-[0_-10px_24px_rgba(0,0,0,0.08)]">
+              <div className="p-5 border-t border-white/10 bg-neutral-950 shadow-[0_-10px_24px_rgba(0,0,0,0.35)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-semibold text-gray-600">Order total</div>
-                    <div className="text-2xl font-extrabold text-black">${cartTotal.toFixed(2)}</div>
+                    <div className="text-xs font-semibold text-white/70">Order total</div>
+                    <div className="text-2xl font-extrabold text-white">${cartTotal.toFixed(2)}</div>
                   </div>
                   <button
                     onClick={() => {
@@ -2081,7 +2081,7 @@ export default function MenuClient() {
                   </button>
                 </div>
                 {!orderingEnabled && (
-                  <p className="text-xs text-gray-500 text-center mt-2">
+                  <p className="text-xs text-white/60 text-center mt-2">
                     Demo mode - No actual payment processed
                   </p>
                 )}
