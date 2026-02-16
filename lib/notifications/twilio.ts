@@ -47,7 +47,12 @@ export function buildReadySmsBody(ctx: ReadySmsContext): string {
   return `Your order from ${tenant} is ready for pickup. Pickup code: ${code}. Reply STOP to opt out.`
 }
 
-export async function sendTwilioSms(args: { toPhone: string; body: string }): Promise<{ sid: string }> {
+type TwilioMessageCreateResponse = {
+  sid?: string
+  status?: string
+}
+
+export async function sendTwilioSms(args: { toPhone: string; body: string }): Promise<{ sid: string; status: string }> {
   if (!twilioConfigured()) {
     throw new Error('Twilio is not configured (missing env vars).')
   }
@@ -85,16 +90,57 @@ export async function sendTwilioSms(args: { toPhone: string; body: string }): Pr
   }
   let data: unknown = null
   try { data = text ? (JSON.parse(text) as unknown) : null } catch { data = null }
-  const sid = (() => {
-    if (!data || typeof data !== 'object') return ''
-    const rec = data as Record<string, unknown>
-    return typeof rec.sid === 'string' ? rec.sid.trim() : ''
-  })()
+  const parsed = (data && typeof data === 'object') ? (data as TwilioMessageCreateResponse) : null
+  const sid = String(parsed?.sid || '').trim()
+  const status = String(parsed?.status || '').trim() || 'unknown'
   if (!sid) throw new Error('Twilio send failed: missing message sid')
-  return { sid }
+  return { sid, status }
 }
 
-export async function sendTwilioReadySms(ctx: ReadySmsContext): Promise<{ sid: string }> {
+export async function sendTwilioReadySms(ctx: ReadySmsContext): Promise<{ sid: string; status: string }> {
   return await sendTwilioSms({ toPhone: ctx.toPhone, body: buildReadySmsBody(ctx) })
+}
+
+export async function getTwilioMessageStatus(sid: string): Promise<{
+  sid: string
+  status: string
+  to?: string
+  from?: string
+  errorCode?: number | null
+  errorMessage?: string | null
+}> {
+  if (!twilioConfigured()) {
+    throw new Error('Twilio is not configured (missing env vars).')
+  }
+  const accountSid = env('TWILIO_ACCOUNT_SID')
+  const apiKeySid = env('TWILIO_API_KEY_SID')
+  const apiKeySecret = env('TWILIO_API_KEY_SECRET')
+
+  const s = String(sid || '').trim()
+  if (!s) throw new Error('Missing sid')
+
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}/Messages/${encodeURIComponent(s)}.json`
+  const basic = Buffer.from(`${apiKeySid}:${apiKeySecret}`).toString('base64')
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { 'Authorization': `Basic ${basic}` },
+    cache: 'no-store',
+  })
+  const text = await res.text().catch(() => '')
+  if (!res.ok) {
+    throw new Error(`Twilio status failed (${res.status}): ${text || res.statusText}`)
+  }
+  let data: unknown = null
+  try { data = text ? (JSON.parse(text) as unknown) : null } catch { data = null }
+  if (!data || typeof data !== 'object') {
+    throw new Error('Twilio status parse failed')
+  }
+  const rec = data as Record<string, unknown>
+  const status = typeof rec.status === 'string' ? rec.status : 'unknown'
+  const to = typeof rec.to === 'string' ? rec.to : undefined
+  const from = typeof rec.from === 'string' ? rec.from : undefined
+  const errorCode = typeof rec.error_code === 'number' ? rec.error_code : null
+  const errorMessage = typeof rec.error_message === 'string' ? rec.error_message : null
+  return { sid: s, status, to, from, errorCode, errorMessage }
 }
 

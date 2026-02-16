@@ -41,7 +41,7 @@ function isAuthorized(req: NextRequest, tenantSlug: string, settings: unknown): 
 type SmsResult =
   | { status: 'disabled' }
   | { status: 'skipped'; reason: 'not_opted_in' | 'missing_phone' | 'already_sent' | 'not_ready' | 'not_found' }
-  | { status: 'sent'; sid: string }
+  | { status: 'queued'; sid: string; twilioStatus: string }
   | { status: 'failed'; error: string }
 
 function safeErr(e: unknown): string {
@@ -120,7 +120,7 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
         where: { id: o.id },
         data: { twilioReadyMessageSid: sent.sid },
       })
-      return { status: 'sent', sid: sent.sid }
+      return { status: 'queued', sid: sent.sid, twilioStatus: sent.status }
     } catch (e) {
       const msg = safeErr(e)
       console.error('[sms] Twilio send failed', { orderId: o.id, tenantId: args.tenantId, msg })

@@ -198,10 +198,32 @@ export default function KitchenPage() {
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) throw new Error(json?.error || `Update failed (${res.status})`)
       if (String(status).toUpperCase() === 'READY' && json?.sms) {
-        const s = json.sms as { status?: string; error?: string }
-        if (s.status === 'sent') setToast('Updated: READY • Text sent')
+        const s = json.sms as { status?: string; error?: string; sid?: string; twilioStatus?: string }
+        if (s.status === 'queued') setToast(`Updated: READY • SMS ${String(s.twilioStatus || 'queued')}`)
         else if (s.status === 'failed') setToast(`Updated: READY • SMS failed: ${String(s.error || 'unknown')}`)
         else setToast('Updated: READY')
+        if (s.status === 'queued' && s.sid) {
+          setTimeout(() => {
+            void (async () => {
+              try {
+                const url = `/api/kitchen/sms-status?tenant=${encodeURIComponent(tenant)}&sid=${encodeURIComponent(String(s.sid))}`
+                const r = await fetch(url, { headers: { 'X-Kitchen-Pin': pin }, cache: 'no-store' })
+                const j = await r.json().catch(() => null)
+                const m = j?.message as { status?: string; errorCode?: number | null; errorMessage?: string | null } | undefined
+                if (!r.ok || !j?.ok || !m) return
+                const st = String(m.status || '').toLowerCase()
+                if (st === 'delivered') setToast('SMS delivered')
+                else if (st === 'failed' || st === 'undelivered') {
+                  const code = m.errorCode != null ? ` (${m.errorCode})` : ''
+                  const msg = m.errorMessage ? `: ${m.errorMessage}` : ''
+                  setToast(`SMS ${st}${code}${msg}`)
+                }
+              } catch {
+                // ignore
+              }
+            })()
+          }, 2500)
+        }
       } else {
         setToast(`Updated: ${status}`)
       }
@@ -221,10 +243,32 @@ export default function KitchenPage() {
           const json2 = await res2.json().catch(() => null)
           if (!res2.ok || !json2?.ok) throw new Error(json2?.error || `Update failed (${res2.status})`)
           if (String(status).toUpperCase() === 'READY' && json2?.sms) {
-            const s = json2.sms as { status?: string; error?: string }
-            if (s.status === 'sent') setToast('Updated: READY • Text sent')
+            const s = json2.sms as { status?: string; error?: string; sid?: string; twilioStatus?: string }
+            if (s.status === 'queued') setToast(`Updated: READY • SMS ${String(s.twilioStatus || 'queued')}`)
             else if (s.status === 'failed') setToast(`Updated: READY • SMS failed: ${String(s.error || 'unknown')}`)
             else setToast('Updated: READY')
+            if (s.status === 'queued' && s.sid) {
+              setTimeout(() => {
+                void (async () => {
+                  try {
+                    const url = `/api/kitchen/sms-status?tenant=${encodeURIComponent(tenant)}&sid=${encodeURIComponent(String(s.sid))}`
+                    const r = await fetch(url, { headers: { 'X-Kitchen-Pin': pin }, cache: 'no-store' })
+                    const j = await r.json().catch(() => null)
+                    const m = j?.message as { status?: string; errorCode?: number | null; errorMessage?: string | null } | undefined
+                    if (!r.ok || !j?.ok || !m) return
+                    const st = String(m.status || '').toLowerCase()
+                    if (st === 'delivered') setToast('SMS delivered')
+                    else if (st === 'failed' || st === 'undelivered') {
+                      const code = m.errorCode != null ? ` (${m.errorCode})` : ''
+                      const msg = m.errorMessage ? `: ${m.errorMessage}` : ''
+                      setToast(`SMS ${st}${code}${msg}`)
+                    }
+                  } catch {
+                    // ignore
+                  }
+                })()
+              }, 2500)
+            }
           } else {
             setToast(`Updated: ${status}`)
           }
