@@ -221,6 +221,7 @@ export default function KitchenPage() {
                   const msg = m.errorMessage ? `: ${m.errorMessage}` : ''
                   setToast(`SMS ${st}${code}${msg}`)
                 }
+                await mutate()
               } catch {
                 // ignore
               }
@@ -268,6 +269,7 @@ export default function KitchenPage() {
                       const msg = m.errorMessage ? `: ${m.errorMessage}` : ''
                       setToast(`SMS ${st}${code}${msg}`)
                     }
+                    await mutate()
                   } catch {
                     // ignore
                   }
@@ -537,6 +539,13 @@ export default function KitchenPage() {
                                     <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
                                       <div className="text-xs font-extrabold uppercase tracking-wide text-amber-200">Order notes</div>
                                       <div className="mt-1 whitespace-pre-wrap">{o.note}</div>
+                                    </div>
+                                  )}
+
+                                  {o.sms?.optedIn && o.sms?.errorMessage && (
+                                    <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-neutral-200">
+                                      <div className="text-[10px] font-extrabold uppercase tracking-wide text-neutral-400">SMS</div>
+                                      <div className="mt-1 whitespace-pre-wrap">{String(o.sms.errorMessage)}</div>
                                     </div>
                                   )}
 
