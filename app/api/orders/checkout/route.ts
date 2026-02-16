@@ -27,6 +27,7 @@ const BodySchema = z.object({
   customerEmail: z.string().email().optional().nullable(),
   customerName: z.string().max(100).optional().nullable(),
   customerPhone: z.string().max(40).optional().nullable(),
+  smsOptIn: z.boolean().optional().default(false),
   // Optional order-level note for kitchen
   orderNote: z.string().max(800).optional().nullable(),
 })
@@ -169,6 +170,7 @@ export async function POST(req: NextRequest) {
     const customerEmail = (parsed.data.customerEmail || '').trim() || null
     const customerName = (parsed.data.customerName || '').trim() || null
     const customerPhone = (parsed.data.customerPhone || '').trim() || null
+    const smsOptIn = parsed.data.smsOptIn === true
     const orderNote = (parsed.data.orderNote || '').trim() || null
 
     // Load tenant settings and gate ordering
@@ -195,6 +197,10 @@ export async function POST(req: NextRequest) {
     // Sales-ready: always collect customer email so Stripe can send receipts and staff can contact if needed.
     if (!customerEmail) {
       return NextResponse.json({ ok: false, error: 'customer_email_required' }, { status: 400 })
+    }
+    // If user opted into SMS updates, a phone number is required.
+    if (smsOptIn && !customerPhone) {
+      return NextResponse.json({ ok: false, error: 'customer_phone_required_for_sms' }, { status: 400 })
     }
 
     // Ensure tenant exists (so we can relate orders even if menu is file-based)
@@ -310,6 +316,8 @@ export async function POST(req: NextRequest) {
           customerName: customerName || undefined,
           customerPhone: customerPhone || undefined,
           tableNumber: tableNumber || undefined,
+          smsOptIn,
+          smsOptInAt: smsOptIn ? new Date() : undefined,
           note: orderNote || undefined,
           items: { create: orderItems },
         },
@@ -338,6 +346,8 @@ export async function POST(req: NextRequest) {
             customerName: customerName || undefined,
             customerPhone: customerPhone || undefined,
             tableNumber: tableNumber || undefined,
+            smsOptIn,
+            smsOptInAt: smsOptIn ? new Date() : undefined,
             note: orderNote || undefined,
             items: { create: orderItems },
           },
@@ -404,6 +414,8 @@ export async function POST(req: NextRequest) {
               customerEmail,
               customerName: customerName || undefined,
               customerPhone: customerPhone || undefined,
+              smsOptIn,
+              smsOptInAt: smsOptIn ? new Date() : undefined,
             },
           })
         } catch {

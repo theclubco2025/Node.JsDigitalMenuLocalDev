@@ -140,6 +140,12 @@ model Order {
   // Optional dine-in context (e.g., table number)
   tableNumber            String?
 
+  // SMS notifications (opt-in, per order)
+  smsOptIn               Boolean          @default(false)
+  smsOptInAt             DateTime?
+  readySmsSentAt         DateTime?
+  twilioReadyMessageSid  String?
+
   // Kitchen note / special instructions
   note                   String?
 

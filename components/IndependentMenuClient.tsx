@@ -313,6 +313,7 @@ export default function MenuClient() {
   const [customerEmail, setCustomerEmail] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  const [smsOptIn, setSmsOptIn] = useState(false)
   const [orderNote, setOrderNote] = useState('')
   const [tableNumber, setTableNumber] = useState('')
   const [fulfillmentMode, setFulfillmentMode] = useState<'pickup' | 'dinein'>('pickup')
@@ -528,6 +529,10 @@ export default function MenuClient() {
         setToast('Email is required for your receipt.')
         return
       }
+      if (orderingEnabled && smsOptIn && !customerPhone.trim()) {
+        setToast('Please add a phone number to receive SMS updates.')
+        return
+      }
       const payload = {
         tenant,
         items: cart.map(ci => ({
@@ -543,6 +548,7 @@ export default function MenuClient() {
         customerEmail: customerEmail.trim(),
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
+        smsOptIn: Boolean(smsOptIn),
         orderNote: orderNote.trim() || null,
       }
       const res = await fetch('/api/orders/checkout', {
@@ -1653,6 +1659,27 @@ export default function MenuClient() {
                           className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black sm:col-span-2"
                         />
                       </div>
+
+                      <label className="mt-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                        <input
+                          type="checkbox"
+                          className="mt-1 h-4 w-4"
+                          checked={smsOptIn}
+                          onChange={(e) => setSmsOptIn(e.target.checked)}
+                        />
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-black">Text me when my order is ready</div>
+                          <div className="text-xs text-gray-600">
+                            Optional. Message &amp; data rates may apply. Reply STOP to opt out.
+                          </div>
+                        </div>
+                      </label>
+                      {smsOptIn && !customerPhone.trim() && (
+                        <div className="mt-2 text-sm font-semibold text-amber-700">
+                          Please add a phone number to receive SMS updates.
+                        </div>
+                      )}
+
                       {!emailOk && (
                         <div className="mt-3 text-sm font-semibold text-amber-700">
                           Please enter a valid email to place your order.
@@ -1749,7 +1776,7 @@ export default function MenuClient() {
                     }}
                     className="rounded-2xl px-5 py-3 text-sm font-extrabold shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)', color: '#0b0b0b' }}
-                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
                   >
                     {orderingEnabled ? 'Place order' : 'Proceed with Plate'}
                   </button>

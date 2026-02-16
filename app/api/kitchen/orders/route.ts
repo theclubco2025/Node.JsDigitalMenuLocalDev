@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import type { OrderStatus } from '@prisma/client'
 import { ensureOrdersSchemaPreview } from '@/lib/server/preview-orders-schema'
 import { computePickupCode } from '@/lib/orders/pickupCode'
+import { sendTwilioReadySms, twilioConfigured } from '@/lib/notifications/twilio'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,6 +36,65 @@ function isAuthorized(req: NextRequest, tenantSlug: string, settings: unknown): 
   if (!pin) return false
   const provided = (req.headers.get('x-kitchen-pin') || '').trim()
   return provided === pin
+}
+
+async function maybeSendReadySms(args: { tenantId: string; tenantName: string; orderId: string }) {
+  if (!twilioConfigured()) return
+  try {
+    const o = await prisma.order.findUnique({
+      where: { id: args.orderId },
+      select: {
+        id: true,
+        tenantId: true,
+        status: true,
+        smsOptIn: true,
+        readySmsSentAt: true,
+        customerPhone: true,
+        tableNumber: true,
+      },
+    })
+    if (!o || o.tenantId !== args.tenantId) return
+    if (o.status !== 'READY') return
+    if (!o.smsOptIn || !o.customerPhone || o.readySmsSentAt) return
+
+    // Claim the send (idempotent). If another request already claimed it, we skip.
+    const claimed = await prisma.order.updateMany({
+      where: {
+        id: args.orderId,
+        tenantId: args.tenantId,
+        status: 'READY',
+        smsOptIn: true,
+        readySmsSentAt: null,
+        customerPhone: { not: null },
+      },
+      data: { readySmsSentAt: new Date() },
+    })
+    if (claimed.count !== 1) return
+
+    const isDineIn = Boolean((o.tableNumber || '').trim())
+    try {
+      const sent = await sendTwilioReadySms({
+        tenantName: args.tenantName,
+        orderId: o.id,
+        toPhone: o.customerPhone || '',
+        isDineIn,
+        tableNumber: o.tableNumber,
+      })
+      await prisma.order.update({
+        where: { id: o.id },
+        data: { twilioReadyMessageSid: sent.sid },
+      })
+    } catch {
+      // If send fails, clear claim so a retry is possible from KDS.
+      await prisma.order.update({
+        where: { id: o.id },
+        data: { readySmsSentAt: null, twilioReadyMessageSid: null },
+      }).catch(() => {})
+    }
+  } catch {
+    // Never break the kitchen workflow due to notification issues.
+    return
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -164,7 +224,7 @@ export async function POST(req: NextRequest) {
     const parsed = Body.safeParse(raw)
     if (!parsed.success) return NextResponse.json({ ok: false, error: 'Invalid payload' }, { status: 400 })
 
-    const t = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { id: true, settings: true } })
+    const t = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { id: true, name: true, settings: true } })
     if (!t) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
     if (!isAuthorized(req, tenant, t.settings)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 
@@ -177,6 +237,10 @@ export async function POST(req: NextRequest) {
       data: { status: parsed.data.status },
       select: { id: true, status: true },
     })
+
+    if (updated.status === 'READY') {
+      await maybeSendReadySms({ tenantId: t.id, tenantName: t.name || tenant, orderId: updated.id })
+    }
     return NextResponse.json({ ok: true, order: updated }, { status: 200 })
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error)?.message || 'Kitchen update error' }, { status: 500 })

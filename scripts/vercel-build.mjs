@@ -63,5 +63,8 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim()) {
   }
 }
 
+// Ensure Prisma client matches schema (helps when caches persist across builds).
+run('npx', ['prisma', 'generate'])
+
 run('npx', ['next', 'build'])
 
