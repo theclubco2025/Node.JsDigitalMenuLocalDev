@@ -8,7 +8,8 @@ export const dynamic = 'force-dynamic'
 
 const Query = z.object({
   tenant: z.string().min(1),
-  sid: z.string().min(5),
+  sid: z.string().min(5).optional(),
+  orderId: z.string().min(1).optional(),
 })
 
 function kitchenPinFromSettings(settings: unknown): string {
@@ -49,7 +50,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const parsed = Query.safeParse({
       tenant: searchParams.get('tenant') || '',
-      sid: searchParams.get('sid') || '',
+      sid: searchParams.get('sid') || undefined,
+      orderId: searchParams.get('orderId') || undefined,
     })
     if (!parsed.success) return NextResponse.json({ ok: false, error: 'Invalid query' }, { status: 400 })
 
@@ -58,7 +60,36 @@ export async function GET(req: NextRequest) {
     if (!t) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
     if (!isAuthorized(req, tenant, t.settings)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 
-    const msg = await getTwilioMessageStatus(parsed.data.sid)
+    let sid = (parsed.data.sid || '').trim()
+    const orderId = (parsed.data.orderId || '').trim()
+
+    if (orderId) {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { id: true, tenantId: true, twilioReadyMessageSid: true },
+      })
+      if (!order) return NextResponse.json({ ok: false, error: 'Order not found' }, { status: 404 })
+      if (order.tenantId !== t.id) return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 })
+      sid = String(order.twilioReadyMessageSid || '').trim()
+      if (!sid) return NextResponse.json({ ok: false, error: 'No Twilio message SID' }, { status: 409 })
+    }
+
+    if (!sid) return NextResponse.json({ ok: false, error: 'Missing sid' }, { status: 400 })
+
+    const msg = await getTwilioMessageStatus(sid)
+
+    // Best-effort: persist delivery telemetry to the order for audit/debug.
+    if (orderId) {
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          twilioReadyStatus: msg.status,
+          twilioReadyErrorCode: msg.errorCode ?? null,
+          twilioReadyErrorMessage: msg.errorMessage ?? null,
+        },
+      }).catch(() => {})
+    }
+
     return NextResponse.json({ ok: true, message: msg }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error)?.message || 'sms status error' }, { status: 500 })

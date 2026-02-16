@@ -20,6 +20,7 @@ type KitchenOrder = {
   pickupCode: string
   tableNumber?: string | null
   note?: string | null
+  sms?: { optedIn?: boolean; status?: string | null; errorCode?: number | null; errorMessage?: string | null; attempts?: number | null } | null
   items: OrderItem[]
 }
 
@@ -198,15 +199,17 @@ export default function KitchenPage() {
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) throw new Error(json?.error || `Update failed (${res.status})`)
       if (String(status).toUpperCase() === 'READY' && json?.sms) {
-        const s = json.sms as { status?: string; error?: string; sid?: string; twilioStatus?: string }
+        const s = json.sms as { status?: string; reason?: string; error?: string; sid?: string; twilioStatus?: string }
         if (s.status === 'queued') setToast(`Updated: READY • SMS ${String(s.twilioStatus || 'queued')}`)
         else if (s.status === 'failed') setToast(`Updated: READY • SMS failed: ${String(s.error || 'unknown')}`)
+        else if (s.status === 'disabled') setToast('Updated: READY • SMS disabled (Twilio not configured)')
+        else if (s.status === 'skipped') setToast(`Updated: READY • SMS skipped${s.reason ? ` (${s.reason})` : ''}`)
         else setToast('Updated: READY')
         if (s.status === 'queued' && s.sid) {
           setTimeout(() => {
             void (async () => {
               try {
-                const url = `/api/kitchen/sms-status?tenant=${encodeURIComponent(tenant)}&sid=${encodeURIComponent(String(s.sid))}`
+                const url = `/api/kitchen/sms-status?tenant=${encodeURIComponent(tenant)}&orderId=${encodeURIComponent(orderId)}`
                 const r = await fetch(url, { headers: { 'X-Kitchen-Pin': pin }, cache: 'no-store' })
                 const j = await r.json().catch(() => null)
                 const m = j?.message as { status?: string; errorCode?: number | null; errorMessage?: string | null } | undefined
@@ -243,15 +246,17 @@ export default function KitchenPage() {
           const json2 = await res2.json().catch(() => null)
           if (!res2.ok || !json2?.ok) throw new Error(json2?.error || `Update failed (${res2.status})`)
           if (String(status).toUpperCase() === 'READY' && json2?.sms) {
-            const s = json2.sms as { status?: string; error?: string; sid?: string; twilioStatus?: string }
+            const s = json2.sms as { status?: string; reason?: string; error?: string; sid?: string; twilioStatus?: string }
             if (s.status === 'queued') setToast(`Updated: READY • SMS ${String(s.twilioStatus || 'queued')}`)
             else if (s.status === 'failed') setToast(`Updated: READY • SMS failed: ${String(s.error || 'unknown')}`)
+            else if (s.status === 'disabled') setToast('Updated: READY • SMS disabled (Twilio not configured)')
+            else if (s.status === 'skipped') setToast(`Updated: READY • SMS skipped${s.reason ? ` (${s.reason})` : ''}`)
             else setToast('Updated: READY')
             if (s.status === 'queued' && s.sid) {
               setTimeout(() => {
                 void (async () => {
                   try {
-                    const url = `/api/kitchen/sms-status?tenant=${encodeURIComponent(tenant)}&sid=${encodeURIComponent(String(s.sid))}`
+                    const url = `/api/kitchen/sms-status?tenant=${encodeURIComponent(tenant)}&orderId=${encodeURIComponent(orderId)}`
                     const r = await fetch(url, { headers: { 'X-Kitchen-Pin': pin }, cache: 'no-store' })
                     const j = await r.json().catch(() => null)
                     const m = j?.message as { status?: string; errorCode?: number | null; errorMessage?: string | null } | undefined
@@ -489,6 +494,12 @@ export default function KitchenPage() {
                                         {!isDineIn && (
                                           <span className="rounded-full bg-white/10 px-2 py-1">Code {o.pickupCode}</span>
                                         )}
+                                        {o.sms?.optedIn && (
+                                          <span className="rounded-full bg-white/10 px-2 py-1">
+                                            SMS: {String(o.sms.status || 'pending')}
+                                            {typeof o.sms.errorCode === 'number' ? ` (${o.sms.errorCode})` : ''}
+                                          </span>
+                                        )}
                                         {allergy && (
                                           <span className="rounded-full bg-red-500/20 text-red-100 px-2 py-1 font-extrabold">ALLERGY</span>
                                         )}
@@ -564,6 +575,37 @@ export default function KitchenPage() {
                                         >
                                           Complete
                                         </button>
+                                        {o.sms?.optedIn && ['failed', 'undelivered'].includes(String(o.sms.status || '').toLowerCase()) && (
+                                          <button
+                                            type="button"
+                                            data-no-drag="true"
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              void (async () => {
+                                                try {
+                                                  const res = await fetch(`/api/kitchen/retry-sms?tenant=${encodeURIComponent(tenant)}`, {
+                                                    method: 'POST',
+                                                    headers: {
+                                                      'Content-Type': 'application/json',
+                                                      'X-Kitchen-Pin': pin,
+                                                    },
+                                                    body: JSON.stringify({ orderId: o.id }),
+                                                  })
+                                                  const j = await res.json().catch(() => null)
+                                                  if (!res.ok || !j?.ok) throw new Error(j?.error || `Retry failed (${res.status})`)
+                                                  if (j?.sms?.status === 'queued') setToast('Retry queued')
+                                                  else setToast('Retry sent')
+                                                  await mutate()
+                                                } catch (err) {
+                                                  setToast((err as Error)?.message || 'Retry error')
+                                                }
+                                              })()
+                                            }}
+                                            className="col-span-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold border border-white/15 bg-white/5 hover:bg-white/10"
+                                          >
+                                            Retry SMS
+                                          </button>
+                                        )}
                                       </>
                                     )}
                                   </div>

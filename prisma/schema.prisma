@@ -145,6 +145,12 @@ model Order {
   smsOptInAt             DateTime?
   readySmsSentAt         DateTime?
   twilioReadyMessageSid  String?
+  twilioReadyStatus      String?
+  twilioReadyTo          String?
+  twilioReadyErrorCode   Int?
+  twilioReadyErrorMessage String?
+  twilioReadyAttemptCount Int            @default(0)
+  twilioReadyLastAttemptAt DateTime?
 
   // Kitchen note / special instructions
   note                   String?

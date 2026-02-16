@@ -93,6 +93,19 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
     if (!o.customerPhone) return { status: 'skipped', reason: 'missing_phone' }
     if (o.readySmsSentAt) return { status: 'skipped', reason: 'already_sent' }
 
+    // Best-effort: record attempt metadata before claiming.
+    await prisma.order.update({
+      where: { id: o.id },
+      data: {
+        twilioReadyAttemptCount: { increment: 1 },
+        twilioReadyLastAttemptAt: new Date(),
+        twilioReadyTo: o.customerPhone,
+        twilioReadyStatus: null,
+        twilioReadyErrorCode: null,
+        twilioReadyErrorMessage: null,
+      },
+    }).catch(() => {})
+
     // Claim the send (idempotent). If another request already claimed it, we skip.
     const claimed = await prisma.order.updateMany({
       where: {
@@ -118,7 +131,7 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
       })
       await prisma.order.update({
         where: { id: o.id },
-        data: { twilioReadyMessageSid: sent.sid },
+        data: { twilioReadyMessageSid: sent.sid, twilioReadyStatus: sent.status, twilioReadyTo: o.customerPhone },
       })
       return { status: 'queued', sid: sent.sid, twilioStatus: sent.status }
     } catch (e) {
@@ -127,7 +140,12 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
       // If send fails, clear claim so a retry is possible from KDS.
       await prisma.order.update({
         where: { id: o.id },
-        data: { readySmsSentAt: null, twilioReadyMessageSid: null },
+        data: {
+          readySmsSentAt: null,
+          twilioReadyMessageSid: null,
+          twilioReadyStatus: 'failed',
+          twilioReadyErrorMessage: msg,
+        },
       }).catch(() => {})
       return { status: 'failed', error: msg }
     }
@@ -187,6 +205,13 @@ export async function GET(req: NextRequest) {
           createdAt: true,
           ...(withExtras ? { tableNumber: true } : {}),
           ...(withExtras ? { note: true } : {}),
+          ...(withExtras ? {
+            smsOptIn: true,
+            twilioReadyStatus: true,
+            twilioReadyErrorCode: true,
+            twilioReadyErrorMessage: true,
+            twilioReadyAttemptCount: true,
+          } : {}),
           items: {
             select: {
               id: true,
@@ -234,6 +259,13 @@ export async function GET(req: NextRequest) {
         pickupCode: computePickupCode(o.id),
         tableNumber: (o as unknown as { tableNumber?: string | null }).tableNumber ?? null,
         note: (o as unknown as { note?: string | null }).note || null,
+        sms: {
+          optedIn: (o as unknown as { smsOptIn?: boolean }).smsOptIn === true,
+          status: (o as unknown as { twilioReadyStatus?: string | null }).twilioReadyStatus ?? null,
+          errorCode: (o as unknown as { twilioReadyErrorCode?: number | null }).twilioReadyErrorCode ?? null,
+          errorMessage: (o as unknown as { twilioReadyErrorMessage?: string | null }).twilioReadyErrorMessage ?? null,
+          attempts: (o as unknown as { twilioReadyAttemptCount?: number | null }).twilioReadyAttemptCount ?? null,
+        },
         items: o.items.map(it => ({
           id: it.id,
           name: it.name,

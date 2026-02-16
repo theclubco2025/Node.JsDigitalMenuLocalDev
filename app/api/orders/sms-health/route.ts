@@ -5,14 +5,27 @@ import { twilioConfigured } from '@/lib/notifications/twilio'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+function classifyTwilioSid(v: string, prefix: string) {
+  const s = String(v || '').trim()
+  if (!s) return { present: false as const, kind: 'missing' as const }
+  if (s.startsWith(prefix)) return { present: true as const, kind: prefix }
+  return { present: true as const, kind: 'unknown' as const }
+}
+
 export async function GET() {
   try {
     const twilioOk = twilioConfigured()
+    const twilio = {
+      TWILIO_ACCOUNT_SID: classifyTwilioSid(process.env.TWILIO_ACCOUNT_SID || '', 'AC'),
+      TWILIO_API_KEY_SID: classifyTwilioSid(process.env.TWILIO_API_KEY_SID || '', 'SK'),
+      TWILIO_MESSAGING_SERVICE_SID: classifyTwilioSid(process.env.TWILIO_MESSAGING_SERVICE_SID || '', 'MG'),
+      TWILIO_API_KEY_SECRET_present: Boolean(String(process.env.TWILIO_API_KEY_SECRET || '').trim()),
+    }
 
     if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.trim()) {
       return NextResponse.json({
         ok: true,
-        twilio: { configured: twilioOk },
+        twilio: { configured: twilioOk, ...twilio },
         db: { configured: false, smsColumnsPresent: false },
       }, { headers: { 'Cache-Control': 'no-store' } })
     }
@@ -30,7 +43,7 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
-      twilio: { configured: twilioOk },
+      twilio: { configured: twilioOk, ...twilio },
       db: { configured: true, smsColumnsPresent },
     }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {

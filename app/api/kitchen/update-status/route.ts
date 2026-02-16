@@ -90,6 +90,18 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
     if (!o.customerPhone) return { status: 'skipped', reason: 'missing_phone' }
     if (o.readySmsSentAt) return { status: 'skipped', reason: 'already_sent' }
 
+    await prisma.order.update({
+      where: { id: o.id },
+      data: {
+        twilioReadyAttemptCount: { increment: 1 },
+        twilioReadyLastAttemptAt: new Date(),
+        twilioReadyTo: o.customerPhone,
+        twilioReadyStatus: null,
+        twilioReadyErrorCode: null,
+        twilioReadyErrorMessage: null,
+      },
+    }).catch(() => {})
+
     const claimed = await prisma.order.updateMany({
       where: {
         id: args.orderId,
@@ -112,12 +124,20 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
         isDineIn,
         tableNumber: o.tableNumber,
       })
-      await prisma.order.update({ where: { id: o.id }, data: { twilioReadyMessageSid: sent.sid } })
+      await prisma.order.update({ where: { id: o.id }, data: { twilioReadyMessageSid: sent.sid, twilioReadyStatus: sent.status, twilioReadyTo: o.customerPhone } })
       return { status: 'queued', sid: sent.sid, twilioStatus: sent.status }
     } catch (e) {
       const msg = safeErr(e)
       console.error('[sms] Twilio send failed', { orderId: o.id, tenantId: args.tenantId, msg })
-      await prisma.order.update({ where: { id: o.id }, data: { readySmsSentAt: null, twilioReadyMessageSid: null } }).catch(() => {})
+      await prisma.order.update({
+        where: { id: o.id },
+        data: {
+          readySmsSentAt: null,
+          twilioReadyMessageSid: null,
+          twilioReadyStatus: 'failed',
+          twilioReadyErrorMessage: msg,
+        },
+      }).catch(() => {})
       return { status: 'failed', error: msg }
     }
   } catch (e) {
