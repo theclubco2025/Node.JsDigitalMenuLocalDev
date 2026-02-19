@@ -215,9 +215,11 @@ export async function GET(req: NextRequest) {
     }
     if (!tenantSlug) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
 
-    const days = parsed.data.days ?? 30
     const end = parsed.data.end ? new Date(parsed.data.end) : new Date()
-    const start = parsed.data.start ? new Date(parsed.data.start) : new Date(end.getTime() - days * 24 * 60 * 60 * 1000)
+    const start = parsed.data.start
+      ? new Date(parsed.data.start)
+      : new Date(end.getTime() - (parsed.data.days ?? 30) * 24 * 60 * 60 * 1000)
+    const days = parsed.data.days ?? Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)))
 
     const tenantRow = await prisma.tenant.findUnique({ where: { slug: tenantSlug }, select: { id: true, name: true } })
     if (!tenantRow) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
@@ -263,9 +265,11 @@ export async function POST(req: NextRequest) {
     }
     if (!tenantSlug) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
 
-    const days = parsed.data.days ?? 30
     const end = parsed.data.end ? new Date(parsed.data.end) : new Date()
-    const start = parsed.data.start ? new Date(parsed.data.start) : new Date(end.getTime() - days * 24 * 60 * 60 * 1000)
+    const start = parsed.data.start
+      ? new Date(parsed.data.start)
+      : new Date(end.getTime() - (parsed.data.days ?? 30) * 24 * 60 * 60 * 1000)
+    const days = parsed.data.days ?? Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)))
 
     const tenantRow = await prisma.tenant.findUnique({ where: { slug: tenantSlug }, select: { id: true, name: true } })
     if (!tenantRow) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
