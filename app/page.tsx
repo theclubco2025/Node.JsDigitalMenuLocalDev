@@ -1,7 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
-'use client'
-
-import React from 'react'
+export const metadata = {
+  title: 'TCC Menus',
+  description:
+    'QR menu + online ordering and a kitchen display (beta) — plus menu editing, orders, and analytics for restaurants.',
+}
 
 const LANDING = {
   calendlyUrl: 'https://calendly.com/tccsolutions2025/30min',
@@ -13,73 +15,74 @@ const LANDING = {
   demoUrlLabel: 'tccmenus.com/demo',
   features: [
     {
-      title: 'Fast updates',
-      body: 'Handles same-day edits on request — availability, photos, pricing, and specials. No reprints.',
+      title: 'QR menu',
+      body: 'Mobile-first menu that looks great on phones. Tags, prices, and sections stay clean and consistent.',
     },
     {
-      title: 'Menu Q&A',
-      body: 'Answers guest questions using your official menu data — not internet guesses.',
+      title: 'AI menu Q&A',
+      body: 'Guests ask questions and get answers based on your menu data (not internet guesses).',
     },
     {
-      title: 'Reduce friction',
-      body: 'Reduces repeat questions and keeps ordering simple — smoother service, happier guests.',
+      title: 'Menu editor',
+      body: 'Owners can edit the menu in Admin and see changes instantly (no redeploy).',
     },
     {
-      title: 'Allergen clarity',
-      body: 'Keeps dietary and allergen tags clear so guests can decide confidently.',
+      title: 'Ordering + KDS (beta)',
+      body: 'Optional online ordering with a clean kitchen board for “New → Preparing → Ready”.',
     },
     {
-      title: 'Hero dishes',
-      body: 'Illustrates hero dishes with dietary tags and storytelling copy.',
+      title: 'Orders + refunds',
+      body: 'Track paid orders and handle common support flows from the admin side.',
     },
     {
-      title: 'Embed anywhere',
-      body: 'Embeds on your website with a simple script — mobile-first and QR-ready.',
+      title: 'Analytics (beta)',
+      body: 'See top items, pickup vs dine-in, and what guests are asking most.',
     },
-  ],
-  useCases: [
-    { name: 'Restaurant', blurb: 'Highlights best-sellers, showcases specials, handles allergens clearly.' },
-    { name: 'Cafe', blurb: 'Speeds up lines, highlights seasonal drinks, keeps menus accurate.' },
-    { name: 'Bar', blurb: 'Promotes signature cocktails, suggests pairings, manages happy hour menus.' },
-    { name: 'Food Truck', blurb: 'Highlights limited items, sells out cleanly, and avoids “Do you still have…?”' },
   ],
   faqs: [
     {
       q: 'Do I have to replace my POS?',
-      a: 'No. Your POS stays. Guests scan a QR and view the menu on the web, separate from your POS.',
+      a: 'No. Your POS stays. TCC runs a web menu (and optional ordering) that can be used alongside your existing workflow.',
     },
     {
       q: 'How fast can we launch?',
       a: 'Most menus are live in 2–5 days depending on complexity and assets.',
     },
     {
-      q: 'What about photos and allergens?',
-      a: 'You approve all item data. We support photos, tags (GF/V/VG/DF), and clear allergen callouts.',
+      q: 'Do guests order and the kitchen gets tickets?',
+      a: 'Yes — ordering + the kitchen display is available now as a beta. It’s production-usable, and we’re still improving polish and edge cases as we onboard more restaurants.',
     },
-    { q: 'How do menu updates work?', a: 'We handle updates for you (same-day, within scope). You send changes by text/email and we push them live.' },
     {
-      q: 'What does ongoing service include?',
-      a: 'Bug fixes, copy tweaks, and owner-requested adjustments within scope. (Insights can be added as an upgrade.)',
+      q: 'How do menu updates work?',
+      a: 'Owners edit the menu in Admin and changes show up instantly (no redeploy). We can also help with onboarding and structure.',
     },
     {
       q: 'Is there a contract?',
       a: 'Month-to-month. Cancel anytime. Keep your exported menu data.',
+    },
+    {
+      q: 'Is AI always correct?',
+      a: 'AI answers may be inaccurate. For allergies and dietary needs, guests should confirm with staff.',
     },
   ],
 }
 
 export default function Landing() {
   return (
-    <main className="bg-white text-neutral-900">
+    <main className="bg-neutral-50 text-neutral-900">
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-neutral-100 to-white" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
           <div>
-            <h1 className="font-semibold tracking-tight" style={{ fontSize: 'clamp(2rem, 4.5vw, 3.5rem)' }}>
-              Your menu hasn’t changed in decades — your customers have.
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+              Ordering + KDS <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px]">beta</span>
+            </div>
+            <h1 className="mt-4 font-semibold tracking-tight" style={{ fontSize: 'clamp(2rem, 4.5vw, 3.5rem)' }}>
+              QR menu + online ordering that actually works in a kitchen.
             </h1>
             <p className="mt-4 text-lg text-neutral-700">
-              Update your menu like texting a friend. Give guests instant answers, spotlight best-sellers, and keep your menu details consistent — while you run the room.
+              Guests scan, ask questions, and place orders. The kitchen runs a clean board: New → Preparing → Ready.
+              Keep your POS — no overhaul.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
@@ -133,10 +136,52 @@ export default function Landing() {
       <section className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid items-start gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
-            <h2 className="text-2xl font-semibold tracking-tight">What it does</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
             <p className="mt-3 text-neutral-700">
-              Your digital menu becomes a polite, always-on server. It answers questions based on your official menu data and helps guests find the right item faster.
-              You keep full control: approve copy, photos, and special rules.
+              The flow is simple for guests and practical for kitchens. Ordering + KDS is available now as a beta.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3 md:col-span-3">
+            {[
+              {
+                step: '1',
+                title: 'Guest scans QR',
+                body: 'They open a fast menu on their phone and can ask questions as they browse.',
+              },
+              {
+                step: '2',
+                title: 'Places an order (beta)',
+                body: 'Pickup or dine-in ordering with a clear confirmation experience.',
+              },
+              {
+                step: '3',
+                title: 'Kitchen runs the KDS',
+                body: 'Orders appear on a board and move New → Preparing → Ready in real time.',
+              },
+            ].map((card) => (
+              <div key={card.step} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-9 w-9 place-items-center rounded-xl bg-neutral-900 text-sm font-semibold text-white">
+                    {card.step}
+                  </div>
+                  <h3 className="font-medium">{card.title}</h3>
+                </div>
+                <p className="mt-2 text-sm text-neutral-600">{card.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-12">
+        <div className="grid items-start gap-8 md:grid-cols-5">
+          <div className="md:col-span-2">
+            <h2 className="text-2xl font-semibold tracking-tight">What’s included (today)</h2>
+            <p className="mt-3 text-neutral-700">
+              A premium QR menu with admin tools. Optional ordering + KDS is marked beta so expectations stay honest.
+            </p>
+            <p className="mt-2 text-sm text-neutral-500">
+              AI answers may be inaccurate. For allergies and dietary needs, confirm with staff.
             </p>
           </div>
           <ul className="grid gap-4 sm:grid-cols-2 md:col-span-3">
@@ -154,14 +199,38 @@ export default function Landing() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12">
-        <h2 className="text-2xl font-semibold tracking-tight">Where it shines</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {LANDING.useCases.map((useCase) => (
-            <div key={useCase.name} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <h3 className="font-medium">{useCase.name}</h3>
-              <p className="mt-1 text-sm text-neutral-600">{useCase.blurb}</p>
+        <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-6">
+            <div className="max-w-2xl">
+              <h2 className="text-2xl font-semibold tracking-tight">Ordering + Kitchen Display (beta)</h2>
+              <p className="mt-2 text-neutral-700">
+                This is the part that turns your menu into a real workflow: guests place orders and the kitchen sees them
+                instantly on a board designed for speed.
+              </p>
+              <ul className="mt-4 grid gap-2 text-sm text-neutral-700">
+                <li>
+                  <span className="font-semibold">What it does:</span> New/Preparing/Ready columns, clear item lists, and
+                  live status updates.
+                </li>
+                <li>
+                  <span className="font-semibold">What’s “beta”:</span> we’re still tightening edge cases and continuing
+                  UI polish as we onboard more restaurants.
+                </li>
+              </ul>
             </div>
-          ))}
+            <div className="w-full max-w-sm rounded-2xl border border-emerald-200 bg-white p-5">
+              <div className="text-sm font-semibold text-neutral-900">Try it end-to-end</div>
+              <p className="mt-1 text-sm text-neutral-600">
+                Open the demo menu, add to plate, and go through checkout to see the flow.
+              </p>
+              <a
+                href="/demo"
+                className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-white shadow-sm hover:bg-emerald-500"
+              >
+                Open Demo
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
