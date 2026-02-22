@@ -271,12 +271,12 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
               href="/kds"
               className="inline-flex items-center justify-center rounded-lg border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-900 hover:bg-indigo-100"
             >
-              Open /kds PIN screen
+              Open kitchen login
             </a>
           </div>
 
           <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-4">
-            <div className="text-sm font-semibold text-gray-900">Kitchen PIN (powers `/kds` routing)</div>
+            <div className="text-sm font-semibold text-gray-900">Kitchen PIN</div>
             <div className="mt-2 flex flex-col sm:flex-row gap-2">
               <input
                 type="password"
@@ -295,7 +295,7 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
               </button>
             </div>
             <div className="mt-2 text-xs text-gray-700">
-              Staff goes to <span className="font-mono">tccmenus.com/kds</span>, enters this PIN, and it opens the correct kitchen screen.
+              Staff enters this PIN on the kitchen login screen to open the correct kitchen display.
             </div>
           </div>
 

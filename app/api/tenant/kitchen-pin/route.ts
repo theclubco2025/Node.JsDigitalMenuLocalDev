@@ -12,6 +12,11 @@ const Body = z.object({
   kitchenPin: z.string().min(4).max(64),
 })
 
+function kitchenPinWhere(pin: string) {
+  // Prisma JSON path query (Postgres)
+  return { settings: { path: ['kitchenPin'], equals: pin } } as const
+}
+
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.DATABASE_URL) {
@@ -40,6 +45,17 @@ export async function POST(req: NextRequest) {
 
     const tenant = await prisma.tenant.findUnique({ where: { slug: requestedTenant }, select: { id: true, settings: true } })
     if (!tenant) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
+
+    // Enforce global uniqueness for routing safety.
+    const existing = await prisma.tenant.findMany({
+      where: kitchenPinWhere(kitchenPin),
+      select: { id: true, slug: true },
+      take: 3,
+    })
+    const conflict = existing.find((t) => t.id !== tenant.id)
+    if (conflict) {
+      return NextResponse.json({ ok: false, error: 'Kitchen PIN already in use. Choose a different PIN.' }, { status: 409 })
+    }
 
     const currentSettings = (tenant.settings && typeof tenant.settings === 'object') ? (tenant.settings as Record<string, unknown>) : {}
     const nextSettings = { ...currentSettings, kitchenPin }

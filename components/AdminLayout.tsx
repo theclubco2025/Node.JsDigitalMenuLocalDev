@@ -86,13 +86,21 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
               <nav className="hidden sm:flex items-center gap-2 text-sm">
                 <a
                   href="/admin/menu"
-                  className="rounded-md px-2 py-1 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  className={`inline-flex items-center justify-center rounded-lg border px-3 py-1.5 font-semibold transition ${
+                    pathname?.startsWith('/admin/menu')
+                      ? 'border-gray-900 bg-gray-900 text-white'
+                      : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
+                  }`}
                 >
                   Menu
                 </a>
                 <a
                   href="/admin/orders"
-                  className="rounded-md px-2 py-1 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  className={`inline-flex items-center justify-center rounded-lg border px-3 py-1.5 font-semibold transition ${
+                    pathname?.startsWith('/admin/orders')
+                      ? 'border-gray-900 bg-gray-900 text-white'
+                      : 'border-gray-300 bg-white text-gray-800 hover:bg-gray-50'
+                  }`}
                 >
                   Orders
                 </a>

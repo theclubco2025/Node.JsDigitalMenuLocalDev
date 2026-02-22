@@ -534,7 +534,8 @@ export default function KitchenPage() {
                           <div className="mt-1 text-xs text-neutral-400">{col.hint}</div>
                         </div>
 
-                        <div className="p-3 space-y-3">
+                        <div className="p-3">
+                          <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
                           {colOrders.map((o) => {
                             const n = orderNumberById.get(o.id) || 0
                             const elapsed = formatElapsed(nowTick - Date.parse(o.createdAt))
@@ -596,19 +597,17 @@ export default function KitchenPage() {
                                   setDragX(prev => ({ ...prev, [o.id]: 0 }))
                                 }}
                               >
-                                <div className="p-3">
+                                <div className="p-2.5">
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
                                       <div className="flex items-baseline gap-2">
-                                        <div className="text-lg font-extrabold">Order #{n}</div>
-                                        <div className={`text-[11px] font-semibold ${runningLong ? 'text-amber-200 animate-pulse' : 'text-neutral-300'}`}>
+                                        <div className="text-base font-extrabold">#{n}</div>
+                                        <div className={`text-[10px] font-semibold ${runningLong ? 'text-amber-200 animate-pulse' : 'text-neutral-300'}`}>
                                           {elapsed} elapsed{runningLong ? ' • Running long' : ''}
                                         </div>
                                       </div>
                                       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
                                         <span className="rounded-full bg-white/10 px-2 py-1">{pickupBadge}</span>
-                                        <span className="rounded-full bg-white/10 px-2 py-1">Total {money(o.totalCents)}</span>
-                                        <span className="rounded-full bg-emerald-500/20 text-emerald-200 px-2 py-1">PAID</span>
                                         {!isDineIn && (
                                           <span className="rounded-full bg-white/10 px-2 py-1">Code {o.pickupCode}</span>
                                         )}
@@ -625,13 +624,13 @@ export default function KitchenPage() {
                                     </div>
                                   </div>
 
-                                  <div className="mt-3 rounded-xl border border-white/10 bg-black/20 max-h-[220px] overflow-auto">
-                                    {(o.items || []).map((it) => (
-                                      <div key={it.id} className="px-3 py-2 border-b border-white/5 last:border-b-0">
+                                  <div className="mt-2 rounded-xl border border-white/10 bg-black/20">
+                                    {(o.items || []).slice(0, 5).map((it) => (
+                                      <div key={it.id} className="px-2.5 py-1.5 border-b border-white/5 last:border-b-0">
                                         <div className="flex items-start justify-between gap-3">
                                           <div className="min-w-0">
-                                            <div className="text-[13px] font-semibold">
-                                              <span className="mr-2 rounded-lg bg-white/10 px-2 py-0.5 text-xs font-extrabold">x{it.quantity}</span>
+                                            <div className="text-[12px] font-semibold">
+                                              <span className="mr-2 rounded-lg bg-white/10 px-2 py-0.5 text-[10px] font-extrabold">x{it.quantity}</span>
                                               {it.name}
                                             </div>
                                             {Array.isArray(it.addOns) && it.addOns.length > 0 && (
@@ -645,34 +644,38 @@ export default function KitchenPage() {
                                               </div>
                                             )}
                                           </div>
-                                          <div className="text-[13px] font-semibold">{money(it.unitPriceCents * it.quantity)}</div>
                                         </div>
                                       </div>
                                     ))}
                                   </div>
+                                  {(o.items || []).length > 5 && (
+                                    <div className="mt-1 text-[11px] text-neutral-300">
+                                      +{(o.items || []).length - 5} more items
+                                    </div>
+                                  )}
 
                                   {o.note && (
-                                    <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                                    <div className="mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-xs text-amber-100">
                                       <div className="text-xs font-extrabold uppercase tracking-wide text-amber-200">Order notes</div>
                                       <div className="mt-1 whitespace-pre-wrap">{o.note}</div>
                                     </div>
                                   )}
 
                                   {o.sms?.optedIn && o.sms?.errorMessage && (
-                                    <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-neutral-200">
+                                    <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-2.5 py-2 text-xs text-neutral-200">
                                       <div className="text-[10px] font-extrabold uppercase tracking-wide text-neutral-400">SMS</div>
                                       <div className="mt-1 whitespace-pre-wrap">{String(o.sms.errorMessage)}</div>
                                     </div>
                                   )}
 
-                                  <div className="mt-3 grid grid-cols-2 gap-2">
+                                  <div className="mt-2 grid grid-cols-2 gap-2">
                                     {col.key === 'NEW' && (
                                       <>
                                         <button
                                           type="button"
                                           data-no-drag="true"
                                           onClick={(e) => { e.stopPropagation(); void updateStatus(o.id, 'PREPARING') }}
-                                          className="col-span-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold border border-sky-300/40 bg-sky-500/20 hover:bg-sky-500/30"
+                                          className="col-span-2 rounded-2xl px-3 py-2 text-xs font-extrabold border border-sky-300/40 bg-sky-500/20 hover:bg-sky-500/30"
                                         >
                                           Start Preparing
                                         </button>
@@ -684,7 +687,7 @@ export default function KitchenPage() {
                                           type="button"
                                           data-no-drag="true"
                                           onClick={(e) => { e.stopPropagation(); void updateStatus(o.id, 'READY') }}
-                                          className="col-span-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold border border-amber-300/40 bg-amber-500/20 hover:bg-amber-500/30"
+                                          className="col-span-2 rounded-2xl px-3 py-2 text-xs font-extrabold border border-amber-300/40 bg-amber-500/20 hover:bg-amber-500/30"
                                         >
                                           Mark Ready
                                         </button>
@@ -696,7 +699,7 @@ export default function KitchenPage() {
                                           type="button"
                                           data-no-drag="true"
                                           onClick={(e) => { e.stopPropagation(); void updateStatus(o.id, 'COMPLETED') }}
-                                          className="col-span-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold border border-emerald-300/40 bg-emerald-500/20 hover:bg-emerald-500/30"
+                                          className="col-span-2 rounded-2xl px-3 py-2 text-xs font-extrabold border border-emerald-300/40 bg-emerald-500/20 hover:bg-emerald-500/30"
                                         >
                                           Complete
                                         </button>
@@ -726,7 +729,7 @@ export default function KitchenPage() {
                                                 }
                                               })()
                                             }}
-                                            className="col-span-2 rounded-2xl px-4 py-2.5 text-sm font-extrabold border border-white/15 bg-white/5 hover:bg-white/10"
+                                            className="col-span-2 rounded-2xl px-3 py-2 text-xs font-extrabold border border-white/15 bg-white/5 hover:bg-white/10"
                                           >
                                             Retry SMS
                                           </button>
@@ -744,6 +747,7 @@ export default function KitchenPage() {
                               </div>
                             )
                           })}
+                          </div>
                         </div>
                       </div>
                     )

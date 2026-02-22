@@ -46,8 +46,8 @@ function LoginContent() {
         <div className="text-center">
           <div className="mx-auto mb-4 h-12 w-12 rounded-2xl bg-white grid place-items-center shadow-sm border border-gray-200 overflow-hidden">
             <Image
-              src="/assets/tcc-club.png"
-              alt="The Club"
+              src="/assets/tcc-stamp.png"
+              alt="TCC Solutions"
               width={48}
               height={48}
               className="h-10 w-10 object-contain"

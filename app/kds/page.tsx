@@ -1,6 +1,7 @@
 "use client"
 
 import { FormEvent, useEffect, useState } from 'react'
+import Image from 'next/image'
 
 type ResolveResponse =
   | { ok: true; tenant: { slug: string; name: string } }
@@ -57,6 +58,18 @@ export default function KdsLandingPage() {
   return (
     <div className="min-h-screen text-white" style={{ background: 'var(--bg, #070707)', color: 'var(--text, #f8fafc)' }}>
       <div className="max-w-md mx-auto px-4 py-12">
+        <div className="flex justify-center">
+          <div className="mb-6 h-14 w-14 rounded-3xl bg-white/5 border border-white/10 grid place-items-center overflow-hidden">
+            <Image
+              src="/assets/tcc-stamp.png"
+              alt="TCC Solutions"
+              width={56}
+              height={56}
+              className="h-12 w-12 object-contain"
+              priority
+            />
+          </div>
+        </div>
         <h1 className="text-3xl font-extrabold">Kitchen Display</h1>
         <p className="mt-2 text-sm text-neutral-300">Enter your kitchen PIN to open your live KDS.</p>
 

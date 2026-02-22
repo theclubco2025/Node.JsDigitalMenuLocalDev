@@ -1389,6 +1389,9 @@ export default function MenuClient() {
           2,000 calories a day is used for general nutrition advice, but calorie needs vary. Calorie values are
           estimates and may differ based on preparation or ingredient changes.
         </p>
+        <p className="mt-2 text-xs text-gray-500">
+          AI answers may be inaccurate. For allergies and dietary needs, please confirm with staff.
+        </p>
       </div>
 
       {/* Floating Plate Button removed */}
@@ -1857,6 +1860,9 @@ export default function MenuClient() {
                 >
                   Send
                 </button>
+              </div>
+              <div className="mt-3 text-xs text-gray-500">
+                AI answers may be inaccurate. For allergies and dietary needs, please confirm with staff.
               </div>
             </div>
           </div>
