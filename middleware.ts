@@ -124,6 +124,8 @@ export function middleware(request: NextRequest) {
       'auth',
       'admin',
       'demo-admin',
+      'terms',
+      'privacy',
       'favicon.ico',
       'robots.txt',
       'sitemap.xml',
