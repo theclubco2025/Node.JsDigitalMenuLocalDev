@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/options'
 import { prisma } from '@/lib/prisma'
-import { getStripe } from '@/lib/stripe'
+import { getStripeOrders } from '@/lib/stripe'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     if (!Number.isFinite(amt) || amt <= 0) return NextResponse.json({ ok: false, error: 'Invalid amount' }, { status: 400 })
     if (amt > order.totalCents) return NextResponse.json({ ok: false, error: 'Refund exceeds order total' }, { status: 400 })
 
-    const stripe = getStripe()
+    const stripe = getStripeOrders()
     const stripeAccountId = (order.stripeAccountId || '').trim() || undefined
     const refund = await stripe.refunds.create({
       payment_intent: pi,

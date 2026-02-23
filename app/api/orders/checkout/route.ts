@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { readMenu } from '@/lib/data/menu'
-import { getStripe } from '@/lib/stripe'
+import { getStripeOrders } from '@/lib/stripe'
 import type { Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -132,20 +132,7 @@ export async function POST(req: NextRequest) {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required for ordering' }, { status: 501 })
     }
-    // Sales-ready constraint: in production, Stripe webhook confirmation must be configured.
-    if (process.env.VERCEL_ENV === 'production') {
-      // Allow using *_TEST in production for test-mode POC on a live domain.
-      const ordersWebhook =
-        (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
-        || (process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST || '').trim()
-      if (!ordersWebhook) {
-        return NextResponse.json({
-          ok: false,
-          error: 'Ordering is not configured: Stripe orders webhook secret is missing (set STRIPE_ORDERS_WEBHOOK_SECRET or STRIPE_ORDERS_WEBHOOK_SECRET_TEST). See /api/orders/health.',
-        }, { status: 501 })
-      }
-    }
-    // Stripe key is resolved inside getStripe() (supports STRIPE_TEST_KEY in preview).
+    // Stripe key is resolved inside getStripeOrders() (supports STRIPE_TEST_KEY for POC).
 
     const raw = await req.json().catch(() => ({}))
     const parsed = BodySchema.safeParse(raw)
@@ -163,6 +150,21 @@ export async function POST(req: NextRequest) {
     const smsOptIn = parsed.data.smsOptIn === true
     const orderNote = (parsed.data.orderNote || '').trim() || null
     const tipCentsRaw = Math.max(0, Math.floor(parsed.data.tipCents || 0))
+
+    // Sales-ready constraint: in production, Stripe webhook confirmation must be configured.
+    // Demo exception: allow platform test checkout to work as a public POC, relying on /api/orders/confirm fallback.
+    if (process.env.VERCEL_ENV === 'production' && tenant !== 'demo') {
+      // Allow using *_TEST in production for test-mode POC on a live domain.
+      const ordersWebhook =
+        (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
+        || (process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST || '').trim()
+      if (!ordersWebhook) {
+        return NextResponse.json({
+          ok: false,
+          error: 'Ordering is not configured: Stripe orders webhook secret is missing (set STRIPE_ORDERS_WEBHOOK_SECRET or STRIPE_ORDERS_WEBHOOK_SECRET_TEST). See /api/orders/health.',
+        }, { status: 501 })
+      }
+    }
 
     // Load tenant settings and gate ordering
     const tenantRow = await prisma.tenant.findUnique({
@@ -194,8 +196,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Sales-ready: ordering payments require a connected Stripe account for this tenant.
+    // Demo exception: allow platform test checkout without Stripe Connect.
     const stripeAccountId = (tenantRow.stripeConnectAccountId || '').trim()
-    if (!stripeAccountId) {
+    const usePlatformStripe = tenant === 'demo' && !stripeAccountId
+    if (!stripeAccountId && !usePlatformStripe) {
       return NextResponse.json({
         ok: false,
         error: 'stripe_connect_required',
@@ -329,7 +333,7 @@ export async function POST(req: NextRequest) {
           smsOptIn,
           smsOptInAt: smsOptIn ? new Date() : undefined,
           note: orderNote || undefined,
-          stripeAccountId,
+          stripeAccountId: usePlatformStripe ? undefined : stripeAccountId,
           items: { create: orderItems },
         },
         select: { id: true },
@@ -360,7 +364,7 @@ export async function POST(req: NextRequest) {
 
     const baseUrl = baseUrlFromRequest(req)
     try {
-      const stripe = getStripe()
+      const stripe = getStripeOrders()
 
       const lineItems = [...stripeLineItems]
       if (tipCents > 0) {
@@ -389,7 +393,7 @@ export async function POST(req: NextRequest) {
           customerPhone: customerPhone || '',
           tipCents: String(tipCents),
         },
-      }, { stripeAccount: stripeAccountId })
+      }, usePlatformStripe ? undefined : { stripeAccount: stripeAccountId })
 
       // Store session id for idempotent webhook handling
       if (session.id) {
@@ -405,7 +409,7 @@ export async function POST(req: NextRequest) {
               smsOptIn,
               smsOptInAt: smsOptIn ? new Date() : undefined,
               tipCents,
-              stripeAccountId,
+              stripeAccountId: usePlatformStripe ? undefined : stripeAccountId,
             },
           })
         } catch {

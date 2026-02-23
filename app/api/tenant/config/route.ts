@@ -296,8 +296,9 @@ export async function GET(request: NextRequest) {
 
     let ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
 
-    // Demo defaults (preview/dev only): allow the demo menu to exercise the ordering UI without redeploying DB settings.
-    // In production, demo ordering must be explicitly enabled via DB settings.
+    // Demo defaults: allow the demo menu to exercise the ordering UI without redeploying DB settings.
+    // Guardrails:
+    // - Only applies if DB did not explicitly set ordering.enabled.
     const dbOrderingHasEnabled =
       !!(dbOrdering && typeof (dbOrdering as Record<string, unknown>)['enabled'] === 'boolean')
     const fbDbOrderingHasEnabled =
@@ -305,7 +306,6 @@ export async function GET(request: NextRequest) {
     const demoOrderingFallbackOk =
       tenant === 'demo'
       && !!process.env.DATABASE_URL
-      && (isPreview || process.env.NODE_ENV !== 'production')
       && !dbOrderingHasEnabled
       && !fbDbOrderingHasEnabled
     if (demoOrderingFallbackOk) {

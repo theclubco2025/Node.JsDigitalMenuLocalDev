@@ -13,6 +13,10 @@ const lora = Lora({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Menu',
   description: 'Smart restaurant menu system with AI assistant',
+  icons: {
+    icon: '/icon',
+    apple: '/apple-icon',
+  },
 }
 
 export default async function RootLayout({
