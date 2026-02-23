@@ -1062,7 +1062,7 @@ export default function MenuClient() {
                 type="button"
                 onClick={() => {
                   try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
-                  window.location.href = `/menu?tenant=demo`
+                  window.location.href = `/demo/menu`
                 }}
                 className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
               >
@@ -1073,54 +1073,24 @@ export default function MenuClient() {
                 type="button"
                 onClick={() => {
                   try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
-                  window.location.href = `/menu?tenant=demo&admin=1`
+                  window.location.href = `/demo/admin`
                 }}
                 className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
               >
-                <span>Inline editor</span>
-                <span className="text-xs text-neutral-500">admin=1</span>
+                <span>Admin editor (demo)</span>
+                <span className="text-xs text-neutral-500">Preview</span>
               </button>
               <button
                 type="button"
                 onClick={() => {
                   try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
-                  window.location.href = `/admin/menu?tenant=demo`
+                  window.location.href = `/demo/kitchen`
                 }}
-                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
+                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100 sm:col-span-2"
               >
-                <span>Admin portal</span>
-                <span className="text-xs text-neutral-500">Auth</span>
+                <span>Kitchen display (demo)</span>
+                <span className="text-xs text-neutral-500">Sample tickets</span>
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
-                  window.location.href = `/kds?pin=1234`
-                }}
-                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
-              >
-                <span>KDS</span>
-                <span className="text-xs text-neutral-500">PIN 1234</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
-                  window.location.href = `/kitchen?tenant=demo`
-                }}
-                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
-              >
-                <span>Kitchen board</span>
-                <span className="text-xs text-neutral-500">Live</span>
-              </button>
-              <a
-                href="/api/orders/env-check"
-                onClick={() => { try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {} }}
-                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-50"
-              >
-                <span>Env check</span>
-                <span className="text-xs text-neutral-500">JSON</span>
-              </a>
             </div>
           </div>
         </div>

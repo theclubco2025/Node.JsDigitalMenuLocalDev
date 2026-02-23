@@ -23,11 +23,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required' }, { status: 501 })
     }
 
-    const session = await getServerSession(authOptions)
-    if (!session) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    const adminToken = (process.env.ADMIN_TOKEN || '').trim()
+    const headerToken = (req.headers.get('x-admin-token') || req.headers.get('X-Admin-Token') || '').trim()
+    const tokenAuthed = !!(adminToken && headerToken && headerToken === adminToken)
 
-    const role = (session as unknown as { role?: string }).role || ''
-    const tenantId = (session as unknown as { tenantId?: string | null }).tenantId || null
+    const session = tokenAuthed ? null : await getServerSession(authOptions)
+    if (!tokenAuthed && !session) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+
+    const role = tokenAuthed ? 'SUPER_ADMIN' : ((session as unknown as { role?: string }).role || '')
+    const tenantId = tokenAuthed ? null : ((session as unknown as { tenantId?: string | null }).tenantId || null)
 
     const raw = await req.json().catch(() => ({}))
     const parsed = Body.safeParse(raw)
@@ -37,6 +41,7 @@ export async function POST(req: NextRequest) {
     const kitchenPin = parsed.data.kitchenPin.trim()
 
     // Owners can only set their own tenant's pin. Super admins can set any.
+    // Production ops override: a correct ADMIN_TOKEN header is treated as SUPER_ADMIN.
     if (role !== 'SUPER_ADMIN') {
       if (!tenantId) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
       const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { slug: true } })

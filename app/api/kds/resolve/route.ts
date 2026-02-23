@@ -29,6 +29,15 @@ export async function POST(req: NextRequest) {
     const pin = parsed.data.pin.trim()
     if (!pin) return NextResponse.json({ ok: false, error: 'Missing pin' }, { status: 400 })
 
+    // Reserved demo pins (hard-routed so they never get mixed up).
+    // These are public POC pins and should remain consistent across environments.
+    if (pin === '1234') {
+      return NextResponse.json({ ok: true, tenant: { slug: 'demo', name: 'Demo' } }, { status: 200 })
+    }
+    if (pin === '4321') {
+      return NextResponse.json({ ok: true, tenant: { slug: 'independentbarandgrille', name: 'Independent Bar & Grille' } }, { status: 200 })
+    }
+
     const matches = await prisma.tenant.findMany({
       where: kitchenPinWhere(pin),
       select: { slug: true, name: true, status: true },

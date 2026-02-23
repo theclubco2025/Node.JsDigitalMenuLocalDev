@@ -59,51 +59,29 @@ export default function DemoAckClient() {
             <div className="text-sm font-semibold">Demo views (same demo tenant)</div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <button
-                onClick={() => go(`/menu?tenant=${encodeURIComponent(tenant)}`)}
+                onClick={() => go('/demo/menu')}
                 className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
               >
                 <span>Guest menu</span>
                 <span className="text-xs text-neutral-500">Browse</span>
               </button>
               <button
-                onClick={() => go(`/menu?tenant=${encodeURIComponent(tenant)}&admin=1`)}
+                onClick={() => go('/demo/admin')}
                 className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
               >
-                <span>Inline editor</span>
-                <span className="text-xs text-neutral-500">admin=1</span>
+                <span>Admin editor (demo)</span>
+                <span className="text-xs text-neutral-500">Preview</span>
               </button>
               <button
-                onClick={() => go(`/admin/menu?tenant=${encodeURIComponent(tenant)}`)}
-                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
+                onClick={() => go('/demo/kitchen')}
+                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50 sm:col-span-2"
               >
-                <span>Admin portal</span>
-                <span className="text-xs text-neutral-500">Auth</span>
+                <span>Kitchen display (demo)</span>
+                <span className="text-xs text-neutral-500">Sample tickets</span>
               </button>
-              <button
-                onClick={() => go(`/kds?pin=${encodeURIComponent("1234")}`)}
-                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
-              >
-                <span>KDS (PIN)</span>
-                <span className="text-xs text-neutral-500">1234</span>
-              </button>
-              <button
-                onClick={() => go(`/kitchen?tenant=${encodeURIComponent(tenant)}`)}
-                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
-              >
-                <span>Kitchen board</span>
-                <span className="text-xs text-neutral-500">Live</span>
-              </button>
-              <a
-                href="/api/orders/env-check"
-                onClick={() => acknowledge()}
-                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
-              >
-                <span>Ordering env check</span>
-                <span className="text-xs text-neutral-500">JSON</span>
-              </a>
             </div>
             <div className="mt-3 text-xs text-neutral-500">
-              Tip: Admin/KDS require DB (and Admin requires auth) depending on environment.
+              Tip: This is a public preview — edits here won’t change the live demo menu.
             </div>
           </div>
 
