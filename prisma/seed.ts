@@ -45,6 +45,32 @@ async function main() {
   })
   console.log('✅ Demo tenant created')
 
+  // Create platform demo tenant (used by /demo => /menu?tenant=demo)
+  await prisma.tenant.upsert({
+    where: { slug: 'demo' },
+    update: {},
+    create: {
+      slug: 'demo',
+      name: 'Demo',
+      plan: 'PREMIUM',
+      status: 'ACTIVE',
+      monthlyRevenue: 0,
+      settings: {
+        kitchenPin: '1234',
+        ordering: {
+          enabled: true,
+          paused: false,
+          pauseMessage: '',
+          fulfillment: 'pickup',
+          timezone: 'America/Los_Angeles',
+          scheduling: { enabled: true, slotMinutes: 15, leadTimeMinutes: 30 },
+          dineIn: { enabled: true, label: 'Table number' },
+        },
+      },
+    },
+  })
+  console.log('✅ Platform demo tenant created')
+
   // Create restaurant owner user
   const ownerPassword = process.env.SEED_OWNER_PASSWORD
   if (!ownerPassword) {

@@ -95,6 +95,10 @@ model Tenant {
   currentPeriodEnd      DateTime?
   cancelAtPeriodEnd     Boolean       @default(false)
   trialEnd              DateTime?
+
+  // Ordering payments (Stripe Connect Standard)
+  stripeConnectAccountId String?      @unique
+  stripeConnectOnboardedAt DateTime?
   
   // Plan limits and settings
   settings              Json          @default("{\"allowMenuEdits\": true, \"maxCategories\": 10, \"maxItems\": 50, \"aiResponsesPerDay\": 100, \"customBranding\": false}")
@@ -121,6 +125,7 @@ model Order {
   // Money stored as integer cents to avoid float issues.
   currency               String           @default("usd")
   subtotalCents          Int
+  tipCents               Int              @default(0)
   totalCents             Int
 
   // Scheduling
@@ -130,6 +135,8 @@ model Order {
   // Stripe identifiers for idempotency
   stripeCheckoutSessionId String?         @unique
   stripePaymentIntentId   String?         @unique
+  // Stripe Connect: which connected account was charged (if any)
+  stripeAccountId         String?
   paidAt                 DateTime?
 
   // Optional customer context

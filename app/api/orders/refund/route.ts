@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth/options'
 import { prisma } from '@/lib/prisma'
-import { getStripeOrders } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -48,6 +48,7 @@ export async function POST(req: NextRequest) {
         paidAt: true,
         refundedAt: true,
         stripePaymentIntentId: true,
+        stripeAccountId: true,
       },
     })
     if (!order) return NextResponse.json({ ok: false, error: 'Order not found' }, { status: 404 })
@@ -68,7 +69,8 @@ export async function POST(req: NextRequest) {
     if (!Number.isFinite(amt) || amt <= 0) return NextResponse.json({ ok: false, error: 'Invalid amount' }, { status: 400 })
     if (amt > order.totalCents) return NextResponse.json({ ok: false, error: 'Refund exceeds order total' }, { status: 400 })
 
-    const stripe = getStripeOrders()
+    const stripe = getStripe()
+    const stripeAccountId = (order.stripeAccountId || '').trim() || undefined
     const refund = await stripe.refunds.create({
       payment_intent: pi,
       amount: amt === order.totalCents ? undefined : amt,
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         orderId: order.id,
       },
-    })
+    }, stripeAccountId ? { stripeAccount: stripeAccountId } : undefined)
 
     await prisma.order.update({
       where: { id: order.id },

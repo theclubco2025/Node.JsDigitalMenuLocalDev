@@ -291,7 +291,6 @@ export default function MenuClient() {
     const addOnCents = (line.addOns || []).reduce((s, a) => s + (a.priceDeltaCents || 0), 0)
     return sum + (base + addOnCents) * line.quantity
   }, 0)
-  const cartTotal = cartTotalCents / 100
 
   const orderingEnabled = orderingCfg?.enabled === true
   const orderingPaused = (orderingCfg as unknown as { paused?: boolean } | undefined)?.paused === true
@@ -315,8 +314,25 @@ export default function MenuClient() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [smsOptIn, setSmsOptIn] = useState(false)
   const [orderNote, setOrderNote] = useState('')
+  const [tipPercent, setTipPercent] = useState<number>(15)
+  const [customTip, setCustomTip] = useState('')
   const [tableNumber, setTableNumber] = useState('')
   const [fulfillmentMode, setFulfillmentMode] = useState<'pickup' | 'dinein'>('pickup')
+
+  const tipCents = useMemo(() => {
+    if (!orderingEnabled) return 0
+    const raw = customTip.trim()
+    if (raw) {
+      const n = Number(raw)
+      if (!Number.isFinite(n) || n <= 0) return 0
+      return Math.min(25_000, Math.round(n * 100))
+    }
+    const pct = Math.max(0, Math.min(50, Math.floor(tipPercent || 0)))
+    return Math.min(25_000, Math.round(cartTotalCents * (pct / 100)))
+  }, [orderingEnabled, customTip, tipPercent, cartTotalCents])
+
+  const orderTotalCents = cartTotalCents + tipCents
+  const orderTotal = orderTotalCents / 100
 
   useEffect(() => {
     if (!dineInEnabled && fulfillmentMode === 'dinein') {
@@ -549,6 +565,7 @@ export default function MenuClient() {
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         smsOptIn: Boolean(smsOptIn),
+        tipCents,
         orderNote: orderNote.trim() || null,
       }
       const res = await fetch('/api/orders/checkout', {
@@ -1691,6 +1708,48 @@ export default function MenuClient() {
                     </div>
                   )}
 
+                  {/* Tip */}
+                  {orderingEnabled && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-black">Tip</div>
+                      <div className="mt-2 text-sm text-gray-600">Optional. Tips go directly to the restaurant.</div>
+                      <div className="mt-4 grid grid-cols-4 gap-2">
+                        {[0, 10, 15, 20].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => { setTipPercent(pct); setCustomTip('') }}
+                            className="rounded-xl px-3 py-2 text-sm font-extrabold border transition"
+                            style={customTip.trim() === '' && tipPercent === pct
+                              ? { background: 'var(--accent)', color: '#0b0b0b', borderColor: 'var(--accent)' }
+                              : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                            }
+                          >
+                            {pct === 0 ? 'No' : `${pct}%`}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-3">
+                        <label className="block text-xs font-semibold text-gray-700">Custom tip</label>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-700">$</span>
+                          <input
+                            inputMode="decimal"
+                            value={customTip}
+                            onChange={(e) => setCustomTip(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                          />
+                        </div>
+                        {tipCents > 0 && (
+                          <div className="mt-2 text-xs text-gray-600">
+                            Tip: ${(tipCents / 100).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Pickup Time */}
                   {orderingEnabled && schedulingEnabled && fulfillmentMode === 'pickup' && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -1767,7 +1826,12 @@ export default function MenuClient() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-xs font-semibold text-white/70">Order total</div>
-                    <div className="text-2xl font-extrabold text-white">${Number(cartTotal ?? 0).toFixed(2)}</div>
+                    <div className="text-2xl font-extrabold text-white">${Number(orderTotal ?? 0).toFixed(2)}</div>
+                    {orderingEnabled && tipCents > 0 && (
+                      <div className="mt-1 text-xs text-white/60">
+                        Includes ${(tipCents / 100).toFixed(2)} tip
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => {

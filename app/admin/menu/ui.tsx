@@ -40,6 +40,9 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   const [query, setQuery] = useState('')
   const [kitchenPin, setKitchenPin] = useState('')
   const [pinSaving, setPinSaving] = useState(false)
+  const [stripeConnectLoading, setStripeConnectLoading] = useState(false)
+  const [stripeConnectAccountId, setStripeConnectAccountId] = useState<string | null>(null)
+  const [stripeConnectOnboardedAt, setStripeConnectOnboardedAt] = useState<string | null>(null)
   const [orderingPaused, setOrderingPaused] = useState(false)
   const [pauseMessage, setPauseMessage] = useState('')
   const [schedulingEnabled, setSchedulingEnabled] = useState(true)
@@ -127,6 +130,41 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
     void loadOrdering()
     return () => { cancelled = true }
   }, [tenant])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadStripeConnect() {
+      setStripeConnectLoading(true)
+      try {
+        const res = await fetch(`/api/tenant/stripe-connect?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
+        const json = await res.json().catch(() => null)
+        if (!res.ok || !json?.ok) return
+        if (cancelled) return
+        setStripeConnectAccountId(typeof json.accountId === 'string' && json.accountId.trim() ? json.accountId.trim() : null)
+        setStripeConnectOnboardedAt(typeof json.onboardedAt === 'string' && json.onboardedAt.trim() ? json.onboardedAt.trim() : null)
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setStripeConnectLoading(false)
+      }
+    }
+    void loadStripeConnect()
+    return () => { cancelled = true }
+  }, [tenant])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const sp = new URLSearchParams(window.location.search)
+    const connect = (sp.get('connect') || '').trim()
+    const msg = (sp.get('msg') || '').trim()
+    if (!connect) return
+    if (connect === 'ok') setToast('Stripe connected')
+    if (connect === 'error') setError(msg ? decodeURIComponent(msg) : 'Stripe connect error')
+    sp.delete('connect')
+    sp.delete('msg')
+    const next = `${window.location.pathname}?${sp.toString()}`
+    try { window.history.replaceState({}, '', next.endsWith('?') ? window.location.pathname : next) } catch {}
+  }, [])
 
   const save = async () => {
     if (!menu) return
@@ -273,6 +311,40 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
             >
               Open kitchen login
             </a>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <div className="text-sm font-semibold text-gray-900">Stripe payouts</div>
+                <div className="mt-1 text-xs text-gray-700">
+                  Connect this restaurant’s Stripe account so online orders pay out directly to them.
+                </div>
+              </div>
+              <a
+                href={`/api/stripe/connect/start?tenant=${encodeURIComponent(tenant)}`}
+                className="inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-gray-800"
+              >
+                {stripeConnectAccountId ? 'Manage Stripe' : 'Connect Stripe'}
+              </a>
+            </div>
+            <div className="mt-2 text-xs text-gray-700">
+              Status:{' '}
+              {stripeConnectLoading
+                ? <span className="font-semibold">Checking…</span>
+                : stripeConnectAccountId
+                  ? <span className="font-semibold text-emerald-700">Connected</span>
+                  : <span className="font-semibold text-amber-700">Not connected</span>
+              }
+              {stripeConnectAccountId && (
+                <span className="ml-2 font-mono text-gray-500">({stripeConnectAccountId})</span>
+              )}
+              {stripeConnectOnboardedAt && (
+                <span className="ml-2 text-gray-500">
+                  Connected {new Date(stripeConnectOnboardedAt).toLocaleDateString()}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-4">

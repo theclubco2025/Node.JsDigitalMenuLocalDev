@@ -25,7 +25,6 @@ export async function GET() {
   const stripeOrdersSecretKey = classifyKey(process.env.STRIPE_ORDERS_SECRET_KEY || '')
   const ordersWebhookTest = classifyKey(process.env.STRIPE_ORDERS_WEBHOOK_SECRET_TEST || '')
   const ordersWebhook = classifyKey(process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '')
-  const orderingPocTenants = ((process.env.ORDERING_POC_TENANTS || '').trim() || null)
   const kitchenPinPresent = !!((process.env.KITCHEN_PIN || '').trim())
   const ordersWebhookEffectivePresent = ordersWebhook.present || ordersWebhookTest.present
 
@@ -45,9 +44,6 @@ export async function GET() {
       STRIPE_ORDERS_WEBHOOK_SECRET: ordersWebhook,
       required_in_production: ordersWebhookRequired,
       ok: ordersWebhookRequired ? ordersWebhookEffectivePresent : true,
-    },
-    poc: {
-      ORDERING_POC_TENANTS: orderingPocTenants,
     },
     kitchen: {
       KITCHEN_PIN_present: kitchenPinPresent,

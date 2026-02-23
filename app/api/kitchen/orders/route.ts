@@ -27,7 +27,7 @@ function expectedKitchenPin(tenantSlug: string, settings: unknown): string {
   const fromSettings = kitchenPinFromSettings(settings)
   if (fromSettings) return fromSettings
   // Preview-only default for Independent draft POC (still behind Vercel protection).
-  if (process.env.VERCEL_ENV === 'preview' && (tenantSlug === 'independent-draft' || tenantSlug === 'independent-kitchen-draft')) return '1234'
+  if (process.env.VERCEL_ENV === 'preview' && (tenantSlug === 'independent-draft' || tenantSlug === 'independent-kitchen-draft' || tenantSlug === 'demo')) return '1234'
   return ''
 }
 

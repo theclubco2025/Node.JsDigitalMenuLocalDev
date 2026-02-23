@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { readMenu } from '@/lib/data/menu'
-import { getStripeOrders } from '@/lib/stripe'
-import { ensureOrdersSchemaPreview } from '@/lib/server/preview-orders-schema'
+import { getStripe } from '@/lib/stripe'
 import type { Prisma } from '@prisma/client'
 
 export const runtime = 'nodejs'
@@ -28,6 +27,7 @@ const BodySchema = z.object({
   customerName: z.string().max(100).optional().nullable(),
   customerPhone: z.string().max(40).optional().nullable(),
   smsOptIn: z.boolean().optional().default(false),
+  tipCents: z.number().int().min(0).max(25_000).optional().default(0),
   // Optional order-level note for kitchen
   orderNote: z.string().max(800).optional().nullable(),
 })
@@ -65,16 +65,6 @@ function getOrderingSettings(settings: unknown) {
 
   const dineInEnabled = dineIn.enabled === true
   return { enabled, paused, pauseMessage, timezone, slotMinutes, leadTimeMinutes, dineInEnabled }
-}
-
-function pocOrderingTenants(): string[] {
-  const raw = (process.env.ORDERING_POC_TENANTS || '').trim()
-  if (!raw) return []
-  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
-}
-
-function isOrderingPocEnabledForTenant(tenant: string): boolean {
-  return pocOrderingTenants().includes((tenant || '').toLowerCase())
 }
 
 function roundMoneyToCents(amount: number): number {
@@ -172,19 +162,19 @@ export async function POST(req: NextRequest) {
     const customerPhone = (parsed.data.customerPhone || '').trim() || null
     const smsOptIn = parsed.data.smsOptIn === true
     const orderNote = (parsed.data.orderNote || '').trim() || null
+    const tipCentsRaw = Math.max(0, Math.floor(parsed.data.tipCents || 0))
 
     // Load tenant settings and gate ordering
     const tenantRow = await prisma.tenant.findUnique({
       where: { slug: tenant },
-      select: { id: true, settings: true },
+      select: { id: true, settings: true, stripeConnectAccountId: true },
     })
+    if (!tenantRow?.id) {
+      return NextResponse.json({ ok: false, error: 'tenant_not_found' }, { status: 404 })
+    }
     const ordering = getOrderingSettings(tenantRow?.settings)
     const tableNumber = ordering.dineInEnabled ? tableNumberRaw : null
-    const isPreview = process.env.VERCEL_ENV === 'preview'
-    // Preview-only POC: allow independent-draft ordering without DB settings.
-    // This does NOT affect production and does NOT affect the live independentbarandgrille tenant.
-    const pocEnabled = isOrderingPocEnabledForTenant(tenant)
-    if (!ordering.enabled && !(isPreview && tenant === 'independent-draft') && !pocEnabled) {
+    if (!ordering.enabled) {
       return NextResponse.json({ ok: false, error: 'ordering_disabled' }, { status: 403 })
     }
     if (ordering.paused) {
@@ -203,10 +193,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'customer_phone_required_for_sms' }, { status: 400 })
     }
 
-    // Ensure tenant exists (so we can relate orders even if menu is file-based)
-    const ensuredTenant = tenantRow?.id
-      ? { id: tenantRow.id }
-      : await prisma.tenant.create({ data: { slug: tenant, name: tenant } })
+    // Sales-ready: ordering payments require a connected Stripe account for this tenant.
+    const stripeAccountId = (tenantRow.stripeConnectAccountId || '').trim()
+    if (!stripeAccountId) {
+      return NextResponse.json({
+        ok: false,
+        error: 'stripe_connect_required',
+        message: 'Ordering is not configured: this restaurant must connect Stripe in Admin before taking online orders.',
+      }, { status: 501 })
+    }
 
     // Compute totals server-side from the canonical menu
     const menu = await readMenu(tenant)
@@ -222,6 +217,10 @@ export async function POST(req: NextRequest) {
     let subtotalCents = 0
     const orderItems: Prisma.OrderItemCreateWithoutOrderInput[] = []
     const orderItemsMinimal: Array<{ menuItemId: string; name: string; unitPriceCents: number; quantity: number }> = []
+    const stripeLineItems: Array<{
+      price_data: { currency: string; product_data: { name: string }; unit_amount: number }
+      quantity: number
+    }> = []
     for (const line of items) {
       const row = itemById.get(line.id)
       const price = row?.price
@@ -249,6 +248,17 @@ export async function POST(req: NextRequest) {
       const unitPriceCents = baseUnitPriceCents + addOnsCents
       subtotalCents += unitPriceCents * line.quantity
 
+      const addOnNames = normalizedSelected.map(a => a.name).filter(Boolean)
+      const suffix = addOnNames.length ? ` (Add: ${addOnNames.join(', ')})` : ''
+      stripeLineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: `${name}${suffix}`.slice(0, 250) },
+          unit_amount: unitPriceCents,
+        },
+        quantity: line.quantity,
+      })
+
       const note = (line.note || '').trim()
       orderItems.push({
         menuItemId: line.id,
@@ -265,7 +275,12 @@ export async function POST(req: NextRequest) {
         quantity: line.quantity,
       })
     }
-    const totalCents = subtotalCents
+    // Tip validation is performed after subtotal is computed.
+    const tipCents = Math.min(25_000, tipCentsRaw)
+    if (tipCents > Math.floor(subtotalCents * 0.5)) {
+      return NextResponse.json({ ok: false, error: 'tip_too_large' }, { status: 400 })
+    }
+    const totalCents = subtotalCents + tipCents
 
     // Scheduling validation (24/7 testing if hours unset)
     let scheduledFor: Date | null = null
@@ -294,21 +309,16 @@ export async function POST(req: NextRequest) {
       scheduledFor = d
     }
 
-    // Preview-only POC: some preview deployments point at a DB without migrations applied.
-    // Ensure the schema exists before creating the first order.
-    if (process.env.VERCEL_ENV === 'preview' && tenant === 'independent-draft') {
-      await ensureOrdersSchemaPreview({ host: req.headers.get('host') || '' })
-    }
-
     let order: { id: string }
     try {
       order = await prisma.order.create({
         data: {
-          tenantId: ensuredTenant.id,
+          tenantId: tenantRow.id,
           status: 'PENDING_PAYMENT',
           fulfillment: 'PICKUP',
           currency: 'usd',
           subtotalCents,
+          tipCents,
           totalCents,
           scheduledFor: scheduledFor || undefined,
           timezone: ordering.timezone,
@@ -319,45 +329,18 @@ export async function POST(req: NextRequest) {
           smsOptIn,
           smsOptInAt: smsOptIn ? new Date() : undefined,
           note: orderNote || undefined,
+          stripeAccountId,
           items: { create: orderItems },
         },
         select: { id: true },
       })
     } catch (e) {
-      // Preview-only: auto-create missing schema then retry once.
       const msg = (e as Error)?.message || ''
-      if (
-        process.env.VERCEL_ENV === 'preview'
-        && msg.includes('public.orders')
-        && msg.includes('does not exist')
-      ) {
-        await ensureOrdersSchemaPreview()
-        order = await prisma.order.create({
-          data: {
-            tenantId: ensuredTenant.id,
-            status: 'PENDING_PAYMENT',
-            fulfillment: 'PICKUP',
-            currency: 'usd',
-            subtotalCents,
-            totalCents,
-            scheduledFor: scheduledFor || undefined,
-            timezone: ordering.timezone,
-            customerEmail,
-            customerName: customerName || undefined,
-            customerPhone: customerPhone || undefined,
-            tableNumber: tableNumber || undefined,
-            smsOptIn,
-            smsOptInAt: smsOptIn ? new Date() : undefined,
-            note: orderNote || undefined,
-            items: { create: orderItems },
-          },
-          select: { id: true },
-        })
-      } else if ((e as { code?: string } | null)?.code === 'P2022' || msg.includes('does not exist')) {
+      if ((e as { code?: string } | null)?.code === 'P2022' || msg.includes('does not exist')) {
         // Production safety: if migrations haven't applied yet, retry without newer columns.
         order = await prisma.order.create({
           data: {
-            tenantId: ensuredTenant.id,
+            tenantId: tenantRow.id,
             status: 'PENDING_PAYMENT',
             fulfillment: 'PICKUP',
             currency: 'usd',
@@ -377,20 +360,24 @@ export async function POST(req: NextRequest) {
 
     const baseUrl = baseUrlFromRequest(req)
     try {
-      const stripe = getStripeOrders()
+      const stripe = getStripe()
+
+      const lineItems = [...stripeLineItems]
+      if (tipCents > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'usd',
+            product_data: { name: 'Tip' },
+            unit_amount: tipCents,
+          },
+          quantity: 1,
+        })
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         customer_email: customerEmail,
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: { name: `${tenant} order` },
-              unit_amount: totalCents,
-            },
-            quantity: 1,
-          }
-        ],
+        line_items: lineItems,
         success_url: `${baseUrl}/order/success?order=${encodeURIComponent(order.id)}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${baseUrl}/menu?tenant=${encodeURIComponent(tenant)}`,
         metadata: {
@@ -400,8 +387,9 @@ export async function POST(req: NextRequest) {
           customerEmail,
           customerName: customerName || '',
           customerPhone: customerPhone || '',
+          tipCents: String(tipCents),
         },
-      })
+      }, { stripeAccount: stripeAccountId })
 
       // Store session id for idempotent webhook handling
       if (session.id) {
@@ -416,6 +404,8 @@ export async function POST(req: NextRequest) {
               customerPhone: customerPhone || undefined,
               smsOptIn,
               smsOptInAt: smsOptIn ? new Date() : undefined,
+              tipCents,
+              stripeAccountId,
             },
           })
         } catch {

@@ -26,13 +26,25 @@
 
 3.5) (Optional) Enable Ordering
 - Ordering is **disabled by default** and must be enabled per-tenant via `Tenant.settings.ordering.enabled=true`.
-- Defaults (for testing): timezone **PST** (`America/Los_Angeles`) and **24/7 hours** if hours are not configured yet.
+
+Stripe Connect (required for ordering)
+- In the admin editor (`/admin/menu`), connect the restaurant’s Stripe account:
+  - Restaurant settings → **Stripe payouts** → **Connect Stripe**
+- Verify it shows **Connected**.
+
+Stripe webhooks (required in production)
 - Stripe orders webhook uses a separate secret: `STRIPE_ORDERS_WEBHOOK_SECRET` (do not reuse the billing webhook secret).
   - Endpoint URL: `https://YOURDOMAIN.com/api/orders/stripe-webhook`
   - Required events:
     - `checkout.session.completed`
     - `checkout.session.async_payment_succeeded`
-- In **production**, ordering requires `STRIPE_ORDERS_WEBHOOK_SECRET` to be set (checkout is blocked without it).
+- For Connect, ensure the webhook is configured to receive events from **connected accounts**.
+- In **production**, ordering is blocked until the orders webhook secret is set.
+
+Verification
+- Place a test order and confirm:
+  - Stripe receipt is itemized (items + add-ons) and includes **Tip** when selected.
+  - KDS shows the order only after payment is confirmed.
 - Health check: `/api/orders/health`
 - Admin orders queue (after login): `/admin/orders`
 
@@ -49,7 +61,13 @@
   - Tap **Complete** (or swipe right) → order clears from the active board and appears in History.
 
 3.7) Customer order-status copy (editable per restaurant)
-- In the admin editor (`/admin/menu`), set:\n+  - Pickup final step label + ready message\n+  - Dine-in final step label + ready message\n+  - Pickup-code helper text\n+- Verify:\n+  - On the customer Order Confirmed screen (`/order/success?order=...`), the final step label and “ready” message reflect your saved copy.\n+  - If you edit this copy while the page is open, it should update automatically within ~15 seconds.\n+
+- In the admin editor (`/admin/menu`), set:
+  - Pickup final step label + ready message
+  - Dine-in final step label + ready message
+  - Pickup-code helper text
+- Verify:
+  - On the customer Order Confirmed screen (`/order/success?order=...`), the final step label and “ready” message reflect your saved copy.
+  - If you edit this copy while the page is open, it should update automatically within ~15 seconds.
 4) Publish
 - Click Publish in the admin bar to promote `<slug>-draft` → `<slug>`.
 

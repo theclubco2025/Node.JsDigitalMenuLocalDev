@@ -10,14 +10,23 @@ export default function DemoAckClient() {
 
   const calendlyUrl = useMemo(() => "https://calendly.com/tccsolutions2025/30min", [])
   const demoAckKey = "demoAcknowledged_v4"
+  const tenant = "demo"
+
+  const acknowledge = () => {
+    try {
+      localStorage.setItem(demoAckKey, "1")
+    } catch {}
+  }
+
+  const go = (path: string) => {
+    acknowledge()
+    router.push(path)
+  }
 
   const continueToDemo = () => {
     if (loading) return
     setLoading(true)
-    try {
-      localStorage.setItem(demoAckKey, "1")
-    } catch {}
-    router.push("/menu?tenant=demo")
+    go(`/menu?tenant=${encodeURIComponent(tenant)}`)
   }
 
   return (
@@ -39,23 +48,62 @@ export default function DemoAckClient() {
           </div>
 
           <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">
-            You’re about to view a demo menu
+            Choose what you want to view
           </h1>
 
           <p className="mt-3 text-base text-neutral-700">
-            This is a sample experience to show how the menu looks and feels. When we onboard your restaurant,
-            we’ll personalize everything: your branding, your real menu items, your photos, your QR link, and your voice.
+            This is a sample experience. After onboarding, we personalize everything: branding, items, photos, QR link, and voice.
           </p>
 
-          <div className="mt-6 grid gap-3 md:grid-cols-2">
-            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="text-sm font-semibold">What will be customized</div>
-              <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700">
-                <li>Logo, colors, typography, and layout</li>
-                <li>Accurate menu items + pricing + sections</li>
-                <li>Allergens/diet tags (as provided/approved)</li>
-                <li>Hero imagery + signature dishes</li>
-              </ul>
+          <div className="mt-6 rounded-3xl border border-neutral-200 bg-neutral-50 p-4">
+            <div className="text-sm font-semibold">Demo views (same demo tenant)</div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <button
+                onClick={() => go(`/menu?tenant=${encodeURIComponent(tenant)}`)}
+                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
+              >
+                <span>Guest menu</span>
+                <span className="text-xs text-neutral-500">Browse</span>
+              </button>
+              <button
+                onClick={() => go(`/menu?tenant=${encodeURIComponent(tenant)}&admin=1`)}
+                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
+              >
+                <span>Inline editor</span>
+                <span className="text-xs text-neutral-500">admin=1</span>
+              </button>
+              <button
+                onClick={() => go(`/admin/menu?tenant=${encodeURIComponent(tenant)}`)}
+                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
+              >
+                <span>Admin portal</span>
+                <span className="text-xs text-neutral-500">Auth</span>
+              </button>
+              <button
+                onClick={() => go(`/kds?pin=${encodeURIComponent("1234")}`)}
+                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
+              >
+                <span>KDS (PIN)</span>
+                <span className="text-xs text-neutral-500">1234</span>
+              </button>
+              <button
+                onClick={() => go(`/kitchen?tenant=${encodeURIComponent(tenant)}`)}
+                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
+              >
+                <span>Kitchen board</span>
+                <span className="text-xs text-neutral-500">Live</span>
+              </button>
+              <a
+                href="/api/orders/env-check"
+                onClick={() => acknowledge()}
+                className="inline-flex items-center justify-between gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-neutral-50"
+              >
+                <span>Ordering env check</span>
+                <span className="text-xs text-neutral-500">JSON</span>
+              </a>
+            </div>
+            <div className="mt-3 text-xs text-neutral-500">
+              Tip: Admin/KDS require DB (and Admin requires auth) depending on environment.
             </div>
           </div>
 

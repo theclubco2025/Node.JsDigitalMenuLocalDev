@@ -14,6 +14,12 @@ export default function KdsLandingPage() {
 
   useEffect(() => {
     try {
+      const urlPin = (new URLSearchParams(window.location.search)).get('pin') || ''
+      if (urlPin.trim()) {
+        setPin(urlPin.trim())
+        try { localStorage.setItem('kds_last_pin', urlPin.trim()) } catch {}
+        return
+      }
       const last = localStorage.getItem('kds_last_pin') || ''
       if (last) setPin(last)
     } catch {

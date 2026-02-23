@@ -115,6 +115,7 @@ export default function MenuClient() {
     ? 'south-fork-grille'
     : String(tenant || '').trim().toLowerCase()
   const isSouthFork = canonicalTenant === 'south-fork-grille'
+  const isDemo = tenant === 'demo'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
@@ -134,14 +135,14 @@ export default function MenuClient() {
   // Demo reminder (first-visit acknowledgement)
   useEffect(() => {
     if (!isBrowser) return
-    if (tenant !== 'demo') return
+    if (!isDemo) return
     try {
       const ack = localStorage.getItem(demoAcknowledgeKey)
       if (!ack) setShowDemoAcknowledgement(true)
     } catch {
       setShowDemoAcknowledgement(true)
     }
-  }, [isBrowser, tenant])
+  }, [isBrowser, isDemo, demoAcknowledgeKey])
 
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
@@ -522,7 +523,6 @@ export default function MenuClient() {
     const addOnCents = (line.addOns || []).reduce((s, a) => s + (a.priceDeltaCents || 0), 0)
     return sum + (base + addOnCents) * line.quantity
   }, 0)
-  const cartTotal = cartTotalCents / 100
 
   const orderingEnabled = orderingCfg?.enabled === true
   const orderingPaused = (orderingCfg as unknown as { paused?: boolean } | undefined)?.paused === true
@@ -546,8 +546,25 @@ export default function MenuClient() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [smsOptIn, setSmsOptIn] = useState(false)
   const [orderNote, setOrderNote] = useState('')
+  const [tipPercent, setTipPercent] = useState<number>(15)
+  const [customTip, setCustomTip] = useState('')
   const [tableNumber, setTableNumber] = useState('')
   const [fulfillmentMode, setFulfillmentMode] = useState<'pickup' | 'dinein'>('pickup')
+
+  const tipCents = useMemo(() => {
+    if (!orderingEnabled) return 0
+    const raw = customTip.trim()
+    if (raw) {
+      const n = Number(raw)
+      if (!Number.isFinite(n) || n <= 0) return 0
+      return Math.min(25_000, Math.round(n * 100))
+    }
+    const pct = Math.max(0, Math.min(50, Math.floor(tipPercent || 0)))
+    return Math.min(25_000, Math.round(cartTotalCents * (pct / 100)))
+  }, [orderingEnabled, customTip, tipPercent, cartTotalCents])
+
+  const orderTotalCents = cartTotalCents + tipCents
+  const orderTotal = orderTotalCents / 100
 
   useEffect(() => {
     if (!dineInEnabled && fulfillmentMode === 'dinein') {
@@ -669,6 +686,7 @@ export default function MenuClient() {
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         smsOptIn: Boolean(smsOptIn),
+        tipCents,
         orderNote: orderNote.trim() || null,
       }
       const res = await fetch('/api/orders/checkout', {
@@ -1018,7 +1036,7 @@ export default function MenuClient() {
       {!error && !isLoading && (
         <>
       {/* Demo reminder */}
-      {tenant === 'demo' && showDemoAcknowledgement && (
+      {isDemo && showDemoAcknowledgement && (
         <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl">
             <div className="flex items-start justify-between gap-3">
@@ -1037,6 +1055,72 @@ export default function MenuClient() {
               >
                 Got it
               </button>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => {
+                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                  window.location.href = `/menu?tenant=demo`
+                }}
+                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
+              >
+                <span>Guest menu</span>
+                <span className="text-xs text-neutral-500">Browse</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                  window.location.href = `/menu?tenant=demo&admin=1`
+                }}
+                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
+              >
+                <span>Inline editor</span>
+                <span className="text-xs text-neutral-500">admin=1</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                  window.location.href = `/admin/menu?tenant=demo`
+                }}
+                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
+              >
+                <span>Admin portal</span>
+                <span className="text-xs text-neutral-500">Auth</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                  window.location.href = `/kds?pin=1234`
+                }}
+                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
+              >
+                <span>KDS</span>
+                <span className="text-xs text-neutral-500">PIN 1234</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                  window.location.href = `/kitchen?tenant=demo`
+                }}
+                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-100"
+              >
+                <span>Kitchen board</span>
+                <span className="text-xs text-neutral-500">Live</span>
+              </button>
+              <a
+                href="/api/orders/env-check"
+                onClick={() => { try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {} }}
+                className="inline-flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-50"
+              >
+                <span>Env check</span>
+                <span className="text-xs text-neutral-500">JSON</span>
+              </a>
             </div>
           </div>
         </div>
@@ -1348,7 +1432,7 @@ export default function MenuClient() {
       </div>
 
       {/* Demo Signature (Pasta only) */}
-      {tenant === 'demo' && showSignatureGrid && (
+      {isDemo && showSignatureGrid && (
         <div className="max-w-7xl mx-auto px-4 mb-6">
           <div className="flex flex-col items-center mb-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2 shadow" style={{ border: '1px solid rgba(0,0,0,0.05)' }}>
@@ -1358,13 +1442,17 @@ export default function MenuClient() {
           </div>
 
           {/* Use the same card layout as the Pasta category items. */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className={isDemo ? 'grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3' : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6'}>
             {resolveDemoSignaturePastaItems().map((it) => {
               const canShow = DEMO_PASTA_PHOTO_ITEM_IDS.has(it.id)
               const sigSrc = canShow ? (((imageMap[it.id] as string | undefined) || it.imageUrl || '')) : ''
               return (
                 <div
                   key={it.id}
+                  id={`item-${it.id}`}
+                  data-menu-item-id={it.id}
+                  data-menu-item-name={it.name}
+                  data-menu-item-price={typeof it.price === 'number' ? it.price : undefined}
                   className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
                   style={{
                     borderRadius: 'var(--radius)',
@@ -1379,20 +1467,20 @@ export default function MenuClient() {
                       <img
                         src={sigSrc}
                         alt={it.name}
-                        className="w-full h-48 object-cover"
+                        className={isDemo ? 'w-full h-32 object-cover' : 'w-full h-48 object-cover'}
                         loading="lazy"
                         decoding="async"
                       />
                     </div>
                   ) : null}
 
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+                  <div className={isDemo ? 'p-4' : 'p-6'}>
+                    <div className={isDemo ? 'flex justify-between items-start mb-2' : 'flex justify-between items-start mb-3'}>
+                      <h3 className={isDemo ? 'text-base font-semibold text-black leading-tight' : 'text-xl font-semibold text-black leading-tight'} style={{ fontFamily: 'var(--font-serif)' }}>
                         {it.name}
                       </h3>
                       {typeof it.price === 'number' && (
-                        <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>
+                        <span className={isDemo ? 'text-sm font-extrabold text-black ml-3 px-2 py-0.5 rounded-full' : 'text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full'} style={{ background: 'var(--accent)', color: '#0b0b0b' }}>
                           ${it.price.toFixed(2)}
                         </span>
                       )}
@@ -1519,38 +1607,149 @@ export default function MenuClient() {
                 <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {category.items.map(item => (
-                  <div 
-                    key={item.id} 
-                    className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
-                    style={{ 
-                      borderRadius: 'var(--radius)', 
-                      background: 'var(--card)', 
-                      borderColor: 'var(--muted)',
-                      ...cardStyleForCategory()
-                    }}
-                  >
-                    {(() => {
-                      const canShow = tenant !== 'demo' || DEMO_PASTA_PHOTO_ITEM_IDS.has(item.id)
-                      const src = canShow ? (imageMap[item.id] || item.imageUrl || '') : ''
-                      if (!src) return null
-                      return (
-                        <div className="bg-gray-100">
-                          <img
-                            id={`img-${item.id}`}
-                            src={src}
-                            alt={item.name}
-                            className="w-full h-48 object-cover"
-                            loading="lazy"
-                            decoding="async"
-                          />
+              {isDemo && !isAdmin ? (
+                <div
+                  className="rounded-xl border border-neutral-200 bg-white overflow-hidden"
+                  data-menu-category-id={category.id}
+                  data-menu-category-name={cleanMojibake(category.name)}
+                >
+                  {category.items.map((item, itemIdx) => {
+                    const canShow = DEMO_PASTA_PHOTO_ITEM_IDS.has(item.id)
+                    const src = canShow ? (imageMap[item.id] || item.imageUrl || '') : ''
+                    const tags = visibleTags(item.tags).slice(0, 3)
+                    return (
+                      <div
+                        key={item.id}
+                        id={`item-${item.id}`}
+                        data-menu-item-id={item.id}
+                        data-menu-item-name={item.name}
+                        data-menu-item-price={typeof item.price === 'number' ? item.price : undefined}
+                        className="px-3 py-3"
+                        style={itemIdx === 0 ? undefined : { borderTop: '1px solid rgba(0,0,0,0.08)' }}
+                      >
+                        <div className="flex items-start gap-3">
+                          {src ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={src}
+                              alt=""
+                              className="h-12 w-12 rounded-lg object-cover bg-neutral-100"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-lg bg-neutral-100 border border-neutral-200" />
+                          )}
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="text-sm font-semibold text-neutral-950 truncate">
+                                  {highlightText(item.name, searchQuery)}
+                                </div>
+                                {typeof item.description === 'string' && item.description.trim() !== '' && (
+                                  <div
+                                    className="mt-0.5 text-[12px] text-neutral-600"
+                                    style={{
+                                      display: '-webkit-box',
+                                      WebkitLineClamp: 1,
+                                      WebkitBoxOrient: 'vertical',
+                                      overflow: 'hidden',
+                                    }}
+                                  >
+                                    {minimalDescription(item.description)}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="shrink-0 text-sm font-extrabold text-neutral-950 tabular-nums">
+                                ${Number(item.price ?? 0).toFixed(2)}
+                              </div>
+                            </div>
+
+                            {(tags.length > 0) && (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-semibold text-neutral-700"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="shrink-0 flex flex-col gap-2">
+                            {!hideCart && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  addToCart(item)
+                                  setRecentlyAddedId(item.id)
+                                  setCartBump(true)
+                                  setToast(`Added ${item.name}`)
+                                  setIsCartOpen(true)
+                                  setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
+                                }}
+                                className="h-9 rounded-lg px-3 text-[12px] font-extrabold text-white"
+                                style={{ background: 'var(--accent)' }}
+                                aria-label={`Add ${item.name} to plate`}
+                              >
+                                Add
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                              className="h-9 rounded-lg px-3 text-[12px] font-extrabold border border-neutral-200 bg-white text-neutral-950 hover:bg-neutral-50"
+                              aria-label={`Ask about ${item.name}`}
+                            >
+                              Ask
+                            </button>
+                          </div>
                         </div>
-                      )
-                    })()}
-                    
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-3">
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {category.items.map(item => (
+                    <div 
+                      key={item.id}
+                      id={`item-${item.id}`}
+                      data-menu-item-id={item.id}
+                      data-menu-item-name={item.name}
+                      data-menu-item-price={typeof item.price === 'number' ? item.price : undefined}
+                      className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                      style={{ 
+                        borderRadius: 'var(--radius)', 
+                        background: 'var(--card)', 
+                        borderColor: 'var(--muted)',
+                        ...cardStyleForCategory()
+                      }}
+                    >
+                      {(() => {
+                        const canShow = !isDemo || DEMO_PASTA_PHOTO_ITEM_IDS.has(item.id)
+                        const src = canShow ? (imageMap[item.id] || item.imageUrl || '') : ''
+                        if (!src) return null
+                        return (
+                          <div className="bg-gray-100">
+                            <img
+                              id={`img-${item.id}`}
+                              src={src}
+                              alt={item.name}
+                              className="w-full h-48 object-cover"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          </div>
+                        )
+                      })()}
+                      
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-3">
                         {isAdmin ? (
                           <input
                             className="text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
@@ -1701,6 +1900,7 @@ export default function MenuClient() {
                   </div>
                 ))}
               </div>
+              )}
             </div>
           ))}
         </div>
@@ -1990,6 +2190,48 @@ export default function MenuClient() {
                     </div>
                   )}
 
+                  {/* Tip */}
+                  {orderingEnabled && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-black">Tip</div>
+                      <div className="mt-2 text-sm text-gray-600">Optional. Tips go directly to the restaurant.</div>
+                      <div className="mt-4 grid grid-cols-4 gap-2">
+                        {[0, 10, 15, 20].map((pct) => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => { setTipPercent(pct); setCustomTip('') }}
+                            className="rounded-xl px-3 py-2 text-sm font-extrabold border transition"
+                            style={customTip.trim() === '' && tipPercent === pct
+                              ? { background: 'var(--accent)', color: '#ffffff', borderColor: 'var(--accent)' }
+                              : { background: '#fff', color: '#111', borderColor: 'rgba(0,0,0,0.15)' }
+                            }
+                          >
+                            {pct === 0 ? 'No' : `${pct}%`}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="mt-3">
+                        <label className="block text-xs font-semibold text-gray-700">Custom tip</label>
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-700">$</span>
+                          <input
+                            inputMode="decimal"
+                            value={customTip}
+                            onChange={(e) => setCustomTip(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                          />
+                        </div>
+                        {tipCents > 0 && (
+                          <div className="mt-2 text-xs text-gray-600">
+                            Tip: ${(tipCents / 100).toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Pickup Time */}
                   {orderingEnabled && schedulingEnabled && fulfillmentMode === 'pickup' && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -2066,7 +2308,12 @@ export default function MenuClient() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-xs font-semibold text-white/70">Order total</div>
-                    <div className="text-2xl font-extrabold text-white">${cartTotal.toFixed(2)}</div>
+                    <div className="text-2xl font-extrabold text-white">${orderTotal.toFixed(2)}</div>
+                    {orderingEnabled && tipCents > 0 && (
+                      <div className="mt-1 text-xs text-white/60">
+                        Includes ${(tipCents / 100).toFixed(2)} tip
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => {

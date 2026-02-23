@@ -39,17 +39,6 @@ const DEFAULT_ORDERING = {
   hours: null,
 } as const
 
-function pocOrderingTenants(): string[] {
-  const raw = (process.env.ORDERING_POC_TENANTS || '').trim()
-  if (!raw) return []
-  return raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
-}
-
-function isOrderingPocEnabledForTenant(tenant: string): boolean {
-  const list = pocOrderingTenants()
-  return list.includes((tenant || '').toLowerCase())
-}
-
 function normalizeOrdering(raw: unknown): Record<string, unknown> {
   const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {}
   const schedulingRaw = (obj.scheduling && typeof obj.scheduling === 'object')
@@ -189,11 +178,7 @@ export async function GET(request: NextRequest) {
           }
         } catch {}
       }
-      let ordering = normalizeOrdering(orderingRaw)
-      // Live POC toggle (env-driven): allow enabling ordering without DB edits for a specific tenant.
-      if (isOrderingPocEnabledForTenant(tenant)) {
-        ordering = { ...(ordering as Record<string, unknown>), enabled: true }
-      }
+      const ordering = normalizeOrdering(orderingRaw)
       return NextResponse.json({ brand, theme, images: images || {}, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
     }
 
@@ -310,15 +295,27 @@ export async function GET(request: NextRequest) {
       ?? embeddedCopy
 
     let ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
-    // Preview-only POC: allow ordering for independent-draft without requiring DB settings.
-    // This does NOT affect production and does NOT affect the live independentbarandgrille tenant.
-    if (isPreview && tenant === 'independent-draft') {
-      ordering = { ...(ordering as Record<string, unknown>), enabled: true }
+
+    // Demo defaults (preview/dev only): allow the demo menu to exercise the ordering UI without redeploying DB settings.
+    // In production, demo ordering must be explicitly enabled via DB settings.
+    const dbOrderingHasEnabled =
+      !!(dbOrdering && typeof (dbOrdering as Record<string, unknown>)['enabled'] === 'boolean')
+    const fbDbOrderingHasEnabled =
+      !!(fbDbOrdering && typeof (fbDbOrdering as Record<string, unknown>)['enabled'] === 'boolean')
+    const demoOrderingFallbackOk =
+      tenant === 'demo'
+      && !!process.env.DATABASE_URL
+      && (isPreview || process.env.NODE_ENV !== 'production')
+      && !dbOrderingHasEnabled
+      && !fbDbOrderingHasEnabled
+    if (demoOrderingFallbackOk) {
+      ordering = normalizeOrdering({
+        ...DEFAULT_ORDERING,
+        enabled: true,
+        dineIn: { ...(DEFAULT_ORDERING.dineIn as unknown as Record<string, unknown>), enabled: true, label: 'Table number' },
+      })
     }
-    // Live POC toggle (env-driven): allow enabling ordering without DB edits for specific tenants.
-    if (isOrderingPocEnabledForTenant(tenant)) {
-      ordering = { ...(ordering as Record<string, unknown>), enabled: true }
-    }
+
     return NextResponse.json({ brand, theme, images, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error)
