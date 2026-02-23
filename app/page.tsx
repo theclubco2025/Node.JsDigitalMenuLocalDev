@@ -2,154 +2,107 @@
 export const metadata = {
   title: 'TCC Menus',
   description:
-    'Modern QR menu + online ordering + a kitchen-ready KDS — plus AI Q&A, menu editing, orders, refunds, and analytics for restaurants.',
+    'The future of restaurant menus: smart QR menus, optional dine-in ordering, kitchen workflow, and admin analytics — all from one QR.',
 }
 
 const LANDING = {
   calendlyUrl: 'https://calendly.com/tccsolutions2025/30min',
-  primaryCtaLabel: 'Book Demo',
-  priceMonthly: 75,
-  priceDisclaimer: 'From $75/month. One-time onboarding based on menu size. No POS overhaul. QR-ready in days.',
+  primaryCtaLabel: 'Book Onboarding',
+  contactEmail: '',
   logo: '/assets/tcc-logo-horizontal.png',
   qrDemo: '/assets/tcc-demo-qr.png',
   demoUrlLabel: 'tccmenus.com/demo',
-  features: [
-    {
-      title: 'QR menu',
-      body: 'Mobile-first menu that looks great on phones. Tags, prices, and sections stay clean and consistent.',
-    },
-    {
-      title: 'AI menu Q&A',
-      body: 'Guests ask questions and get answers based on your menu data (not internet guesses) — helpful for ingredients, allergens, and recommendations.',
-    },
-    {
-      title: 'Menu editor',
-      body: 'Owners can update items, prices, and availability in Admin — changes go live instantly.',
-    },
-    {
-      title: 'Ordering + Kitchen Display',
-      body: 'Online ordering with a clean kitchen board that runs the service: New → Preparing → Ready.',
-    },
-    {
-      title: 'Orders + refunds',
-      body: 'Track paid orders, update statuses, and handle common support flows securely from Admin.',
-    },
-    {
-      title: 'Analytics',
-      body: 'See what’s selling, what guests ask the AI, and practical insights to reduce waste and improve the menu.',
-    },
-    {
-      title: 'SMS “Ready” alerts (beta)',
-      body: 'Optional text notifications when an order is ready (pending carrier verification / Twilio verification).',
-    },
-  ],
-  faqs: [
-    {
-      q: 'Do I have to replace my POS?',
-      a: 'No. Your POS stays. TCC runs a web menu + ordering + kitchen display that fits alongside your existing workflow.',
-    },
-    {
-      q: 'Where do payments go?',
-      a: 'To the restaurant’s Stripe account via Stripe Connect. You stay in control of payouts and reporting.',
-    },
-    {
-      q: 'Can you integrate with my POS?',
-      a: 'Yes — POS integration is optional and available for Square and Clover (API-based). When enabled, taxes and receipts can follow POS rules.',
-    },
-    {
-      q: 'How fast can we launch?',
-      a: 'Most menus are live in 2–5 days depending on complexity and assets.',
-    },
-    {
-      q: 'Do guests order and the kitchen gets tickets?',
-      a: 'Yes. Guests order from their phone and the kitchen sees paid orders instantly on a clean board designed for speed.',
-    },
-    {
-      q: 'How do menu updates work?',
-      a: 'Owners edit the menu in Admin and changes go live instantly. We handle onboarding and structure so it stays clean and consistent.',
-    },
-    {
-      q: 'Is there a contract?',
-      a: 'Month-to-month. Cancel anytime. Keep your exported menu data.',
-    },
-    {
-      q: 'Is AI always correct?',
-      a: 'AI answers may be inaccurate. For allergies and dietary needs, guests should confirm with staff.',
-    },
-  ],
 }
 
 export default function Landing() {
   return (
-    <main className="bg-neutral-50 text-neutral-900">
+    <main className="bg-white text-neutral-950">
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-neutral-100 to-white" />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
+        <div className="absolute inset-0 bg-gradient-to-b from-neutral-50 to-white" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-2 md:py-24">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              Built for real kitchens
-            </div>
-            <h1 className="mt-4 font-semibold tracking-tight" style={{ fontSize: 'clamp(2rem, 4.5vw, 3.5rem)' }}>
-              QR menu + ordering that feels modern — and runs like a kitchen tool.
+            <h1 className="font-semibold tracking-tight" style={{ fontSize: 'clamp(2.1rem, 4.8vw, 3.75rem)' }}>
+              The Future of Restaurant Menus
             </h1>
             <p className="mt-4 text-lg text-neutral-700">
-              Guests scan, ask questions, customize, and place orders. The kitchen runs a clean board: New → Preparing → Ready.
-              Payments go to the restaurant’s Stripe (Connect). Optional POS integrations for Square and Clover.
+              The easiest way to manage menus, ordering, and kitchen workflow — all from one QR.
             </p>
+            <p className="mt-3 text-sm text-neutral-600">No POS overhaul required. Integrates when you want it to.</p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
                 href={LANDING.calendlyUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center rounded-2xl bg-neutral-900 px-5 py-3 text-sm text-white shadow-sm hover:bg-neutral-800"
+                className="inline-flex items-center rounded-2xl bg-neutral-950 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-neutral-800"
               >
                 {LANDING.primaryCtaLabel}
               </a>
               <a
                 href="/demo"
-                className="inline-flex items-center rounded-2xl bg-emerald-600 px-5 py-3 text-white shadow-sm hover:bg-emerald-500"
+                className="inline-flex items-center rounded-2xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-950 shadow-sm hover:bg-neutral-50"
               >
                 Try Live Demo
               </a>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2 text-xs text-neutral-600">
-              {[
-                'Stripe Connect payouts',
-                'Kitchen-ready KDS',
-                'Optional Square/Clover POS integration',
-                'Admin analytics to reduce waste',
-              ].map((t) => (
-                <span key={t} className="rounded-full border border-neutral-200 bg-white px-3 py-1 shadow-sm">
-                  {t}
-                </span>
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-neutral-500">{LANDING.priceDisclaimer}</p>
+            <p className="mt-4 text-xs text-neutral-500">
+              Menu editing • optional table-number dine-in ordering • kitchen display • admin analytics
+            </p>
           </div>
           <div className="relative">
             <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-center">
-                <img
-                  src={LANDING.logo}
-                  alt="TCC Solutions"
-                  className="w-full max-w-[180px]"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <img src={LANDING.logo} alt="TCC Menus" className="w-full max-w-[320px]" loading="lazy" decoding="async" />
               </div>
-              <div className="mt-4 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-700">
-                <p className="font-medium">Scan the live demo QR to see it in action.</p>
-                <div className="mt-3 flex items-center gap-4">
-                  <div className="grid h-36 w-36 place-items-center rounded-md border border-dashed border-neutral-300 text-neutral-400">
-                    <img
-                      src={LANDING.qrDemo}
-                      alt="Demo menu QR"
-                      className="h-full w-full rounded-md object-contain"
-                      loading="lazy"
-                      decoding="async"
-                    />
+
+              <div className="mt-5 grid gap-4 md:grid-cols-5">
+                <div className="md:col-span-3">
+                  <div className="mx-auto w-full max-w-[360px] rounded-[2.25rem] border border-neutral-200 bg-neutral-950 p-2 shadow-sm">
+                    <div className="rounded-[1.85rem] bg-white p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-semibold text-neutral-950">Menu</div>
+                        <div className="rounded-full border border-neutral-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">
+                          Dine‑In • Table 12
+                        </div>
+                      </div>
+
+                      <div className="mt-3 space-y-2">
+                        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+                          <div className="text-xs font-semibold text-neutral-950">Ahi Tartare</div>
+                          <div className="mt-1 text-[11px] text-neutral-600">Ask AI: “Is this gluten‑free?”</div>
+                        </div>
+                        <div className="flex justify-end">
+                          <div className="max-w-[75%] rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-[11px] text-neutral-800 shadow-sm">
+                            AI: “Based on your menu, it’s listed with …”
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center text-[11px] font-semibold text-neutral-950">
+                            Add to Plate
+                          </div>
+                          <div className="rounded-xl bg-neutral-950 px-3 py-2 text-center text-[11px] font-semibold text-white">
+                            Checkout
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-neutral-500">{LANDING.demoUrlLabel}</div>
+                </div>
+
+                <div className="md:col-span-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+                  <div className="text-sm font-semibold text-neutral-950">See it live</div>
+                  <p className="mt-1 text-xs text-neutral-600">Scan the demo QR on your phone.</p>
+                  <div className="mt-3 flex items-center gap-4">
+                    <div className="grid h-28 w-28 place-items-center rounded-xl border border-dashed border-neutral-300 bg-white">
+                      <img
+                        src={LANDING.qrDemo}
+                        alt="Demo menu QR"
+                        className="h-full w-full rounded-xl object-contain"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </div>
+                    <div className="text-xs text-neutral-500">{LANDING.demoUrlLabel}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -157,33 +110,57 @@ export default function Landing() {
         </div>
       </section>
 
+      <section className="mx-auto max-w-6xl px-4 py-8">
+        <div className="grid gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm md:grid-cols-4">
+          {[
+            { title: 'Smart QR Menu', body: 'Modern, fast, mobile‑first menus that stay up to date.' },
+            { title: 'Optional Dine‑In Ordering', body: 'Guests can enter a table number and order from their phone.' },
+            { title: 'Kitchen Display System', body: 'Orders flow to the kitchen: New → Preparing → Ready.' },
+            { title: 'Admin Analytics (Bonus)', body: 'See top items, ordering patterns, and operational insights.' },
+          ].map((x) => (
+            <div key={x.title} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-neutral-950 text-sm font-semibold text-white">
+                  {x.title === 'Smart QR Menu' ? '▦' : x.title === 'Optional Dine‑In Ordering' ? '⌁' : x.title === 'Kitchen Display System' ? '▤' : '▣'}
+                </span>
+                <div className="text-sm font-semibold text-neutral-950">{x.title}</div>
+              </div>
+              <p className="mt-2 text-sm text-neutral-700">{x.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid items-start gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
-            <h2 className="text-2xl font-semibold tracking-tight">Your menu may be the same. Guest expectations aren’t.</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">What TCC Menus does</h2>
             <p className="mt-3 text-neutral-700">
-              Your menu hasn’t changed in decades — your customers have. Today’s guests expect speed, clarity, and
-              confidence when they order.
+              A clean guest experience + a practical kitchen workflow — built to modernize without forcing a POS replacement.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3 md:col-span-3">
+          <div className="grid gap-4 sm:grid-cols-2 md:col-span-3">
             {[
               {
-                title: 'Fewer questions',
-                body: 'AI Q&A helps guests understand ingredients, allergens, and what to order — before they flag down staff.',
+                title: 'Modern QR Menu',
+                body: 'Fast, mobile‑first menus that are always up to date.',
               },
               {
-                title: 'Cleaner tickets',
-                body: 'Guests can customize and leave clear notes so the kitchen gets it right the first time — without back-and-forth.',
+                title: 'Smart Menu Assistant',
+                body: 'Guests ask about ingredients, allergens, and recommendations — answered from your menu data (not the internet).',
               },
               {
-                title: 'Smarter decisions',
-                body: 'Analytics shows what’s selling and what’s confusing guests — built for reducing waste and improving the menu.',
+                title: 'Optional Dine‑In Ordering',
+                body: 'Enable table‑number ordering when you want a low‑contact, high‑efficiency workflow.',
+              },
+              {
+                title: 'Kitchen Display System',
+                body: 'Orders flow to the kitchen in real time: New → Preparing → Ready.',
               },
             ].map((card) => (
               <div key={card.title} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-                <h3 className="font-medium">{card.title}</h3>
-                <p className="mt-2 text-sm text-neutral-600">{card.body}</p>
+                <h3 className="text-sm font-semibold text-neutral-950">{card.title}</h3>
+                <p className="mt-2 text-sm text-neutral-700">{card.body}</p>
               </div>
             ))}
           </div>
@@ -194,36 +171,23 @@ export default function Landing() {
         <div className="grid items-start gap-8 md:grid-cols-5">
           <div className="md:col-span-2">
             <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
-            <p className="mt-3 text-neutral-700">
-              The flow is simple for guests and practical for kitchens.
-            </p>
+            <p className="mt-3 text-neutral-700">Simple for guests. Practical for kitchens.</p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3 md:col-span-3">
+          <div className="grid gap-4 sm:grid-cols-2 md:col-span-3">
             {[
-              {
-                step: '1',
-                title: 'Guest scans QR',
-                body: 'They open a fast menu on their phone and can ask questions as they browse.',
-              },
-              {
-                step: '2',
-                title: 'Places an order',
-                body: 'Pickup or dine-in ordering with clear confirmation and easy customization.',
-              },
-              {
-                step: '3',
-                title: 'Kitchen runs the KDS',
-                body: 'Orders appear on a board and move New → Preparing → Ready in real time.',
-              },
+              { step: '1', title: 'Scan', body: 'Guests open your menu instantly.' },
+              { step: '2', title: 'Ask + Order', body: 'They ask questions, customize items, and place dine‑in (table number) or pickup orders.' },
+              { step: '3', title: 'Kitchen runs the board', body: 'Orders appear on the KDS and move New → Preparing → Ready.' },
+              { step: '4', title: 'Admins get insights', body: 'Analytics helps reduce waste and increase sales (bonus feature).' },
             ].map((card) => (
               <div key={card.step} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-9 w-9 place-items-center rounded-xl bg-neutral-900 text-sm font-semibold text-white">
+                  <div className="grid h-9 w-9 place-items-center rounded-xl bg-neutral-950 text-sm font-semibold text-white">
                     {card.step}
                   </div>
-                  <h3 className="font-medium">{card.title}</h3>
+                  <h3 className="text-sm font-semibold text-neutral-950">{card.title}</h3>
                 </div>
-                <p className="mt-2 text-sm text-neutral-600">{card.body}</p>
+                <p className="mt-2 text-sm text-neutral-700">{card.body}</p>
               </div>
             ))}
           </div>
@@ -231,87 +195,115 @@ export default function Landing() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid items-start gap-8 md:grid-cols-5">
-          <div className="md:col-span-2">
-            <h2 className="text-2xl font-semibold tracking-tight">What’s included (today)</h2>
-            <p className="mt-3 text-neutral-700">
-              A premium QR menu with admin tools — built to sell more and run smoother service.
-            </p>
-            <p className="mt-2 text-sm text-neutral-500">
-              AI answers may be inaccurate. For allergies and dietary needs, confirm with staff.
-            </p>
-          </div>
-          <ul className="grid gap-4 sm:grid-cols-2 md:col-span-3">
-            {LANDING.features.map((feature) => (
-              <li key={feature.title} className="relative rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-                <span className="absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-xs font-semibold text-emerald-600">
-                  ✓
-                </span>
-                <h3 className="font-medium">{feature.title}</h3>
-                <p className="mt-1 text-sm text-neutral-600">{feature.body}</p>
-              </li>
-            ))}
-          </ul>
+        <div className="grid gap-6 rounded-3xl border border-neutral-200 bg-neutral-50 p-6 shadow-sm md:grid-cols-3">
+          {[
+            {
+              title: 'Modernize without replacing your POS',
+              body: 'Use TCC Menus on its own, or integrate when you’re ready. No overhaul required.',
+            },
+            {
+              title: 'Reduce staff stress',
+              body: 'Fewer questions. Fewer mistakes. Faster service — without changing the vibe of your restaurant.',
+            },
+            {
+              title: 'Run a cleaner, smarter kitchen',
+              body: 'Real‑time tickets, clear statuses, and a board designed to keep service moving.',
+            },
+          ].map((x) => (
+            <div key={x.title} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-semibold text-neutral-950">{x.title}</h3>
+              <p className="mt-2 text-sm text-neutral-700">{x.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid gap-6 md:grid-cols-5">
-          <div className="md:col-span-3 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
-            <h2 className="text-2xl font-semibold tracking-tight">Ordering + Kitchen Display</h2>
-            <p className="mt-2 text-neutral-700">
-              Turn your menu into a workflow. Guests place paid orders from their phone, and the kitchen sees them instantly
-              on a board designed for speed.
-            </p>
-            <ul className="mt-4 grid gap-2 text-sm text-neutral-700">
-              <li>
-                <span className="font-semibold">Kitchen clarity:</span> New/Preparing/Ready columns with clear item lists and live status updates.
-              </li>
-              <li>
-                <span className="font-semibold">Payments:</span> processed through the restaurant’s Stripe account via Stripe Connect.
-              </li>
-              <li>
-                <span className="font-semibold">POS integration (optional):</span> Square and Clover. When enabled, taxes and receipts can follow POS rules.
-              </li>
-              <li>
-                <span className="font-semibold">SMS ready alerts:</span> available as a beta while carrier verification completes.
-              </li>
-            </ul>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">See it in action</h2>
+            <p className="mt-2 text-neutral-700">A quick look at the full guest → kitchen → admin flow.</p>
           </div>
-          <div className="md:col-span-2 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-            <div className="text-sm font-semibold text-neutral-900">Try it end-to-end</div>
-            <p className="mt-1 text-sm text-neutral-600">
-              Open the demo menu, add to plate, and go through checkout to see the flow.
-            </p>
-            <a
-              href="/demo"
-              className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-white shadow-sm hover:bg-emerald-500"
-            >
-              Open Demo
-            </a>
+          <a
+            href="/demo"
+            className="hidden items-center rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-950 shadow-sm hover:bg-neutral-50 md:inline-flex"
+          >
+            Try the Live Demo
+          </a>
+        </div>
+
+        <div className="mt-6 -mx-4 overflow-x-auto px-4">
+          <div className="flex min-w-max gap-4 pb-2">
+            {[
+              { label: 'Menu browsing', top: 'Menu', badge: '' },
+              { label: 'AI Q&A', top: 'Ask AI', badge: '' },
+              { label: 'Add to Plate', top: 'Plate', badge: '' },
+              { label: 'Table number entry', top: 'Dine‑In', badge: 'Table 12' },
+              { label: 'Checkout', top: 'Checkout', badge: '' },
+              { label: 'KDS', top: 'Kitchen', badge: 'New → Ready' },
+              { label: 'Admin analytics', top: 'Admin', badge: 'Insights' },
+            ].map((frame) => (
+              <div key={frame.label} className="w-[230px] shrink-0">
+                <div className="rounded-[2.1rem] border border-neutral-200 bg-neutral-950 p-2 shadow-sm">
+                  <div className="rounded-[1.7rem] bg-white p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-semibold text-neutral-950">{frame.top}</div>
+                      {frame.badge ? (
+                        <div className="rounded-full border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-neutral-700">
+                          {frame.badge}
+                        </div>
+                      ) : (
+                        <div className="h-5 w-10 rounded-full bg-neutral-100" />
+                      )}
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <div className="h-8 rounded-xl border border-neutral-200 bg-neutral-50" />
+                      <div className="h-8 rounded-xl border border-neutral-200 bg-neutral-50" />
+                      <div className="h-8 rounded-xl border border-neutral-200 bg-neutral-50" />
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <div className="rounded-xl border border-neutral-200 bg-white py-2 text-center text-[10px] font-semibold text-neutral-950">
+                        Action
+                      </div>
+                      <div className="rounded-xl bg-neutral-950 py-2 text-center text-[10px] font-semibold text-white">
+                        Next
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-2 text-xs font-medium text-neutral-700">{frame.label}</div>
+              </div>
+            ))}
           </div>
+        </div>
+
+        <div className="mt-6 md:hidden">
+          <a
+            href="/demo"
+            className="inline-flex w-full items-center justify-center rounded-2xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-950 shadow-sm hover:bg-neutral-50"
+          >
+            Try the Live Demo
+          </a>
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-12" id="pricing">
         <div className="grid items-center gap-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:grid-cols-2">
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Simple pricing</h2>
-            <p className="mt-2 text-neutral-700">
-              Month-to-month. Cancel anytime. Onboarding is a one-time fee based on menu size.
+            <h2 className="text-2xl font-semibold tracking-tight">Simple, transparent pricing</h2>
+            <p className="mt-2 text-neutral-700">Month‑to‑month. No contracts.</p>
+            <p className="mt-2 text-sm text-neutral-600">
+              Pricing is shared during onboarding so we can tailor it to your menu size and workflow.
             </p>
           </div>
-          <div className="rounded-2xl border border-neutral-200 p-6">
-            <div className="text-5xl font-semibold tracking-tight">
-              ${LANDING.priceMonthly}
-              <span className="align-super text-lg">/mo</span>
-            </div>
-            <p className="mt-1 text-sm text-neutral-500">Flexible pricing tailored to your menu size.</p>
+          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
+            <div className="text-sm font-semibold text-neutral-950">Ready to launch?</div>
+            <p className="mt-1 text-sm text-neutral-700">Book onboarding and we’ll tailor the setup to your restaurant.</p>
             <a
               href={LANDING.calendlyUrl}
               target="_blank"
               rel="noreferrer"
-              className="mt-6 inline-flex items-center rounded-2xl bg-neutral-900 px-5 py-3 text-sm text-white shadow-sm hover:bg-neutral-800"
+              className="mt-5 inline-flex items-center rounded-2xl bg-neutral-950 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-neutral-800"
             >
               {LANDING.primaryCtaLabel}
             </a>
@@ -322,7 +314,24 @@ export default function Landing() {
       <section className="mx-auto max-w-6xl px-4 py-12" id="faq">
         <h2 className="text-2xl font-semibold tracking-tight">FAQ</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {LANDING.faqs.map((faq) => (
+          {[
+            {
+              q: 'Do I need to replace my POS?',
+              a: 'No. TCC Menus works on its own and integrates when you want it to.',
+            },
+            {
+              q: 'Is dine‑in ordering required?',
+              a: 'No. Dine‑in table‑number ordering is optional and can be turned on in the admin panel.',
+            },
+            {
+              q: 'Does the AI use outside data?',
+              a: 'No. It answers based on your menu data (not internet guesses).',
+            },
+            {
+              q: 'Does it work on all devices?',
+              a: 'Yes. Guests use any phone and any browser — no app required.',
+            },
+          ].map((faq) => (
             <details key={faq.q} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
               <summary className="cursor-pointer list-none font-medium">{faq.q}</summary>
               <p className="mt-2 text-sm text-neutral-600">{faq.a}</p>
@@ -331,12 +340,34 @@ export default function Landing() {
         </div>
       </section>
 
-      <footer className="mx-auto max-w-6xl px-4 py-10 text-sm text-neutral-500">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-neutral-200 pt-6">
-          <p>© {new Date().getFullYear()} TCC Solutions. All rights reserved.</p>
-          <a href="#faq" className="hover:text-neutral-800">
-            FAQ
-          </a>
+      <footer className="mt-14 bg-neutral-950 text-neutral-200">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
+            <div>
+              <div className="text-sm font-semibold text-white">TCC Menus</div>
+              <p className="mt-2 max-w-lg text-sm text-neutral-300">
+                Smart QR menus, optional dine‑in table ordering, and a real kitchen workflow — all from one QR.
+              </p>
+              <p className="mt-3 text-xs text-neutral-400">Stripe Connect note: payments can be routed to the restaurant’s Stripe account when enabled.</p>
+            </div>
+            <div className="grid gap-2 text-sm">
+              <a href="/terms" className="hover:text-white">
+                Terms
+              </a>
+              <a href="/privacy" className="hover:text-white">
+                Privacy
+              </a>
+              <a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="hover:text-white">
+                Contact
+              </a>
+              <a href="#faq" className="hover:text-white">
+                FAQ
+              </a>
+            </div>
+          </div>
+          <div className="mt-10 border-t border-neutral-800 pt-6 text-xs text-neutral-400">
+            © {new Date().getFullYear()} TCC Solutions. All rights reserved.
+          </div>
         </div>
       </footer>
     </main>
