@@ -34,7 +34,7 @@ async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccoun
       paidAt: true,
       status: true,
       stripeAccountId: true,
-      tenant: { select: { stripeConnectAccountId: true } },
+      tenant: { select: { slug: true, stripeConnectAccountId: true } },
     },
   })
   if (!order) return
@@ -43,10 +43,17 @@ async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccoun
     return
   }
 
+  const tenantSlug = (order.tenant?.slug || '').trim().toLowerCase()
+  const isPocTenant = tenantSlug === 'demo' || tenantSlug === 'independentbarandgrille'
+
+  // For POC tenants, rely on the per-order stripeAccountId only.
+  // This avoids blocking platform test charges when the tenant has a connect id set.
   const expectedAccountId =
-    (order.stripeAccountId || '').trim()
-    || (order.tenant?.stripeConnectAccountId || '').trim()
-    || ''
+    isPocTenant
+      ? (order.stripeAccountId || '').trim()
+      : ((order.stripeAccountId || '').trim()
+        || (order.tenant?.stripeConnectAccountId || '').trim()
+        || '')
 
   // Safety: only mark paid if we can match the webhook event to the expected connected account.
   if (expectedAccountId) {

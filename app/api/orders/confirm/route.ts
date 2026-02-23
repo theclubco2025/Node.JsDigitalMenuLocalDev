@@ -77,10 +77,17 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = getStripeOrders()
-    const stripeAccountId =
-      String(row?.stripeAccountId || '').trim()
-      || String(row?.tenant?.stripeConnectAccountId || '').trim()
-    const usePlatformStripe = (tenantSlug === 'demo' || tenantSlug === 'independentbarandgrille') && !stripeAccountId
+    const rawOrderStripeAccountId = String(row?.stripeAccountId || '').trim()
+    const rawTenantStripeAccountId = String(row?.tenant?.stripeConnectAccountId || '').trim()
+    const isPocTenant = tenantSlug === 'demo' || tenantSlug === 'independentbarandgrille'
+
+    // POC tenants: decide strictly from the stored order stripeAccountId.
+    // Non-POC: fall back to tenant connect id for backward compatibility.
+    const stripeAccountId = isPocTenant
+      ? rawOrderStripeAccountId
+      : (rawOrderStripeAccountId || rawTenantStripeAccountId)
+
+    const usePlatformStripe = isPocTenant && !stripeAccountId
     if (!stripeAccountId && !usePlatformStripe) {
       return NextResponse.json({ ok: false, error: 'Missing Stripe connected account' }, { status: 501 })
     }
