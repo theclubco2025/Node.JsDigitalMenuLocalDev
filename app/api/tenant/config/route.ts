@@ -282,7 +282,7 @@ export async function GET(request: NextRequest) {
       ...(isNonEmpty(embeddedImages) ? embeddedImages : {}),
     }
 
-    const style = (isNonEmpty(dbStyle) ? dbStyle : null)
+    let style = (isNonEmpty(dbStyle) ? dbStyle : null)
       ?? (isNonEmpty(fsStyle) ? fsStyle : null)
       ?? (isNonEmpty(fbDbStyle) ? fbDbStyle : null)
       ?? fbFsStyle
@@ -314,6 +314,21 @@ export async function GET(request: NextRequest) {
         enabled: true,
         dineIn: { ...(DEFAULT_ORDERING.dineIn as unknown as Record<string, unknown>), enabled: true, label: 'Table number' },
       })
+    }
+
+    // Demo UI safety: force demo to show ordering/cart and avoid oversized signature grids,
+    // even if production DB settings have older demo style values.
+    if (tenant === 'demo') {
+      const base = (style && typeof style === 'object') ? (style as Record<string, unknown>) : {}
+      const flagsBase = (base.flags && typeof base.flags === 'object') ? (base.flags as Record<string, unknown>) : {}
+      style = {
+        ...base,
+        flags: {
+          ...flagsBase,
+          hideCart: false,
+          signatureGrid: false,
+        },
+      }
     }
 
     return NextResponse.json({ brand, theme, images, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
