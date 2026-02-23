@@ -28,6 +28,7 @@ export default function Landing() {
               The easiest way to manage menus, ordering, and kitchen workflow — all from one QR.
             </p>
             <p className="mt-3 text-sm text-neutral-600">No POS overhaul required. Integrates when you want it to.</p>
+            <p className="mt-1 text-sm text-neutral-600">POS integrations currently available for Clover and Square.</p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <a
                 href={LANDING.calendlyUrl}
@@ -116,7 +117,7 @@ export default function Landing() {
             { title: 'Smart QR Menu', body: 'Modern, fast, mobile‑first menus that stay up to date.' },
             { title: 'Optional Dine‑In Ordering', body: 'Guests can enter a table number and order from their phone.' },
             { title: 'Kitchen Display System', body: 'Orders flow to the kitchen: New → Preparing → Ready.' },
-            { title: 'Admin Analytics (Bonus)', body: 'See top items, ordering patterns, and operational insights.' },
+            { title: 'Admin Analytics', body: 'See top items, ordering patterns, and operational insights.' },
           ].map((x) => (
             <div key={x.title} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
               <div className="flex items-center gap-2">
@@ -176,9 +177,13 @@ export default function Landing() {
           <div className="grid gap-4 sm:grid-cols-2 md:col-span-3">
             {[
               { step: '1', title: 'Scan', body: 'Guests open your menu instantly.' },
-              { step: '2', title: 'Ask + Order', body: 'They ask questions, customize items, and place dine‑in (table number) or pickup orders.' },
+              {
+                step: '2',
+                title: 'Ask + Order',
+                body: 'They ask questions, customize items, and place dine‑in (table number) or pickup orders. Pickup orders include a pickup code shown after payment and visible to the kitchen.',
+              },
               { step: '3', title: 'Kitchen runs the board', body: 'Orders appear on the KDS and move New → Preparing → Ready.' },
-              { step: '4', title: 'Admins get insights', body: 'Analytics helps reduce waste and increase sales (bonus feature).' },
+              { step: '4', title: 'Admins get insights', body: 'Analytics helps reduce waste and increase sales.' },
             ].map((card) => (
               <div key={card.step} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center gap-3">
@@ -256,19 +261,140 @@ export default function Landing() {
                         <div className="h-5 w-10 rounded-full bg-neutral-100" />
                       )}
                     </div>
-                    <div className="mt-3 space-y-2">
-                      <div className="h-8 rounded-xl border border-neutral-200 bg-neutral-50" />
-                      <div className="h-8 rounded-xl border border-neutral-200 bg-neutral-50" />
-                      <div className="h-8 rounded-xl border border-neutral-200 bg-neutral-50" />
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <div className="rounded-xl border border-neutral-200 bg-white py-2 text-center text-[10px] font-semibold text-neutral-950">
-                        Action
+                    {frame.label === 'Menu browsing' ? (
+                      <div className="mt-3 space-y-2">
+                        {[
+                          { name: 'Ahi Tartare', tags: 'GF • Citrus', price: '$18' },
+                          { name: 'Turnip Fries', tags: 'Shareable', price: '$12' },
+                          { name: 'Caesar', tags: 'Add chicken', price: '$14' },
+                        ].map((row) => (
+                          <div key={row.name} className="rounded-xl border border-neutral-200 bg-neutral-50 p-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <div className="text-[11px] font-semibold text-neutral-950">{row.name}</div>
+                                <div className="mt-0.5 text-[10px] text-neutral-600">{row.tags}</div>
+                              </div>
+                              <div className="text-[10px] font-semibold text-neutral-700">{row.price}</div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="rounded-xl bg-neutral-950 py-2 text-center text-[10px] font-semibold text-white">
-                        Next
+                    ) : frame.label === 'AI Q&A' ? (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex justify-end">
+                          <div className="max-w-[85%] rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-[10px] text-neutral-800">
+                            “Is the calamari spicy?”
+                          </div>
+                        </div>
+                        <div className="flex justify-start">
+                          <div className="max-w-[90%] rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-[10px] text-neutral-800 shadow-sm">
+                            Based on your menu, it’s served with a mild chili aioli. Want a no‑spice option?
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-[10px] text-neutral-600">
+                          Ask about ingredients, allergens, or recommendations
+                        </div>
                       </div>
-                    </div>
+                    ) : frame.label === 'Add to Plate' ? (
+                      <div className="mt-3 space-y-2">
+                        {[
+                          { qty: '1×', name: 'Ahi Tartare', price: '$18' },
+                          { qty: '2×', name: 'Turnip Fries', price: '$24' },
+                        ].map((row) => (
+                          <div key={row.name} className="flex items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2">
+                            <div className="text-[10px] text-neutral-600">
+                              <span className="font-semibold text-neutral-900">{row.qty}</span> {row.name}
+                            </div>
+                            <div className="text-[10px] font-semibold text-neutral-700">{row.price}</div>
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2">
+                          <div className="text-[10px] font-semibold text-neutral-900">Total</div>
+                          <div className="text-[10px] font-semibold text-neutral-900">$42</div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <div className="rounded-xl border border-neutral-200 bg-white py-2 text-center text-[10px] font-semibold text-neutral-950">
+                            Add note
+                          </div>
+                          <div className="rounded-xl bg-neutral-950 py-2 text-center text-[10px] font-semibold text-white">
+                            Checkout
+                          </div>
+                        </div>
+                      </div>
+                    ) : frame.label === 'Table number entry' ? (
+                      <div className="mt-3 space-y-2">
+                        <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-[10px] text-neutral-600">
+                          Table number
+                        </div>
+                        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2">
+                          <div className="text-[10px] text-neutral-700">12</div>
+                          <div className="text-[10px] text-neutral-500">Dine‑In</div>
+                        </div>
+                        <div className="rounded-xl bg-neutral-950 py-2 text-center text-[10px] font-semibold text-white">
+                          Continue
+                        </div>
+                      </div>
+                    ) : frame.label === 'Checkout' ? (
+                      <div className="mt-3 space-y-2">
+                        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-2">
+                          <div className="text-[11px] font-semibold text-neutral-950">Pickup</div>
+                          <div className="mt-0.5 text-[10px] text-neutral-600">ASAP • Contact info</div>
+                        </div>
+                        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2">
+                          <div className="text-[10px] text-neutral-700">Order total</div>
+                          <div className="text-[10px] font-semibold text-neutral-900">$42</div>
+                        </div>
+                        <div className="rounded-xl bg-neutral-950 py-2 text-center text-[10px] font-semibold text-white">
+                          Pay securely
+                        </div>
+                        <div className="text-[10px] text-neutral-500">Pickup code shown after payment</div>
+                      </div>
+                    ) : frame.label === 'KDS' ? (
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {[
+                          { col: 'New', has: true },
+                          { col: 'Prep', has: false },
+                          { col: 'Ready', has: false },
+                        ].map((c) => (
+                          <div key={c.col} className="rounded-xl border border-neutral-200 bg-neutral-50 p-2">
+                            <div className="text-[9px] font-semibold text-neutral-700">{c.col}</div>
+                            {c.has ? (
+                              <div className="mt-2 rounded-lg border border-neutral-200 bg-white p-2">
+                                <div className="text-[9px] font-semibold text-neutral-950">Order #12</div>
+                                <div className="mt-1 text-[9px] text-neutral-600">Pickup code</div>
+                                <div className="text-[10px] font-semibold text-neutral-950">4821</div>
+                              </div>
+                            ) : (
+                              <div className="mt-2 h-10 rounded-lg border border-neutral-200 bg-white/60" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-3 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { k: 'Paid', v: '24' },
+                            { k: 'Pickup', v: '22' },
+                            { k: 'Dine‑in', v: '2' },
+                            { k: 'AI', v: '8' },
+                          ].map((kpi) => (
+                            <div key={kpi.k} className="rounded-xl border border-neutral-200 bg-neutral-50 p-2">
+                              <div className="text-[12px] font-semibold text-neutral-950">{kpi.v}</div>
+                              <div className="text-[9px] text-neutral-600">{kpi.k}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="rounded-xl border border-neutral-200 bg-white p-2">
+                          <div className="text-[9px] font-semibold text-neutral-700">Top items</div>
+                          <div className="mt-2 space-y-1">
+                            <div className="h-2 w-[90%] rounded bg-neutral-200" />
+                            <div className="h-2 w-[70%] rounded bg-neutral-200" />
+                            <div className="h-2 w-[55%] rounded bg-neutral-200" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="mt-2 text-xs font-medium text-neutral-700">{frame.label}</div>
@@ -291,7 +417,7 @@ export default function Landing() {
         <div className="grid items-center gap-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:grid-cols-2">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">Simple, transparent pricing</h2>
-            <p className="mt-2 text-neutral-700">Month‑to‑month. No contracts.</p>
+            <p className="mt-2 text-neutral-700">Month‑to‑month. Cancel anytime.</p>
             <p className="mt-2 text-sm text-neutral-600">
               Pricing is shared during onboarding so we can tailor it to your menu size and workflow.
             </p>
