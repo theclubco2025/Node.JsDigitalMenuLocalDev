@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     const stripeAccountId =
       String(row?.stripeAccountId || '').trim()
       || String(row?.tenant?.stripeConnectAccountId || '').trim()
-    const usePlatformStripe = tenantSlug === 'demo' && !stripeAccountId
+    const usePlatformStripe = (tenantSlug === 'demo' || tenantSlug === 'independentbarandgrille') && !stripeAccountId
     if (!stripeAccountId && !usePlatformStripe) {
       return NextResponse.json({ ok: false, error: 'Missing Stripe connected account' }, { status: 501 })
     }

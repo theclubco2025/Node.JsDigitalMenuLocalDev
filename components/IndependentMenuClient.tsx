@@ -292,7 +292,9 @@ export default function MenuClient() {
     return sum + (base + addOnCents) * line.quantity
   }, 0)
 
-  const orderingEnabled = orderingCfg?.enabled === true
+  // Live testing: allow Independent to exercise ordering UI on production even if DB config lags.
+  const forceOrderingUi = tenant === 'independentbarandgrille'
+  const orderingEnabled = orderingCfg?.enabled === true || forceOrderingUi
   const orderingPaused = (orderingCfg as unknown as { paused?: boolean } | undefined)?.paused === true
   const orderingPauseMessage =
     (orderingCfg as unknown as { pauseMessage?: unknown } | undefined)?.pauseMessage
@@ -1281,23 +1283,21 @@ export default function MenuClient() {
                               ${Number(item.price ?? 0).toFixed(2)}
                             </div>
                             <div className="mt-3 flex flex-col gap-2">
-                              {orderingEnabled && (
-                                <button
-                                  onClick={(e) => {
-                                    addToCart(item)
-                                    flyToPlate(e.currentTarget as unknown as HTMLElement, item)
-                                  }}
-                                  className="inline-flex h-10 w-28 items-center justify-center gap-2 rounded-full text-sm font-extrabold transition shadow-sm"
-                                  style={{
-                                    background: 'rgba(196,167,106,0.18)',
-                                    border: '1px solid rgba(196,167,106,0.55)',
-                                    color: '#f8fafc'
-                                  }}
-                                  aria-label={`Add ${item.name} to order`}
-                                >
-                                  Add
-                                </button>
-                              )}
+                              <button
+                                onClick={(e) => {
+                                  addToCart(item)
+                                  flyToPlate(e.currentTarget as unknown as HTMLElement, item)
+                                }}
+                                className="inline-flex h-10 w-28 items-center justify-center gap-2 rounded-full text-sm font-extrabold transition shadow-sm"
+                                style={{
+                                  background: 'rgba(196,167,106,0.18)',
+                                  border: '1px solid rgba(196,167,106,0.55)',
+                                  color: '#f8fafc'
+                                }}
+                                aria-label={`Add ${item.name} to order`}
+                              >
+                                Add
+                              </button>
                               <button
                                 onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
                                 className="inline-flex h-10 w-28 items-center justify-center gap-2 rounded-full text-sm font-extrabold transition shadow-sm"
@@ -1413,7 +1413,7 @@ export default function MenuClient() {
 
       {/* Floating Plate Button removed */}
       {/* Independent draft: floating Order button */}
-      {isIndependentDraft && orderingEnabled && (
+      {isIndependentDraft && (
         <button
           ref={plateButtonRef}
           onClick={() => setIsCartOpen(true)}

@@ -178,7 +178,12 @@ export async function GET(request: NextRequest) {
           }
         } catch {}
       }
-      const ordering = normalizeOrdering(orderingRaw)
+      // Live testing mode: Independent uses the premium UI which hides ordering affordances unless enabled.
+      // We force-enable ordering for this tenant so "Add" + checkout can be exercised end-to-end.
+      const ordering = normalizeOrdering({
+        ...(orderingRaw || {}),
+        enabled: true,
+      })
       return NextResponse.json({ brand, theme, images: images || {}, style, copy, ordering }, { headers: { 'Cache-Control': 'no-store' } })
     }
 

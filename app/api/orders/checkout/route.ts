@@ -141,6 +141,7 @@ export async function POST(req: NextRequest) {
     }
 
     const tenant = parsed.data.tenant.trim().toLowerCase()
+    const isPocTenant = tenant === 'demo' || tenant === 'independentbarandgrille'
     const items = parsed.data.items
     const scheduledForRaw = parsed.data.scheduledFor ?? null
     const tableNumberRaw = (parsed.data.tableNumber || '').trim() || null
@@ -152,8 +153,8 @@ export async function POST(req: NextRequest) {
     const tipCentsRaw = Math.max(0, Math.floor(parsed.data.tipCents || 0))
 
     // Sales-ready constraint: in production, Stripe webhook confirmation must be configured.
-    // Demo exception: allow platform test checkout to work as a public POC, relying on /api/orders/confirm fallback.
-    if (process.env.VERCEL_ENV === 'production' && tenant !== 'demo') {
+    // POC exception: allow platform test checkout to work as a public POC, relying on /api/orders/confirm fallback.
+    if (process.env.VERCEL_ENV === 'production' && !isPocTenant) {
       // Allow using *_TEST in production for test-mode POC on a live domain.
       const ordersWebhook =
         (process.env.STRIPE_ORDERS_WEBHOOK_SECRET || '').trim()
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest) {
     }
     const ordering = getOrderingSettings(tenantRow?.settings)
     const tableNumber = ordering.dineInEnabled ? tableNumberRaw : null
-    if (!ordering.enabled) {
+    if (!ordering.enabled && !isPocTenant) {
       return NextResponse.json({ ok: false, error: 'ordering_disabled' }, { status: 403 })
     }
     if (ordering.paused) {
@@ -196,9 +197,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Sales-ready: ordering payments require a connected Stripe account for this tenant.
-    // Demo exception: allow platform test checkout without Stripe Connect.
+    // POC exception: allow platform test checkout without Stripe Connect.
     const stripeAccountId = (tenantRow.stripeConnectAccountId || '').trim()
-    const usePlatformStripe = tenant === 'demo' && !stripeAccountId
+    const usePlatformStripe = isPocTenant && !stripeAccountId
     if (!stripeAccountId && !usePlatformStripe) {
       return NextResponse.json({
         ok: false,
