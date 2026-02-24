@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
+import { useSearchParams } from 'next/navigation'
 
 type TenantBrand = { name?: string; header?: { logoUrl?: string }; logoUrl?: string }
 type TenantTheme = { bg?: string; text?: string; ink?: string; card?: string; muted?: string; accent?: string; primary?: string }
@@ -64,9 +65,8 @@ function resolveKitchenTenant(raw: string) {
 }
 
 export default function KitchenPage() {
-  const isBrowser = typeof window !== 'undefined'
-  const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
-  const rawTenant = isBrowser ? (searchParams!.get('tenant') || 'independent-draft') : 'independent-draft'
+  const searchParams = useSearchParams()
+  const rawTenant = (searchParams?.get('tenant') || 'independent-draft')
   const tenant = resolveKitchenTenant(rawTenant)
 
   const [pin, setPin] = useState('')
@@ -80,24 +80,21 @@ export default function KitchenPage() {
   const hasFetchedOnceRef = useRef(false)
 
   useEffect(() => {
-    if (!isBrowser) return
     try {
       const saved = localStorage.getItem(`kitchen_pin:${tenant}`) || ''
       if (saved) setPin(saved)
     } catch {}
     setPinReady(true)
-  }, [isBrowser, tenant])
+  }, [tenant])
 
   useEffect(() => {
-    if (!isBrowser) return
     try {
       const raw = localStorage.getItem(`kds_sound_enabled:${tenant}`)
       setSoundEnabled(raw === '1')
     } catch {}
-  }, [isBrowser, tenant])
+  }, [tenant])
 
   const playDing = useCallback(async () => {
-    if (!isBrowser) return
     try {
       const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext)
       if (!Ctx) return
@@ -120,7 +117,7 @@ export default function KitchenPage() {
     } catch {
       // ignore
     }
-  }, [isBrowser])
+  }, [])
 
   const setSound = async (next: boolean) => {
     setSoundEnabled(next)
@@ -172,7 +169,6 @@ export default function KitchenPage() {
   const orders = useMemo(() => data?.orders || [], [data?.orders])
 
   useEffect(() => {
-    if (!isBrowser) return
     // Hydrate seen set once per tenant.
     if (!hasHydratedSeenRef.current) {
       hasHydratedSeenRef.current = true
@@ -223,7 +219,7 @@ export default function KitchenPage() {
         void playDing()
       }
     }
-  }, [isBrowser, tenant, shouldFetch, view, data?.ok, data?.orders, soundEnabled, playDing])
+  }, [tenant, shouldFetch, view, data?.ok, data?.orders, soundEnabled, playDing])
 
   // Note: preview-only debug actions removed to keep KDS kitchen-focused.
   const [nowTick, setNowTick] = useState(() => Date.now())
