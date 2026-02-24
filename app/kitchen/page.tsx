@@ -67,7 +67,8 @@ function resolveKitchenTenant(raw: string) {
 export default function KitchenPage() {
   const searchParams = useSearchParams()
   const rawTenant = (searchParams?.get('tenant') || 'independent-draft')
-  const tenant = resolveKitchenTenant(rawTenant)
+  const tenantParam = rawTenant
+  const tenant = resolveKitchenTenant(tenantParam)
 
   const [pin, setPin] = useState('')
   const [pinReady, setPinReady] = useState(false)
