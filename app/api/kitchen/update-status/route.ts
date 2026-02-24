@@ -21,11 +21,11 @@ function resolveKitchenTenantSlug(raw: string): string {
 }
 
 function expectedKitchenPin(tenantSlug: string, settings: unknown): string {
-  const fromSettings = kitchenPinFromSettings(settings)
-  if (fromSettings) return fromSettings
   // Public POC pins (consistent across environments).
   if (tenantSlug === 'demo') return '1234'
   if (tenantSlug === 'independentbarandgrille' || tenantSlug === 'independent-draft' || tenantSlug === 'independent-kitchen-draft') return '4321'
+  const fromSettings = kitchenPinFromSettings(settings)
+  if (fromSettings) return fromSettings
   return ''
 }
 
