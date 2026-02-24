@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useSWR from 'swr'
-import { useSearchParams } from 'next/navigation'
 
 type TenantBrand = { name?: string; header?: { logoUrl?: string }; logoUrl?: string }
 type TenantTheme = { bg?: string; text?: string; ink?: string; card?: string; muted?: string; accent?: string; primary?: string }
@@ -65,10 +64,16 @@ function resolveKitchenTenant(raw: string) {
 }
 
 export default function KitchenPage() {
-  const searchParams = useSearchParams()
-  const rawTenant = (searchParams?.get('tenant') || 'independent-draft')
-  const tenantParam = rawTenant
-  const tenant = resolveKitchenTenant(tenantParam)
+  const [tenant, setTenant] = useState('')
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(window.location.search)
+      const rawTenant = (sp.get('tenant') || 'independent-draft').trim()
+      setTenant(resolveKitchenTenant(rawTenant))
+    } catch {
+      setTenant('independent-draft')
+    }
+  }, [])
 
   const [pin, setPin] = useState('')
   const [pinReady, setPinReady] = useState(false)
@@ -81,6 +86,7 @@ export default function KitchenPage() {
   const hasFetchedOnceRef = useRef(false)
 
   useEffect(() => {
+    if (!tenant) return
     try {
       const saved = localStorage.getItem(`kitchen_pin:${tenant}`) || ''
       if (saved) setPin(saved)
@@ -89,6 +95,7 @@ export default function KitchenPage() {
   }, [tenant])
 
   useEffect(() => {
+    if (!tenant) return
     try {
       const raw = localStorage.getItem(`kds_sound_enabled:${tenant}`)
       setSoundEnabled(raw === '1')
@@ -146,7 +153,10 @@ export default function KitchenPage() {
   }
 
   const shouldFetch = pinReady && pin.trim().length > 0
-  const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${encodeURIComponent(tenant)}`, (u: string) => fetch(u).then(r => r.json()))
+  const { data: cfg } = useSWR<TenantConfig>(
+    tenant ? `/api/tenant/config?tenant=${encodeURIComponent(tenant)}` : null,
+    (u: string) => fetch(u).then(r => r.json())
+  )
 
   // Apply theme (match tenant branding)
   useEffect(() => {
@@ -162,7 +172,7 @@ export default function KitchenPage() {
   }, [cfg?.theme])
 
   const { data, mutate } = useSWR<KitchenResponse>(
-    shouldFetch ? `/api/kitchen/orders?tenant=${encodeURIComponent(tenant)}&view=${encodeURIComponent(view)}` : null,
+    (tenant && shouldFetch) ? `/api/kitchen/orders?tenant=${encodeURIComponent(tenant)}&view=${encodeURIComponent(view)}` : null,
     fetcher,
     { refreshInterval: 2000 }
   )
