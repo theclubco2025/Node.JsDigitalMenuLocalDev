@@ -9,6 +9,15 @@ function shortHash(input: string) {
 }
 
 export async function GET(req: NextRequest) {
+  // Never expose debug fingerprints publicly in production.
+  if (process.env.VERCEL_ENV === 'production') {
+    const adminToken = String(process.env.ADMIN_TOKEN || '').trim()
+    const provided = String(req.headers.get('x-admin-token') || '').trim()
+    if (!adminToken || provided !== adminToken) {
+      return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404, headers: { 'Cache-Control': 'no-store' } })
+    }
+  }
+
   const host = (req.headers.get('host') || '').trim()
   const vercelEnv = process.env.VERCEL_ENV || 'unknown'
   const ref = process.env.VERCEL_GIT_COMMIT_REF || ''

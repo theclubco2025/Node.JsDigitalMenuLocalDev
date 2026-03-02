@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { readMenu } from '@/lib/data/menu'
 import { getStripeOrders } from '@/lib/stripe'
 import type { Prisma } from '@prisma/client'
+import { checkRateLimit, clientIp } from '@/lib/server/rateLimit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -151,6 +152,22 @@ export async function POST(req: NextRequest) {
     const smsOptIn = parsed.data.smsOptIn === true
     const orderNote = (parsed.data.orderNote || '').trim() || null
     const tipCentsRaw = Math.max(0, Math.floor(parsed.data.tipCents || 0))
+
+    const ip = clientIp(req)
+    const limIp = await checkRateLimit({ rule: 'orders_checkout_ip_1m', key: `ip:${ip}`, limit: 20, window: '1 m' })
+    if (!limIp.ok) {
+      return NextResponse.json(
+        { ok: false, error: 'rate_limited' },
+        { status: 429, headers: { 'Retry-After': String(limIp.retryAfterSeconds) } }
+      )
+    }
+    const limTenant = await checkRateLimit({ rule: 'orders_checkout_tenant_1m', key: `tenant:${tenant}`, limit: 120, window: '1 m' })
+    if (!limTenant.ok) {
+      return NextResponse.json(
+        { ok: false, error: 'rate_limited' },
+        { status: 429, headers: { 'Retry-After': String(limTenant.retryAfterSeconds) } }
+      )
+    }
 
     // Sales-ready constraint: in production, Stripe webhook confirmation must be configured.
     // POC exception: allow platform test checkout to work as a public POC, relying on /api/orders/confirm fallback.

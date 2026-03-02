@@ -10,23 +10,27 @@ export function middleware(request: NextRequest) {
     // Admin APIs are same-origin only: do NOT emit permissive CORS headers.
     if (!isAdminApi) {
       const origin = request.headers.get('origin') || '*'
+      const isAssistant = request.nextUrl.pathname.startsWith('/api/assistant')
+      if (isAssistant) {
+        const allowed = (process.env.ASSISTANT_ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS || process.env.NEXT_PUBLIC_SITE_URL || '')
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+        let sameOrigin = false
+        try {
+          sameOrigin = origin !== '*' && origin === request.nextUrl.origin
+        } catch {}
+        const ok = origin === '*' ? false : (sameOrigin || allowed.includes(origin))
+        if (!ok) {
+          return NextResponse.json({ ok: false, message: 'Forbidden' }, { status: 403 })
+        }
+      }
       res.headers.set('Access-Control-Allow-Origin', origin)
       res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
       res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
       res.headers.set('Vary', 'Origin')
     }
     return res
-  }
-
-  // Hard bypass: never allow billing for specific tenants (avoid any paywall flash).
-  if (request.nextUrl.pathname === '/billing') {
-    const t = (request.nextUrl.searchParams.get('tenant') || '').trim().toLowerCase()
-    if (['buttercuppantry', 'southforkgrille', 'south-fork-grille', 'independent', 'independentbarandgrille'].includes(t)) {
-      const url = request.nextUrl.clone()
-      url.pathname = `/${encodeURIComponent(t)}`
-      url.search = ''
-      return NextResponse.redirect(url)
-    }
   }
 
   // Safety: never allow -draft tenants on production domain (prevents accidental draft leakage)

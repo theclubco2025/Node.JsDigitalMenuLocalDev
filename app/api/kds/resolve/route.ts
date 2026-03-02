@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit, clientIp } from '@/lib/server/rateLimit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,13 +30,20 @@ export async function POST(req: NextRequest) {
     const pin = parsed.data.pin.trim()
     if (!pin) return NextResponse.json({ ok: false, error: 'Missing pin' }, { status: 400 })
 
-    // Reserved demo pins (hard-routed so they never get mixed up).
-    // These are public POC pins and should remain consistent across environments.
-    if (pin === '1234') {
-      return NextResponse.json({ ok: true, tenant: { slug: 'demo', name: 'Demo' } }, { status: 200 })
+    const ip = clientIp(req)
+    const limIp = await checkRateLimit({ rule: 'kds_resolve_ip_1m', key: `ip:${ip}`, limit: 10, window: '1 m' })
+    if (!limIp.ok) {
+      return NextResponse.json(
+        { ok: false, error: 'Too many attempts. Please wait and try again.' },
+        { status: 429, headers: { 'Retry-After': String(limIp.retryAfterSeconds) } }
+      )
     }
-    if (pin === '4321') {
-      return NextResponse.json({ ok: true, tenant: { slug: 'independentbarandgrille', name: 'Independent Bar & Grille' } }, { status: 200 })
+    const limPin = await checkRateLimit({ rule: 'kds_resolve_pin_1m', key: `pin:${pin}`, limit: 20, window: '1 m' })
+    if (!limPin.ok) {
+      return NextResponse.json(
+        { ok: false, error: 'Too many attempts. Please wait and try again.' },
+        { status: 429, headers: { 'Retry-After': String(limPin.retryAfterSeconds) } }
+      )
     }
 
     const matches = await prisma.tenant.findMany({

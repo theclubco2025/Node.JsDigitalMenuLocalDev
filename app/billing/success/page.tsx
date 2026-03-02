@@ -32,22 +32,46 @@ export default function BillingSuccessPage() {
   useEffect(() => {
     if (!tenant) return
     let cancelled = false
+    let t: ReturnType<typeof setTimeout> | null = null
+    let attempt = 0
+
+    const nextDelayMs = () => {
+      const steps = [1500, 1500, 2000, 2500, 3000, 4000, 6000, 8000, 10_000, 15_000]
+      return steps[Math.min(attempt, steps.length - 1)]!
+    }
+
+    const schedule = (ms: number) => {
+      if (t) clearTimeout(t)
+      t = setTimeout(() => void poll(), ms)
+    }
+
     async function poll() {
+      if (cancelled) return
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        schedule(15_000)
+        return
+      }
+      attempt += 1
       try {
         const res = await fetch(`/api/tenant/status?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
         const json = await res.json().catch(() => null)
-        if (!json || cancelled) return
+        if (!json || cancelled) {
+          schedule(nextDelayMs())
+          return
+        }
         setStatus(String(json.status || ''))
-        setActive(Boolean(json.active))
+        const isActive = Boolean(json.active)
+        setActive(isActive)
+        if (!isActive) schedule(nextDelayMs())
       } catch {
-        // ignore
+        schedule(nextDelayMs())
       }
     }
+
     void poll()
-    const t = setInterval(poll, 1500)
     return () => {
       cancelled = true
-      clearInterval(t)
+      if (t) clearTimeout(t)
     }
   }, [tenant])
 

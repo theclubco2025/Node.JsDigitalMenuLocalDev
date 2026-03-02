@@ -30,6 +30,8 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.35.3",
     "@prisma/client": "^6.16.0",
     "autoprefixer": "^10.4.16",
     "bcryptjs": "^2.4.3",

@@ -6,9 +6,18 @@ import https from 'https'
 
 const [,, argDomain, argBypass, argAdmin, argTenant] = process.argv
 const domain = argDomain || process.env.VERCEL_DOMAIN || 'digital-menu-74avowbt9-the-club-cos-projects.vercel.app'
-const bypassToken = argBypass || process.env.VERCEL_BYPASS_TOKEN || 'a9f3b7c2d6e1f4a8b0c5d9e3f7a2b6c1'
-const adminToken = argAdmin || process.env.ADMIN_TOKEN || '22582811'
+const bypassToken = argBypass || process.env.VERCEL_BYPASS_TOKEN || ''
+const adminToken = argAdmin || process.env.ADMIN_TOKEN || ''
 const tenant = argTenant || process.env.TENANT || 'buttercup-pantry-draft'
+
+if (!adminToken) {
+  console.error('Missing ADMIN_TOKEN. Pass via argv (4th arg) or set ADMIN_TOKEN env var.')
+  process.exit(1)
+}
+if (!bypassToken) {
+  console.error('Missing VERCEL_BYPASS_TOKEN. Pass via argv (3rd arg) or set VERCEL_BYPASS_TOKEN env var (required when deployment protection is enabled).')
+  process.exit(1)
+}
 
 function httpGet(path) {
   return new Promise((resolve, reject) => {

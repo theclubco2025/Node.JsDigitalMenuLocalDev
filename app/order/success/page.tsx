@@ -99,23 +99,78 @@ export default function OrderSuccessPage({ searchParams }: Props) {
   useEffect(() => {
     if (!orderId) return
     let cancelled = false
-    async function poll() {
+    let t: ReturnType<typeof setTimeout> | null = null
+    let attempt = 0
+
+    const isTerminal = (status: string | null | undefined) => {
+      const s = String(status || '').toUpperCase()
+      return s === 'READY' || s === 'COMPLETED' || s === 'CANCELED'
+    }
+
+    const nextDelayMs = () => {
+      // Exponential-ish backoff with caps; protects DB during spikes.
+      const steps = [1500, 1500, 2000, 2500, 3000, 4000, 6000, 8000, 10_000, 15_000]
+      return steps[Math.min(attempt, steps.length - 1)]!
+    }
+
+    const schedule = (ms: number) => {
+      if (t) clearTimeout(t)
+      t = setTimeout(() => void pollMinimal(), ms)
+    }
+
+    const pollFull = async () => {
       try {
         const res = await fetch(`/api/orders/status?order=${encodeURIComponent(orderId)}`, { cache: 'no-store' })
         const json = await res.json().catch(() => null)
         if (cancelled) return
         if (!res.ok || !json?.ok) {
           setError(json?.error || `Could not load order (${res.status})`)
+          schedule(nextDelayMs())
           return
         }
+        setError(null)
         setOrder(json.order as Order)
+        if (!isTerminal(json.order?.status)) schedule(nextDelayMs())
       } catch (e) {
         if (!cancelled) setError((e as Error)?.message || 'Could not load order')
+        schedule(nextDelayMs())
       }
     }
-    void poll()
-    const t = setInterval(poll, 1500)
-    return () => { cancelled = true; clearInterval(t) }
+
+    const pollMinimal = async () => {
+      if (cancelled) return
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        schedule(15_000)
+        return
+      }
+      attempt += 1
+      try {
+        const res = await fetch(`/api/orders/status?order=${encodeURIComponent(orderId)}&minimal=1`, { cache: 'no-store' })
+        const json = await res.json().catch(() => null)
+        if (cancelled) return
+        if (!res.ok || !json?.ok) {
+          schedule(nextDelayMs())
+          return
+        }
+        const newStatus = String(json.order?.status || '')
+        setOrder((prev) => {
+          if (!prev) {
+            void pollFull()
+            return prev
+          }
+          return { ...prev, status: newStatus || prev.status }
+        })
+        if (!isTerminal(newStatus)) schedule(nextDelayMs())
+      } catch {
+        schedule(nextDelayMs())
+      }
+    }
+
+    void pollFull()
+    return () => {
+      cancelled = true
+      if (t) clearTimeout(t)
+    }
   }, [orderId])
 
   // Persist last order id per-tenant so customers can reopen if they leave this screen.
@@ -146,7 +201,7 @@ export default function OrderSuccessPage({ searchParams }: Props) {
       }
     }
     void load()
-    const t = setInterval(load, 12_000)
+    const t = setInterval(load, 30_000)
     return () => { cancelled = true; clearInterval(t) }
   }, [order?.tenant?.slug])
 

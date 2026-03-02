@@ -46,6 +46,7 @@ async function main() {
   console.log('✅ Demo tenant created')
 
   // Create platform demo tenant (used by /demo => /menu?tenant=demo)
+  const demoKitchenPin = String(process.env.SEED_DEMO_KITCHEN_PIN || '').trim()
   await prisma.tenant.upsert({
     where: { slug: 'demo' },
     update: {},
@@ -56,7 +57,7 @@ async function main() {
       status: 'ACTIVE',
       monthlyRevenue: 0,
       settings: {
-        kitchenPin: '1234',
+        ...(demoKitchenPin ? { kitchenPin: demoKitchenPin } : {}),
         ordering: {
           enabled: true,
           paused: false,

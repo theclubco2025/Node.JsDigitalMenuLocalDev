@@ -6,16 +6,38 @@ import { buildPrompt } from '@/lib/ai/prompt'
 import { generate } from '@/lib/ai/model'
 import { resolveTenant } from '@/lib/tenant'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit, clientIp } from '@/lib/server/rateLimit'
 import { rateLimit, circuitIsOpen, recordFailure, recordSuccess } from './limit'
 import type { MenuResponse } from '@/types/api'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-function corsHeaders(origin?: string) {
-  const o = origin || '*'
+function parseAllowedOrigins(): string[] {
+  const raw =
+    (process.env.ASSISTANT_ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS || process.env.NEXT_PUBLIC_SITE_URL || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+  return Array.from(new Set(raw))
+}
+
+function isOriginAllowed(origin: string, requestUrl: string): boolean {
+  const o = (origin || '').trim()
+  if (!o) return true // non-browser / same-origin requests may omit Origin
+  const allowed = parseAllowedOrigins()
+  try {
+    const reqOrigin = new URL(requestUrl).origin
+    if (o === reqOrigin) return true // always allow same-origin
+  } catch {}
+  return allowed.includes(o)
+}
+
+function corsHeaders(origin: string | null | undefined, requestUrl?: string) {
+  const o = (origin || '').trim()
+  const allow = requestUrl ? (isOriginAllowed(o, requestUrl) ? o : '') : o
   return {
-    'Access-Control-Allow-Origin': o,
+    ...(allow ? { 'Access-Control-Allow-Origin': allow } : {}),
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, HEAD',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Admin-Token',
     'Vary': 'Origin',
@@ -418,11 +440,61 @@ export async function POST(request: NextRequest) {
     }
 
     const requestStarted = Date.now()
+    const origin = request.headers.get('origin') || ''
     const tenantId = providedTenant || resolveTenant(request.url)
     const canonical = canonicalTenantSlug(tenantId)
     const isSouthFork = canonical === 'south-fork-grille'
     // South Fork only: always load menu/theme from canonical tenant slug so AI matches live menu exactly.
     const dataTenantId = isSouthFork ? canonical : tenantId
+
+    const ip = clientIp(request)
+    const limIp = await checkRateLimit({ rule: 'assistant_ip_1m', key: `ip:${ip}`, limit: 60, window: '1 m' })
+    if (!limIp.ok) {
+      return NextResponse.json(
+        { ok: false, message: 'Too many requests. Please slow down.' },
+        { status: 429, headers: { ...corsHeaders(origin, request.url), 'Retry-After': String(limIp.retryAfterSeconds) } }
+      )
+    }
+    const limTenant = await checkRateLimit({ rule: 'assistant_tenant_1m', key: `tenant:${canonical}`, limit: 300, window: '1 m' })
+    if (!limTenant.ok) {
+      return NextResponse.json(
+        { ok: false, message: 'Too many requests. Please slow down.' },
+        { status: 429, headers: { ...corsHeaders(origin, request.url), 'Retry-After': String(limTenant.retryAfterSeconds) } }
+      )
+    }
+
+    if (origin && origin !== '*' && !isOriginAllowed(origin, request.url)) {
+      return NextResponse.json(
+        { ok: false, message: 'Forbidden' },
+        { status: 403, headers: corsHeaders(origin, request.url) }
+      )
+    }
+
+    let tenantSettings: Record<string, unknown> | null = null
+    let tenantNameFromDb = ''
+    if (process.env.DATABASE_URL) {
+      try {
+        const row = await prisma.tenant.findUnique({
+          where: { slug: dataTenantId },
+          select: { name: true, settings: true },
+        })
+        tenantNameFromDb = (row?.name || '').trim()
+        tenantSettings = (row?.settings as Record<string, unknown>) || null
+      } catch {}
+    }
+    const rawDaily = tenantSettings && typeof tenantSettings === 'object'
+      ? (tenantSettings as Record<string, unknown>).aiResponsesPerDay
+      : undefined
+    const dailyLimit = (typeof rawDaily === 'number' && Number.isFinite(rawDaily))
+      ? Math.max(5, Math.min(20_000, Math.floor(rawDaily)))
+      : 500
+    const limDaily = await checkRateLimit({ rule: 'assistant_tenant_1d', key: `tenant:${canonical}`, limit: dailyLimit, window: '1 d' })
+    if (!limDaily.ok) {
+      return NextResponse.json(
+        { ok: false, message: 'Daily assistant quota reached. Please try again tomorrow.' },
+        { status: 429, headers: { ...corsHeaders(origin, request.url), 'Retry-After': String(limDaily.retryAfterSeconds) } }
+      )
+    }
 
     // Load menu and apply diet filters
     const menu = await getMenuForTenant(dataTenantId)
@@ -462,7 +534,7 @@ export async function POST(request: NextRequest) {
         })
         return NextResponse.json(
           { ok: true, tenantId, text, fallback: true },
-          { headers: corsHeaders(request.headers.get('origin') || '*') }
+          { headers: corsHeaders(origin, request.url) }
         )
       }
 
@@ -482,7 +554,7 @@ export async function POST(request: NextRequest) {
         })
         return NextResponse.json(
           { ok: true, tenantId, text, fallback: true },
-          { headers: corsHeaders(request.headers.get('origin') || '*') }
+          { headers: corsHeaders(origin, request.url) }
         )
       }
     }
@@ -496,18 +568,30 @@ export async function POST(request: NextRequest) {
       ? buildFallback(matches.slice(0, 4), query)
       : `I'm still syncing menu details. Try asking about a specific dish or ingredient.`
 
-    // Load tenant meta from theme.json if available
-    const { promises: fs } = await import('fs')
-    const path = await import('path')
-    const themePath = path.join(process.cwd(), 'data', 'tenants', dataTenantId, 'theme.json')
     let restaurantName = 'Our Restaurant'
     let tone = 'casual'
     try {
-      const themeRaw = await fs.readFile(themePath, 'utf8')
-      const theme = JSON.parse(themeRaw)
-      restaurantName = theme?.name || restaurantName
-      tone = theme?.tone || tone
+      const s = (tenantSettings && typeof tenantSettings === 'object') ? (tenantSettings as Record<string, unknown>) : {}
+      const theme = (s.theme && typeof s.theme === 'object') ? (s.theme as Record<string, unknown>) : {}
+      const brand = (s.brand && typeof s.brand === 'object') ? (s.brand as Record<string, unknown>) : {}
+      const themeName = typeof theme.name === 'string' ? theme.name.trim() : ''
+      const brandName = typeof brand.name === 'string' ? brand.name.trim() : ''
+      const themeTone = typeof theme.tone === 'string' ? theme.tone.trim() : ''
+      restaurantName = themeName || brandName || tenantNameFromDb || restaurantName
+      tone = themeTone || tone
     } catch {}
+    // Local/dev fallback to filesystem tenant theme if DB config is missing.
+    if (!tenantSettings && (process.env.VERCEL_ENV !== 'production')) {
+      try {
+        const { promises: fs } = await import('fs')
+        const path = await import('path')
+        const themePath = path.join(process.cwd(), 'data', 'tenants', dataTenantId, 'theme.json')
+        const themeRaw = await fs.readFile(themePath, 'utf8')
+        const theme = JSON.parse(themeRaw)
+        restaurantName = theme?.name || restaurantName
+        tone = theme?.tone || tone
+      } catch {}
+    }
 
     const { system, user } = buildPrompt({
       tenantId: dataTenantId,
@@ -545,7 +629,7 @@ export async function POST(request: NextRequest) {
           model: process.env.AI_MODEL || null,
           fallback: true,
         })
-        return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+        return NextResponse.json({ ok: true, tenantId, text: fallbackText, fallback: true }, { headers: corsHeaders(origin, request.url) })
       }
     }
 
@@ -565,19 +649,19 @@ export async function POST(request: NextRequest) {
         model: process.env.AI_MODEL || null,
         fallback: false,
       })
-      return NextResponse.json({ ok: true, tenantId, text }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+      return NextResponse.json({ ok: true, tenantId, text }, { headers: corsHeaders(origin, request.url) })
     } catch (e) {
       recordFailure(tenantId)
       const ms = Date.now() - started
       const msg = (e as Error)?.message || ''
       console.warn(`[assistant] tenant=${tenantId} fail latency=${ms}ms`, e)
       if (msg.includes('401')) {
-        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
+        return NextResponse.json({ ok: false, message: 'AI provider rejected credentials (401). Check AI_API_KEY/OPENAI_API_KEY and AI_MODEL.' }, { status: 200, headers: corsHeaders(origin, request.url) })
       }
       if (msg.includes('404')) {
-        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
+        return NextResponse.json({ ok: false, message: 'Model not found (404). Set AI_MODEL to a model your account supports.' }, { status: 200, headers: corsHeaders(origin, request.url) })
       }
-      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
+      return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(origin, request.url) })
     }
   } catch (e) {
     console.error('Assistant error:', e)
@@ -766,23 +850,31 @@ export async function GET(request: NextRequest) {
     if (provider !== 'ollama') {
       const hasKey = Boolean((process.env.AI_KEYS || process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '').trim())
       // When missing keys, expose that assistant is in fallback (enabled) mode
-      if (!hasKey) return NextResponse.json({ ok: true, fallback: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+      if (!hasKey) return NextResponse.json({ ok: true, fallback: true }, { headers: corsHeaders(request.headers.get('origin'), request.url) })
     }
-    return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+    return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin'), request.url) })
   } catch (e) {
     console.error('Assistant GET error:', e)
-    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin') || '*') })
+    return NextResponse.json({ ok: false, message: 'Assistant temporarily unavailable. Please try again.' }, { status: 200, headers: corsHeaders(request.headers.get('origin'), request.url) })
   }
 }
 
 // CORS preflight support to avoid 405 on OPTIONS
 export async function OPTIONS(request: NextRequest) {
-  return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin') || '*') })
+  const origin = request.headers.get('origin') || ''
+  if (origin && !isOriginAllowed(origin, request.url)) {
+    return NextResponse.json({ ok: false, message: 'Forbidden' }, { status: 403, headers: corsHeaders(origin, request.url) })
+  }
+  return NextResponse.json({ ok: true }, { headers: corsHeaders(request.headers.get('origin'), request.url) })
 }
 
 // Explicit HEAD handler to avoid 405 from HEAD checks
 export async function HEAD(request: NextRequest) {
-  const headers = corsHeaders(request.headers.get('origin') || '*')
+  const origin = request.headers.get('origin') || ''
+  if (origin && !isOriginAllowed(origin, request.url)) {
+    return new NextResponse(null, { status: 403, headers: corsHeaders(origin, request.url) })
+  }
+  const headers = corsHeaders(request.headers.get('origin'), request.url)
   return new NextResponse(null, { headers })
 }
 /*

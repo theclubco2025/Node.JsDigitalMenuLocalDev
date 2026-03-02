@@ -4,6 +4,8 @@ export async function ensureOrdersSchemaPreview(opts?: { host?: string }) {
   // Preview-only safety valve: if a preview deployment points at a DB without the orders migration,
   // create the minimal schema on-demand so POC can run. This will NOT run in production.
   if (process.env.VERCEL_ENV === 'production') return
+  // Disabled by default: raw SQL auto-patching is a sharp tool.
+  if (String(process.env.PREVIEW_SCHEMA_AUTOPATCH || '').trim() !== '1') return
 
   const hostRaw = (opts?.host || '').trim().toLowerCase()
   const host = hostRaw.split(':')[0] || '' // strip port if present
