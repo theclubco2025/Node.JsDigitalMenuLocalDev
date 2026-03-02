@@ -9,7 +9,7 @@
           "name": "Fettuccine Bolognese",
           "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 23,
-          "tags": [],
+          "tags": ["house favorite", "addon:Extra Cheese|2.00", "addon:Garlic Bread|3.50"],
           "imageUrl": ""
         },
         {
@@ -17,7 +17,7 @@
           "name": "Spaghetti and Meatballs",
           "description": "House made meatballs, signature marinara infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 20,
-          "tags": [],
+          "tags": ["house favorite", "addon:Extra Meatball|3.00", "addon:Garlic Bread|3.50"],
           "imageUrl": ""
         },
         {
@@ -25,7 +25,7 @@
           "name": "Chicken Fettuccine Alfredo",
           "description": "House made alfredo sauce, sliced chicken breast, basil, parmesan.",
           "price": 22,
-          "tags": [],
+          "tags": ["addon:Extra Chicken|4.00", "addon:Garlic Bread|3.50"],
           "imageUrl": ""
         }
       ]
@@ -39,7 +39,7 @@
           "name": "Spaghetti Bolognese",
           "description": "Ground veal and sausage in signature marinara, infused with locally produced zinfandel wine, topped with asiago and basil.",
           "price": 23,
-          "tags": [],
+          "tags": ["addon:Garlic Bread|3.50"],
           "imageUrl": ""
         },
         {
@@ -47,7 +47,7 @@
           "name": "Rigatoni with Sausage",
           "description": "Rigatoni grande, sliced Italian sausage, pomodoro sauce, topped with asiago and basil.",
           "price": 22,
-          "tags": [],
+          "tags": ["addon:Extra Sausage|3.50"],
           "imageUrl": ""
         },
         {
@@ -55,7 +55,7 @@
           "name": "Linguine Pesto",
           "description": "Signature pesto, asiago, heirloom cherry tomatoes.",
           "price": 19,
-          "tags": [],
+          "tags": ["vegetarian", "addon:Add Chicken|4.00", "addon:Add Prawns|6.00"],
           "imageUrl": ""
         },
         {
@@ -63,7 +63,7 @@
           "name": "Linguine and Clams",
           "description": "Fresh steamed clams, white wine garlic lemon butter sauce.",
           "price": 23,
-          "tags": [],
+          "tags": ["seafood"],
           "imageUrl": ""
         },
         {
@@ -71,7 +71,7 @@
           "name": "Linguine and Prawns",
           "description": "Fresh prawns sautéed in white wine garlic lemon butter sauce, with slivered zucchini and carrots.",
           "price": 22,
-          "tags": [],
+          "tags": ["seafood"],
           "imageUrl": ""
         },
         {
@@ -79,7 +79,7 @@
           "name": "Fettuccine Vegetariano",
           "description": "Ribbons of pasta, portobello mushrooms, ribbons of carrots and Italian squash, sautéed in olive oil and garlic, topped with asiago and basil.",
           "price": 19,
-          "tags": [],
+          "tags": ["vegetarian", "vegan option available"],
           "imageUrl": ""
         },
         {
@@ -87,7 +87,7 @@
           "name": "Spaghetti Aglio e Olio",
           "description": "Olive oil, garlic, asiago, Italian parsley, touch of crushed red pepper.",
           "price": 15,
-          "tags": [],
+          "tags": ["vegetarian", "can be made vegan"],
           "imageUrl": ""
         },
         {
@@ -95,7 +95,7 @@
           "name": "Lasagna",
           "description": "Pomodoro sauce, Italian sausage, ricotta, basil, house made lasagna noodles, topped with asiago and mozzarella.",
           "price": 18,
-          "tags": [],
+          "tags": ["house favorite"],
           "imageUrl": ""
         }
       ]
@@ -109,7 +109,7 @@
           "name": "Margherita Napoletana 10\"",
           "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
           "price": 17,
-          "tags": [],
+          "tags": ["vegetarian", "classic"],
           "imageUrl": ""
         },
         {
@@ -117,55 +117,7 @@
           "name": "Margherita Napoletana 14\"",
           "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
           "price": 25,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-margherita-napoletana-with-mozzarella-di-bufala-",
-          "name": "Margherita Napoletana With mozzarella di bufala (imported from Naples, Italy) 10\"",
-          "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
-          "price": 20,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-margherita-napoletana-with-mozzarella-di-bufala-",
-          "name": "Margherita Napoletana With mozzarella di bufala (imported from Naples, Italy) 14\"",
-          "description": "Fresh creamy mozzarella, fresh basil, extra virgin olive oil, tomato sauce.",
-          "price": 30,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-portobello-mushroom-bacon-10",
-          "name": "Portobello Mushroom Bacon 10\"",
-          "description": "Sliced portobello mushrooms, hickory smoked bacon, mozzarella, tomato sauce.",
-          "price": 20,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-portobello-mushroom-bacon-14",
-          "name": "Portobello Mushroom Bacon 14\"",
-          "description": "Sliced portobello mushrooms, hickory smoked bacon, mozzarella, tomato sauce.",
-          "price": 30,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-chicken-piccata-10",
-          "name": "Chicken Piccata 10\"",
-          "description": "Chicken breast, capers, garlic, mozzarella, fresh squeezed lemon, extra virgin olive oil.",
-          "price": 20,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-chicken-piccata-14",
-          "name": "Chicken Piccata 14\"",
-          "description": "Chicken breast, capers, garlic, mozzarella, fresh squeezed lemon, extra virgin olive oil.",
-          "price": 30,
-          "tags": [],
+          "tags": ["vegetarian", "classic"],
           "imageUrl": ""
         },
         {
@@ -173,7 +125,7 @@
           "name": "Prosciutto & Arugula 10\"",
           "description": "Thin sliced prosciutto di Parma, arugula, asiago, garlic, olive oil, cherry tomatoes (heirlooms when in season), drizzled with balsamic reduction.",
           "price": 22,
-          "tags": [],
+          "tags": ["chef's pick"],
           "imageUrl": ""
         },
         {
@@ -181,71 +133,7 @@
           "name": "Prosciutto & Arugula 14\"",
           "description": "Thin sliced prosciutto di Parma, arugula, asiago, garlic, olive oil, cherry tomatoes (heirlooms when in season), drizzled with balsamic reduction.",
           "price": 32,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-garlic-and-more-garlic-10",
-          "name": "Garlic and More Garlic 10\"",
-          "description": "Fresh garlic, roasted garlic cloves, mozzarella, tomato sauce.",
-          "price": 18,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-garlic-and-more-garlic-14",
-          "name": "Garlic and More Garlic 14\"",
-          "description": "Fresh garlic, roasted garlic cloves, mozzarella, tomato sauce.",
-          "price": 26,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-asiago-10",
-          "name": "Asiago 10\"",
-          "description": "Asiago, fresh garlic, fresh basil, tomato sauce.",
-          "price": 15,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-asiago-14",
-          "name": "Asiago 14\"",
-          "description": "Asiago, fresh garlic, fresh basil, tomato sauce.",
-          "price": 25,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-pesto-10",
-          "name": "Pesto 10\"",
-          "description": "Signature pesto, asiago, tomatoes (heirlooms when in season).",
-          "price": 18,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-pesto-14",
-          "name": "Pesto 14\"",
-          "description": "Signature pesto, asiago, tomatoes (heirlooms when in season).",
-          "price": 27,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-cheese-10",
-          "name": "Cheese 10\"",
-          "description": "Mozzarella, tomato sauce.",
-          "price": 13,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-cheese-14",
-          "name": "Cheese 14\"",
-          "description": "Mozzarella, tomato sauce.",
-          "price": 22,
-          "tags": [],
+          "tags": ["chef's pick"],
           "imageUrl": ""
         },
         {
@@ -253,7 +141,7 @@
           "name": "Carnivoro 10\"",
           "description": "Salami, pepperoni, Italian sausage, mozzarella, tomato sauce.",
           "price": 18,
-          "tags": [],
+          "tags": ["meat lovers"],
           "imageUrl": ""
         },
         {
@@ -261,7 +149,39 @@
           "name": "Carnivoro 14\"",
           "description": "Salami, pepperoni, Italian sausage, mozzarella, tomato sauce.",
           "price": 27,
-          "tags": [],
+          "tags": ["meat lovers"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-vegetariano-10",
+          "name": "Vegetariano 10\"",
+          "description": "Mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
+          "price": 19,
+          "tags": ["vegetarian"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-vegetariano-14",
+          "name": "Vegetariano 14\"",
+          "description": "Mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
+          "price": 29,
+          "tags": ["vegetarian"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-pepperoni-10",
+          "name": "Pepperoni 10\"",
+          "description": "Pepperoni, mozzarella cheese, tomato sauce.",
+          "price": 15,
+          "tags": ["classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-pepperoni-14",
+          "name": "Pepperoni 14\"",
+          "description": "Pepperoni, mozzarella cheese, tomato sauce.",
+          "price": 24,
+          "tags": ["classic"],
           "imageUrl": ""
         },
         {
@@ -279,54 +199,6 @@
           "price": 30,
           "tags": [],
           "imageUrl": ""
-        },
-        {
-          "id": "i-vegetariano-10",
-          "name": "Vegetariano 10\"",
-          "description": "Mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
-          "price": 19,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-vegetariano-14",
-          "name": "Vegetariano 14\"",
-          "description": "Mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
-          "price": 29,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-pepperoni-10",
-          "name": "Pepperoni 10\"",
-          "description": "Pepperoni, mozzarella cheese, tomato sauce.",
-          "price": 15,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-pepperoni-14",
-          "name": "Pepperoni 14\"",
-          "description": "Pepperoni, mozzarella cheese, tomato sauce.",
-          "price": 24,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-combination-10",
-          "name": "Combination 10\"",
-          "description": "Salami, pepperoni, Italian sausage, mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
-          "price": 21,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-combination-14",
-          "name": "Combination 14\"",
-          "description": "Salami, pepperoni, Italian sausage, mushrooms, olives, onions, bell peppers, mozzarella, tomato sauce.",
-          "price": 31,
-          "tags": [],
-          "imageUrl": ""
         }
       ]
     },
@@ -339,7 +211,7 @@
           "name": "Bene Special",
           "description": "Italian sausage, asiago, onions, fresh garlic, olives, basil, sauce.",
           "price": 13,
-          "tags": [],
+          "tags": ["house favorite", "addon:Extra Cheese|1.50", "addon:Jalapeños|1.00"],
           "imageUrl": ""
         },
         {
@@ -347,7 +219,7 @@
           "name": "Polpetta",
           "description": "Meatballs, mozzarella, asiago, garlic, sauce.",
           "price": 13,
-          "tags": [],
+          "tags": ["addon:Extra Meatballs|2.50"],
           "imageUrl": ""
         },
         {
@@ -355,15 +227,15 @@
           "name": "Vesuvio",
           "description": "Italian sausage, mozzarella, onions, bell peppers, garlic, crushed red pepper, sauce (spicy hot).",
           "price": 13,
-          "tags": [],
+          "tags": ["spicy"],
           "imageUrl": ""
         },
         {
-          "id": "i-vegetariano",
+          "id": "i-vegetariano-calzone",
           "name": "Vegetariano",
           "description": "Roasted portobello mushrooms, asiago, basil, onion, roasted garlic cloves, balsamic vinegar reduction, sauce.",
           "price": 13,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         }
       ]
@@ -377,15 +249,15 @@
           "name": "Italian Beef",
           "description": "Certified Angus beef thin sliced, sautéed onions and bell peppers, au jus, horseradish sauce on the side.",
           "price": 14,
-          "tags": [],
+          "tags": ["popular"],
           "imageUrl": ""
         },
         {
           "id": "i-portobello",
           "name": "Portobello",
-          "description": "Marinated mushrooms, mozzarella, garlic aoli, lettuce, tomato, onion, basil, olive oil, balsamic vinegar reduction, sea salt.",
+          "description": "Marinated mushrooms, mozzarella, garlic aioli, lettuce, tomato, onion, basil, olive oil, balsamic vinegar reduction, sea salt.",
           "price": 12,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
@@ -419,30 +291,6 @@
           "price": 12,
           "tags": [],
           "imageUrl": ""
-        },
-        {
-          "id": "i-salami",
-          "name": "Salami",
-          "description": "Molinari Toscano salami, onions, peperoncini, basil.",
-          "price": 12,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-1-2-sandwich-and-cup-of-soup",
-          "name": "1/2 Sandwich and Cup of Soup",
-          "description": "",
-          "price": 12,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-1-2-sandwich-and-small-italian-salad",
-          "name": "1/2 Sandwich and Small Italian Salad",
-          "description": "",
-          "price": 12,
-          "tags": [],
-          "imageUrl": ""
         }
       ]
     },
@@ -451,9 +299,9 @@
       "name": "Kids Menu",
       "items": [
         {
-          "id": "i-spaghetti-and-meatballs",
+          "id": "i-kids-spaghetti-meatballs",
           "name": "Spaghetti and Meatballs",
-          "description": "",
+          "description": "Kid-sized portion with house made meatballs and marinara.",
           "price": 7,
           "tags": [],
           "imageUrl": ""
@@ -461,166 +309,92 @@
         {
           "id": "i-spaghetti-marinara",
           "name": "Spaghetti Marinara",
-          "description": "",
+          "description": "Simple spaghetti with our house marinara sauce.",
           "price": 7,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
           "id": "i-spaghetti-and-butter",
           "name": "Spaghetti and Butter",
-          "description": "",
+          "description": "Plain spaghetti with butter and parmesan.",
           "price": 7,
-          "tags": [],
+          "tags": ["vegetarian"],
           "imageUrl": ""
         },
         {
           "id": "i-pizza-by-the-slice",
           "name": "Pizza by the Slice",
-          "description": "",
-          "price": 7,
+          "description": "One slice of cheese pizza.",
+          "price": 5,
+          "tags": ["vegetarian"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-beverages",
+      "name": "Beverages",
+      "items": [
+        {
+          "id": "i-italian-soda",
+          "name": "Italian Soda",
+          "description": "Choice of flavor: raspberry, peach, vanilla, or lemon.",
+          "price": 4,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-san-pellegrino",
+          "name": "San Pellegrino",
+          "description": "Sparkling mineral water.",
+          "price": 4,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-espresso",
+          "name": "Espresso",
+          "description": "Double shot of Italian espresso.",
+          "price": 3,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-cappuccino",
+          "name": "Cappuccino",
+          "description": "Espresso with steamed milk and foam.",
+          "price": 5,
           "tags": [],
           "imageUrl": ""
         }
       ]
     },
     {
-      "id": "c-beers",
-      "name": "Beers",
+      "id": "c-desserts",
+      "name": "Desserts",
       "items": [
         {
-          "id": "i-widmer-hefeweizen",
-          "name": "Widmer Hefeweizen",
-          "description": "",
+          "id": "i-tiramisu",
+          "name": "Tiramisu",
+          "description": "Classic Italian dessert with espresso-soaked ladyfingers, mascarpone cream, and cocoa.",
+          "price": 9,
+          "tags": ["house favorite"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-cannoli",
+          "name": "Cannoli",
+          "description": "Crispy pastry shells filled with sweet ricotta cream and chocolate chips.",
+          "price": 7,
+          "tags": [],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-gelato",
+          "name": "Gelato",
+          "description": "Two scoops of authentic Italian gelato. Ask your server for today's flavors.",
           "price": 6,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-sculpin-ipa",
-          "name": "Sculpin IPA",
-          "description": "",
-          "price": 7.5,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-eel-river-organic-ipa",
-          "name": "Eel River Organic IPA",
-          "description": "",
-          "price": 6.5,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-auburn-alehouse-american-river-pale-ale",
-          "name": "Auburn Alehouse American River Pale Ale",
-          "description": "",
-          "price": 6,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-moretti-la-rossa",
-          "name": "Moretti La Rossa",
-          "description": "",
-          "price": 8,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-peroni",
-          "name": "Peroni",
-          "description": "",
-          "price": 6,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-bourbon-barrel-stout",
-          "name": "Bourbon Barrel Stout",
-          "description": "",
-          "price": 8.5,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-firestone-805-blonde-ale",
-          "name": "Firestone 805 Blonde Ale",
-          "description": "",
-          "price": 6,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-coors-light",
-          "name": "Coors Light",
-          "description": "",
-          "price": 0,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-bud-light",
-          "name": "Bud Light",
-          "description": "",
-          "price": 0,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-widmer-omission-pale-ale-gluten-free",
-          "name": "Widmer Omission Pale Ale (Gluten Free)",
-          "description": "",
-          "price": 0,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-widmer-omission-ipa-gluten-free",
-          "name": "Widmer Omission IPA (Gluten Free)",
-          "description": "",
-          "price": 0,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-stella-artois",
-          "name": "Stella Artois",
-          "description": "",
-          "price": 0,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-stella-artois-cider",
-          "name": "Stella Artois Cider",
-          "description": "",
-          "price": 0,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-guinness-draught-can",
-          "name": "Guinness Draught — Can",
-          "description": "",
-          "price": 5,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-clausthaler-n-a-lager",
-          "name": "Clausthaler N/A Lager",
-          "description": "",
-          "price": 0,
-          "tags": [],
-          "imageUrl": ""
-        },
-        {
-          "id": "i-clausthaler-n-a-amber",
-          "name": "Clausthaler N/A Amber",
-          "description": "",
-          "price": 0,
           "tags": [],
           "imageUrl": ""
         }

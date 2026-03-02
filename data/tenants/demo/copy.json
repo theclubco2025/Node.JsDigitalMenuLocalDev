@@ -1,16 +1,17 @@
 {
-  "tagline": "Polished digital menu experience",
-  "heroSubtitle": "Showcase how recommendations, tags, and AI guidance flow together.",
-  "about": "Fully styled demo menu illustrating a complete onboarding output: curated dishes, dietary tags, and concierge-quality descriptions.",
-  "specials": "Signature Sampler • Chef's Table Pasta • Seasonal Reserve",
+  "tagline": "Authentic Italian cuisine since 1985",
+  "heroSubtitle": "Fresh pasta, wood-fired pizza, and classic Italian dishes made with love.",
+  "about": "Family-owned Italian restaurant featuring house-made pasta, traditional recipes, and a warm atmosphere.",
+  "specials": "Fettuccine Bolognese • Tiramisu • Prosciutto & Arugula Pizza",
   "categoryIntros": {
-    "Pasta": "Illustrates hero dishes with dietary tags and storytelling copy.",
-    "Pizza": "Highlights high-margin items with mouthwatering photography.",
-    "Calzone": "Demonstrates customization with add-ons and modifiers.",
-    "Lunch": "Shows daytime features and cross-selling language."
+    "Signature Dishes": "Our most beloved house specialties, perfected over 40 years.",
+    "Pasta": "Fresh pasta made daily, paired with authentic Italian sauces.",
+    "Pizza": "Wood-fired pizzas with San Marzano tomatoes and imported cheeses.",
+    "Calzone": "Golden-baked pockets of Italian goodness.",
+    "Lunch": "Quick and satisfying Italian sandwiches on house-baked bread.",
+    "Desserts": "Sweet endings to your Italian feast."
   },
   "badges": {
-    "category": "Demo"
+    "category": "Bene's"
   }
 }
-

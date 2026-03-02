@@ -1,12 +1,11 @@
 {
-  "name": "Demo Dining Room",
+  "name": "Bene's Italian Kitchen",
+  "tagline": "Authentic Italian • Est. 1985",
   "header": {
     "mode": "logo-only",
-    "height": 160,
+    "height": 140,
     "logoUrl": "https://tccmenus.com/assets/tcc-logo-horizontal.png",
     "background": "#ffffff"
   },
   "links": {}
 }
-
-
