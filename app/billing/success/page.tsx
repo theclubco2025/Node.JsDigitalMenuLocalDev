@@ -31,6 +31,7 @@ export default function BillingSuccessPage() {
 
   useEffect(() => {
     if (!tenant) return
+    if (active) return
     let cancelled = false
     let t: ReturnType<typeof setTimeout> | null = null
     let attempt = 0
@@ -73,7 +74,7 @@ export default function BillingSuccessPage() {
       cancelled = true
       if (t) clearTimeout(t)
     }
-  }, [tenant])
+  }, [tenant, active])
 
   // If webhook isn't configured yet, we can still activate by confirming the checkout session_id server-side.
   useEffect(() => {

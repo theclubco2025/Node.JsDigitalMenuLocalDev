@@ -8,6 +8,21 @@ export const dynamic = 'force-dynamic'
 
 const StatusSchema = z.enum(['NEW', 'PREPARING', 'READY', 'COMPLETED', 'CANCELED'])
 
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  NEW: ['PREPARING', 'CANCELED'],
+  PREPARING: ['READY', 'CANCELED'],
+  READY: ['COMPLETED', 'CANCELED'],
+  COMPLETED: [],
+  CANCELED: [],
+  PENDING_PAYMENT: [],
+}
+
+function isValidTransition(from: string, to: string): boolean {
+  const allowed = VALID_TRANSITIONS[from]
+  if (!allowed) return false
+  return allowed.includes(to)
+}
+
 function kitchenPinFromSettings(settings: unknown): string {
   if (!settings || typeof settings !== 'object') return ''
   const v = (settings as Record<string, unknown>).kitchenPin
@@ -164,9 +179,17 @@ export async function GET(req: NextRequest) {
     if (!t) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
     if (!isAuthorized(req, tenant, t.settings)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 
-    const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, tenantId: true } })
+    const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, tenantId: true, status: true, paidAt: true } })
     if (!order) return NextResponse.json({ ok: false, error: 'Order not found' }, { status: 404 })
     if (order.tenantId !== t.id) return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 })
+
+    if (!isValidTransition(order.status, statusParsed.data)) {
+      return NextResponse.json({ ok: false, error: `Invalid transition: ${order.status} → ${statusParsed.data}` }, { status: 400 })
+    }
+
+    if (!order.paidAt && order.status === 'PENDING_PAYMENT') {
+      return NextResponse.json({ ok: false, error: 'Cannot update unpaid order' }, { status: 400 })
+    }
 
     const updated = await prisma.order.update({
       where: { id: orderId },

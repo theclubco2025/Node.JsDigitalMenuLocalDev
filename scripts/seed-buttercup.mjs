@@ -5,7 +5,7 @@
 import https from 'https'
 
 const [,, argDomain, argBypass, argAdmin, argTenant] = process.argv
-const domain = argDomain || process.env.VERCEL_DOMAIN || 'digital-menu-74avowbt9-the-club-cos-projects.vercel.app'
+const domain = argDomain || process.env.VERCEL_DOMAIN || ''
 const bypassToken = argBypass || process.env.VERCEL_BYPASS_TOKEN || ''
 const adminToken = argAdmin || process.env.ADMIN_TOKEN || ''
 const tenant = argTenant || process.env.TENANT || 'buttercup-pantry-draft'
