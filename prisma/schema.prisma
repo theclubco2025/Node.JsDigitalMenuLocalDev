@@ -213,6 +213,33 @@ model AssistantEvent {
   @@map("assistant_events")
 }
 
+model TermsAcceptance {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+
+  // Who accepted
+  email           String
+  name            String?
+  tenantSlug      String?
+  userId          String?
+
+  // What was accepted
+  documentType    String   // 'terms' | 'privacy' | 'both'
+  documentVersion String   // e.g., '2025-03-02'
+
+  // Context
+  ipAddress       String?
+  userAgent       String?
+  acceptedAt      DateTime @default(now())
+
+  // Audit
+  checkboxText    String?  // The exact text the user agreed to
+
+  @@index([email, documentType])
+  @@index([tenantSlug, createdAt])
+  @@map("terms_acceptances")
+}
+
 enum Role {
   SUPER_ADMIN
   RESTAURANT_OWNER
