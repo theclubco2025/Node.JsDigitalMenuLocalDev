@@ -83,8 +83,8 @@ async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccoun
 export async function POST(req: NextRequest) {
   const secret = webhookSecret()
   if (!secret) {
-    // Webhook disabled until configured; acknowledge to avoid retries during setup.
-    return NextResponse.json({ ok: true, disabled: true }, { status: 200 })
+    console.warn('[orders:stripe-webhook] STRIPE_ORDERS_WEBHOOK_SECRET not configured — returning 503 so Stripe retries')
+    return NextResponse.json({ ok: false, disabled: true, error: 'Webhook secret not configured' }, { status: 503 })
   }
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ ok: false, error: 'DATABASE_URL required' }, { status: 501 })

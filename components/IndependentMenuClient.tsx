@@ -1916,7 +1916,7 @@ export default function MenuClient() {
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm text-black bg-white placeholder-gray-500"
                   value={assistantMessage}
                   onChange={(e) => setAssistantMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendAssistantMessage()}
+                  onKeyDown={(e) => e.key === 'Enter' && sendAssistantMessage()}
                 />
                 <button
                   onClick={() => { void sendAssistantMessage() }}

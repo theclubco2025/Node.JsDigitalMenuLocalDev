@@ -110,36 +110,49 @@ export async function POST(request: NextRequest) {
     })
     const srcMenu = srcMenus[0] || null
 
-    // Upsert target tenant and copy settings
-    const target = await prisma.tenant.upsert({
-      where: { slug: to },
-      update: { name: srcTenant.name, status: 'ACTIVE', settings: (srcTenant.settings as InputJsonValue) },
-      create: { slug: to, name: srcTenant.name, status: 'ACTIVE', settings: (srcTenant.settings as InputJsonValue) }
-    })
+    // Merge settings: preserve target's critical config (kitchenPin, Stripe Connect, ordering)
+    const existingTarget = await prisma.tenant.findUnique({ where: { slug: to }, select: { settings: true } })
+    const existingSettings = (existingTarget?.settings && typeof existingTarget.settings === 'object') ? existingTarget.settings as Record<string, unknown> : {}
+    const srcSettings = (srcTenant.settings && typeof srcTenant.settings === 'object') ? srcTenant.settings as Record<string, unknown> : {}
+    const mergedSettings = { ...srcSettings, ...existingSettings, ...srcSettings }
+    const preserveKeys = ['kitchenPin', 'ordering', 'stripeConnectAccountId', 'stripeConnectOnboardedAt'] as const
+    for (const key of preserveKeys) {
+      if (existingSettings[key] !== undefined) {
+        mergedSettings[key] = existingSettings[key]
+      }
+    }
 
-    if (srcMenu) {
-      // Create a fresh menu for the target and copy categories/items/tags
-      const newMenu = await prisma.menu.create({ data: { tenantId: target.id, name: `${to} menu ${new Date().toISOString()}` } })
-      for (const c of srcMenu.categories) {
-        const newCat = await prisma.menuCategory.create({ data: { menuId: newMenu.id, name: c.name, description: c.description ?? null } })
-        for (const it of c.items) {
-          const newItem = await prisma.menuItem.create({
-            data: {
-              categoryId: newCat.id,
-              name: it.name,
-              description: it.description,
-              price: it.price,
-              imageUrl: it.imageUrl,
-              calories: it.calories,
-              available: it.available
+    await prisma.$transaction(async (tx) => {
+      const t = await tx.tenant.upsert({
+        where: { slug: to },
+        update: { name: srcTenant.name, status: 'ACTIVE', settings: (mergedSettings as InputJsonValue) },
+        create: { slug: to, name: srcTenant.name, status: 'ACTIVE', settings: (mergedSettings as InputJsonValue) }
+      })
+
+      if (srcMenu) {
+        const newMenu = await tx.menu.create({ data: { tenantId: t.id, name: `${to} menu ${new Date().toISOString()}` } })
+        for (const c of srcMenu.categories) {
+          const newCat = await tx.menuCategory.create({ data: { menuId: newMenu.id, name: c.name, description: c.description ?? null } })
+          for (const it of c.items) {
+            const newItem = await tx.menuItem.create({
+              data: {
+                categoryId: newCat.id,
+                name: it.name,
+                description: it.description,
+                price: it.price,
+                imageUrl: it.imageUrl,
+                calories: it.calories,
+                available: it.available
+              }
+            })
+            for (const tag of it.tags) {
+              await tx.menuItemTag.create({ data: { itemId: newItem.id, tag: tag.tag } })
             }
-          })
-          for (const t of it.tags) {
-            await prisma.menuItemTag.create({ data: { itemId: newItem.id, tag: t.tag } })
           }
         }
       }
-    }
+
+    })
 
     return NextResponse.json({ ok: true })
   } catch (error) {

@@ -17,6 +17,9 @@ function classifyKey(key: string) {
 }
 
 export async function GET() {
+  if (process.env.VERCEL_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
+  }
   const vercelEnv = (process.env.VERCEL_ENV || '').trim() || null
   const ordersWebhookRequired = vercelEnv === 'production'
 

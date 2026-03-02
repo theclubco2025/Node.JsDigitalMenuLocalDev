@@ -8,6 +8,21 @@ export const dynamic = 'force-dynamic'
 
 const StatusSchema = z.enum(['NEW', 'PREPARING', 'READY', 'COMPLETED', 'CANCELED'])
 
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  NEW: ['PREPARING', 'CANCELED'],
+  PREPARING: ['READY', 'CANCELED'],
+  READY: ['COMPLETED', 'CANCELED'],
+  COMPLETED: [],
+  CANCELED: [],
+  PENDING_PAYMENT: [],
+}
+
+function isValidTransition(from: string, to: string): boolean {
+  const allowed = VALID_TRANSITIONS[from]
+  if (!allowed) return false
+  return allowed.includes(to)
+}
+
 function kitchenPinFromSettings(settings: unknown): string {
   if (!settings || typeof settings !== 'object') return ''
   const v = (settings as Record<string, unknown>).kitchenPin
@@ -40,7 +55,8 @@ type SmsResult =
   | { status: 'failed'; error: string }
 
 function safeErr(e: unknown): string {
-  const msg = (e instanceof Error ? e.message : String(e || '')).trim()
+  let msg = (e instanceof Error ? e.message : String(e || '')).trim()
+  msg = msg.replace(/\+?\d{10,15}/g, '[REDACTED_PHONE]')
   return msg.length > 220 ? `${msg.slice(0, 220)}…` : (msg || 'unknown_error')
 }
 
@@ -88,18 +104,6 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
     if (!o.customerPhone) return { status: 'skipped', reason: 'missing_phone' }
     if (o.readySmsSentAt) return { status: 'skipped', reason: 'already_sent' }
 
-    await prisma.order.update({
-      where: { id: o.id },
-      data: {
-        twilioReadyAttemptCount: { increment: 1 },
-        twilioReadyLastAttemptAt: new Date(),
-        twilioReadyTo: o.customerPhone,
-        twilioReadyStatus: null,
-        twilioReadyErrorCode: null,
-        twilioReadyErrorMessage: null,
-      },
-    }).catch(() => {})
-
     const claimed = await prisma.order.updateMany({
       where: {
         id: args.orderId,
@@ -112,6 +116,15 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
       data: { readySmsSentAt: new Date() },
     })
     if (claimed.count !== 1) return { status: 'skipped', reason: 'already_sent' }
+
+    await prisma.order.update({
+      where: { id: o.id },
+      data: {
+        twilioReadyAttemptCount: { increment: 1 },
+        twilioReadyLastAttemptAt: new Date(),
+        twilioReadyTo: o.customerPhone,
+      },
+    }).catch(() => {})
 
     const isDineIn = Boolean((o.tableNumber || '').trim())
     try {
@@ -164,9 +177,17 @@ export async function GET(req: NextRequest) {
     if (!t) return NextResponse.json({ ok: false, error: 'Tenant not found' }, { status: 404 })
     if (!isAuthorized(req, tenant, t.settings)) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
 
-    const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, tenantId: true } })
+    const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true, tenantId: true, status: true, paidAt: true } })
     if (!order) return NextResponse.json({ ok: false, error: 'Order not found' }, { status: 404 })
     if (order.tenantId !== t.id) return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 })
+
+    if (!isValidTransition(order.status, statusParsed.data)) {
+      return NextResponse.json({ ok: false, error: `Invalid transition: ${order.status} → ${statusParsed.data}` }, { status: 400 })
+    }
+
+    if (!order.paidAt && order.status === 'PENDING_PAYMENT') {
+      return NextResponse.json({ ok: false, error: 'Cannot update unpaid order' }, { status: 400 })
+    }
 
     const updated = await prisma.order.update({
       where: { id: orderId },

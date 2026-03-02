@@ -8,7 +8,7 @@ export default function PrivacyPage() {
     <main className="min-h-screen bg-white text-neutral-950">
       <div className="mx-auto max-w-3xl px-4 py-12">
         <h1 className="text-3xl font-semibold tracking-tight">Privacy</h1>
-        <p className="mt-3 text-sm text-neutral-600">Last updated: {new Date().toLocaleDateString()}</p>
+        <p className="mt-3 text-sm text-neutral-600">Last updated: March 1, 2025</p>
 
         <div className="prose prose-neutral mt-8 max-w-none">
           <p>

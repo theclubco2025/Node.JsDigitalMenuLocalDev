@@ -115,7 +115,7 @@ function LoginContent() {
             </div>
           </form>
 
-          {process.env.GOOGLE_CLIENT_ID && (
+          {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">

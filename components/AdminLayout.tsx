@@ -83,7 +83,7 @@ export default function AdminLayout({ children, requiredRole }: AdminLayoutProps
               <h1 className="text-lg font-semibold text-gray-900">
                 {role === 'SUPER_ADMIN' ? 'Super Admin' : 'Restaurant Admin'}
               </h1>
-              <nav className="hidden sm:flex items-center gap-2 text-sm">
+              <nav className="flex items-center gap-2 text-sm">
                 <a
                   href="/admin/menu"
                   className={`inline-flex items-center justify-center rounded-lg border px-3 py-1.5 font-semibold transition ${

@@ -56,9 +56,9 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Menu API error:', error)
-    const detail = error instanceof Error ? error.message : String(error)
+    const detail = process.env.NODE_ENV !== 'production' ? (error instanceof Error ? error.message : String(error)) : undefined
     return NextResponse.json(
-      { error: 'Internal server error', detail },
+      { error: 'Internal server error', ...(detail ? { detail } : {}) },
       { status: 500, headers: { 'Cache-Control': 'no-store' } }
     )
   }
