@@ -7,8 +7,10 @@ export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/') && request.method === 'OPTIONS') {
     const res = NextResponse.json({ ok: true })
     const isAdminApi = request.nextUrl.pathname.startsWith('/api/admin/')
+    const isAssistantApi = request.nextUrl.pathname === '/api/assistant'
     // Admin APIs are same-origin only: do NOT emit permissive CORS headers.
-    if (!isAdminApi) {
+    // Assistant API uses its own CORS logic (ASSISTANT_ALLOWED_ORIGINS).
+    if (!isAdminApi && !isAssistantApi) {
       const origin = request.headers.get('origin') || '*'
       const isAssistant = request.nextUrl.pathname.startsWith('/api/assistant')
       if (isAssistant) {
@@ -28,6 +30,14 @@ export function middleware(request: NextRequest) {
       res.headers.set('Access-Control-Allow-Origin', origin)
       res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, HEAD')
       res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
+      res.headers.set('Vary', 'Origin')
+    } else if (isAssistantApi) {
+      const origin = request.headers.get('origin') || ''
+      const allowList = (process.env.ASSISTANT_ALLOWED_ORIGINS || '').trim()
+      const allowed = !allowList || allowList.split(',').map(o => o.trim().toLowerCase()).includes(origin.toLowerCase())
+      res.headers.set('Access-Control-Allow-Origin', allowed && origin ? origin : 'null')
+      res.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
+      res.headers.set('Access-Control-Allow-Headers', 'Content-Type')
       res.headers.set('Vary', 'Origin')
     }
     return res
