@@ -117,13 +117,14 @@ export default function BillingSuccessPage() {
           </a>
 
           <div className="mt-5 text-sm font-medium">Your QR code</div>
-          <div className="mt-3 flex items-start gap-4">
+          <div className="mt-3 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrUrl} alt="Menu QR code" className="h-44 w-44 rounded-xl border border-neutral-200 bg-white" />
-            <div className="text-sm text-neutral-700">
+            <img src={qrUrl} alt="Menu QR code" className="h-56 w-56 rounded-xl border border-neutral-200 bg-white sm:h-52 sm:w-52 md:h-64 md:w-64" />
+            <div className="text-center text-sm text-neutral-700 sm:text-left">
               <div>This QR points to your live menu.</div>
+              <div className="mt-2 text-xs text-neutral-500">Print this QR code and display it at your restaurant entrance, tables, or anywhere customers can scan it.</div>
               <a
-                className="mt-3 inline-flex items-center rounded-2xl bg-neutral-900 px-5 py-3 text-sm text-white"
+                className="mt-4 inline-flex items-center rounded-2xl bg-neutral-900 px-5 py-3 text-sm text-white hover:bg-neutral-800"
                 href={qrUrl}
                 target="_blank"
                 rel="noreferrer"

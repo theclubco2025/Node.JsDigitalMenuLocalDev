@@ -92,8 +92,8 @@ export default function Landing() {
                 <div className="md:col-span-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
                   <div className="text-sm font-semibold text-neutral-950">See it live</div>
                   <p className="mt-1 text-xs text-neutral-600">Scan the demo QR on your phone.</p>
-                  <div className="mt-3 flex items-center gap-4">
-                    <div className="grid h-28 w-28 place-items-center rounded-xl border border-dashed border-neutral-300 bg-white">
+                  <div className="mt-3 flex flex-col items-center gap-3 md:items-start">
+                    <div className="grid h-36 w-36 place-items-center rounded-xl border border-dashed border-neutral-300 bg-white md:h-32 md:w-32 lg:h-40 lg:w-40">
                       <img
                         src={LANDING.qrDemo}
                         alt="Demo menu QR"
