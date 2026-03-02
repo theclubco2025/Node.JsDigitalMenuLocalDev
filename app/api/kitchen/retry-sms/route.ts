@@ -36,7 +36,8 @@ function isAuthorized(req: NextRequest, tenantSlug: string, settings: unknown): 
 }
 
 function safeErr(e: unknown): string {
-  const msg = (e instanceof Error ? e.message : String(e || '')).trim()
+  let msg = (e instanceof Error ? e.message : String(e || '')).trim()
+  msg = msg.replace(/\+?\d{10,15}/g, '[REDACTED_PHONE]')
   return msg.length > 220 ? `${msg.slice(0, 220)}…` : (msg || 'unknown_error')
 }
 
