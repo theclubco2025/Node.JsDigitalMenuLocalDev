@@ -32,3 +32,8 @@ Standard dev commands are in `package.json` scripts. Key ones:
 - **pnpm build scripts**: pnpm v10 blocks build scripts for untrusted packages. After `pnpm install`, esbuild's binary may not be installed. If vitest fails with esbuild errors, run: `node node_modules/.pnpm/esbuild@0.21.5/node_modules/esbuild/install.js` (version may vary — check `node_modules/.pnpm/esbuild@*/`).
 - **File-based tenant data fallback**: The app falls back to JSON files in `data/tenants/<slug>/` when database records are missing. The "demo" tenant uses file-based data from `data/tenants/demo/`.
 - **Optional services**: OpenAI, Stripe, Twilio, and Google OAuth all degrade gracefully when their environment variables are not set. The menu browsing experience works fully without them.
+- **Rate limiting**: Distributed rate limiting uses Upstash Redis (`@upstash/ratelimit`). Requires `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. When not configured, rate limiting is silently skipped (graceful degradation).
+- **Assistant CORS**: The `/api/assistant` endpoint uses `ASSISTANT_ALLOWED_ORIGINS` (comma-separated) to restrict cross-origin requests. When not set, all origins are allowed (development default).
+- **Kitchen PINs**: All kitchen PINs are stored in `Tenant.settings.kitchenPin` — there are no hardcoded universal PINs. The demo tenant's PIN must be set via the seed script or admin panel.
+- **Ops health**: `GET /api/admin/ops/health` requires `X-Admin-Token` header and returns the status of all configured services (DB, Stripe, Upstash, AI, Twilio).
+- **Security docs**: See `docs/GO_NO_GO.md` for the production launch checklist and `docs/SECURITY_ROTATION.md` for the secret rotation runbook.
