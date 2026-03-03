@@ -1,498 +1,572 @@
 /* eslint-disable @next/next/no-img-element */
 export const metadata = {
-  title: 'TCC Menus',
+  title: 'TCC Menus — Digital Menus for Restaurants',
   description:
-    'The future of restaurant menus: smart QR menus, optional dine-in ordering, kitchen workflow, and admin analytics — all from one QR.',
+    'Transform your restaurant with smart QR menus. Customers scan, browse, ask questions, and order — all from their phone. No app download required.',
 }
 
 const LANDING = {
   calendlyUrl: 'https://calendly.com/tccsolutions2025/30min',
-  primaryCtaLabel: 'Book Onboarding',
-  contactEmail: '',
   logo: '/assets/tcc-logo-horizontal.png',
   qrDemo: '/assets/tcc-demo-qr.png',
-  demoUrlLabel: 'tccmenus.com/demo',
 }
 
 export default function Landing() {
   return (
-    <main className="bg-white text-neutral-950">
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-neutral-50 to-white" />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-2 md:py-24">
-          <div>
-            <h1 className="font-semibold tracking-tight" style={{ fontSize: 'clamp(2.1rem, 4.8vw, 3.75rem)' }}>
-              The Future of Restaurant Menus
-            </h1>
-            <p className="mt-4 text-lg text-neutral-700">
-              The easiest way to manage menus, ordering, and kitchen workflow — all from one QR.
+    <main className="bg-white text-neutral-900">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-white">
+        <div className="mx-auto max-w-6xl px-4 py-16 md:py-24">
+          <div className="grid items-center gap-12 md:grid-cols-2">
+            <div>
+              <div className="mb-6">
+                <img src={LANDING.logo} alt="TCC Menus" className="h-12" loading="lazy" />
+              </div>
+              <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
+                Your Menu,<br />
+                <span className="text-emerald-600">Smarter</span>
+              </h1>
+              <p className="mt-6 text-xl text-neutral-700">
+                Give your customers a beautiful digital menu they can browse, search, and order from — 
+                all by scanning a simple QR code. No app download. No complicated setup.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <a
+                  href={LANDING.calendlyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:bg-emerald-700 transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Book a Free Demo
+                </a>
+                <a
+                  href="/demo"
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-neutral-900 px-8 py-4 text-lg font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Try Live Demo
+                </a>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-xl">
+                <div className="text-center">
+                  <p className="text-sm font-medium text-neutral-600 mb-4">Scan to see a live demo</p>
+                  <div className="inline-block rounded-2xl border-4 border-emerald-100 p-4 bg-white">
+                    <img
+                      src={LANDING.qrDemo}
+                      alt="Demo menu QR"
+                      className="h-48 w-48 rounded-xl"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="mt-4 text-sm text-neutral-500">tccmenus.com/demo</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Bar */}
+      <section className="border-y border-neutral-200 bg-neutral-50 py-6">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-neutral-600">
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>No app download required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>Works on any phone</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>Setup in one day</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>Cancel anytime</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem/Solution */}
+      <section className="mx-auto max-w-6xl px-4 py-16 md:py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Running a restaurant is hard enough
+          </h2>
+          <p className="mt-4 text-xl text-neutral-600 max-w-3xl mx-auto">
+            You shouldn&apos;t have to worry about outdated paper menus, answering the same questions all day, 
+            or managing a complicated tech system. TCC Menus handles it all.
+          </p>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-3">
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-6">
+            <div className="text-3xl mb-4">😤</div>
+            <h3 className="text-lg font-semibold text-red-900">The Old Way</h3>
+            <ul className="mt-3 space-y-2 text-red-800">
+              <li>• Print new menus every time prices change</li>
+              <li>• Customers wait for a server to answer questions</li>
+              <li>• Handwritten orders get lost or misread</li>
+              <li>• No idea which items are actually popular</li>
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-lg relative">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-semibold px-4 py-1 rounded-full">
+              WITH TCC MENUS
+            </div>
+            <div className="text-3xl mb-4 mt-2">✨</div>
+            <h3 className="text-lg font-semibold text-emerald-900">The Smart Way</h3>
+            <ul className="mt-3 space-y-2 text-neutral-700">
+              <li>• Update your menu instantly from any device</li>
+              <li>• AI answers customer questions 24/7</li>
+              <li>• Orders go straight to the kitchen</li>
+              <li>• See exactly what&apos;s selling and what&apos;s not</li>
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+            <div className="text-3xl mb-4">🎯</div>
+            <h3 className="text-lg font-semibold text-emerald-900">The Results</h3>
+            <ul className="mt-3 space-y-2 text-emerald-800">
+              <li>• Faster table turnover</li>
+              <li>• Fewer order mistakes</li>
+              <li>• Happier customers</li>
+              <li>• More time for what matters</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="bg-neutral-900 text-white py-16 md:py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+              Everything You Need, Nothing You Don&apos;t
+            </h2>
+            <p className="mt-4 text-xl text-neutral-300 max-w-2xl mx-auto">
+              One system that works together — from your customer&apos;s phone to your kitchen to your reports.
             </p>
-            <p className="mt-3 text-sm text-neutral-600">No POS overhaul required. Integrates when you want it to.</p>
-            <p className="mt-1 text-sm text-neutral-600">POS integrations currently available for Clover and Square.</p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Feature 1 */}
+            <div className="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+              <div className="h-12 w-12 rounded-xl bg-emerald-600 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Beautiful QR Menu</h3>
+              <p className="text-neutral-300">
+                Customers scan a QR code and instantly see your full menu on their phone. 
+                Beautiful photos, clear descriptions, dietary info — all easy to browse.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+              <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Smart AI Assistant</h3>
+              <p className="text-neutral-300">
+                &quot;Is the pasta gluten-free?&quot; &quot;What&apos;s good for kids?&quot; Your AI assistant 
+                answers questions about YOUR menu — not generic internet answers.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+              <div className="h-12 w-12 rounded-xl bg-orange-600 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Easy Ordering</h3>
+              <p className="text-neutral-300">
+                Customers can add items to their order and pay right from their phone. 
+                For dine-in, they just enter their table number. For pickup, they get a code.
+              </p>
+            </div>
+
+            {/* Feature 4 */}
+            <div className="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+              <div className="h-12 w-12 rounded-xl bg-purple-600 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Kitchen Display</h3>
+              <p className="text-neutral-300">
+                Orders appear on a screen in your kitchen the moment they&apos;re placed. 
+                Your team moves them from &quot;New&quot; to &quot;Preparing&quot; to &quot;Ready&quot; with one tap.
+              </p>
+            </div>
+
+            {/* Feature 5 */}
+            <div className="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+              <div className="h-12 w-12 rounded-xl bg-pink-600 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Easy Menu Updates</h3>
+              <p className="text-neutral-300">
+                Change prices, add specials, mark items sold out — all from your phone or computer. 
+                Changes show up instantly. No reprinting, no waiting.
+              </p>
+            </div>
+
+            {/* Feature 6 */}
+            <div className="rounded-2xl border border-neutral-700 bg-neutral-800 p-6">
+              <div className="h-12 w-12 rounded-xl bg-teal-600 flex items-center justify-center mb-4">
+                <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Simple Reports</h3>
+              <p className="text-neutral-300">
+                See what&apos;s selling, what&apos;s not, and when you&apos;re busiest. 
+                No spreadsheets — just clear numbers that help you make better decisions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="mx-auto max-w-6xl px-4 py-16 md:py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            How It Works
+          </h2>
+          <p className="mt-4 text-xl text-neutral-600">
+            Simple for your customers. Simple for your team.
+          </p>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-4">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+              <span className="text-2xl font-bold text-emerald-600">1</span>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Customer Scans</h3>
+            <p className="text-neutral-600">
+              They scan the QR code on their table with any smartphone camera. Your menu opens instantly.
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+              <span className="text-2xl font-bold text-emerald-600">2</span>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">They Browse &amp; Ask</h3>
+            <p className="text-neutral-600">
+              They explore your menu, see photos, check ingredients, and ask the AI any questions.
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+              <span className="text-2xl font-bold text-emerald-600">3</span>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">They Order &amp; Pay</h3>
+            <p className="text-neutral-600">
+              They add items, enter their table number (or pickup), and pay securely on their phone.
+            </p>
+          </div>
+
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+              <span className="text-2xl font-bold text-emerald-600">4</span>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Kitchen Gets It</h3>
+            <p className="text-neutral-600">
+              The order appears on your kitchen screen instantly. Your team prepares it and marks it ready.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="bg-gradient-to-b from-neutral-50 to-white py-16 md:py-24" id="pricing">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+              Simple, Honest Pricing
+            </h2>
+            <p className="mt-4 text-xl text-neutral-600">
+              Choose the plan that fits your restaurant. No hidden fees. Cancel anytime.
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3 max-w-5xl mx-auto">
+            {/* Starter */}
+            <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
+              <div className="text-sm font-semibold text-emerald-600 uppercase tracking-wide">Starter</div>
+              <div className="mt-4">
+                <span className="text-4xl font-bold">$299</span>
+                <span className="text-neutral-600"> setup</span>
+              </div>
+              <div className="mt-1 text-neutral-600">
+                + <span className="font-semibold">$49</span>/month
+              </div>
+              <p className="mt-4 text-neutral-600">
+                Perfect for small cafes and food trucks just getting started with digital menus.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {['QR menu for up to 50 items', 'Basic branding (your logo + colors)', 'Email support', 'Self-service menu updates'].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <svg className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-neutral-700">{item}</span>
+                  </li>
+                ))}
+              </ul>
               <a
                 href={LANDING.calendlyUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center rounded-2xl bg-neutral-950 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-neutral-800"
+                className="mt-8 block w-full rounded-full border-2 border-neutral-900 py-3 text-center font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors"
               >
-                {LANDING.primaryCtaLabel}
+                Get Started
               </a>
+            </div>
+
+            {/* Professional - Most Popular */}
+            <div className="rounded-3xl border-2 border-emerald-600 bg-white p-8 shadow-xl relative">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wide">
+                Most Popular
+              </div>
+              <div className="text-sm font-semibold text-emerald-600 uppercase tracking-wide">Professional</div>
+              <div className="mt-4">
+                <span className="text-4xl font-bold">$499</span>
+                <span className="text-neutral-600"> setup</span>
+              </div>
+              <div className="mt-1 text-neutral-600">
+                + <span className="font-semibold">$99</span>/month
+              </div>
+              <p className="mt-4 text-neutral-600">
+                The complete solution for restaurants ready to modernize their entire operation.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  'Unlimited menu items',
+                  'Full branding customization',
+                  'AI menu assistant',
+                  'Online ordering + payments',
+                  'Kitchen display system',
+                  'Priority phone support',
+                  'Analytics dashboard',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <svg className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-neutral-700">{item}</span>
+                  </li>
+                ))}
+              </ul>
               <a
-                href="/demo"
-                className="inline-flex items-center rounded-2xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-950 shadow-sm hover:bg-neutral-50"
+                href={LANDING.calendlyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-8 block w-full rounded-full bg-emerald-600 py-3 text-center font-semibold text-white hover:bg-emerald-700 transition-colors"
               >
-                Try Live Demo
+                Get Started
               </a>
             </div>
-            <p className="mt-4 text-xs text-neutral-500">
-              Menu editing • optional table-number dine-in ordering • kitchen display • admin analytics
-            </p>
-          </div>
-          <div className="relative">
-            <div className="rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-center">
-                <img src={LANDING.logo} alt="TCC Menus" className="w-full max-w-[320px]" loading="lazy" decoding="async" />
+
+            {/* Enterprise */}
+            <div className="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
+              <div className="text-sm font-semibold text-emerald-600 uppercase tracking-wide">Enterprise</div>
+              <div className="mt-4">
+                <span className="text-4xl font-bold">$799</span>
+                <span className="text-neutral-600"> setup</span>
               </div>
-
-              <div className="mt-5 grid gap-4 md:grid-cols-5">
-                <div className="md:col-span-3">
-                  <div className="mx-auto w-full max-w-[360px] rounded-[2.25rem] border border-neutral-200 bg-neutral-950 p-2 shadow-sm">
-                    <div className="rounded-[1.85rem] bg-white p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs font-semibold text-neutral-950">Menu</div>
-                        <div className="rounded-full border border-neutral-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-neutral-700">
-                          Dine‑In • Table 12
-                        </div>
-                      </div>
-
-                      <div className="mt-3 space-y-2">
-                        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                          <div className="text-xs font-semibold text-neutral-950">Ahi Tartare</div>
-                          <div className="mt-1 text-[11px] text-neutral-600">Ask AI: “Is this gluten‑free?”</div>
-                        </div>
-                        <div className="flex justify-end">
-                          <div className="max-w-[75%] rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-[11px] text-neutral-800 shadow-sm">
-                            AI: “Based on your menu, it’s listed with …”
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 pt-1">
-                          <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center text-[11px] font-semibold text-neutral-950">
-                            Add to Plate
-                          </div>
-                          <div className="rounded-xl bg-neutral-950 px-3 py-2 text-center text-[11px] font-semibold text-white">
-                            Checkout
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="md:col-span-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-                  <div className="text-sm font-semibold text-neutral-950">See it live</div>
-                  <p className="mt-1 text-xs text-neutral-600">Scan the demo QR on your phone.</p>
-                  <div className="mt-3 flex flex-col items-center gap-3 md:items-start">
-                    <div className="grid h-36 w-36 place-items-center rounded-xl border border-dashed border-neutral-300 bg-white md:h-32 md:w-32 lg:h-40 lg:w-40">
-                      <img
-                        src={LANDING.qrDemo}
-                        alt="Demo menu QR"
-                        className="h-full w-full rounded-xl object-contain"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                    <div className="text-xs text-neutral-500">{LANDING.demoUrlLabel}</div>
-                  </div>
-                </div>
+              <div className="mt-1 text-neutral-600">
+                + <span className="font-semibold">$149</span>/month
               </div>
+              <p className="mt-4 text-neutral-600">
+                For multi-location restaurants and chains that need advanced features.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {[
+                  'Everything in Professional',
+                  'Multiple locations',
+                  'POS integration (Clover, Square)',
+                  'Dedicated account manager',
+                  'Custom training session',
+                  'White-label options',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <svg className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-neutral-700">{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={LANDING.calendlyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-8 block w-full rounded-full border-2 border-neutral-900 py-3 text-center font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors"
+              >
+                Contact Sales
+              </a>
             </div>
           </div>
+
+          <p className="mt-8 text-center text-neutral-500">
+            All plans include free QR codes, secure payment processing, and a 30-day money-back guarantee.
+          </p>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-8">
-        <div className="grid gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm md:grid-cols-4">
-          {[
-            { title: 'Smart QR Menu', body: 'Modern, fast, mobile‑first menus that stay up to date.' },
-            { title: 'Optional Dine‑In Ordering', body: 'Guests can enter a table number and order from their phone.' },
-            { title: 'Kitchen Display System', body: 'Orders flow to the kitchen: New → Preparing → Ready.' },
-            { title: 'Admin Analytics', body: 'See top items, ordering patterns, and operational insights.' },
-          ].map((x) => (
-            <div key={x.title} className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-neutral-950 text-sm font-semibold text-white">
-                  {x.title === 'Smart QR Menu' ? '▦' : x.title === 'Optional Dine‑In Ordering' ? '⌁' : x.title === 'Kitchen Display System' ? '▤' : '▣'}
-                </span>
-                <div className="text-sm font-semibold text-neutral-950">{x.title}</div>
-              </div>
-              <p className="mt-2 text-sm text-neutral-700">{x.body}</p>
-            </div>
-          ))}
+      {/* FAQ Section */}
+      <section className="mx-auto max-w-4xl px-4 py-16 md:py-24" id="faq">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Common Questions
+          </h2>
         </div>
-      </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid items-start gap-8 md:grid-cols-5">
-          <div className="md:col-span-2">
-            <h2 className="text-2xl font-semibold tracking-tight">What TCC Menus does</h2>
-            <p className="mt-3 text-neutral-700">
-              A clean guest experience + a practical kitchen workflow — built to modernize without forcing a POS replacement.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 md:col-span-3">
-            {[
-              {
-                title: 'Modern QR Menu',
-                body: 'Fast, mobile‑first menus that are always up to date.',
-              },
-              {
-                title: 'Smart Menu Assistant',
-                body: 'Guests ask about ingredients, allergens, and recommendations — answered from your menu data (not the internet).',
-              },
-              {
-                title: 'Optional Dine‑In Ordering',
-                body: 'Enable table‑number ordering when you want a low‑contact, high‑efficiency workflow.',
-              },
-              {
-                title: 'Kitchen Display System',
-                body: 'Orders flow to the kitchen in real time: New → Preparing → Ready.',
-              },
-            ].map((card) => (
-              <div key={card.title} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-                <h3 className="text-sm font-semibold text-neutral-950">{card.title}</h3>
-                <p className="mt-2 text-sm text-neutral-700">{card.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid items-start gap-8 md:grid-cols-5">
-          <div className="md:col-span-2">
-            <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
-            <p className="mt-3 text-neutral-700">Simple for guests. Practical for kitchens.</p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 md:col-span-3">
-            {[
-              { step: '1', title: 'Scan', body: 'Guests open your menu instantly.' },
-              {
-                step: '2',
-                title: 'Ask + Order',
-                body: 'They ask questions, customize items, and place dine‑in (table number) or pickup orders. Pickup orders include a pickup code shown after payment and visible to the kitchen.',
-              },
-              { step: '3', title: 'Kitchen runs the board', body: 'Orders appear on the KDS and move New → Preparing → Ready.' },
-              { step: '4', title: 'Admins get insights', body: 'Analytics helps reduce waste and increase sales.' },
-            ].map((card) => (
-              <div key={card.step} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-9 w-9 place-items-center rounded-xl bg-neutral-950 text-sm font-semibold text-white">
-                    {card.step}
-                  </div>
-                  <h3 className="text-sm font-semibold text-neutral-950">{card.title}</h3>
-                </div>
-                <p className="mt-2 text-sm text-neutral-700">{card.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid gap-6 rounded-3xl border border-neutral-200 bg-neutral-50 p-6 shadow-sm md:grid-cols-3">
+        <div className="space-y-4">
           {[
             {
-              title: 'Modernize without replacing your POS',
-              body: 'Use TCC Menus on its own, or integrate when you’re ready. No overhaul required.',
+              q: 'Do my customers need to download an app?',
+              a: 'No! That\'s the beauty of it. Customers just scan the QR code with their regular phone camera and your menu opens right in their browser. Works on any iPhone or Android.',
             },
             {
-              title: 'Reduce staff stress',
-              body: 'Fewer questions. Fewer mistakes. Faster service — without changing the vibe of your restaurant.',
+              q: 'How long does setup take?',
+              a: 'Most restaurants are up and running in one day. We handle importing your menu, setting up your branding, and creating your QR codes. You just need to put the QR codes on your tables.',
             },
             {
-              title: 'Run a cleaner, smarter kitchen',
-              body: 'Real‑time tickets, clear statuses, and a board designed to keep service moving.',
-            },
-          ].map((x) => (
-            <div key={x.title} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-neutral-950">{x.title}</h3>
-              <p className="mt-2 text-sm text-neutral-700">{x.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-12">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">See it in action</h2>
-            <p className="mt-2 text-neutral-700">A quick look at the full guest → kitchen → admin flow.</p>
-          </div>
-          <a
-            href="/demo"
-            className="hidden items-center rounded-2xl border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-950 shadow-sm hover:bg-neutral-50 md:inline-flex"
-          >
-            Try the Live Demo
-          </a>
-        </div>
-
-        <div className="mt-6 -mx-4 overflow-x-auto px-4">
-          <div className="flex min-w-max gap-4 pb-2">
-            {[
-              { label: 'Menu browsing', top: 'Menu', badge: '' },
-              { label: 'AI Q&A', top: 'Ask AI', badge: '' },
-              { label: 'Add to Plate', top: 'Plate', badge: '' },
-              { label: 'Table number entry', top: 'Dine‑In', badge: 'Table 12' },
-              { label: 'Checkout', top: 'Checkout', badge: '' },
-              { label: 'KDS', top: 'Kitchen', badge: 'New → Ready' },
-              { label: 'Admin analytics', top: 'Admin', badge: 'Insights' },
-            ].map((frame) => (
-              <div key={frame.label} className="w-[230px] shrink-0">
-                <div className="rounded-[2.1rem] border border-neutral-200 bg-neutral-950 p-2 shadow-sm">
-                  <div className="rounded-[1.7rem] bg-white p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-[11px] font-semibold text-neutral-950">{frame.top}</div>
-                      {frame.badge ? (
-                        <div className="rounded-full border border-neutral-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-neutral-700">
-                          {frame.badge}
-                        </div>
-                      ) : (
-                        <div className="h-5 w-10 rounded-full bg-neutral-100" />
-                      )}
-                    </div>
-                    {frame.label === 'Menu browsing' ? (
-                      <div className="mt-3 space-y-2">
-                        {[
-                          { name: 'Ahi Tartare', tags: 'GF • Citrus', price: '$18' },
-                          { name: 'Turnip Fries', tags: 'Shareable', price: '$12' },
-                          { name: 'Caesar', tags: 'Add chicken', price: '$14' },
-                        ].map((row) => (
-                          <div key={row.name} className="rounded-xl border border-neutral-200 bg-neutral-50 p-2">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <div className="text-[11px] font-semibold text-neutral-950">{row.name}</div>
-                                <div className="mt-0.5 text-[10px] text-neutral-600">{row.tags}</div>
-                              </div>
-                              <div className="text-[10px] font-semibold text-neutral-700">{row.price}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : frame.label === 'AI Q&A' ? (
-                      <div className="mt-3 space-y-2">
-                        <div className="flex justify-end">
-                          <div className="max-w-[85%] rounded-2xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-[10px] text-neutral-800">
-                            “Is the calamari spicy?”
-                          </div>
-                        </div>
-                        <div className="flex justify-start">
-                          <div className="max-w-[90%] rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-[10px] text-neutral-800 shadow-sm">
-                            Based on your menu, it’s served with a mild chili aioli. Want a no‑spice option?
-                          </div>
-                        </div>
-                        <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-[10px] text-neutral-600">
-                          Ask about ingredients, allergens, or recommendations
-                        </div>
-                      </div>
-                    ) : frame.label === 'Add to Plate' ? (
-                      <div className="mt-3 space-y-2">
-                        {[
-                          { qty: '1×', name: 'Ahi Tartare', price: '$18' },
-                          { qty: '2×', name: 'Turnip Fries', price: '$24' },
-                        ].map((row) => (
-                          <div key={row.name} className="flex items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2">
-                            <div className="text-[10px] text-neutral-600">
-                              <span className="font-semibold text-neutral-900">{row.qty}</span> {row.name}
-                            </div>
-                            <div className="text-[10px] font-semibold text-neutral-700">{row.price}</div>
-                          </div>
-                        ))}
-                        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2">
-                          <div className="text-[10px] font-semibold text-neutral-900">Total</div>
-                          <div className="text-[10px] font-semibold text-neutral-900">$42</div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 pt-1">
-                          <div className="rounded-xl border border-neutral-200 bg-white py-2 text-center text-[10px] font-semibold text-neutral-950">
-                            Add note
-                          </div>
-                          <div className="rounded-xl bg-neutral-950 py-2 text-center text-[10px] font-semibold text-white">
-                            Checkout
-                          </div>
-                        </div>
-                      </div>
-                    ) : frame.label === 'Table number entry' ? (
-                      <div className="mt-3 space-y-2">
-                        <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-[10px] text-neutral-600">
-                          Table number
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2">
-                          <div className="text-[10px] text-neutral-700">12</div>
-                          <div className="text-[10px] text-neutral-500">Dine‑In</div>
-                        </div>
-                        <div className="rounded-xl bg-neutral-950 py-2 text-center text-[10px] font-semibold text-white">
-                          Continue
-                        </div>
-                      </div>
-                    ) : frame.label === 'Checkout' ? (
-                      <div className="mt-3 space-y-2">
-                        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-2">
-                          <div className="text-[11px] font-semibold text-neutral-950">Pickup</div>
-                          <div className="mt-0.5 text-[10px] text-neutral-600">ASAP • Contact info</div>
-                        </div>
-                        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2">
-                          <div className="text-[10px] text-neutral-700">Order total</div>
-                          <div className="text-[10px] font-semibold text-neutral-900">$42</div>
-                        </div>
-                        <div className="rounded-xl bg-neutral-950 py-2 text-center text-[10px] font-semibold text-white">
-                          Pay securely
-                        </div>
-                        <div className="text-[10px] text-neutral-500">Pickup code shown after payment</div>
-                      </div>
-                    ) : frame.label === 'KDS' ? (
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        {[
-                          { col: 'New', has: true },
-                          { col: 'Prep', has: false },
-                          { col: 'Ready', has: false },
-                        ].map((c) => (
-                          <div key={c.col} className="rounded-xl border border-neutral-200 bg-neutral-50 p-2">
-                            <div className="text-[9px] font-semibold text-neutral-700">{c.col}</div>
-                            {c.has ? (
-                              <div className="mt-2 rounded-lg border border-neutral-200 bg-white p-2">
-                                <div className="text-[9px] font-semibold text-neutral-950">Order #12</div>
-                                <div className="mt-1 text-[9px] text-neutral-600">Pickup code</div>
-                                <div className="text-[10px] font-semibold text-neutral-950">4821</div>
-                              </div>
-                            ) : (
-                              <div className="mt-2 h-10 rounded-lg border border-neutral-200 bg-white/60" />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mt-3 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          {[
-                            { k: 'Paid', v: '24' },
-                            { k: 'Pickup', v: '22' },
-                            { k: 'Dine‑in', v: '2' },
-                            { k: 'AI', v: '8' },
-                          ].map((kpi) => (
-                            <div key={kpi.k} className="rounded-xl border border-neutral-200 bg-neutral-50 p-2">
-                              <div className="text-[12px] font-semibold text-neutral-950">{kpi.v}</div>
-                              <div className="text-[9px] text-neutral-600">{kpi.k}</div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="rounded-xl border border-neutral-200 bg-white p-2">
-                          <div className="text-[9px] font-semibold text-neutral-700">Top items</div>
-                          <div className="mt-2 space-y-1">
-                            <div className="h-2 w-[90%] rounded bg-neutral-200" />
-                            <div className="h-2 w-[70%] rounded bg-neutral-200" />
-                            <div className="h-2 w-[55%] rounded bg-neutral-200" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-2 text-xs font-medium text-neutral-700">{frame.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 md:hidden">
-          <a
-            href="/demo"
-            className="inline-flex w-full items-center justify-center rounded-2xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-950 shadow-sm hover:bg-neutral-50"
-          >
-            Try the Live Demo
-          </a>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-12" id="pricing">
-        <div className="grid items-center gap-8 rounded-3xl border border-neutral-200 bg-white p-6 shadow-sm md:grid-cols-2">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">Simple, transparent pricing</h2>
-            <p className="mt-2 text-neutral-700">Month‑to‑month. Cancel anytime.</p>
-            <p className="mt-2 text-sm text-neutral-600">
-              Pricing is shared during onboarding so we can tailor it to your menu size and workflow.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-6">
-            <div className="text-sm font-semibold text-neutral-950">Ready to launch?</div>
-            <p className="mt-1 text-sm text-neutral-700">Book onboarding and we’ll tailor the setup to your restaurant.</p>
-            <a
-              href={LANDING.calendlyUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-flex items-center rounded-2xl bg-neutral-950 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-neutral-800"
-            >
-              {LANDING.primaryCtaLabel}
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 py-12" id="faq">
-        <h2 className="text-2xl font-semibold tracking-tight">FAQ</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {[
-            {
-              q: 'Do I need to replace my POS?',
-              a: 'No. TCC Menus works on its own and integrates when you want it to.',
+              q: 'Do I need to replace my current POS system?',
+              a: 'No. TCC Menus works completely on its own. If you want to integrate with your POS later (we support Clover and Square), that\'s optional.',
             },
             {
-              q: 'Is dine‑in ordering required?',
-              a: 'No. Dine‑in table‑number ordering is optional and can be turned on in the admin panel.',
+              q: 'What if I need to change my menu?',
+              a: 'You can update your menu anytime from your phone or computer. Change prices, add items, mark things as sold out — changes appear instantly. No more reprinting.',
             },
             {
-              q: 'Does the AI use outside data?',
-              a: 'No. It answers based on your menu data (not internet guesses).',
+              q: 'How does the AI assistant work?',
+              a: 'The AI is trained on YOUR menu — not random internet data. When a customer asks "Is the Caesar salad vegetarian?" it looks at your actual ingredients and gives an accurate answer.',
             },
             {
-              q: 'Does it work on all devices?',
-              a: 'Yes. Guests use any phone and any browser — no app required.',
+              q: 'Is online ordering required?',
+              a: 'No. You can use TCC Menus as a view-only digital menu if you prefer. Online ordering is an optional feature you can turn on whenever you\'re ready.',
+            },
+            {
+              q: 'What about payment processing fees?',
+              a: 'Payments go through Stripe at their standard rates (about 2.9% + 30¢). The money goes directly to your bank account. We don\'t take any cut of your sales.',
+            },
+            {
+              q: 'Can I cancel anytime?',
+              a: 'Yes. No long-term contracts. You can cancel your subscription anytime and your menu will simply go offline at the end of the billing period.',
             },
           ].map((faq) => (
-            <details key={faq.q} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <summary className="cursor-pointer list-none font-medium">{faq.q}</summary>
-              <p className="mt-2 text-sm text-neutral-600">{faq.a}</p>
+            <details key={faq.q} className="group rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+              <summary className="cursor-pointer list-none flex items-center justify-between font-semibold text-lg">
+                {faq.q}
+                <svg className="h-5 w-5 text-neutral-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <p className="mt-4 text-neutral-600">{faq.a}</p>
             </details>
           ))}
         </div>
       </section>
 
-      <footer className="mt-14 bg-neutral-950 text-neutral-200">
+      {/* Final CTA */}
+      <section className="bg-emerald-600 text-white py-16 md:py-24">
+        <div className="mx-auto max-w-4xl px-4 text-center">
+          <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Ready to modernize your menu?
+          </h2>
+          <p className="mt-4 text-xl text-emerald-100 max-w-2xl mx-auto">
+            Join restaurants that are saving time, reducing mistakes, and making customers happier. 
+            Setup takes just one day.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            <a
+              href={LANDING.calendlyUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-lg font-semibold text-emerald-600 hover:bg-emerald-50 transition-colors"
+            >
+              Book Your Free Demo
+            </a>
+            <a
+              href="/demo"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-white px-8 py-4 text-lg font-semibold text-white hover:bg-emerald-700 transition-colors"
+            >
+              Try It Yourself
+            </a>
+          </div>
+          <p className="mt-6 text-emerald-200">
+            No credit card required for demo • 30-day money-back guarantee
+          </p>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-neutral-900 text-neutral-300">
         <div className="mx-auto max-w-6xl px-4 py-12">
-          <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-            <div>
-              <div className="text-sm font-semibold text-white">TCC Menus</div>
-              <p className="mt-2 max-w-lg text-sm text-neutral-300">
-                Smart QR menus, optional dine‑in table ordering, and a real kitchen workflow — all from one QR.
+          <div className="grid gap-8 md:grid-cols-4">
+            <div className="md:col-span-2">
+              <img src={LANDING.logo} alt="TCC Menus" className="h-8 brightness-0 invert" loading="lazy" />
+              <p className="mt-4 text-neutral-400 max-w-md">
+                Smart digital menus for modern restaurants. Customers scan, browse, and order — 
+                all from one QR code. No app required.
               </p>
-              <p className="mt-3 text-xs text-neutral-400">Stripe Connect note: payments can be routed to the restaurant’s Stripe account when enabled.</p>
             </div>
-            <div className="grid gap-2 text-sm">
-              <a href="/terms" className="hover:text-white">
-                Terms
-              </a>
-              <a href="/privacy" className="hover:text-white">
-                Privacy
-              </a>
-              <a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="hover:text-white">
-                Contact
-              </a>
-              <a href="#faq" className="hover:text-white">
-                FAQ
-              </a>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Product</h4>
+              <ul className="space-y-2">
+                <li><a href="/demo" className="hover:text-white transition-colors">Live Demo</a></li>
+                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Company</h4>
+              <ul className="space-y-2">
+                <li><a href="/terms" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Contact Us</a></li>
+              </ul>
             </div>
           </div>
-          <div className="mt-10 border-t border-neutral-800 pt-6 text-xs text-neutral-400">
-            © {new Date().getFullYear()} TCC Solutions. All rights reserved.
+          <div className="mt-12 border-t border-neutral-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-neutral-500">© {new Date().getFullYear()} TCC Solutions. All rights reserved.</p>
+            <p className="text-neutral-500 text-sm">Secure payments powered by Stripe</p>
           </div>
         </div>
       </footer>
