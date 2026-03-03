@@ -18,8 +18,9 @@ export const metadata: Metadata = {
   },
   description: 'The future of restaurant menus: smart QR menus, optional dine-in ordering, kitchen workflow, and admin analytics — all from one QR.',
   icons: {
-    icon: '/icon',
-    apple: '/apple-icon',
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+    shortcut: '/favicon.png',
   },
 }
 
