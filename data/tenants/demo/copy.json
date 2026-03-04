@@ -1,17 +1,18 @@
 {
-  "tagline": "Authentic Italian cuisine since 1985",
-  "heroSubtitle": "Fresh pasta, wood-fired pizza, and classic Italian dishes made with love.",
-  "about": "Family-owned Italian restaurant featuring house-made pasta, traditional recipes, and a warm atmosphere.",
+  "tagline": "Sample Italian restaurant menu",
+  "heroSubtitle": "This is a demo showing how your restaurant menu could look. All items, prices, and branding are customizable.",
+  "about": "This demo showcases TCC Menus features: QR access, AI assistant, ordering, and kitchen display. Your actual menu will be fully customized to your restaurant.",
   "specials": "Fettuccine Bolognese • Tiramisu • Prosciutto & Arugula Pizza",
   "categoryIntros": {
-    "Signature Dishes": "Our most beloved house specialties, perfected over 40 years.",
+    "Signature Dishes": "Your signature items would be featured here.",
     "Pasta": "Fresh pasta made daily, paired with authentic Italian sauces.",
     "Pizza": "Wood-fired pizzas with San Marzano tomatoes and imported cheeses.",
     "Calzone": "Golden-baked pockets of Italian goodness.",
-    "Lunch": "Quick and satisfying Italian sandwiches on house-baked bread.",
-    "Desserts": "Sweet endings to your Italian feast."
+    "Lunch": "Quick and satisfying Italian sandwiches.",
+    "Desserts": "Sweet endings to your feast.",
+    "Beverages": "Refreshing drinks to complement your meal."
   },
   "badges": {
-    "category": "Bene's"
+    "category": "Demo"
   }
 }
