@@ -19,16 +19,17 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-4 py-16 md:py-24">
           <div className="grid items-center gap-12 md:grid-cols-2">
             <div>
-              <div className="mb-6">
-                <img src={LANDING.logo} alt="TCC Menus" className="h-12" loading="lazy" />
+              <div className="inline-flex items-center gap-2 mb-8">
+                <img src="/assets/tcc-club.png" alt="" className="h-8 w-8" loading="lazy" />
+                <span className="text-lg font-semibold text-neutral-900">TCC Menus</span>
               </div>
               <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
                 Your Menu,<br />
                 <span className="text-emerald-600">Smarter</span>
               </h1>
-              <p className="mt-6 text-xl text-neutral-700">
-                Give your customers a beautiful digital menu they can browse, search, and order from — 
-                all by scanning a simple QR code. No app download. No complicated setup.
+              <p className="mt-6 text-lg text-neutral-600 leading-relaxed">
+                <span className="font-semibold text-neutral-900">Level up your restaurant.</span> Increase ticket size. 
+                Reduce decision time. Cut staff labor. Get real insights — all from one system powered by AI.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <a
@@ -437,7 +438,7 @@ export default function Landing() {
                 rel="noreferrer"
                 className="mt-8 block w-full rounded-full border-2 border-neutral-900 py-3 text-center font-semibold text-neutral-900 hover:bg-neutral-100 transition-colors"
               >
-                Contact Sales
+                Get Started
               </a>
             </div>
           </div>
