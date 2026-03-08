@@ -104,12 +104,15 @@ export default function MenuClient() {
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [showDemoAcknowledgement, setShowDemoAcknowledgement] = useState(false)
 
-  // Get tenant/admin from URL params
+  // Get tenant/admin from URL params or pathname
   const isBrowser = typeof window !== 'undefined'
   const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
+  const pathTenant = isBrowser ? window.location.pathname.split('/').filter(Boolean)[0] : null
+  const reservedPaths = ['menu', 'demo', 'admin', 'kitchen', 'kds', 'billing', 'order', 'api', 'auth', 'terms', 'privacy']
+  const validPathTenant = pathTenant && !reservedPaths.includes(pathTenant) ? pathTenant : null
   const tenant = isBrowser
-    ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
-    : 'benes'
+    ? (searchParams!.get('tenant') || validPathTenant || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo')
+    : 'demo'
   // Tenant-scoped UI overrides (must not affect other menus)
   const canonicalTenant = String(tenant || '').trim().toLowerCase() === 'southforkgrille'
     ? 'south-fork-grille'

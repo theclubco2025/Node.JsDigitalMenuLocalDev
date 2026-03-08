@@ -77,12 +77,13 @@ export default function MenuClient() {
   // plate pile removed with floating button
   // fly-to-plate animation removed
 
-  // Get tenant/admin from URL params
+  // Get tenant/admin from URL params or pathname
   const isBrowser = typeof window !== 'undefined'
   const searchParams = isBrowser ? new URLSearchParams(window.location.search) : null
+  const pathTenant = isBrowser ? window.location.pathname.split('/').filter(Boolean)[0] : null
   const tenant = isBrowser
-    ? (searchParams!.get('tenant') || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'benes')
-    : 'benes'
+    ? (searchParams!.get('tenant') || pathTenant || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'independentbarandgrille')
+    : 'independentbarandgrille'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   // Tenant-scoped UI polish (must not affect other menus)
   // Live slug: independentbarandgrille
