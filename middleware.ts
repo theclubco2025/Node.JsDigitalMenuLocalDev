@@ -140,7 +140,6 @@ export function middleware(request: NextRequest) {
       'demo-admin',
       'terms',
       'privacy',
-      'platepilot',
       'favicon.ico',
       'robots.txt',
       'sitemap.xml',
