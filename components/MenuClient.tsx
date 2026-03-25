@@ -56,10 +56,15 @@ type OrderingScheduling = {
 
 type OrderingSettings = {
   enabled?: boolean
-  fulfillment?: 'pickup'
+  fulfillment?: 'pickup' | 'delivery' | 'catering'
   timezone?: string
   scheduling?: OrderingScheduling
   hours?: unknown
+  // Catering-specific settings
+  cateringMode?: boolean
+  cateringLeadDays?: number
+  cateringDepositPercent?: number
+  cateringMinimumCents?: number
 }
 
 type TenantConfig = {
@@ -322,7 +327,7 @@ export default function MenuClient() {
                 item.imageUrl = value === undefined ? undefined : String(value)
                 break
               default:
-                item[field] = value as typeof item[typeof field]
+                (item as Record<string, unknown>)[field] = value
             }
           }
           break
@@ -554,6 +559,26 @@ export default function MenuClient() {
   const [tableNumber, setTableNumber] = useState('')
   const [fulfillmentMode, setFulfillmentMode] = useState<'pickup' | 'dinein'>('pickup')
 
+  // Catering-specific state
+  const cateringMode = orderingCfg?.cateringMode === true
+  const cateringLeadDays = typeof orderingCfg?.cateringLeadDays === 'number' ? orderingCfg.cateringLeadDays : 2
+  const [eventDate, setEventDate] = useState<string>('')
+  const [eventTime, setEventTime] = useState<string>('')
+  const [guestCount, setGuestCount] = useState<string>('')
+  const [eventType, setEventType] = useState<string>('')
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('')
+  const [deliveryNotes, setDeliveryNotes] = useState<string>('')
+  const [dietaryNotes, setDietaryNotes] = useState<string>('')
+  const [companyName, setCompanyName] = useState<string>('')
+
+  const minEventDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + cateringLeadDays)
+    return d.toISOString().split('T')[0]
+  }, [cateringLeadDays])
+
+  const eventTypes = ['Corporate', 'Wedding', 'Birthday', 'Graduation', 'Holiday Party', 'Memorial', 'Other']
+
   const tipCents = useMemo(() => {
     if (!orderingEnabled) return 0
     const raw = customTip.trim()
@@ -661,6 +686,25 @@ export default function MenuClient() {
         setToast(orderingPauseText)
         return
       }
+      // Catering mode validations
+      if (cateringMode) {
+        if (!eventDate) {
+          setToast('Please select an event date.')
+          return
+        }
+        if (!guestCount || parseInt(guestCount) < 1) {
+          setToast('Please enter the number of guests.')
+          return
+        }
+        if (!customerName.trim()) {
+          setToast('Please enter your name.')
+          return
+        }
+        if (!customerPhone.trim()) {
+          setToast('Please enter your phone number.')
+          return
+        }
+      }
       if (orderingEnabled && dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) {
         setToast(`Please enter your ${dineInLabel.toLowerCase()} to place a dine-in order.`)
         return
@@ -689,8 +733,19 @@ export default function MenuClient() {
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         smsOptIn: Boolean(smsOptIn),
-        tipCents,
+        tipCents: cateringMode ? 0 : tipCents,
         orderNote: orderNote.trim() || null,
+        // Catering-specific fields
+        ...(cateringMode ? {
+          eventDate: eventDate || null,
+          eventTime: eventTime.trim() || null,
+          guestCount: guestCount ? parseInt(guestCount) : null,
+          eventType: eventType || null,
+          deliveryAddress: deliveryAddress.trim() || null,
+          deliveryNotes: deliveryNotes.trim() || null,
+          dietaryNotes: dietaryNotes.trim() || null,
+          companyName: companyName.trim() || null,
+        } : {}),
       }
       const res = await fetch('/api/orders/checkout', {
         method: 'POST',
@@ -1906,7 +1961,7 @@ export default function MenuClient() {
           <div className="ml-auto w-full max-w-md bg-neutral-950 text-white h-full shadow-2xl border-l border-white/10 flex flex-col">
             <div className="p-6 border-b border-white/10 bg-neutral-950/90 backdrop-blur">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">Your Plate</h2>
+                <h2 className="text-2xl font-bold text-white">{cateringMode ? 'Your Catering Order' : 'Your Plate'}</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="text-white/70 hover:text-white transition-colors"
@@ -1914,6 +1969,9 @@ export default function MenuClient() {
                   ✕
                 </button>
               </div>
+              {cateringMode && (
+                <p className="mt-2 text-sm text-white/70">Build your order, add event details, and submit your inquiry.</p>
+              )}
             </div>
             
             <div className="flex-1 overflow-y-auto px-6 py-6 bg-neutral-950 overscroll-contain">
@@ -1924,8 +1982,117 @@ export default function MenuClient() {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  {/* Fulfillment (dine-in vs pickup) */}
-                  {orderingEnabled && dineInEnabled && (
+                  {/* Catering Event Details */}
+                  {cateringMode && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-white">📅 Event Details</div>
+                      <div className="mt-2 text-sm text-white/70">
+                        Tell us about your event so we can prepare everything perfectly.
+                      </div>
+                      <div className="mt-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-white/80">Event Date *</label>
+                            <input
+                              type="date"
+                              min={minEventDate}
+                              value={eventDate}
+                              onChange={(e) => setEventDate(e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-white/80">Event Time</label>
+                            <input
+                              type="text"
+                              placeholder="e.g., 12:00 PM"
+                              value={eventTime}
+                              onChange={(e) => setEventTime(e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-white/80">Guest Count *</label>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="1"
+                              placeholder="50"
+                              value={guestCount}
+                              onChange={(e) => setGuestCount(e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-white/80">Event Type</label>
+                            <select
+                              value={eventType}
+                              onChange={(e) => setEventType(e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white"
+                            >
+                              <option value="">Select...</option>
+                              {eventTypes.map((t) => (
+                                <option key={t} value={t}>{t}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Catering Delivery Location */}
+                  {cateringMode && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-white">📍 Delivery Location</div>
+                      <div className="mt-4 space-y-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-white/80">Delivery Address</label>
+                          <textarea
+                            placeholder="123 Main St, Suite 400&#10;San Francisco, CA 94102"
+                            value={deliveryAddress}
+                            onChange={(e) => setDeliveryAddress(e.target.value)}
+                            rows={2}
+                            className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-white/80">Delivery Notes</label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Enter through loading dock, ask for Sarah"
+                            value={deliveryNotes}
+                            onChange={(e) => setDeliveryNotes(e.target.value)}
+                            className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Catering Dietary Requirements */}
+                  {cateringMode && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-white">🥗 Dietary Requirements</div>
+                      <div className="mt-2 text-sm text-white/70">
+                        Let us know about any dietary needs for your guests.
+                      </div>
+                      <div className="mt-3">
+                        <textarea
+                          placeholder="e.g., 5 vegetarian, 2 gluten-free, 1 nut allergy"
+                          value={dietaryNotes}
+                          onChange={(e) => setDietaryNotes(e.target.value)}
+                          rows={2}
+                          className="w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fulfillment (dine-in vs pickup) - Hidden for catering mode */}
+                  {orderingEnabled && dineInEnabled && !cateringMode && (
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-white">Order type</div>
                       <div className="mt-2 text-sm text-white/70">
@@ -2103,25 +2270,30 @@ export default function MenuClient() {
                   {/* Contact Info */}
                   {orderingEnabled && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <div className="text-sm font-extrabold tracking-wide text-black">Contact Info</div>
-                      <div className="mt-2 text-sm text-gray-600">Receipt & updates. We’ll send your receipt and pickup updates here.</div>
+                      <div className="text-sm font-extrabold tracking-wide text-black">{cateringMode ? '👤 Contact Information' : 'Contact Info'}</div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        {cateringMode 
+                          ? "We'll use this to confirm your order and coordinate delivery."
+                          : "Receipt & updates. We'll send your receipt and pickup updates here."
+                        }
+                      </div>
                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input
-                          type="email"
-                          inputMode="email"
-                          autoComplete="email"
-                          value={customerEmail}
-                          onChange={(e) => setCustomerEmail(e.target.value)}
-                          placeholder="Email (required)"
-                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
-                        />
                         <input
                           type="text"
                           inputMode="text"
                           autoComplete="name"
                           value={customerName}
                           onChange={(e) => setCustomerName(e.target.value)}
-                          placeholder="Name (optional)"
+                          placeholder={cateringMode ? "Your Name *" : "Name (optional)"}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        />
+                        <input
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          value={customerEmail}
+                          onChange={(e) => setCustomerEmail(e.target.value)}
+                          placeholder="Email *"
                           className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
                         />
                         <input
@@ -2130,9 +2302,20 @@ export default function MenuClient() {
                           autoComplete="tel"
                           value={customerPhone}
                           onChange={(e) => setCustomerPhone(e.target.value)}
-                          placeholder="Phone (optional)"
-                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black sm:col-span-2"
+                          placeholder={cateringMode ? "Phone *" : "Phone (optional)"}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
                         />
+                        {cateringMode && (
+                          <input
+                            type="text"
+                            inputMode="text"
+                            autoComplete="organization"
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                            placeholder="Company/Organization (optional)"
+                            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                          />
+                        )}
                       </div>
 
                       <label className="mt-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
@@ -2163,8 +2346,8 @@ export default function MenuClient() {
                     </div>
                   )}
 
-                  {/* Tip */}
-                  {orderingEnabled && (
+                  {/* Tip - Hidden for catering mode */}
+                  {orderingEnabled && !cateringMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-black">Tip</div>
                       <div className="mt-2 text-sm text-gray-600">Optional. Tips go directly to the restaurant.</div>
@@ -2205,8 +2388,8 @@ export default function MenuClient() {
                     </div>
                   )}
 
-                  {/* Pickup Time */}
-                  {orderingEnabled && schedulingEnabled && fulfillmentMode === 'pickup' && (
+                  {/* Pickup Time - Hidden for catering mode */}
+                  {orderingEnabled && schedulingEnabled && fulfillmentMode === 'pickup' && !cateringMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-extrabold tracking-wide text-black">
                         <span aria-hidden="true">
@@ -2280,9 +2463,14 @@ export default function MenuClient() {
               <div className="p-5 border-t border-white/10 bg-neutral-950 shadow-[0_-10px_24px_rgba(0,0,0,0.35)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-semibold text-white/70">Order total</div>
+                    <div className="text-xs font-semibold text-white/70">{cateringMode ? 'Estimated Total' : 'Order total'}</div>
                     <div className="text-2xl font-extrabold text-white">${orderTotal.toFixed(2)}</div>
-                    {orderingEnabled && tipCents > 0 && (
+                    {cateringMode && guestCount && parseInt(guestCount) > 0 && (
+                      <div className="mt-1 text-xs text-white/60">
+                        For {guestCount} guests
+                      </div>
+                    )}
+                    {orderingEnabled && !cateringMode && tipCents > 0 && (
                       <div className="mt-1 text-xs text-white/60">
                         Includes ${(tipCents / 100).toFixed(2)} tip
                       </div>
@@ -2298,14 +2486,19 @@ export default function MenuClient() {
                     }}
                     className="rounded-2xl px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)' }}
-                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) || (cateringMode && (!eventDate || !guestCount || !customerName.trim() || !customerPhone.trim()))))}
                   >
-                    {orderingEnabled ? 'Place order' : 'Proceed with Plate'}
+                    {cateringMode ? 'Submit Inquiry' : (orderingEnabled ? 'Place order' : 'Proceed with Plate')}
                   </button>
                 </div>
                 {!orderingEnabled && (
                   <p className="text-xs text-white/60 text-center mt-2">
                     Demo mode - No actual payment processed
+                  </p>
+                )}
+                {cateringMode && (
+                  <p className="text-xs text-white/60 text-center mt-2">
+                    We&apos;ll review your order and confirm within 24 hours
                   </p>
                 )}
               </div>

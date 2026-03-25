@@ -33,6 +33,15 @@ type OrderRow = {
   tableNumber?: string | null
   createdAt: string
   items: OrderItem[]
+  // Catering fields
+  eventDate?: string | null
+  eventTime?: string | null
+  guestCount?: number | null
+  eventType?: string | null
+  deliveryAddress?: string | null
+  deliveryNotes?: string | null
+  dietaryNotes?: string | null
+  companyName?: string | null
 }
 
 type ListResponse =
@@ -471,7 +480,47 @@ export default function AdminOrdersClient({ tenant }: { tenant: string }) {
                       <span className="font-semibold">${formatMoney(o.totalCents)}</span>{' '}
                       <span className="text-gray-500">({o.currency.toUpperCase()})</span>
                     </div>
-                    {o.tableNumber && (
+                    {o.eventDate && (
+                      <div className="mt-2 inline-flex flex-wrap gap-2">
+                        <span className="text-xs font-bold text-purple-800 bg-purple-50 border border-purple-200 rounded-lg px-2 py-1">
+                          🍽️ CATERING
+                        </span>
+                        {o.guestCount && (
+                          <span className="text-xs font-bold text-purple-800 bg-purple-50 border border-purple-200 rounded-lg px-2 py-1">
+                            {o.guestCount} guests
+                          </span>
+                        )}
+                        {o.eventType && (
+                          <span className="text-xs font-bold text-purple-800 bg-purple-50 border border-purple-200 rounded-lg px-2 py-1">
+                            {o.eventType}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {o.eventDate && (
+                      <div className="mt-2 text-xs text-gray-700">
+                        <span className="font-semibold">📅 Event:</span>{' '}
+                        {new Date(o.eventDate).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                        {o.eventTime && ` at ${o.eventTime}`}
+                      </div>
+                    )}
+                    {o.deliveryAddress && (
+                      <div className="mt-1 text-xs text-gray-700">
+                        <span className="font-semibold">📍 Location:</span> {o.deliveryAddress}
+                        {o.deliveryNotes && <span className="text-gray-500"> ({o.deliveryNotes})</span>}
+                      </div>
+                    )}
+                    {o.dietaryNotes && (
+                      <div className="mt-1 text-xs text-gray-700">
+                        <span className="font-semibold">🥗 Dietary:</span> {o.dietaryNotes}
+                      </div>
+                    )}
+                    {o.companyName && (
+                      <div className="mt-1 text-xs text-gray-700">
+                        <span className="font-semibold">🏢 Company:</span> {o.companyName}
+                      </div>
+                    )}
+                    {o.tableNumber && !o.eventDate && (
                       <div className="mt-2 text-xs font-bold text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-1 inline-flex">
                         DINE-IN • Table {o.tableNumber}
                       </div>

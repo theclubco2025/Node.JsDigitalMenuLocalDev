@@ -19,6 +19,14 @@ type Order = {
   tableNumber?: string | null
   tenant?: Tenant | null
   items: OrderItem[]
+  // Catering fields
+  eventDate?: string | null
+  eventTime?: string | null
+  guestCount?: number | null
+  eventType?: string | null
+  deliveryAddress?: string | null
+  customerName?: string | null
+  customerEmail?: string | null
 }
 
 function firstString(v: string | string[] | undefined): string | undefined {
@@ -89,6 +97,7 @@ function formatPickupTime(iso: string | null, tz: string) {
 export default function OrderSuccessPage({ searchParams }: Props) {
   const orderId = useMemo(() => firstString(searchParams?.order) || '', [searchParams])
   const sessionId = useMemo(() => firstString(searchParams?.session_id) || '', [searchParams])
+  const isCatering = useMemo(() => firstString(searchParams?.catering) === '1', [searchParams])
 
   const [order, setOrder] = useState<Order | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -264,7 +273,147 @@ export default function OrderSuccessPage({ searchParams }: Props) {
 
   const pickupCodeHelper = typeof pickupCodeCopy?.helper === 'string' && pickupCodeCopy.helper.trim()
     ? pickupCodeCopy.helper.trim()
-    : 'Save this pickup code — you’ll need it when you arrive.'
+    : 'Save this pickup code — you\'ll need it when you arrive.'
+
+  const formatEventDate = (iso: string | null | undefined) => {
+    if (!iso) return ''
+    try {
+      const d = new Date(iso)
+      return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    } catch {
+      return iso
+    }
+  }
+
+  // Catering confirmation view
+  if (isCatering || order?.eventDate) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white">
+        <div className="max-w-2xl mx-auto px-4 py-10">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-200">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M20 7L10.5 16.5L4 10" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-2xl font-extrabold text-white">Inquiry Submitted!</h1>
+                <p className="mt-1 text-sm text-white/70">Thanks for your catering request to {tenantName}</p>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {error}
+              </div>
+            )}
+
+            {/* Event Summary */}
+            {order && (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="text-sm font-extrabold text-white">📅 Event Details</div>
+                <div className="mt-4 space-y-3 text-sm text-white/80">
+                  {order.eventDate && (
+                    <div>
+                      <span className="font-semibold text-white">Date:</span>{' '}
+                      {formatEventDate(order.eventDate)}
+                      {order.eventTime && ` at ${order.eventTime}`}
+                    </div>
+                  )}
+                  {order.guestCount && (
+                    <div>
+                      <span className="font-semibold text-white">Guests:</span>{' '}
+                      {order.guestCount} people
+                    </div>
+                  )}
+                  {order.eventType && (
+                    <div>
+                      <span className="font-semibold text-white">Event Type:</span>{' '}
+                      {order.eventType}
+                    </div>
+                  )}
+                  {order.deliveryAddress && (
+                    <div>
+                      <span className="font-semibold text-white">Location:</span>{' '}
+                      {order.deliveryAddress}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Order Items */}
+            {order?.items?.length ? (
+              <div className="mt-6">
+                <div className="text-sm font-extrabold text-white">Your Items</div>
+                <div className="mt-3 divide-y divide-white/10 rounded-2xl border border-white/10 bg-white/5">
+                  {order.items.map((it) => (
+                    <div key={it.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-white truncate">{it.name}</div>
+                        <div className="text-white/70">
+                          Qty {it.quantity} • {moneyCents(it.unitPriceCents)}
+                        </div>
+                      </div>
+                      <div className="font-extrabold text-white">
+                        {moneyCents(it.unitPriceCents * it.quantity)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {/* Estimated Total */}
+            {order && (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5">
+                <div className="text-sm font-extrabold text-white">Estimated Total</div>
+                <div className="mt-2 text-3xl font-extrabold text-white">${total}</div>
+                <div className="mt-1 text-xs text-white/60">Final pricing may vary based on customizations</div>
+              </div>
+            )}
+
+            {/* What happens next - Catering */}
+            <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+              <div className="text-sm font-extrabold text-white">What happens next</div>
+              <ul className="mt-3 space-y-2 text-sm text-white/80">
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-xs font-bold text-emerald-300">1</span>
+                  <span>We&apos;ll review your order within 24 hours</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white/60">2</span>
+                  <span>You&apos;ll receive a confirmation email with final pricing</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white/60">3</span>
+                  <span>Once confirmed, we&apos;ll coordinate delivery details</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Order Reference */}
+            {order && (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                <div className="text-xs text-white/50 uppercase tracking-wide">Order Reference</div>
+                <div className="mt-1 font-mono text-lg font-bold text-white">{order.id.slice(-8).toUpperCase()}</div>
+              </div>
+            )}
+
+            <div className="mt-6">
+              <a
+                href={`/menu?tenant=${encodeURIComponent(tenantSlug)}`}
+                className="inline-flex w-full items-center justify-center rounded-2xl bg-white/10 px-4 py-3 text-sm font-extrabold text-white hover:bg-white/15 border border-white/10"
+              >
+                Return to Menu
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">

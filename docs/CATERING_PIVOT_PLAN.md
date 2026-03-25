@@ -2,6 +2,24 @@
 
 ## Executive Summary
 
+### 🎯 THE HARD HOOK
+
+> **Turn 10 back-and-forth messages into 1 structured order.**
+
+Every catering inquiry today looks like this:
+- "How much for 50 people?" 
+- "What date?"
+- "Where's the delivery?"
+- "Any dietary restrictions?"
+- "Can you do gluten-free?"
+- "What's the total again?"
+- "Did you get my text?"
+- ... (repeat 10x)
+
+**This system eliminates that.** Customer fills out one form. You get one clean order. Done.
+
+---
+
 Transform the existing digital menu SaaS into a **Catering Order Builder** that solves a specific problem:
 
 > **Catering businesses waste time going back and forth with customers via text, calls, and email to build custom orders and give quotes.**
@@ -487,19 +505,22 @@ Convert technical features into benefits caterers understand:
 
 ### Landing Page Copy Ideas
 
+**THE HOOK (use everywhere):**
+> **Turn 10 back-and-forth messages into 1 structured order.**
+
 **Headline Options:**
-- "Stop Playing Phone Tag with Catering Customers"
-- "Let Customers Build Their Own Catering Orders"
-- "The Simplest Way to Take Catering Orders Online"
+- "Turn 10 Back-and-Forth Messages Into 1 Structured Order"
+- "Stop Texting. Start Taking Catering Orders."
+- "One Link. One Form. One Clean Order."
 
 **Subhead:**
-- "Your menu. Instant pricing. Structured orders. No back-and-forth."
+- "Your menu. Instant pricing. All the details you need — in one submission."
 
 **Problem Statement:**
-> Every catering inquiry starts the same way: "How much for 50 people?" Then you're texting back and forth, trying to nail down the date, the location, the dietary restrictions... It's exhausting. And half of them ghost you anyway.
+> Every catering inquiry is the same: "How much for 50 people?" Then 10 texts later you're still asking about the date, the address, the dietary restrictions. Half of them ghost you. The ones who don't? You're still playing phone tag.
 
 **Solution:**
-> Give customers a link to your catering menu. They build their order, see the price instantly, and submit all the details you need in one clean form. You wake up to organized orders in your inbox — not 47 unread texts.
+> Send customers one link. They pick items, see pricing, enter event details, and hit submit. You get a clean, organized order — not 47 unread texts.
 
 ---
 

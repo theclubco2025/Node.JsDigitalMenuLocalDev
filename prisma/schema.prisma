@@ -132,6 +132,23 @@ model Order {
   scheduledFor           DateTime?
   timezone               String           @default("America/Los_Angeles")
 
+  // Catering event details
+  eventDate              DateTime?
+  eventTime              String?          // e.g., "12:00 PM - 2:00 PM"
+  guestCount             Int?
+  eventType              String?          // "Corporate", "Wedding", "Birthday", etc.
+
+  // Delivery location
+  deliveryAddress        String?
+  venueName              String?
+  deliveryNotes          String?          // "Enter through loading dock"
+
+  // Dietary requirements summary
+  dietaryNotes           String?          // "5 vegetarian, 2 gluten-free"
+
+  // Company/organization (for corporate catering)
+  companyName            String?
+
   // Stripe identifiers for idempotency
   stripeCheckoutSessionId String?         @unique
   stripePaymentIntentId   String?         @unique
@@ -144,7 +161,7 @@ model Order {
   customerName           String?
   customerPhone          String?
 
-  // Optional dine-in context (e.g., table number)
+  // Optional dine-in context (e.g., table number) - legacy, hidden for catering
   tableNumber            String?
 
   // SMS notifications (opt-in, per order)
@@ -175,6 +192,7 @@ model Order {
   items                  OrderItem[]
 
   @@index([tenantId, createdAt])
+  @@index([tenantId, eventDate])
   @@map("orders")
 }
 

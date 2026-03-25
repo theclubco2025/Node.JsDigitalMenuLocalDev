@@ -31,6 +31,15 @@ const BodySchema = z.object({
   tipCents: z.number().int().min(0).max(25_000).optional().default(0),
   // Optional order-level note for kitchen
   orderNote: z.string().max(800).optional().nullable(),
+  // Catering-specific fields
+  eventDate: z.string().optional().nullable(),
+  eventTime: z.string().max(50).optional().nullable(),
+  guestCount: z.number().int().min(1).max(10000).optional().nullable(),
+  eventType: z.string().max(50).optional().nullable(),
+  deliveryAddress: z.string().max(500).optional().nullable(),
+  deliveryNotes: z.string().max(500).optional().nullable(),
+  dietaryNotes: z.string().max(500).optional().nullable(),
+  companyName: z.string().max(100).optional().nullable(),
 })
 
 function baseUrlFromRequest(req: NextRequest) {
@@ -151,6 +160,17 @@ export async function POST(req: NextRequest) {
     const smsOptIn = parsed.data.smsOptIn === true
     const orderNote = (parsed.data.orderNote || '').trim() || null
     const tipCentsRaw = Math.max(0, Math.floor(parsed.data.tipCents || 0))
+
+    // Catering-specific fields
+    const eventDateRaw = (parsed.data.eventDate || '').trim() || null
+    const eventTime = (parsed.data.eventTime || '').trim() || null
+    const guestCount = parsed.data.guestCount ?? null
+    const eventType = (parsed.data.eventType || '').trim() || null
+    const deliveryAddress = (parsed.data.deliveryAddress || '').trim() || null
+    const deliveryNotes = (parsed.data.deliveryNotes || '').trim() || null
+    const dietaryNotes = (parsed.data.dietaryNotes || '').trim() || null
+    const companyName = (parsed.data.companyName || '').trim() || null
+    const isCatering = Boolean(eventDateRaw || guestCount)
 
     const ip = clientIp(req)
     const limIp = await checkRateLimit({ rule: 'orders_checkout_ip_1m', key: `ip:${ip}`, limit: 20, window: '1 m' })
@@ -330,17 +350,26 @@ export async function POST(req: NextRequest) {
       scheduledFor = d
     }
 
+    // Parse event date for catering
+    let eventDate: Date | null = null
+    if (eventDateRaw) {
+      const d = new Date(eventDateRaw)
+      if (!Number.isNaN(d.getTime())) {
+        eventDate = d
+      }
+    }
+
     let order: { id: string }
     try {
       order = await prisma.order.create({
         data: {
           tenantId: tenantRow.id,
-          status: 'PENDING_PAYMENT',
+          status: isCatering ? 'NEW' : 'PENDING_PAYMENT',
           fulfillment: 'PICKUP',
           currency: 'usd',
           subtotalCents,
-          tipCents,
-          totalCents,
+          tipCents: isCatering ? 0 : tipCents,
+          totalCents: isCatering ? subtotalCents : totalCents,
           scheduledFor: scheduledFor || undefined,
           timezone: ordering.timezone,
           customerEmail,
@@ -351,6 +380,15 @@ export async function POST(req: NextRequest) {
           smsOptInAt: smsOptIn ? new Date() : undefined,
           note: orderNote || undefined,
           stripeAccountId: usePlatformStripe ? undefined : stripeAccountId,
+          // Catering-specific fields
+          eventDate: eventDate || undefined,
+          eventTime: eventTime || undefined,
+          guestCount: guestCount || undefined,
+          eventType: eventType || undefined,
+          deliveryAddress: deliveryAddress || undefined,
+          deliveryNotes: deliveryNotes || undefined,
+          dietaryNotes: dietaryNotes || undefined,
+          companyName: companyName || undefined,
           items: { create: orderItems },
         },
         select: { id: true },
@@ -380,6 +418,13 @@ export async function POST(req: NextRequest) {
     }
 
     const baseUrl = baseUrlFromRequest(req)
+
+    // For catering inquiries, skip Stripe checkout and redirect directly to success page
+    if (isCatering) {
+      const successUrl = `${baseUrl}/order/success?order=${encodeURIComponent(order.id)}&catering=1&tenant=${encodeURIComponent(tenant)}`
+      return NextResponse.json({ ok: true, orderId: order.id, url: successUrl, catering: true }, { status: 200 })
+    }
+
     try {
       const stripe = getStripeOrders()
 
