@@ -123,7 +123,8 @@ export default function MenuClient() {
     ? 'south-fork-grille'
     : String(tenant || '').trim().toLowerCase()
   const isSouthFork = canonicalTenant === 'south-fork-grille'
-  const isDemo = tenant === 'demo' || tenant === 'platepilot-demo'
+  const isDemo = tenant === 'demo'
+  const useElegantListLayout = tenant === 'independentbarandgrille' || tenant === 'platepilot-demo'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
@@ -1635,7 +1636,106 @@ export default function MenuClient() {
                 <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
               )}
               
-              {isDemo && !isAdmin ? (
+              {useElegantListLayout && !isAdmin ? (
+                <div
+                  className="rounded-xl overflow-hidden"
+                  style={{ background: 'var(--bg)', border: '1px solid var(--muted)' }}
+                  data-menu-category-id={category.id}
+                  data-menu-category-name={cleanMojibake(category.name)}
+                >
+                  {category.items.map((item, itemIdx) => {
+                    const tags = visibleTags(item.tags).slice(0, 3)
+                    return (
+                      <div
+                        key={item.id}
+                        id={`item-${item.id}`}
+                        data-menu-item-id={item.id}
+                        data-menu-item-name={item.name}
+                        data-menu-item-price={typeof item.price === 'number' ? item.price : undefined}
+                        className="px-4 py-4"
+                        style={itemIdx === 0 ? undefined : { borderTop: '1px solid var(--muted)' }}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold" style={{ color: 'var(--text)' }}>
+                              {highlightText(item.name, searchQuery)}
+                            </div>
+                            {typeof item.description === 'string' && item.description.trim() !== '' && (
+                              <div
+                                className="mt-1 text-sm"
+                                style={{
+                                  color: 'var(--text)',
+                                  opacity: 0.6,
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                {minimalDescription(item.description)}
+                              </div>
+                            )}
+                            {(tags.length > 0) && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                                    style={{ background: 'var(--muted)', color: 'var(--text)', opacity: 0.8 }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="shrink-0 text-right">
+                            <div className="font-bold tabular-nums" style={{ color: 'var(--accent)' }}>
+                              ${Number(item.price ?? 0).toFixed(2)}
+                            </div>
+                            {cateringMode && item.servingSize && (
+                              <div className="text-xs font-medium mt-0.5" style={{ color: 'var(--accent)', opacity: 0.8 }}>
+                                Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="shrink-0 flex flex-col gap-2">
+                            {!hideCart && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  addToCart(item)
+                                  setRecentlyAddedId(item.id)
+                                  setCartBump(true)
+                                  setToast(`Added ${item.name}`)
+                                  setIsCartOpen(true)
+                                  setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
+                                }}
+                                className="h-9 rounded-lg px-4 text-sm font-semibold"
+                                style={{ background: 'var(--accent)', color: 'var(--ink)' }}
+                                aria-label={`Add ${item.name} to plate`}
+                              >
+                                Add
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                              className="h-9 rounded-lg px-4 text-sm font-semibold"
+                              style={{ background: 'var(--muted)', color: 'var(--text)' }}
+                              aria-label={`Ask about ${item.name}`}
+                            >
+                              ○ Ask
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : isDemo && !isAdmin ? (
                 <div
                   className="rounded-xl border border-neutral-200 bg-white overflow-hidden"
                   data-menu-category-id={category.id}
