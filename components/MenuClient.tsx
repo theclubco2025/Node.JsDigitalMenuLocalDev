@@ -123,7 +123,7 @@ export default function MenuClient() {
     ? 'south-fork-grille'
     : String(tenant || '').trim().toLowerCase()
   const isSouthFork = canonicalTenant === 'south-fork-grille'
-  const isDemo = tenant === 'demo'
+  const isDemo = tenant === 'demo' || tenant === 'platepilot-demo'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
