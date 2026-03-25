@@ -79,6 +79,12 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
 
   const hours = Object.prototype.hasOwnProperty.call(obj, 'hours') ? (obj.hours ?? null) : DEFAULT_ORDERING.hours
 
+  // Catering-specific settings
+  const cateringMode = typeof obj.cateringMode === 'boolean' ? obj.cateringMode : false
+  const cateringLeadDays = typeof obj.cateringLeadDays === 'number' && Number.isFinite(obj.cateringLeadDays)
+    ? obj.cateringLeadDays
+    : 2
+
   return {
     enabled,
     paused,
@@ -123,6 +129,9 @@ function normalizeOrdering(raw: unknown): Record<string, unknown> {
           : DEFAULT_ORDERING.pickupCodeCopy.helper,
     },
     hours,
+    // Catering
+    cateringMode,
+    cateringLeadDays,
   }
 }
 
@@ -318,6 +327,9 @@ export async function GET(request: NextRequest) {
         ...DEFAULT_ORDERING,
         enabled: true,
         dineIn: { ...(DEFAULT_ORDERING.dineIn as unknown as Record<string, unknown>), enabled: true, label: 'Table number' },
+        // Enable catering mode for demo testing
+        cateringMode: true,
+        cateringLeadDays: 2,
       })
     }
 
@@ -333,6 +345,12 @@ export async function GET(request: NextRequest) {
           hideCart: false,
           signatureGrid: false,
         },
+      }
+      // Force catering mode for demo tenant
+      ordering = {
+        ...ordering,
+        cateringMode: true,
+        cateringLeadDays: 2,
       }
     }
 
