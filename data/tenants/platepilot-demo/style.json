@@ -1,0 +1,8 @@
+{
+  "flags": {
+    "hideCart": false,
+    "categoryBadges": true,
+    "specials": false
+  },
+  "navVariant": "chipscroller"
+}

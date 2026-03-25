@@ -1689,8 +1689,15 @@ export default function MenuClient() {
                                   </div>
                                 )}
                               </div>
-                              <div className="shrink-0 text-sm font-extrabold text-neutral-950 tabular-nums">
-                                ${Number(item.price ?? 0).toFixed(2)}
+                              <div className="shrink-0 text-right">
+                                <div className="text-sm font-extrabold text-neutral-950 tabular-nums">
+                                  ${Number(item.price ?? 0).toFixed(2)}
+                                </div>
+                                {cateringMode && item.servingSize && (
+                                  <div className="text-[10px] text-amber-600 font-medium">
+                                    Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -1801,7 +1808,14 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                          <div className="ml-4 text-right">
+                            <span className="text-xl font-bold text-black px-2 py-0.5 rounded-full inline-block" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                            {cateringMode && item.servingSize && (
+                              <div className="text-xs text-amber-600 font-semibold mt-1">
+                                Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                       {(!isAdmin && showCategoryBadges) && (
