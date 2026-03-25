@@ -52,27 +52,18 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
   }
-  // Default landing: render marketing page unless a tenant is explicitly requested or landing mode disabled
+  // Default landing: ALWAYS render marketing page at root (PlatePilot landing)
+  // unless landing mode is explicitly disabled
   if (request.nextUrl.pathname === '/' && !request.nextUrl.searchParams.get('tenant')) {
     const landingDisabled = process.env.NEXT_PUBLIC_LANDING_MODE === '0'
-    if (!landingDisabled && !isPreview) {
-      return NextResponse.next()
-    }
-    const url = request.nextUrl.clone()
-    if (landingDisabled && !isPreview) {
+    if (landingDisabled) {
+      const url = request.nextUrl.clone()
       url.pathname = '/menu'
-      url.searchParams.set('tenant', 'benes')
+      url.searchParams.set('tenant', 'platepilot-demo')
       return NextResponse.redirect(url)
     }
-    const host = request.headers.get('host') || ''
-    const m = host.match(/-git-([a-z0-9-]+)-/i)
-    const fromHost = (m?.[1] || '').toLowerCase()
-    const candidate = fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
-    if (candidate) {
-      url.pathname = '/menu'
-      url.searchParams.set('tenant', candidate)
-      return NextResponse.redirect(url)
-    }
+    // Always show the landing page (PlatePilot) at root
+    return NextResponse.next()
   }
   // In preview, ALWAYS normalize /menu to the branch slug tenant, even if a wrong tenant query is present
   if (request.nextUrl.pathname === '/menu') {
