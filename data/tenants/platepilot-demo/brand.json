@@ -1,5 +1,9 @@
 {
   "name": "PlatePilot Demo",
   "tagline": "Sample Catering Menu",
-  "logoUrl": ""
+  "header": {
+    "mode": "logo",
+    "logoUrl": "/assets/platepilot-logo.svg",
+    "background": "#1E1E1E"
+  }
 }

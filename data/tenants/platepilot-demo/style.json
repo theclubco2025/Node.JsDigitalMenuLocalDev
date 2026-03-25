@@ -1,8 +1,12 @@
 {
+  "heroVariant": "logo",
+  "navVariant": "sticky",
   "flags": {
+    "specials": false,
+    "pairings": false,
+    "signatureGrid": false,
     "hideCart": false,
-    "categoryBadges": true,
-    "specials": false
+    "categoryBadges": true
   },
-  "navVariant": "chipscroller"
+  "accentSecondary": "#A67C52"
 }
