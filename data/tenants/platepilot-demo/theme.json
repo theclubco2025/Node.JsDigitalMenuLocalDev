@@ -3,8 +3,8 @@
   "bg": "#1E1E1E",
   "text": "#FFFFFF",
   "ink": "#111111",
-  "card": "#2A2A2A",
-  "muted": "#3A3A3A",
+  "card": "#F7F7F7",
+  "muted": "#EAEAEA",
   "accent": "#C4A76A",
   "radius": "12px"
 }

@@ -193,57 +193,49 @@ export default function Landing() {
 
       {/* Pricing */}
       <section id="pricing" className="py-20 px-6 bg-[#0a0a0a]">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-16">
+        <div className="mx-auto max-w-3xl">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple Pricing</h2>
-            <p className="text-white/60">Start free. Upgrade when you&apos;re ready.</p>
+            <p className="text-white/60">One-time setup, flat monthly fee. No surprises.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {/* Starter */}
-            <div className="bg-[#1a1a1a] p-6 rounded-lg">
-              <div className="text-sm text-white/50 uppercase tracking-wide mb-2">Starter</div>
-              <div className="text-4xl font-bold mb-4">$0<span className="text-lg text-white/50">/mo</span></div>
-              <ul className="space-y-2 text-sm text-white/70 mb-6">
-                <li>Up to 25 orders/month</li>
-                <li>Basic menu builder</li>
-                <li>Email notifications</li>
-              </ul>
-              <a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="block w-full border border-white/20 py-3 text-center font-medium hover:bg-white/5 transition-colors">
-                Get Started
-              </a>
-            </div>
-            {/* Pro */}
-            <div className="bg-[#1a1a1a] p-6 rounded-lg border-2 border-[#C4A76A] relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C4A76A] text-[#111] text-xs font-bold px-3 py-1 uppercase">
-                Popular
+          <div className="bg-[#1a1a1a] p-8 md:p-12 rounded-lg border border-[#C4A76A]/30">
+            <div className="text-center mb-8">
+              <div className="text-sm text-[#C4A76A] uppercase tracking-wide mb-3">All-Inclusive</div>
+              <div className="flex items-baseline justify-center gap-2 mb-2">
+                <span className="text-5xl font-bold">$50</span>
+                <span className="text-xl text-white/50">/month</span>
               </div>
-              <div className="text-sm text-[#C4A76A] uppercase tracking-wide mb-2">Professional</div>
-              <div className="text-4xl font-bold mb-4">$79<span className="text-lg text-white/50">/mo</span></div>
-              <ul className="space-y-2 text-sm text-white/70 mb-6">
-                <li>Unlimited orders</li>
-                <li>AI menu assistant</li>
-                <li>Order analytics</li>
-                <li>SMS + email notifications</li>
-                <li>Priority support</li>
-              </ul>
-              <a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="block w-full bg-[#C4A76A] text-[#111] py-3 text-center font-semibold hover:bg-[#d4b87a] transition-colors">
-                Start Free Trial
-              </a>
+              <p className="text-white/50">+ one-time onboarding fee (quoted per business)</p>
             </div>
-            {/* Business */}
-            <div className="bg-[#1a1a1a] p-6 rounded-lg">
-              <div className="text-sm text-white/50 uppercase tracking-wide mb-2">Business</div>
-              <div className="text-4xl font-bold mb-4">$149<span className="text-lg text-white/50">/mo</span></div>
-              <ul className="space-y-2 text-sm text-white/70 mb-6">
-                <li>Everything in Pro</li>
-                <li>Multiple menus</li>
-                <li>Deposit collection</li>
-                <li>Custom branding</li>
-                <li>API access</li>
-              </ul>
-              <a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="block w-full border border-white/20 py-3 text-center font-medium hover:bg-white/5 transition-colors">
-                Contact Sales
+            <div className="grid md:grid-cols-2 gap-4 mb-8">
+              {[
+                'Unlimited catering orders',
+                'Full menu customization',
+                'Event details capture',
+                'Order notifications (email + SMS)',
+                'AI menu assistant',
+                'Order analytics',
+                'Mobile-optimized ordering',
+                'Priority support',
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-white/80">
+                  <svg className="w-5 h-5 text-[#C4A76A] shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="text-center">
+              <a
+                href={LANDING.calendlyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block bg-[#C4A76A] text-[#111] px-10 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors"
+              >
+                Get Your Quote
               </a>
+              <p className="mt-4 text-sm text-white/40">We&apos;ll set up everything for you</p>
             </div>
           </div>
         </div>
