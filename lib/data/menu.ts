@@ -125,6 +125,8 @@ function normalizeItem(raw: RawMenuItem): MenuItem & {
     tags: Array.from(tagSet).filter(Boolean),
     calories: typeof raw.calories === "number" ? raw.calories : undefined,
     imageUrl: raw.imageUrl || undefined,
+    servingSize: typeof raw.servingSize === "number" ? raw.servingSize : undefined,
+    servingUnit: typeof raw.servingUnit === "string" ? raw.servingUnit : undefined,
   };
 
   if (diet.length) item.diet = diet;
