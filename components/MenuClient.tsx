@@ -1533,6 +1533,91 @@ export default function MenuClient() {
       )}
 
       {/* Main Content */}
+      {useElegantListLayout ? (
+        <div className="max-w-4xl mx-auto px-4 py-4" id="top">
+          {filteredCategories.map((category) => (
+            <div key={category.id} id={`cat-${category.id}`}>
+              {category.items.map((item, itemIdx) => {
+                const tags = visibleTags(item.tags).slice(0, 3)
+                return (
+                  <div
+                    key={item.id}
+                    id={`item-${item.id}`}
+                    data-menu-item-id={item.id}
+                    data-menu-item-name={item.name}
+                    className="py-5"
+                    style={itemIdx === 0 && filteredCategories.indexOf(category) === 0 ? undefined : { borderTop: '1px solid rgba(255,255,255,0.1)' }}
+                  >
+                    <div className="flex items-start justify-between gap-6">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-base font-semibold text-white">
+                          {highlightText(item.name, searchQuery)}
+                        </div>
+                        {typeof item.description === 'string' && item.description.trim() !== '' && (
+                          <div className="mt-1 text-sm text-gray-400">
+                            {minimalDescription(item.description)}
+                          </div>
+                        )}
+                        {(tags.length > 0) && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium bg-neutral-800 text-neutral-300"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <div className="text-base font-semibold" style={{ color: 'var(--accent)' }}>
+                          ${Number(item.price ?? 0).toFixed(2)}
+                        </div>
+                        {cateringMode && item.servingSize && (
+                          <div className="text-xs mt-0.5" style={{ color: 'var(--accent)', opacity: 0.85 }}>
+                            Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="shrink-0 flex flex-col gap-2">
+                        {!hideCart && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              addToCart(item)
+                              setRecentlyAddedId(item.id)
+                              setCartBump(true)
+                              setToast(`Added ${item.name}`)
+                              setIsCartOpen(true)
+                              setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
+                            }}
+                            className="h-9 rounded-lg px-5 text-sm font-semibold"
+                            style={{ background: 'var(--accent)', color: '#0a0a0a' }}
+                          >
+                            Add
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                          className="h-9 rounded-lg px-5 text-sm font-medium flex items-center justify-center gap-1"
+                          style={{ background: '#2a2a2a', color: '#e5e5e5' }}
+                        >
+                          <span className="text-xs">○</span> Ask
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      ) : (
       <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
         {/* Current Category Chip */}
         <div className="lg:col-span-12 mb-4">
@@ -2047,6 +2132,7 @@ export default function MenuClient() {
           ))}
         </div>
       </div>
+      )}
 
       {/* Nutrition/legal disclaimer */}
       <div className="max-w-7xl mx-auto px-4 mt-10 mb-24">
