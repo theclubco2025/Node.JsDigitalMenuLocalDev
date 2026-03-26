@@ -91,7 +91,7 @@ const DIETARY_OPTIONS_BASE: readonly DietaryOption[] = [
 ]
 
 
-export default function MenuClient() {
+export default function MenuClient({ initialTenant }: { initialTenant?: string } = {}) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   // South Fork only: allow multi-select of specific categories via dropdown
@@ -116,8 +116,8 @@ export default function MenuClient() {
   const reservedPaths = ['menu', 'demo', 'admin', 'kitchen', 'kds', 'billing', 'order', 'api', 'auth', 'terms', 'privacy']
   const validPathTenant = pathTenant && !reservedPaths.includes(pathTenant) ? pathTenant : null
   const tenant = isBrowser
-    ? (searchParams!.get('tenant') || validPathTenant || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo')
-    : 'demo'
+    ? (searchParams!.get('tenant') || validPathTenant || process.env.NEXT_PUBLIC_DEFAULT_TENANT || initialTenant || 'demo')
+    : (initialTenant || 'demo')
   // Tenant-scoped UI overrides (must not affect other menus)
   const canonicalTenant = String(tenant || '').trim().toLowerCase() === 'southforkgrille'
     ? 'south-fork-grille'

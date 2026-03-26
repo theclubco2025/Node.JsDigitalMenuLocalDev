@@ -40,17 +40,20 @@ export default async function MenuPage({ searchParams }: Props) {
   }
 
   // In preview we want clients to be able to review work without being paywalled.
-  if (isPreview) return <MenuClient />
+  if (isPreview) return <MenuClient initialTenant={tenant} />
 
   // Always allow demo + any draft tenants (drafts are blocked elsewhere on prod anyway).
-  if (!tenant || tenant === 'demo' || tenant.endsWith('-draft')) return <MenuClient />
+  // platepilot-demo uses MenuClient with elegant layout enabled via useElegantListLayout
+  if (!tenant || tenant === 'demo' || tenant.endsWith('-draft') || tenant === 'platepilot-demo') {
+    return <MenuClient initialTenant={tenant} />
+  }
 
   // Independent: render the exact premium UI used in independent-draft previews.
   // Tenant-scoped so it won't impact any other menus.
   if (tenant === 'independentbarandgrille' || tenant === 'independent-draft') return <IndependentMenuClient />
 
   // If DB isn't configured (local/demo), don't block.
-  if (!process.env.DATABASE_URL) return <MenuClient />
+  if (!process.env.DATABASE_URL) return <MenuClient initialTenant={tenant} />
 
   try {
     const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })
@@ -60,8 +63,8 @@ export default async function MenuPage({ searchParams }: Props) {
   } catch {
     // Build/runtime safety: if DB is temporarily unreachable, do not fail rendering.
     // The billing gate is an activation guard; safe fallback is to render the menu client.
-    return <MenuClient />
+    return <MenuClient initialTenant={tenant} />
   }
 
-  return <MenuClient />
+  return <MenuClient initialTenant={tenant} />
 }
