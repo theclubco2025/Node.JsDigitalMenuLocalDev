@@ -16,8 +16,8 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#111]/90 backdrop-blur-md border-b border-[#C4A76A]/20">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-3">
-            <img src="/assets/platepilot-logo.png" alt="PlatePilot" className="h-10 w-10" />
+          <a href="/" className="flex items-center gap-2">
+            <img src="/assets/platepilot-logo.png" alt="PlatePilot" className="h-9 w-auto object-contain" />
             <span className="text-xl font-semibold tracking-tight text-[#C4A76A]">
               PlatePilot
             </span>
@@ -268,8 +268,8 @@ export default function Landing() {
       {/* Footer */}
       <footer className="border-t border-white/10 py-12 px-6">
         <div className="mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <img src="/assets/platepilot-logo.png" alt="PlatePilot" className="h-8 w-8" />
+          <div className="flex items-center gap-2">
+            <img src="/assets/platepilot-logo.png" alt="PlatePilot" className="h-7 w-auto object-contain" />
             <span className="font-semibold text-[#C4A76A]">PlatePilot</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-white/50">
