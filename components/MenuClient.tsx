@@ -2839,4 +2839,3 @@ export default function MenuClient() {
   )
 }
 
-// Force rebuild Thu Mar 26 10:21:42 PM UTC 2026
