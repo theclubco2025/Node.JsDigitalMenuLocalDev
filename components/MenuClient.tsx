@@ -1324,36 +1324,38 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Search & Filters (scroll with page) */}
-      <div className="max-w-7xl mx-auto px-4 py-2">
-        {/* Search Bar */}
-        <div className="mb-3">
-          <div className="flex items-center gap-2 max-w-2xl mx-auto">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search menu items, tags, or categories..."
-                className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
-                style={{ border: '1px solid var(--muted)' }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
-                  <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+      {/* Search & Filters (scroll with page) - hide search for elegant layout since it's in header */}
+      <div className={`mx-auto px-4 py-2 ${useElegantListLayout ? 'max-w-4xl' : 'max-w-7xl'}`}>
+        {/* Search Bar - hide for elegant layout (search is in header) */}
+        {!useElegantListLayout && (
+          <div className="mb-3">
+            <div className="flex items-center gap-2 max-w-2xl mx-auto">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search menu items, tags, or categories..."
+                  className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
+                  style={{ border: '1px solid var(--muted)' }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
+                    <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
               </div>
+              <button
+                onClick={() => setFiltersOpen(o => !o)}
+                className="px-3 py-2 rounded-md text-sm font-medium"
+                style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+              >
+                {filtersOpen ? 'Hide Filters' : 'Filters'}
+              </button>
             </div>
-            <button
-              onClick={() => setFiltersOpen(o => !o)}
-              className="px-3 py-2 rounded-md text-sm font-medium"
-              style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
-            >
-              {filtersOpen ? 'Hide Filters' : 'Filters'}
-            </button>
           </div>
-        </div>
+        )}
 
         {/* Category Filters */}
         {isSouthFork ? (
