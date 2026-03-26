@@ -3,7 +3,7 @@
   "tagline": "Sample Catering Menu",
   "header": {
     "mode": "logo",
-    "logoUrl": "/assets/platepilot-logo.svg",
-    "background": "#1E1E1E"
+    "logoUrl": "/assets/platepilot-logo.png",
+    "background": "#0a0a0a"
   }
 }
