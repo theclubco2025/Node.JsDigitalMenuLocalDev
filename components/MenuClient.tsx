@@ -1155,34 +1155,60 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Fixed Header (South Fork requested: remove this top header; keep hero image header only) */}
+      {/* Fixed Header */}
       {!isSouthFork && (
         <>
-          <div
-            className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-            style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
-          >
-            <div
-              className="px-4"
-              style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-                <div className="text-center">
-                  <h1
-                    className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
-                    style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
-                  >
-                    {brandName}
-                  </h1>
-                  <p className="text-gray-200 text-xs">{brandTagline}</p>
+          {useElegantListLayout ? (
+            /* Dark minimal header for Independent/PlatePilot style */
+            <div className="fixed top-0 left-0 right-0 z-50" style={{ background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {brand?.header?.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={brand.header.logoUrl} alt={brandName} className="h-10 w-auto" />
+                  ) : (
+                    <span className="text-xl font-semibold text-white">{brandName}</span>
+                  )}
+                </div>
+                <div className="flex-1 max-w-md mx-8">
+                  <input
+                    type="text"
+                    placeholder="Search the menu..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg bg-white text-neutral-900 text-sm placeholder-neutral-500"
+                  />
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* Original gradient header */
+            <div
+              className="fixed top-0 left-0 right-0 z-50 shadow-sm"
+              style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+            >
+              <div
+                className="px-4"
+                style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+                  <div className="text-center">
+                    <h1
+                      className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
+                      style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
+                    >
+                      {brandName}
+                    </h1>
+                    <p className="text-gray-200 text-xs">{brandTagline}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Spacer to offset fixed header height */}
-          <div style={{ height: 80 }} />
+          <div style={{ height: useElegantListLayout ? 64 : 80 }} />
         </>
       )}
 
@@ -1534,86 +1560,97 @@ export default function MenuClient() {
 
       {/* Main Content */}
       {useElegantListLayout ? (
-        <div className="max-w-4xl mx-auto px-4 py-4" id="top">
-          {filteredCategories.map((category) => (
-            <div key={category.id} id={`cat-${category.id}`}>
-              {category.items.map((item, itemIdx) => {
-                const tags = visibleTags(item.tags).slice(0, 3)
-                return (
-                  <div
-                    key={item.id}
-                    id={`item-${item.id}`}
-                    data-menu-item-id={item.id}
-                    data-menu-item-name={item.name}
-                    className="py-5"
-                    style={itemIdx === 0 && filteredCategories.indexOf(category) === 0 ? undefined : { borderTop: '1px solid rgba(255,255,255,0.1)' }}
-                  >
-                    <div className="flex items-start justify-between gap-6">
-                      <div className="flex-1 min-w-0">
-                        <div className="text-base font-semibold text-white">
-                          {highlightText(item.name, searchQuery)}
+        <div className="max-w-4xl mx-auto px-4 py-6" id="top">
+          {filteredCategories.map((category, catIdx) => (
+            <div key={category.id} id={`cat-${category.id}`} className={catIdx > 0 ? 'mt-10' : ''}>
+              {/* Category Header */}
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-xl font-bold text-white tracking-wide">
+                  {cleanMojibake(category.name)}
+                </h2>
+                <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+              </div>
+              
+              {/* Category Items */}
+              <div className="rounded-xl overflow-hidden" style={{ background: '#1a1a1a' }}>
+                {category.items.map((item, itemIdx) => {
+                  const tags = visibleTags(item.tags).slice(0, 3)
+                  return (
+                    <div
+                      key={item.id}
+                      id={`item-${item.id}`}
+                      data-menu-item-id={item.id}
+                      data-menu-item-name={item.name}
+                      className="px-5 py-5"
+                      style={itemIdx > 0 ? { borderTop: '1px solid rgba(255,255,255,0.08)' } : undefined}
+                    >
+                      <div className="flex items-start justify-between gap-6">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-base font-semibold text-white">
+                            {highlightText(item.name, searchQuery)}
+                          </div>
+                          {typeof item.description === 'string' && item.description.trim() !== '' && (
+                            <div className="mt-1 text-sm text-gray-400">
+                              {minimalDescription(item.description)}
+                            </div>
+                          )}
+                          {(tags.length > 0) && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {tags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium bg-neutral-800 text-neutral-300"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        {typeof item.description === 'string' && item.description.trim() !== '' && (
-                          <div className="mt-1 text-sm text-gray-400">
-                            {minimalDescription(item.description)}
-                          </div>
-                        )}
-                        {(tags.length > 0) && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium bg-neutral-800 text-neutral-300"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="shrink-0 text-right">
-                        <div className="text-base font-semibold" style={{ color: 'var(--accent)' }}>
-                          ${Number(item.price ?? 0).toFixed(2)}
+                        <div className="shrink-0 text-right">
+                          <div className="text-base font-semibold" style={{ color: 'var(--accent)' }}>
+                            ${Number(item.price ?? 0).toFixed(2)}
+                          </div>
+                          {cateringMode && item.servingSize && (
+                            <div className="text-xs mt-0.5" style={{ color: 'var(--accent)', opacity: 0.85 }}>
+                              Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                            </div>
+                          )}
                         </div>
-                        {cateringMode && item.servingSize && (
-                          <div className="text-xs mt-0.5" style={{ color: 'var(--accent)', opacity: 0.85 }}>
-                            Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
-                          </div>
-                        )}
-                      </div>
 
-                      <div className="shrink-0 flex flex-col gap-2">
-                        {!hideCart && (
+                        <div className="shrink-0 flex flex-col gap-2">
+                          {!hideCart && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                addToCart(item)
+                                setRecentlyAddedId(item.id)
+                                setCartBump(true)
+                                setToast(`Added ${item.name}`)
+                                setIsCartOpen(true)
+                                setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
+                              }}
+                              className="h-9 rounded-lg px-5 text-sm font-semibold"
+                              style={{ background: 'var(--accent)', color: '#0a0a0a' }}
+                            >
+                              Add
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={() => {
-                              addToCart(item)
-                              setRecentlyAddedId(item.id)
-                              setCartBump(true)
-                              setToast(`Added ${item.name}`)
-                              setIsCartOpen(true)
-                              setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
-                            }}
-                            className="h-9 rounded-lg px-5 text-sm font-semibold"
-                            style={{ background: 'var(--accent)', color: '#0a0a0a' }}
+                            onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                            className="h-9 rounded-lg px-5 text-sm font-medium flex items-center justify-center gap-1"
+                            style={{ background: '#2a2a2a', color: '#e5e5e5' }}
                           >
-                            Add
+                            <span className="text-xs">○</span> Ask
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                          className="h-9 rounded-lg px-5 text-sm font-medium flex items-center justify-center gap-1"
-                          style={{ background: '#2a2a2a', color: '#e5e5e5' }}
-                        >
-                          <span className="text-xs">○</span> Ask
-                        </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           ))}
         </div>
