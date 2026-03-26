@@ -65,16 +65,20 @@ export function middleware(request: NextRequest) {
     // Always show the landing page (PlatePilot) at root
     return NextResponse.next()
   }
-  // In preview, ALWAYS normalize /menu to the branch slug tenant, even if a wrong tenant query is present
+  // In preview, normalize /menu to the branch slug tenant, unless explicitly requesting platepilot-demo
   if (request.nextUrl.pathname === '/menu') {
     if (isPreview) {
       const url = request.nextUrl.clone()
+      const currentTenant = (url.searchParams.get('tenant') || '').toLowerCase()
+      // Allow platepilot-demo to work in preview (for landing page demo links)
+      if (currentTenant === 'platepilot-demo') {
+        return NextResponse.next()
+      }
       const host = request.headers.get('host') || ''
       const fromEnv = (process.env.VERCEL_GIT_COMMIT_REF || '').toLowerCase()
       const m = host.match(/-git-([a-z0-9-]+)-/i)
       const fromHost = (m?.[1] || '').toLowerCase()
       const desiredTenant = fromEnv || fromHost || (process.env.PREVIEW_DEFAULT_TENANT || '')
-      const currentTenant = (url.searchParams.get('tenant') || '').toLowerCase()
       if (desiredTenant && currentTenant !== desiredTenant) {
         url.searchParams.set('tenant', desiredTenant)
         return NextResponse.redirect(url)
