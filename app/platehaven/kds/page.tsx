@@ -157,10 +157,9 @@ export default function PlateHavenKDSPage() {
   }, [])
 
   useEffect(() => {
-    if (orders.length > 0) return
     setOrders(seedOrders)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seedOrders])
+  }, [])
 
   const orderNumberById = useMemo(() => {
     const sorted = [...orders].sort((a, b) => a.createdAt - b.createdAt)
