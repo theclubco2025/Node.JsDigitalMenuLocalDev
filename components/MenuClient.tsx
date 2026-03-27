@@ -124,6 +124,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
     : String(tenant || '').trim().toLowerCase()
   const isSouthFork = canonicalTenant === 'south-fork-grille'
   const isDemo = tenant === 'demo'
+  const isPlateHavenDemo = tenant === 'platehaven-demo' || tenant === 'platepilot-demo'
   const useElegantListLayout = tenant === 'independentbarandgrille' || tenant === 'platepilot-demo' || tenant === 'platehaven-demo'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
   // URL-based mode override: ?mode=foodtruck or ?mode=catering
@@ -147,14 +148,14 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
   // Demo reminder (first-visit acknowledgement)
   useEffect(() => {
     if (!isBrowser) return
-    if (!isDemo) return
+    if (!isDemo && !isPlateHavenDemo) return
     try {
       const ack = localStorage.getItem(demoAcknowledgeKey)
       if (!ack) setShowDemoAcknowledgement(true)
     } catch {
       setShowDemoAcknowledgement(true)
     }
-  }, [isBrowser, isDemo, demoAcknowledgeKey])
+  }, [isBrowser, isDemo, isPlateHavenDemo, demoAcknowledgeKey])
 
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
@@ -1097,7 +1098,62 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
       )}
       {!error && !isLoading && (
         <>
-      {/* Demo reminder */}
+      {/* Demo reminder - PlateHaven version */}
+      {isPlateHavenDemo && showDemoAcknowledgement && (
+        <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-2xl bg-[#111] border border-[#C4A76A]/20 p-6 shadow-2xl">
+            <div className="text-center mb-5">
+              <div className="text-lg font-bold text-white mb-2">Welcome to the Demo</div>
+              <p className="text-sm text-white/60">
+                You&apos;re viewing a sample {isFoodTruckMode ? 'food truck' : 'catering'} menu.
+              </p>
+            </div>
+            
+            <div className="bg-[#1a1a1a] rounded-xl p-4 mb-5 border border-white/5">
+              <div className="text-sm font-semibold text-[#C4A76A] mb-2">What You&apos;ll Get</div>
+              <ul className="space-y-2 text-sm text-white/70">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span>Fully personalized to your brand, colors &amp; logo</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span>Your menu items with your pricing</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span>Your own shareable link &amp; QR code</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span>Custom features available for additional fees</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => {
+                try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                setShowDemoAcknowledgement(false)
+              }}
+              className="w-full rounded-lg bg-[#C4A76A] px-4 py-3 text-sm font-bold text-[#111] hover:bg-[#d4b87a] transition-colors"
+            >
+              Explore Demo
+            </button>
+            
+            <a
+              href="https://calendly.com/tccsolutions2025/30min"
+              target="_blank"
+              rel="noreferrer"
+              className="block mt-3 text-center text-xs text-[#C4A76A] hover:underline"
+            >
+              Ready to get started? Schedule a call →
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Demo reminder - Original demo tenant */}
       {isDemo && showDemoAcknowledgement && (
         <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl">
@@ -2497,8 +2553,8 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                     </div>
                   </div>
 
-                  {/* Order-wide notes */}
-                  {orderingEnabled && (
+                  {/* Order-wide notes - hidden in food truck mode (included in pickup section) */}
+                  {orderingEnabled && !isFoodTruckMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-black">Order-wide notes</div>
                       <div className="mt-2 text-sm text-gray-600">Anything the kitchen should know for the whole order.</div>
@@ -2515,19 +2571,26 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                   {/* Food Truck Pickup Info - Simplified */}
                   {isFoodTruckMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <div className="text-sm font-extrabold tracking-wide text-black">👤 Pickup Info</div>
+                      <div className="text-sm font-extrabold tracking-wide text-black">📝 Order Details</div>
                       <div className="mt-2 text-sm text-gray-600">
-                        We&apos;ll call this name when your order is ready.
+                        Enter your name and any special requests.
                       </div>
-                      <div className="mt-4">
+                      <div className="mt-4 space-y-3">
                         <input
                           type="text"
                           inputMode="text"
                           autoComplete="name"
                           value={customerName}
                           onChange={(e) => setCustomerName(e.target.value)}
-                          placeholder="Pickup Name *"
+                          placeholder="Name for order *"
                           className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        />
+                        <textarea
+                          value={orderNote}
+                          onChange={(e) => setOrderNote(e.target.value)}
+                          placeholder="Special instructions (optional)"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black resize-none"
+                          rows={2}
                         />
                       </div>
                     </div>

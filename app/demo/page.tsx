@@ -107,7 +107,7 @@ export default function DemoPage() {
               
               {/* Admin Panel */}
               <Link 
-                href="/independentbarandgrille?admin=1"
+                href="/platehaven/admin"
                 className="group bg-[#161616] rounded-xl p-5 border border-white/5 hover:border-[#C4A76A]/30 transition-all"
               >
                 <div className="flex items-start gap-4">
