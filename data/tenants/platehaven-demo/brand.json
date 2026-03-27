@@ -1,0 +1,9 @@
+{
+  "name": "PlateHaven Demo",
+  "tagline": "Sample Menu",
+  "header": {
+    "mode": "logo",
+    "logoUrl": "/assets/platehaven-logo.png",
+    "background": "#0a0a0a"
+  }
+}

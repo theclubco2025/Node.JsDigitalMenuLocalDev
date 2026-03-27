@@ -47,7 +47,20 @@ export async function GET(req: NextRequest) {
             tenant: { select: { slug: true, name: true } },
             items: { select: { id: true, name: true, quantity: true, unitPriceCents: true } },
           }),
-          ...(minimal ? {} : (withExtras ? { tableNumber: true } : {})),
+          ...(minimal ? {} : (withExtras ? { 
+            tableNumber: true,
+            // Catering fields
+            eventDate: true,
+            eventTime: true,
+            guestCount: true,
+            eventType: true,
+            deliveryAddress: true,
+            deliveryNotes: true,
+            dietaryNotes: true,
+            companyName: true,
+            customerName: true,
+            customerEmail: true,
+          } : {})),
         }
       })
     }
@@ -66,12 +79,39 @@ export async function GET(req: NextRequest) {
     }
     if (!order) return NextResponse.json({ ok: false, error: 'Not found' }, { status: 404 })
 
+    const orderWithExtras = order as unknown as { 
+      tableNumber?: string | null
+      eventDate?: Date | null
+      eventTime?: string | null
+      guestCount?: number | null
+      eventType?: string | null
+      deliveryAddress?: string | null
+      deliveryNotes?: string | null
+      dietaryNotes?: string | null
+      companyName?: string | null
+      customerName?: string | null
+      customerEmail?: string | null
+    }
+
     return NextResponse.json({
       ok: true,
       order: {
         ...order,
         pickupCode: computePickupCode(order.id),
-        ...(minimal ? {} : { tableNumber: (order as unknown as { tableNumber?: string | null }).tableNumber ?? null }),
+        ...(minimal ? {} : { 
+          tableNumber: orderWithExtras.tableNumber ?? null,
+          // Catering fields
+          eventDate: orderWithExtras.eventDate ?? null,
+          eventTime: orderWithExtras.eventTime ?? null,
+          guestCount: orderWithExtras.guestCount ?? null,
+          eventType: orderWithExtras.eventType ?? null,
+          deliveryAddress: orderWithExtras.deliveryAddress ?? null,
+          deliveryNotes: orderWithExtras.deliveryNotes ?? null,
+          dietaryNotes: orderWithExtras.dietaryNotes ?? null,
+          companyName: orderWithExtras.companyName ?? null,
+          customerName: orderWithExtras.customerName ?? null,
+          customerEmail: orderWithExtras.customerEmail ?? null,
+        }),
       }
     }, { status: 200 })
   } catch (e) {

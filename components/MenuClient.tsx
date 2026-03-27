@@ -56,10 +56,15 @@ type OrderingScheduling = {
 
 type OrderingSettings = {
   enabled?: boolean
-  fulfillment?: 'pickup'
+  fulfillment?: 'pickup' | 'delivery' | 'catering'
   timezone?: string
   scheduling?: OrderingScheduling
   hours?: unknown
+  // Catering-specific settings
+  cateringMode?: boolean
+  cateringLeadDays?: number
+  cateringDepositPercent?: number
+  cateringMinimumCents?: number
 }
 
 type TenantConfig = {
@@ -86,7 +91,7 @@ const DIETARY_OPTIONS_BASE: readonly DietaryOption[] = [
 ]
 
 
-export default function MenuClient() {
+export default function MenuClient({ initialTenant }: { initialTenant?: string } = {}) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   // South Fork only: allow multi-select of specific categories via dropdown
@@ -111,15 +116,20 @@ export default function MenuClient() {
   const reservedPaths = ['menu', 'demo', 'admin', 'kitchen', 'kds', 'billing', 'order', 'api', 'auth', 'terms', 'privacy']
   const validPathTenant = pathTenant && !reservedPaths.includes(pathTenant) ? pathTenant : null
   const tenant = isBrowser
-    ? (searchParams!.get('tenant') || validPathTenant || process.env.NEXT_PUBLIC_DEFAULT_TENANT || 'demo')
-    : 'demo'
+    ? (searchParams!.get('tenant') || validPathTenant || process.env.NEXT_PUBLIC_DEFAULT_TENANT || initialTenant || 'demo')
+    : (initialTenant || 'demo')
   // Tenant-scoped UI overrides (must not affect other menus)
   const canonicalTenant = String(tenant || '').trim().toLowerCase() === 'southforkgrille'
     ? 'south-fork-grille'
     : String(tenant || '').trim().toLowerCase()
   const isSouthFork = canonicalTenant === 'south-fork-grille'
   const isDemo = tenant === 'demo'
+  const isPlateHavenDemo = tenant === 'platehaven-demo' || tenant === 'platepilot-demo'
+  const useElegantListLayout = tenant === 'independentbarandgrille' || tenant === 'platepilot-demo' || tenant === 'platehaven-demo'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+  // URL-based mode override: ?mode=foodtruck or ?mode=catering
+  const urlMode = isBrowser ? searchParams!.get('mode') : null
+  const isFoodTruckMode = urlMode === 'foodtruck'
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
@@ -138,14 +148,14 @@ export default function MenuClient() {
   // Demo reminder (first-visit acknowledgement)
   useEffect(() => {
     if (!isBrowser) return
-    if (!isDemo) return
+    if (!isDemo && !isPlateHavenDemo) return
     try {
       const ack = localStorage.getItem(demoAcknowledgeKey)
       if (!ack) setShowDemoAcknowledgement(true)
     } catch {
       setShowDemoAcknowledgement(true)
     }
-  }, [isBrowser, isDemo, demoAcknowledgeKey])
+  }, [isBrowser, isDemo, isPlateHavenDemo, demoAcknowledgeKey])
 
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
@@ -322,7 +332,7 @@ export default function MenuClient() {
                 item.imageUrl = value === undefined ? undefined : String(value)
                 break
               default:
-                item[field] = value as typeof item[typeof field]
+                (item as Record<string, unknown>)[field] = value
             }
           }
           break
@@ -554,6 +564,26 @@ export default function MenuClient() {
   const [tableNumber, setTableNumber] = useState('')
   const [fulfillmentMode, setFulfillmentMode] = useState<'pickup' | 'dinein'>('pickup')
 
+  // Catering-specific state (disabled if food truck mode is active)
+  const cateringMode = orderingCfg?.cateringMode === true && !isFoodTruckMode
+  const cateringLeadDays = typeof orderingCfg?.cateringLeadDays === 'number' ? orderingCfg.cateringLeadDays : 2
+  const [eventDate, setEventDate] = useState<string>('')
+  const [eventTime, setEventTime] = useState<string>('')
+  const [guestCount, setGuestCount] = useState<string>('')
+  const [eventType, setEventType] = useState<string>('')
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('')
+  const [deliveryNotes, setDeliveryNotes] = useState<string>('')
+  const [dietaryNotes, setDietaryNotes] = useState<string>('')
+  const [companyName, setCompanyName] = useState<string>('')
+
+  const minEventDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + cateringLeadDays)
+    return d.toISOString().split('T')[0]
+  }, [cateringLeadDays])
+
+  const eventTypes = ['Corporate', 'Wedding', 'Birthday', 'Graduation', 'Holiday Party', 'Memorial', 'Other']
+
   const tipCents = useMemo(() => {
     if (!orderingEnabled) return 0
     const raw = customTip.trim()
@@ -661,6 +691,25 @@ export default function MenuClient() {
         setToast(orderingPauseText)
         return
       }
+      // Catering mode validations
+      if (cateringMode) {
+        if (!eventDate) {
+          setToast('Please select an event date.')
+          return
+        }
+        if (!guestCount || parseInt(guestCount) < 1) {
+          setToast('Please enter the number of guests.')
+          return
+        }
+        if (!customerName.trim()) {
+          setToast('Please enter your name.')
+          return
+        }
+        if (!customerPhone.trim()) {
+          setToast('Please enter your phone number.')
+          return
+        }
+      }
       if (orderingEnabled && dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) {
         setToast(`Please enter your ${dineInLabel.toLowerCase()} to place a dine-in order.`)
         return
@@ -689,8 +738,19 @@ export default function MenuClient() {
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         smsOptIn: Boolean(smsOptIn),
-        tipCents,
+        tipCents: cateringMode ? 0 : tipCents,
         orderNote: orderNote.trim() || null,
+        // Catering-specific fields
+        ...(cateringMode ? {
+          eventDate: eventDate || null,
+          eventTime: eventTime.trim() || null,
+          guestCount: guestCount ? parseInt(guestCount) : null,
+          eventType: eventType || null,
+          deliveryAddress: deliveryAddress.trim() || null,
+          deliveryNotes: deliveryNotes.trim() || null,
+          dietaryNotes: dietaryNotes.trim() || null,
+          companyName: companyName.trim() || null,
+        } : {}),
       }
       const res = await fetch('/api/orders/checkout', {
         method: 'POST',
@@ -1038,7 +1098,62 @@ export default function MenuClient() {
       )}
       {!error && !isLoading && (
         <>
-      {/* Demo reminder */}
+      {/* Demo reminder - PlateHaven version */}
+      {isPlateHavenDemo && showDemoAcknowledgement && (
+        <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-2xl bg-[#111] border border-[#C4A76A]/20 p-6 shadow-2xl">
+            <div className="text-center mb-5">
+              <div className="text-lg font-bold text-white mb-2">Welcome to the Demo</div>
+              <p className="text-sm text-white/60">
+                You&apos;re viewing a sample {isFoodTruckMode ? 'food truck' : 'catering'} menu.
+              </p>
+            </div>
+            
+            <div className="bg-[#1a1a1a] rounded-xl p-4 mb-5 border border-white/5">
+              <div className="text-sm font-semibold text-[#C4A76A] mb-2">What You&apos;ll Get</div>
+              <ul className="space-y-2 text-sm text-white/70">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span>Fully personalized to your brand, colors &amp; logo</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span>Your menu items with your pricing</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span>Your own shareable link &amp; QR code</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span>Custom features available for additional fees</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => {
+                try { localStorage.setItem(demoAcknowledgeKey, '1') } catch {}
+                setShowDemoAcknowledgement(false)
+              }}
+              className="w-full rounded-lg bg-[#C4A76A] px-4 py-3 text-sm font-bold text-[#111] hover:bg-[#d4b87a] transition-colors"
+            >
+              Explore Demo
+            </button>
+            
+            <a
+              href="https://calendly.com/tccsolutions2025/30min"
+              target="_blank"
+              rel="noreferrer"
+              className="block mt-3 text-center text-xs text-[#C4A76A] hover:underline"
+            >
+              Ready to get started? Schedule a call →
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Demo reminder - Original demo tenant */}
       {isDemo && showDemoAcknowledgement && (
         <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-lg rounded-2xl border border-neutral-200 bg-white p-5 shadow-xl">
@@ -1099,34 +1214,60 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Fixed Header (South Fork requested: remove this top header; keep hero image header only) */}
+      {/* Fixed Header */}
       {!isSouthFork && (
         <>
-          <div
-            className="fixed top-0 left-0 right-0 z-50 shadow-sm"
-            style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
-          >
-            <div
-              className="px-4"
-              style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
-                <div className="text-center">
-                  <h1
-                    className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
-                    style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
-                  >
-                    {brandName}
-                  </h1>
-                  <p className="text-gray-200 text-xs">{brandTagline}</p>
+          {useElegantListLayout ? (
+            /* Dark minimal header for Independent/PlatePilot style */
+            <div className="fixed top-0 left-0 right-0 z-50" style={{ background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {brand?.header?.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={brand.header.logoUrl} alt={brandName} className="h-10 w-auto" />
+                  ) : (
+                    <span className="text-xl font-semibold text-white">{brandName}</span>
+                  )}
+                </div>
+                <div className="flex-1 max-w-md mx-8">
+                  <input
+                    type="text"
+                    placeholder="Search the menu..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg bg-white text-neutral-900 text-sm placeholder-neutral-500"
+                  />
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* Original gradient header */
+            <div
+              className="fixed top-0 left-0 right-0 z-50 shadow-sm"
+              style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
+            >
+              <div
+                className="px-4"
+                style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+                  <div className="text-center">
+                    <h1
+                      className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
+                      style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
+                    >
+                      {brandName}
+                    </h1>
+                    <p className="text-gray-200 text-xs">{brandTagline}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Spacer to offset fixed header height */}
-          <div style={{ height: 80 }} />
+          <div style={{ height: useElegantListLayout ? 64 : 80 }} />
         </>
       )}
 
@@ -1242,36 +1383,38 @@ export default function MenuClient() {
         </div>
       )}
 
-      {/* Search & Filters (scroll with page) */}
-      <div className="max-w-7xl mx-auto px-4 py-2">
-        {/* Search Bar */}
-        <div className="mb-3">
-          <div className="flex items-center gap-2 max-w-2xl mx-auto">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search menu items, tags, or categories..."
-                className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
-                style={{ border: '1px solid var(--muted)' }}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
-                  <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+      {/* Search & Filters (scroll with page) - hide search for elegant layout since it's in header */}
+      <div className={`mx-auto px-4 py-2 ${useElegantListLayout ? 'max-w-4xl' : 'max-w-7xl'}`}>
+        {/* Search Bar - hide for elegant layout (search is in header) */}
+        {!useElegantListLayout && (
+          <div className="mb-3">
+            <div className="flex items-center gap-2 max-w-2xl mx-auto">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  placeholder="Search menu items, tags, or categories..."
+                  className="w-full px-3 py-2 pr-9 rounded-md focus:ring-2 transition-colors text-sm text-black bg-white placeholder-gray-500"
+                  style={{ border: '1px solid var(--muted)' }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" />
+                    <path d="M20 20l-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
               </div>
+              <button
+                onClick={() => setFiltersOpen(o => !o)}
+                className="px-3 py-2 rounded-md text-sm font-medium"
+                style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
+              >
+                {filtersOpen ? 'Hide Filters' : 'Filters'}
+              </button>
             </div>
-            <button
-              onClick={() => setFiltersOpen(o => !o)}
-              className="px-3 py-2 rounded-md text-sm font-medium"
-              style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--muted)' }}
-            >
-              {filtersOpen ? 'Hide Filters' : 'Filters'}
-            </button>
           </div>
-        </div>
+        )}
 
         {/* Category Filters */}
         {isSouthFork ? (
@@ -1477,6 +1620,102 @@ export default function MenuClient() {
       )}
 
       {/* Main Content */}
+      {useElegantListLayout ? (
+        <div className="max-w-4xl mx-auto px-4 py-6" id="top">
+          {filteredCategories.map((category, catIdx) => (
+            <div key={category.id} id={`cat-${category.id}`} className={catIdx > 0 ? 'mt-10' : ''}>
+              {/* Category Header */}
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-xl font-bold text-white tracking-wide">
+                  {cleanMojibake(category.name)}
+                </h2>
+                <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
+              </div>
+              
+              {/* Category Items */}
+              <div className="rounded-xl overflow-hidden" style={{ background: '#1a1a1a' }}>
+                {category.items.map((item, itemIdx) => {
+                  const tags = visibleTags(item.tags).slice(0, 3)
+                  return (
+                    <div
+                      key={item.id}
+                      id={`item-${item.id}`}
+                      data-menu-item-id={item.id}
+                      data-menu-item-name={item.name}
+                      className="px-5 py-5"
+                      style={itemIdx > 0 ? { borderTop: '1px solid rgba(255,255,255,0.08)' } : undefined}
+                    >
+                      <div className="flex items-start justify-between gap-6">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-base font-semibold text-white">
+                            {highlightText(item.name, searchQuery)}
+                          </div>
+                          {typeof item.description === 'string' && item.description.trim() !== '' && (
+                            <div className="mt-1 text-sm text-gray-400">
+                              {minimalDescription(item.description)}
+                            </div>
+                          )}
+                          {(tags.length > 0) && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {tags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium bg-neutral-800 text-neutral-300"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="shrink-0 text-right">
+                          <div className="text-base font-semibold" style={{ color: 'var(--accent)' }}>
+                            ${Number(item.price ?? 0).toFixed(2)}
+                          </div>
+                          {cateringMode && item.servingSize && (
+                            <div className="text-xs mt-0.5" style={{ color: 'var(--accent)', opacity: 0.85 }}>
+                              Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="shrink-0 flex flex-col gap-2">
+                          {!hideCart && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                addToCart(item)
+                                setRecentlyAddedId(item.id)
+                                setCartBump(true)
+                                setToast(`Added ${item.name}`)
+                                setIsCartOpen(true)
+                                setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
+                              }}
+                              className="h-9 rounded-lg px-5 text-sm font-semibold"
+                              style={{ background: 'var(--accent)', color: '#0a0a0a' }}
+                            >
+                              Add
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                            className="h-9 rounded-lg px-5 text-sm font-medium flex items-center justify-center gap-1"
+                            style={{ background: '#2a2a2a', color: '#e5e5e5' }}
+                          >
+                            <span className="text-xs">○</span> Ask
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
       <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
         {/* Current Category Chip */}
         <div className="lg:col-span-12 mb-4">
@@ -1580,7 +1819,106 @@ export default function MenuClient() {
                 <p className="text-sm mb-4" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
               )}
               
-              {isDemo && !isAdmin ? (
+              {useElegantListLayout && !isAdmin ? (
+                <div
+                  className="rounded-xl overflow-hidden"
+                  style={{ background: 'var(--bg)', border: '1px solid var(--muted)' }}
+                  data-menu-category-id={category.id}
+                  data-menu-category-name={cleanMojibake(category.name)}
+                >
+                  {category.items.map((item, itemIdx) => {
+                    const tags = visibleTags(item.tags).slice(0, 3)
+                    return (
+                      <div
+                        key={item.id}
+                        id={`item-${item.id}`}
+                        data-menu-item-id={item.id}
+                        data-menu-item-name={item.name}
+                        data-menu-item-price={typeof item.price === 'number' ? item.price : undefined}
+                        className="px-4 py-4"
+                        style={itemIdx === 0 ? undefined : { borderTop: '1px solid var(--muted)' }}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold" style={{ color: 'var(--text)' }}>
+                              {highlightText(item.name, searchQuery)}
+                            </div>
+                            {typeof item.description === 'string' && item.description.trim() !== '' && (
+                              <div
+                                className="mt-1 text-sm"
+                                style={{
+                                  color: 'var(--text)',
+                                  opacity: 0.6,
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 2,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                {minimalDescription(item.description)}
+                              </div>
+                            )}
+                            {(tags.length > 0) && (
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                                    style={{ background: 'var(--muted)', color: 'var(--text)', opacity: 0.8 }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="shrink-0 text-right">
+                            <div className="font-bold tabular-nums" style={{ color: 'var(--accent)' }}>
+                              ${Number(item.price ?? 0).toFixed(2)}
+                            </div>
+                            {cateringMode && item.servingSize && (
+                              <div className="text-xs font-medium mt-0.5" style={{ color: 'var(--accent)', opacity: 0.8 }}>
+                                Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="shrink-0 flex flex-col gap-2">
+                            {!hideCart && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  addToCart(item)
+                                  setRecentlyAddedId(item.id)
+                                  setCartBump(true)
+                                  setToast(`Added ${item.name}`)
+                                  setIsCartOpen(true)
+                                  setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
+                                }}
+                                className="h-9 rounded-lg px-4 text-sm font-semibold"
+                                style={{ background: 'var(--accent)', color: 'var(--ink)' }}
+                                aria-label={`Add ${item.name} to plate`}
+                              >
+                                Add
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                              className="h-9 rounded-lg px-4 text-sm font-semibold"
+                              style={{ background: 'var(--muted)', color: 'var(--text)' }}
+                              aria-label={`Ask about ${item.name}`}
+                            >
+                              ○ Ask
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : isDemo && !isAdmin ? (
                 <div
                   className="rounded-xl border border-neutral-200 bg-white overflow-hidden"
                   data-menu-category-id={category.id}
@@ -1634,8 +1972,15 @@ export default function MenuClient() {
                                   </div>
                                 )}
                               </div>
-                              <div className="shrink-0 text-sm font-extrabold text-neutral-950 tabular-nums">
-                                ${Number(item.price ?? 0).toFixed(2)}
+                              <div className="shrink-0 text-right">
+                                <div className="text-sm font-extrabold text-neutral-950 tabular-nums">
+                                  ${Number(item.price ?? 0).toFixed(2)}
+                                </div>
+                                {cateringMode && item.servingSize && (
+                                  <div className="text-[10px] text-amber-600 font-medium">
+                                    Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -1746,7 +2091,14 @@ export default function MenuClient() {
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
-                          <span className="text-xl font-bold text-black ml-4 px-2 py-0.5 rounded-full" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                          <div className="ml-4 text-right">
+                            <span className="text-xl font-bold text-black px-2 py-0.5 rounded-full inline-block" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                            {cateringMode && item.servingSize && (
+                              <div className="text-xs text-amber-600 font-semibold mt-1">
+                                Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
                       {(!isAdmin && showCategoryBadges) && (
@@ -1878,6 +2230,7 @@ export default function MenuClient() {
           ))}
         </div>
       </div>
+      )}
 
       {/* Nutrition/legal disclaimer */}
       <div className="max-w-7xl mx-auto px-4 mt-10 mb-24">
@@ -1906,7 +2259,7 @@ export default function MenuClient() {
           <div className="ml-auto w-full max-w-md bg-neutral-950 text-white h-full shadow-2xl border-l border-white/10 flex flex-col">
             <div className="p-6 border-b border-white/10 bg-neutral-950/90 backdrop-blur">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">Your Plate</h2>
+                <h2 className="text-2xl font-bold text-white">{cateringMode ? 'Your Catering Order' : (isFoodTruckMode ? 'Your Order' : 'Your Plate')}</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="text-white/70 hover:text-white transition-colors"
@@ -1914,6 +2267,12 @@ export default function MenuClient() {
                   ✕
                 </button>
               </div>
+              {cateringMode && (
+                <p className="mt-2 text-sm text-white/70">Build your order, add event details, and submit your inquiry.</p>
+              )}
+              {isFoodTruckMode && (
+                <p className="mt-2 text-sm text-white/70">Add items and enter your name for pickup.</p>
+              )}
             </div>
             
             <div className="flex-1 overflow-y-auto px-6 py-6 bg-neutral-950 overscroll-contain">
@@ -1924,8 +2283,117 @@ export default function MenuClient() {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  {/* Fulfillment (dine-in vs pickup) */}
-                  {orderingEnabled && dineInEnabled && (
+                  {/* Catering Event Details */}
+                  {cateringMode && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-white">📅 Event Details</div>
+                      <div className="mt-2 text-sm text-white/70">
+                        Tell us about your event so we can prepare everything perfectly.
+                      </div>
+                      <div className="mt-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-white/80">Event Date *</label>
+                            <input
+                              type="date"
+                              min={minEventDate}
+                              value={eventDate}
+                              onChange={(e) => setEventDate(e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-white/80">Event Time</label>
+                            <input
+                              type="text"
+                              placeholder="e.g., 12:00 PM"
+                              value={eventTime}
+                              onChange={(e) => setEventTime(e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-white/80">Guest Count *</label>
+                            <input
+                              type="number"
+                              inputMode="numeric"
+                              min="1"
+                              placeholder="50"
+                              value={guestCount}
+                              onChange={(e) => setGuestCount(e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-white/80">Event Type</label>
+                            <select
+                              value={eventType}
+                              onChange={(e) => setEventType(e.target.value)}
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white"
+                            >
+                              <option value="">Select...</option>
+                              {eventTypes.map((t) => (
+                                <option key={t} value={t}>{t}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Catering Delivery Location */}
+                  {cateringMode && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-white">📍 Delivery Location</div>
+                      <div className="mt-4 space-y-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-white/80">Delivery Address</label>
+                          <textarea
+                            placeholder="123 Main St, Suite 400&#10;San Francisco, CA 94102"
+                            value={deliveryAddress}
+                            onChange={(e) => setDeliveryAddress(e.target.value)}
+                            rows={2}
+                            className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-white/80">Delivery Notes</label>
+                          <input
+                            type="text"
+                            placeholder="e.g., Enter through loading dock, ask for Sarah"
+                            value={deliveryNotes}
+                            onChange={(e) => setDeliveryNotes(e.target.value)}
+                            className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Catering Dietary Requirements */}
+                  {cateringMode && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-white">🥗 Dietary Requirements</div>
+                      <div className="mt-2 text-sm text-white/70">
+                        Let us know about any dietary needs for your guests.
+                      </div>
+                      <div className="mt-3">
+                        <textarea
+                          placeholder="e.g., 5 vegetarian, 2 gluten-free, 1 nut allergy"
+                          value={dietaryNotes}
+                          onChange={(e) => setDietaryNotes(e.target.value)}
+                          rows={2}
+                          className="w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fulfillment (dine-in vs pickup) - Hidden for catering and food truck modes */}
+                  {orderingEnabled && dineInEnabled && !cateringMode && !isFoodTruckMode && (
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-white">Order type</div>
                       <div className="mt-2 text-sm text-white/70">
@@ -2085,8 +2553,8 @@ export default function MenuClient() {
                     </div>
                   </div>
 
-                  {/* Order-wide notes */}
-                  {orderingEnabled && (
+                  {/* Order-wide notes - hidden in food truck mode (included in pickup section) */}
+                  {orderingEnabled && !isFoodTruckMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-black">Order-wide notes</div>
                       <div className="mt-2 text-sm text-gray-600">Anything the kitchen should know for the whole order.</div>
@@ -2100,28 +2568,61 @@ export default function MenuClient() {
                     </div>
                   )}
 
-                  {/* Contact Info */}
-                  {orderingEnabled && (
+                  {/* Food Truck Pickup Info - Simplified */}
+                  {isFoodTruckMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <div className="text-sm font-extrabold tracking-wide text-black">Contact Info</div>
-                      <div className="mt-2 text-sm text-gray-600">Receipt & updates. We’ll send your receipt and pickup updates here.</div>
-                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input
-                          type="email"
-                          inputMode="email"
-                          autoComplete="email"
-                          value={customerEmail}
-                          onChange={(e) => setCustomerEmail(e.target.value)}
-                          placeholder="Email (required)"
-                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
-                        />
+                      <div className="text-sm font-extrabold tracking-wide text-black">📝 Order Details</div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        Enter your name and any special requests.
+                      </div>
+                      <div className="mt-4 space-y-3">
                         <input
                           type="text"
                           inputMode="text"
                           autoComplete="name"
                           value={customerName}
                           onChange={(e) => setCustomerName(e.target.value)}
-                          placeholder="Name (optional)"
+                          placeholder="Name for order *"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        />
+                        <textarea
+                          value={orderNote}
+                          onChange={(e) => setOrderNote(e.target.value)}
+                          placeholder="Special instructions (optional)"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black resize-none"
+                          rows={2}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contact Info - For non-food-truck modes */}
+                  {orderingEnabled && !isFoodTruckMode && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-black">{cateringMode ? '👤 Contact Information' : 'Contact Info'}</div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        {cateringMode 
+                          ? "We'll use this to confirm your order and coordinate delivery."
+                          : "Receipt & updates. We'll send your receipt and pickup updates here."
+                        }
+                      </div>
+                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          inputMode="text"
+                          autoComplete="name"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder={cateringMode ? "Your Name *" : "Name (optional)"}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        />
+                        <input
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          value={customerEmail}
+                          onChange={(e) => setCustomerEmail(e.target.value)}
+                          placeholder="Email *"
                           className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
                         />
                         <input
@@ -2130,9 +2631,20 @@ export default function MenuClient() {
                           autoComplete="tel"
                           value={customerPhone}
                           onChange={(e) => setCustomerPhone(e.target.value)}
-                          placeholder="Phone (optional)"
-                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black sm:col-span-2"
+                          placeholder={cateringMode ? "Phone *" : "Phone (optional)"}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
                         />
+                        {cateringMode && (
+                          <input
+                            type="text"
+                            inputMode="text"
+                            autoComplete="organization"
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                            placeholder="Company/Organization (optional)"
+                            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                          />
+                        )}
                       </div>
 
                       <label className="mt-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
@@ -2163,8 +2675,8 @@ export default function MenuClient() {
                     </div>
                   )}
 
-                  {/* Tip */}
-                  {orderingEnabled && (
+                  {/* Tip - Hidden for catering mode */}
+                  {orderingEnabled && !cateringMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-black">Tip</div>
                       <div className="mt-2 text-sm text-gray-600">Optional. Tips go directly to the restaurant.</div>
@@ -2205,8 +2717,8 @@ export default function MenuClient() {
                     </div>
                   )}
 
-                  {/* Pickup Time */}
-                  {orderingEnabled && schedulingEnabled && fulfillmentMode === 'pickup' && (
+                  {/* Pickup Time - Hidden for catering mode */}
+                  {orderingEnabled && schedulingEnabled && fulfillmentMode === 'pickup' && !cateringMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="flex items-center gap-2 text-sm font-extrabold tracking-wide text-black">
                         <span aria-hidden="true">
@@ -2280,9 +2792,14 @@ export default function MenuClient() {
               <div className="p-5 border-t border-white/10 bg-neutral-950 shadow-[0_-10px_24px_rgba(0,0,0,0.35)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-semibold text-white/70">Order total</div>
+                    <div className="text-xs font-semibold text-white/70">{cateringMode ? 'Estimated Total' : 'Order total'}</div>
                     <div className="text-2xl font-extrabold text-white">${orderTotal.toFixed(2)}</div>
-                    {orderingEnabled && tipCents > 0 && (
+                    {cateringMode && guestCount && parseInt(guestCount) > 0 && (
+                      <div className="mt-1 text-xs text-white/60">
+                        For {guestCount} guests
+                      </div>
+                    )}
+                    {orderingEnabled && !cateringMode && tipCents > 0 && (
                       <div className="mt-1 text-xs text-white/60">
                         Includes ${(tipCents / 100).toFixed(2)} tip
                       </div>
@@ -2298,14 +2815,19 @@ export default function MenuClient() {
                     }}
                     className="rounded-2xl px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)' }}
-                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) || (cateringMode && (!eventDate || !guestCount || !customerName.trim() || !customerPhone.trim())) || (isFoodTruckMode && !customerName.trim())))}
                   >
-                    {orderingEnabled ? 'Place order' : 'Proceed with Plate'}
+                    {cateringMode ? 'Submit Inquiry' : (isFoodTruckMode ? 'Submit Order' : (orderingEnabled ? 'Place order' : 'Proceed with Plate'))}
                   </button>
                 </div>
                 {!orderingEnabled && (
                   <p className="text-xs text-white/60 text-center mt-2">
                     Demo mode - No actual payment processed
+                  </p>
+                )}
+                {cateringMode && (
+                  <p className="text-xs text-white/60 text-center mt-2">
+                    We&apos;ll review your order and confirm within 24 hours
                   </p>
                 )}
               </div>

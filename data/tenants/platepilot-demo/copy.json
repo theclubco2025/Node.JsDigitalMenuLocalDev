@@ -1,0 +1,12 @@
+{
+  "tagline": "Build your catering order with ease",
+  "heroSubtitle": "Select items, see instant pricing, and submit your event details.",
+  "categoryIntros": {
+    "trays-platters": "Main dishes sized to feed your guests.",
+    "sides": "Perfect complements to complete your spread.",
+    "sandwich-wraps": "Handheld options for easy serving.",
+    "appetizers": "Crowd-pleasing starters and snacks.",
+    "desserts": "Sweet endings for any event.",
+    "beverages": "Drinks by the gallon or case."
+  }
+}

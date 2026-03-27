@@ -6,6 +6,11 @@ export type MenuItem = {
   tags?: string[];
   calories?: number;
   imageUrl?: string;
+  // Catering-specific fields
+  servingSize?: number;      // e.g., 10 (serves 10 people)
+  servingUnit?: string;      // e.g., "people", "pieces"
+  minimumQuantity?: number;  // e.g., must order at least 2
+  pricingType?: 'per_item' | 'per_person' | 'per_platter';
 };
 export type MenuCategory={id:string;name:string;items:MenuItem[]};
 export type MenuResponse={categories:MenuCategory[]};
@@ -45,11 +50,16 @@ export type OrderingScheduling = {
 
 export type OrderingSettings = {
   enabled?: boolean; // default false
-  fulfillment?: 'pickup'; // MVP: pickup only
+  fulfillment?: 'pickup' | 'delivery' | 'catering'; // catering = event-based delivery
   timezone?: string; // IANA tz, e.g. America/Los_Angeles
   scheduling?: OrderingScheduling;
   // Optional hours definition. If unset, we assume 24/7 for testing.
   hours?: unknown;
+  // Catering-specific settings
+  cateringMode?: boolean;           // Enable catering order flow
+  cateringLeadDays?: number;        // Minimum days in advance (e.g., 2)
+  cateringDepositPercent?: number;  // e.g., 25 for 25% deposit
+  cateringMinimumCents?: number;    // Minimum order amount
 };
 
 export type TenantSettings = {

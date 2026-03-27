@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     // Preview must remain viewable for client review.
     // TEMP: allow Independent Bar & Grille to be publicly viewable without activation.
     // This is a tenant-scoped exception requested for launch validation.
-    const bypassActivation = tenant === 'independentbarandgrille'
+    const bypassActivation = tenant === 'independentbarandgrille' || tenant === 'platepilot-demo' || tenant === 'platehaven-demo'
     if (!bypassActivation && !isPreview && tenant !== 'demo' && !tenant.endsWith('-draft') && process.env.DATABASE_URL) {
       const row = await prisma.tenant.findUnique({ where: { slug: tenant }, select: { status: true } })
       if (row?.status !== 'ACTIVE') {
