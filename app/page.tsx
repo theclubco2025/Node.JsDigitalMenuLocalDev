@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 export const metadata = {
-  title: 'PlateHaven — Catering & Food Truck Orders Made Simple',
+  title: 'PlateHaven — Turn Catering Requests Into Clean Orders',
   description:
-    'Turn 10 back-and-forth messages into 1 structured order. Customers build their order, see pricing, and submit — no calls or confusion.',
+    'Customers pick their items, see pricing, and send you everything at once. No more texting, calling, or guessing.',
 }
 
 const LANDING = {
@@ -14,7 +14,7 @@ export default function Landing() {
   return (
     <main className="bg-[#111] text-white min-h-screen">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#111]/90 backdrop-blur-md border-b border-[#C4A76A]/20">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#111]/95 backdrop-blur-md border-b border-white/5">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2.5">
             <img src="/assets/platehaven-logo.png" alt="PlateHaven" className="h-10 w-auto object-contain" />
@@ -23,246 +23,294 @@ export default function Landing() {
             </span>
           </a>
           <div className="flex items-center gap-6">
-            <a href="#how-it-works" className="hidden md:inline text-sm text-white/60 hover:text-white">
+            <a href="#how-it-works" className="hidden md:inline text-sm text-white/60 hover:text-white transition-colors">
               How It Works
             </a>
-            <a href="#food-trucks" className="hidden md:inline text-sm text-white/60 hover:text-white">
+            <a href="#food-trucks" className="hidden md:inline text-sm text-white/60 hover:text-white transition-colors">
               Food Trucks
-            </a>
-            <a href="#pricing" className="hidden md:inline text-sm text-white/60 hover:text-white">
-              Pricing
             </a>
             <a
               href={LANDING.demoUrl}
-              className="bg-[#C4A76A] text-[#111] px-5 py-2 text-sm font-semibold hover:bg-[#d4b87a] transition-colors"
+              className="bg-[#C4A76A] text-[#111] px-5 py-2 text-sm font-semibold hover:bg-[#d4b87a] transition-colors rounded"
             >
-              Try Demo
+              See Demo
             </a>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="pt-32 pb-20 md:pt-44 md:pb-32 px-6">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="text-[#C4A76A] text-sm font-medium tracking-widest uppercase mb-6">
-            For Caterers & Food Businesses
-          </p>
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight mb-6">
-            Stop Going Back and Forth<br />
-            <span className="text-[#C4A76A]">With Catering Orders</span>
-          </h1>
-          <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Customers build their order, see instant pricing, and submit everything you need — 
-            no more endless texts, calls, or confusion.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href={LANDING.demoUrl}
-              className="w-full sm:w-auto bg-[#C4A76A] text-[#111] px-8 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors"
-            >
-              See Demo
-            </a>
-            <a
-              href={LANDING.calendlyUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/5 transition-colors"
-            >
-              Get Started Free
-            </a>
+      {/* ===== HERO (THE MONEY SECTION) ===== */}
+      <section className="pt-32 pb-16 md:pt-40 md:pb-24 px-6">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-10">
+            <p className="text-[#C4A76A] text-xs font-semibold tracking-widest uppercase mb-6">
+              Built for caterers & food trucks handling custom orders
+            </p>
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight mb-6">
+              Turn Catering Requests Into Clean Orders<br />
+              <span className="text-[#C4A76A]">— Without the Back-and-Forth</span>
+            </h1>
+            <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
+              Customers pick their items, see pricing, and send you everything at once.<br className="hidden md:block" />
+              You stop texting, calling, and guessing.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a
+                href={LANDING.demoUrl}
+                className="w-full sm:w-auto bg-[#C4A76A] text-[#111] px-8 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors rounded"
+              >
+                👉 See How It Works (2 min)
+              </a>
+              <a
+                href={LANDING.calendlyUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/5 transition-colors rounded"
+              >
+                Get Set Up For Free
+              </a>
+            </div>
+          </div>
+
+          {/* Visual: The Shift */}
+          <div className="mt-16 grid md:grid-cols-2 gap-6 items-center">
+            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
+              <div className="text-xs text-white/40 uppercase tracking-wider mb-4">Customer sends this:</div>
+              <div className="bg-[#0f0f0f] rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span className="text-white/80">BBQ Pulled Pork Tray × 2</span>
+                  <span className="text-white/40 ml-auto">$178</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span className="text-white/80">Grilled Chicken Tray × 1</span>
+                  <span className="text-white/40 ml-auto">$79</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-[#C4A76A]">✓</span>
+                  <span className="text-white/80">Garden Salad Tray × 1</span>
+                  <span className="text-white/40 ml-auto">$45</span>
+                </div>
+                <div className="border-t border-white/10 my-3 pt-3">
+                  <div className="text-xs text-white/40 mb-2">Event Details:</div>
+                  <div className="text-sm text-white/70">March 15 • 50 guests • 123 Main St</div>
+                  <div className="text-sm text-white/70">3 vegetarian, 2 gluten-free</div>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                  <span className="font-semibold">Total Estimate</span>
+                  <span className="text-[#C4A76A] font-semibold">$302</span>
+                </div>
+              </div>
+            </div>
+            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
+              <div className="text-xs text-white/40 uppercase tracking-wider mb-4">You receive this:</div>
+              <div className="bg-[#0f0f0f] rounded-lg p-4">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-[#C4A76A]/20 flex items-center justify-center text-[#C4A76A] text-lg">📋</div>
+                  <div>
+                    <div className="font-semibold text-white">New Catering Request</div>
+                    <div className="text-sm text-white/50">Sarah Johnson • Just now</div>
+                  </div>
+                </div>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#C4A76A]">📅</span>
+                    <span className="text-white/70">March 15, 2026 at 12:00 PM</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#C4A76A]">👥</span>
+                    <span className="text-white/70">50 guests</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#C4A76A]">📍</span>
+                    <span className="text-white/70">123 Main St, Suite 400</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#C4A76A]">🥗</span>
+                    <span className="text-white/70">3 vegetarian, 2 gluten-free</span>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/10 text-center">
+                  <span className="text-[#C4A76A] font-semibold">Ready to confirm — no back-and-forth needed</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Problem */}
+      {/* ===== SECTION 2: THE REAL PAIN ===== */}
       <section className="py-20 px-6 bg-[#0a0a0a]">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Sound familiar?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Catering Orders Shouldn&apos;t Take 10 Messages</h2>
           </div>
-          <div className="bg-[#1a1a1a] rounded-lg p-6 md:p-10 max-w-2xl mx-auto">
-            <div className="space-y-3 text-sm md:text-base">
+          
+          <div className="bg-[#1a1a1a] rounded-xl p-6 md:p-8 max-w-xl mx-auto mb-10">
+            <div className="space-y-3">
               {[
-                { who: 'customer', text: 'How much for 50 people?' },
-                { who: 'you', text: 'What date?' },
-                { who: 'customer', text: 'March 15th' },
-                { who: 'you', text: 'Where\'s the delivery?' },
-                { who: 'customer', text: '123 Main St. Can we do 60 people instead?' },
-                { who: 'you', text: 'Any dietary restrictions?' },
-                { who: 'customer', text: '3 vegetarian, 2 gluten-free' },
-                { who: 'you', text: 'What time?' },
-                { who: 'customer', text: 'Did you get my last text?' },
+                '"What\'s the price for 40 people?"',
+                '"Can we swap items?"',
+                '"What do you recommend?"',
+                '"Can you send a quote?"',
+                '"Did you get my last message?"',
               ].map((msg, i) => (
-                <div key={i} className={`flex ${msg.who === 'you' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`px-4 py-2 rounded-2xl max-w-[80%] ${
-                    msg.who === 'you' 
-                      ? 'bg-[#C4A76A]/20 text-[#C4A76A]' 
-                      : 'bg-white/10 text-white/80'
-                  }`}>
-                    {msg.text}
-                  </div>
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 text-xs shrink-0">💬</div>
+                  <div className="bg-white/5 rounded-xl px-4 py-2 text-white/70 text-sm">{msg}</div>
                 </div>
               ))}
             </div>
-            <p className="text-center mt-6 text-white/40 text-sm">...10+ messages per inquiry</p>
           </div>
-          <div className="mt-12 text-center">
-            <p className="text-2xl font-semibold text-[#C4A76A]">
-              Turn 10 messages into 1 clean order.
+
+          <div className="text-center">
+            <p className="text-xl md:text-2xl text-white/60 mb-2">
+              Every order turns into a conversation.
+            </p>
+            <p className="text-xl md:text-2xl font-semibold text-[#C4A76A]">
+              That&apos;s time you don&apos;t have.
             </p>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-20 px-6">
+      {/* ===== SECTION 3: THE SHIFT (where you sell) ===== */}
+      <section className="py-20 px-6">
         <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-white/60 max-w-xl mx-auto">
-              Send customers one link. They handle the rest.
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Now Customers Just Send You This</h2>
+          </div>
+          
+          <div className="bg-[#1a1a1a] rounded-xl p-6 md:p-10 max-w-3xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <div className="text-sm text-[#C4A76A] font-semibold mb-4">ITEMS SELECTED</div>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-white/80">
+                    <span>BBQ Pulled Pork Tray × 2</span>
+                    <span>$178</span>
+                  </div>
+                  <div className="flex justify-between text-white/80">
+                    <span>Grilled Chicken Tray × 1</span>
+                    <span>$79</span>
+                  </div>
+                  <div className="flex justify-between text-white/80">
+                    <span>Garden Salad Tray × 1</span>
+                    <span>$45</span>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="flex justify-between font-semibold">
+                    <span>Total Estimate</span>
+                    <span className="text-[#C4A76A]">$302</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-[#C4A76A] font-semibold mb-4">EVENT DETAILS</div>
+                <div className="space-y-2 text-sm text-white/70">
+                  <div>📅 March 15, 2026</div>
+                  <div>⏰ 12:00 PM</div>
+                  <div>👥 50 guests</div>
+                  <div>📍 123 Main St, Suite 400</div>
+                  <div>🥗 3 vegetarian, 2 gluten-free</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-10">
+            <p className="text-xl md:text-2xl font-semibold">
+              No guessing. No back-and-forth. <span className="text-[#C4A76A]">Just a complete order.</span>
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SECTION 4: HOW IT WORKS (simple) ===== */}
+      <section id="how-it-works" className="py-20 px-6 bg-[#0a0a0a]">
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold">How It Works</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { 
-                num: '1', 
-                title: 'They Build Their Order', 
-                desc: 'Customers browse your menu and select items. Each shows serving size so they know exactly what they need.' 
-              },
-              { 
-                num: '2', 
-                title: 'They Enter Event Details', 
-                desc: 'Date, guest count, location, dietary needs — all captured in one structured form.' 
-              },
-              { 
-                num: '3', 
-                title: 'You Get a Clean Order', 
-                desc: 'Everything organized and ready. No chasing details. No miscommunication.' 
-              },
+              { num: '1', title: 'Customer builds their order', desc: 'They browse your menu, select items, see serving sizes and pricing.' },
+              { num: '2', title: 'They enter event details', desc: 'Date, time, guest count, location, dietary needs — all in one form.' },
+              { num: '3', title: 'You receive everything ready to go', desc: 'Complete order. Complete details. Ready to confirm.' },
             ].map((step, i) => (
               <div key={i} className="text-center">
                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#C4A76A] text-[#111] text-xl font-bold mb-4">
                   {step.num}
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                <p className="text-white/60">{step.desc}</p>
+                <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
+                <p className="text-white/60 text-sm">{step.desc}</p>
               </div>
             ))}
           </div>
+          <p className="text-center mt-12 text-white/40">That&apos;s it. No fluff.</p>
         </div>
       </section>
 
-      {/* Demo CTA */}
-      <section className="py-20 px-6 bg-[#0a0a0a]">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">See It In Action</h2>
-          <p className="text-white/60 mb-8 max-w-xl mx-auto">
-            Try a sample catering order. No signup required.
-          </p>
-          <a
-            href={LANDING.demoUrl}
-            className="inline-block bg-[#C4A76A] text-[#111] px-10 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors"
-          >
-            Launch Demo
-          </a>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-20 px-6">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Caterers</h2>
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            {[
-              { title: 'Instant Pricing', desc: 'Customers see their total as they build. No waiting for quotes.' },
-              { title: 'Event Details Form', desc: 'Date, time, location, guest count, dietary needs — all captured upfront.' },
-              { title: 'Serving Sizes', desc: 'Every item shows "Serves X people" so customers order the right amount.' },
-              { title: 'Order Notifications', desc: 'Get notified instantly when a new catering request comes in.' },
-              { title: 'Mobile-First', desc: 'Works on any device. No app download required for your customers.' },
-              { title: 'AI Menu Assistant', desc: 'Customers can ask questions about your menu 24/7.' },
-            ].map((feature, i) => (
-              <div key={i} className="bg-[#1a1a1a] p-6 rounded-lg">
-                <h3 className="text-lg font-semibold mb-2 text-[#C4A76A]">{feature.title}</h3>
-                <p className="text-white/60">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Food Trucks Section */}
-      <section id="food-trucks" className="py-20 px-6 bg-[#0a0a0a]">
-        <div className="mx-auto max-w-5xl">
+      {/* ===== SECTION 5: FOOD TRUCKS ===== */}
+      <section id="food-trucks" className="py-20 px-6">
+        <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12">
-            <p className="text-[#C4A76A] text-sm font-medium tracking-widest uppercase mb-4">
-              Not Just for Catering
-            </p>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Also Built for Busy Food Trucks</h2>
-            <p className="text-white/60 max-w-2xl mx-auto">
-              Handle rushes without losing customers. Let people order from their phone instead of waiting in line.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Also Helps Food Trucks During Rush</h2>
           </div>
           
-          {/* Pain Points */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {[
-              { icon: '⏳', title: 'Long Lines = Lost Customers', desc: 'People see the line and walk away. You lose sales without even knowing it.' },
-              { icon: '😰', title: 'Staff Overwhelmed at Peak', desc: 'Rush hours are chaos. Orders get mixed up. Service slows down.' },
-              { icon: '📵', title: 'Missed Orders During Rush', desc: 'Can\'t take phone orders when you\'re slammed. Revenue walks out the door.' },
-            ].map((pain, i) => (
-              <div key={i} className="bg-[#1a1a1a] p-6 rounded-lg text-center">
-                <div className="text-3xl mb-3">{pain.icon}</div>
-                <h3 className="font-semibold mb-2 text-white">{pain.title}</h3>
-                <p className="text-white/60 text-sm">{pain.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Solution Flow */}
-          <div className="bg-[#1a1a1a] rounded-lg p-8 mb-12">
-            <h3 className="text-xl font-semibold text-center mb-8 text-[#C4A76A]">How It Works for Food Trucks</h3>
-            <div className="grid md:grid-cols-4 gap-6">
-              {[
-                { num: '1', title: 'Display QR Code', desc: 'Post it at your truck or on social media' },
-                { num: '2', title: 'Customers Scan & Order', desc: 'They browse your menu on their phone' },
-                { num: '3', title: 'Orders Come In Organized', desc: 'Each order shows name & items clearly' },
-                { num: '4', title: 'Call Name When Ready', desc: 'Fast pickup, no confusion' },
-              ].map((step, i) => (
-                <div key={i} className="text-center">
-                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#C4A76A] text-[#111] font-bold mb-3">
-                    {step.num}
-                  </div>
-                  <h4 className="font-semibold mb-1 text-sm">{step.title}</h4>
-                  <p className="text-white/60 text-xs">{step.desc}</p>
+          <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
+            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
+              <div className="text-xs text-white/40 uppercase tracking-wider mb-4">Mobile Ordering Screen</div>
+              <div className="bg-[#0f0f0f] rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-white/80">Street Tacos × 3</span>
+                  <span className="text-white/40">$12</span>
                 </div>
-              ))}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-white/80">Loaded Nachos × 1</span>
+                  <span className="text-white/40">$9</span>
+                </div>
+                <div className="border-t border-white/10 pt-3">
+                  <div className="text-sm text-white/70 mb-2">Pickup Name: <span className="text-white">Mike</span></div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span className="text-[#C4A76A]">$21</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="text-[#C4A76A] text-xl">📱</span>
+                <div>
+                  <div className="font-semibold">Customers order while waiting</div>
+                  <div className="text-sm text-white/60">They scan QR, order from their phone</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-[#C4A76A] text-xl">⚡</span>
+                <div>
+                  <div className="font-semibold">Lines move faster</div>
+                  <div className="text-sm text-white/60">No bottleneck at the counter</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <span className="text-[#C4A76A] text-xl">💰</span>
+                <div>
+                  <div className="font-semibold">You serve more people per hour</div>
+                  <div className="text-sm text-white/60">More orders, less chaos</div>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Results */}
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {[
-              { metric: '↑', title: 'Serve More Per Hour', desc: 'No bottleneck at the counter. Orders flow smoothly.' },
-              { metric: '↓', title: 'Reduce Staff Pressure', desc: 'Less chaos, fewer mistakes, happier team.' },
-              { metric: '💰', title: 'Capture Lost Sales', desc: 'People who would\'ve walked away now order from their phone.' },
-            ].map((result, i) => (
-              <div key={i} className="text-center">
-                <div className="text-3xl font-bold text-[#C4A76A] mb-2">{result.metric}</div>
-                <h3 className="font-semibold mb-1">{result.title}</h3>
-                <p className="text-white/60 text-sm">{result.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* CTA */}
+          
           <div className="text-center">
+            <p className="text-lg text-white/60 mb-6">Same system. Different use. Same result: <span className="text-[#C4A76A] font-semibold">more orders.</span></p>
             <a
               href="/demo?mode=foodtruck"
-              className="inline-block bg-[#C4A76A] text-[#111] px-8 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors"
+              className="inline-block bg-[#C4A76A] text-[#111] px-8 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors rounded"
             >
               See Food Truck Demo
             </a>
@@ -270,77 +318,27 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20 px-6">
-        <div className="mx-auto max-w-3xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple Pricing</h2>
-            <p className="text-white/60">One-time setup, flat monthly fee. No surprises.</p>
-          </div>
-          <div className="bg-[#1a1a1a] p-8 md:p-12 rounded-lg border border-[#C4A76A]/30">
-            <div className="text-center mb-8">
-              <div className="text-sm text-[#C4A76A] uppercase tracking-wide mb-3">All-Inclusive</div>
-              <div className="flex items-baseline justify-center gap-2 mb-2">
-                <span className="text-5xl font-bold">$50</span>
-                <span className="text-xl text-white/50">/month</span>
-              </div>
-              <p className="text-white/50">+ one-time onboarding fee (quoted per business)</p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-4 mb-8">
-              {[
-                'Unlimited orders',
-                'Full menu customization',
-                'Catering + Food Truck modes',
-                'Order notifications (email + SMS)',
-                'AI menu assistant',
-                'Order analytics',
-                'Mobile-optimized ordering',
-                'Priority support',
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-white/80">
-                  <svg className="w-5 h-5 text-[#C4A76A] shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                  {item}
-                </div>
-              ))}
-            </div>
-            <div className="text-center">
-              <a
-                href={LANDING.calendlyUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block bg-[#C4A76A] text-[#111] px-10 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors"
-              >
-                Get Your Quote
-              </a>
-              <p className="mt-4 text-sm text-white/40">We&apos;ll set up everything for you</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
+      {/* ===== SECTION 6: THE OFFER (close) ===== */}
       <section className="py-20 px-6 bg-[#0a0a0a]">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to simplify orders?</h2>
-          <p className="text-white/60 mb-8">Set up in minutes. No credit card required.</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href={LANDING.demoUrl}
-              className="w-full sm:w-auto bg-[#C4A76A] text-[#111] px-8 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors"
-            >
-              See Demo
-            </a>
-            <a
-              href={LANDING.calendlyUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full sm:w-auto border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/5 transition-colors"
-            >
-              Get Started Free
-            </a>
-          </div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">I&apos;ll Set This Up For You — Free</h2>
+          <p className="text-lg text-white/60 mb-4 max-w-xl mx-auto">
+            I&apos;ll set up your menu and ordering flow for you.<br />
+            You try it with real customers.
+          </p>
+          <p className="text-lg text-white/60 mb-10 max-w-xl mx-auto">
+            <span className="text-white">If it helps, we keep it.</span><br />
+            If not, you don&apos;t pay.
+          </p>
+          <a
+            href={LANDING.calendlyUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-block bg-[#C4A76A] text-[#111] px-10 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors rounded"
+          >
+            👉 Get Set Up
+          </a>
+          <p className="mt-6 text-sm text-white/40">Free setup. $50/month if you keep it.</p>
         </div>
       </section>
 
@@ -352,9 +350,9 @@ export default function Landing() {
             <span className="font-semibold text-[#C4A76A]">PlateHaven</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-white/50">
-            <a href="/terms" className="hover:text-white">Terms</a>
-            <a href="/privacy" className="hover:text-white">Privacy</a>
-            <a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="hover:text-white">Contact</a>
+            <a href="/terms" className="hover:text-white transition-colors">Terms</a>
+            <a href="/privacy" className="hover:text-white transition-colors">Privacy</a>
+            <a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Contact</a>
           </div>
         </div>
         <div className="mx-auto max-w-5xl mt-8 pt-8 border-t border-white/10 text-center text-sm text-white/40">
