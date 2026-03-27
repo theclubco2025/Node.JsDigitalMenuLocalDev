@@ -176,6 +176,155 @@ Please respond to the customer within 24 hours.
 `.trim()
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// QUOTE EMAIL
+// ═══════════════════════════════════════════════════════════════════════════
+
+type QuoteEmail = {
+  to: string
+  customerName: string
+  tenantName: string
+  quoteNumber: string
+  quoteUrl: string
+  eventDate?: string
+  eventType?: string
+  guestCount?: number
+  totalCents: number
+  depositCents: number
+  expiresAt: string
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function buildQuoteEmailHtml(quote: QuoteEmail): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #C4A76A 0%, #A68B4C 100%); padding: 24px; border-radius: 12px 12px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">Your Catering Quote is Ready</h1>
+    <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0;">Quote #${quote.quoteNumber}</p>
+  </div>
+  
+  <div style="background: white; padding: 24px; border: 1px solid #eee; border-top: none;">
+    <p style="font-size: 16px; margin: 0 0 16px;">Hi ${quote.customerName},</p>
+    <p style="margin: 0 0 16px;">Thank you for your catering inquiry! ${quote.tenantName} has prepared a quote for your event.</p>
+    
+    <div style="background: #f9f9f9; border-radius: 8px; padding: 16px; margin: 20px 0;">
+      <table style="width: 100%; border-collapse: collapse;">
+        ${quote.eventDate ? `<tr><td style="padding: 6px 0; color: #666;">Event Date:</td><td style="padding: 6px 0; font-weight: 600;">${formatDate(quote.eventDate)}</td></tr>` : ''}
+        ${quote.eventType ? `<tr><td style="padding: 6px 0; color: #666;">Event Type:</td><td style="padding: 6px 0; font-weight: 600;">${quote.eventType}</td></tr>` : ''}
+        ${quote.guestCount ? `<tr><td style="padding: 6px 0; color: #666;">Guests:</td><td style="padding: 6px 0; font-weight: 600;">${quote.guestCount} people</td></tr>` : ''}
+        <tr><td style="padding: 6px 0; color: #666;">Total:</td><td style="padding: 6px 0; font-weight: 700; font-size: 18px; color: #C4A76A;">${formatMoney(quote.totalCents)}</td></tr>
+        <tr><td style="padding: 6px 0; color: #666;">Deposit (50%):</td><td style="padding: 6px 0; font-weight: 600;">${formatMoney(quote.depositCents)}</td></tr>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin: 24px 0;">
+      <a href="${quote.quoteUrl}" style="display: inline-block; background: #C4A76A; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">
+        View Quote & Accept
+      </a>
+    </div>
+
+    <p style="margin: 0; padding: 16px; background: #fff8e6; border-radius: 8px; font-size: 14px; text-align: center;">
+      ⏰ This quote expires on <strong>${formatDate(quote.expiresAt)}</strong>
+    </p>
+  </div>
+
+  <div style="background: #f5f5f5; padding: 20px 24px; border-radius: 0 0 12px 12px; text-align: center;">
+    <p style="margin: 0; font-size: 14px; color: #666;">
+      Questions? Reply to this email or contact ${quote.tenantName} directly.
+    </p>
+  </div>
+
+  <p style="margin-top: 24px; font-size: 12px; color: #999; text-align: center;">
+    This email was sent by ${quote.tenantName} via PlateHaven.
+  </p>
+</body>
+</html>
+`
+}
+
+function buildQuoteEmailText(quote: QuoteEmail): string {
+  return `
+YOUR CATERING QUOTE IS READY
+Quote #${quote.quoteNumber}
+${'='.repeat(50)}
+
+Hi ${quote.customerName},
+
+Thank you for your catering inquiry! ${quote.tenantName} has prepared a quote for your event.
+
+${quote.eventDate ? `Event Date: ${formatDate(quote.eventDate)}` : ''}
+${quote.eventType ? `Event Type: ${quote.eventType}` : ''}
+${quote.guestCount ? `Guests: ${quote.guestCount} people` : ''}
+
+Total: ${formatMoney(quote.totalCents)}
+Deposit (50%): ${formatMoney(quote.depositCents)}
+
+View and accept your quote here:
+${quote.quoteUrl}
+
+This quote expires on ${formatDate(quote.expiresAt)}.
+
+Questions? Reply to this email or contact ${quote.tenantName} directly.
+`.trim()
+}
+
+export async function sendQuoteEmail(quote: QuoteEmail): Promise<{ sent: boolean; error?: string }> {
+  const smtpHost = process.env.SMTP_HOST
+  const smtpPort = process.env.SMTP_PORT
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+  const smtpFrom = process.env.SMTP_FROM || smtpUser
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    console.log('[email] SMTP not configured, skipping quote email')
+    return { sent: false, error: 'SMTP not configured' }
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort ? parseInt(smtpPort, 10) : 587,
+      secure: smtpPort === '465',
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    })
+
+    const subject = `Your Catering Quote from ${quote.tenantName} - ${quote.quoteNumber}`
+
+    await transporter.sendMail({
+      from: smtpFrom,
+      to: quote.to,
+      subject,
+      text: buildQuoteEmailText(quote),
+      html: buildQuoteEmailHtml(quote),
+    })
+
+    console.log(`[email] Quote email sent to ${quote.to}`)
+    return { sent: true }
+  } catch (e) {
+    const msg = (e as Error)?.message || 'Email send failed'
+    console.error('[email] Error sending quote email:', msg)
+    return { sent: false, error: msg }
+  }
+}
+
 export async function sendCateringOrderNotification(order: CateringOrderEmail): Promise<{ sent: boolean; error?: string }> {
   const smtpHost = process.env.SMTP_HOST
   const smtpPort = process.env.SMTP_PORT

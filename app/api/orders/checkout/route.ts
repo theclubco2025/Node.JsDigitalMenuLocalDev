@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
     const deliveryNotes = (parsed.data.deliveryNotes || '').trim() || null
     const dietaryNotes = (parsed.data.dietaryNotes || '').trim() || null
     const companyName = (parsed.data.companyName || '').trim() || null
-    const isCatering = Boolean(eventDateRaw || guestCount)
+    const isCatering = Boolean(eventDateRaw && guestCount) // Require BOTH for catering mode
 
     const ip = clientIp(req)
     const limIp = await checkRateLimit({ rule: 'orders_checkout_ip_1m', key: `ip:${ip}`, limit: 20, window: '1 m' })
@@ -360,13 +360,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Generate quote number for catering orders
+    const quoteNumber = isCatering ? `QT-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}` : undefined
+    
+    // Default deposit settings for catering
+    const depositPercent = isCatering ? 50 : undefined // 50% deposit by default
+
     let order: { id: string }
     try {
       order = await prisma.order.create({
         data: {
           tenantId: tenantRow.id,
-          status: isCatering ? 'NEW' : 'PENDING_PAYMENT',
-          fulfillment: 'PICKUP',
+          status: isCatering ? 'INQUIRY' : 'PENDING_PAYMENT',
+          fulfillment: isCatering ? 'CATERING' : 'PICKUP',
+          orderType: isCatering ? 'CATERING' : 'PICKUP',
           currency: 'usd',
           subtotalCents,
           tipCents: isCatering ? 0 : tipCents,
@@ -390,6 +397,12 @@ export async function POST(req: NextRequest) {
           deliveryNotes: deliveryNotes || undefined,
           dietaryNotes: dietaryNotes || undefined,
           companyName: companyName || undefined,
+          // Quote system fields
+          quoteNumber: quoteNumber || undefined,
+          quoteStatus: isCatering ? 'DRAFT' : undefined,
+          depositPercent: depositPercent || undefined,
+          paymentTerms: isCatering ? '50% deposit due upon acceptance, balance due 48 hours before event' : undefined,
+          cancellationPolicy: isCatering ? 'Full refund if canceled 7+ days before event' : undefined,
           items: { create: orderItems },
         },
         select: { id: true },

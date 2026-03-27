@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import type { MenuResponse } from '@/types/api'
 
@@ -31,7 +31,7 @@ export default function PlateHavenAdminPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [query, setQuery] = useState('')
-  const [activeTab, setActiveTab] = useState<'menu' | 'analytics' | 'settings'>('menu')
+  const [activeTab, setActiveTab] = useState<'menu' | 'catering' | 'analytics' | 'settings'>('menu')
 
   useEffect(() => {
     if (!toast) return
@@ -115,6 +115,16 @@ export default function PlateHavenAdminPage() {
             }`}
           >
             Menu Editor
+          </button>
+          <button
+            onClick={() => setActiveTab('catering')}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === 'catering'
+                ? 'text-[#C4A76A] border-b-2 border-[#C4A76A]'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            Catering Orders
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
@@ -386,6 +396,10 @@ export default function PlateHavenAdminPage() {
           </>
         )}
 
+        {activeTab === 'catering' && (
+          <CateringPipelineTab tenant={tenant} />
+        )}
+
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <div>
@@ -591,6 +605,430 @@ export default function PlateHavenAdminPage() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CATERING PIPELINE TAB COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+interface CateringOrder {
+  id: string
+  quoteNumber: string
+  status: string
+  quoteStatus: string | null
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  companyName: string | null
+  eventDate: string | null
+  eventTime: string | null
+  eventType: string | null
+  guestCount: number | null
+  deliveryAddress: string | null
+  totalCents: number
+  depositCents: number | null
+  depositPaidAt: string | null
+  balanceCents: number | null
+  balancePaidAt: string | null
+  createdAt: string
+}
+
+function formatMoney(cents: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
+}
+
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+function CateringPipelineTab({ tenant }: { tenant: string }) {
+  const [orders, setOrders] = useState<CateringOrder[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedOrder, setSelectedOrder] = useState<CateringOrder | null>(null)
+  const [sendingQuote, setSendingQuote] = useState(false)
+
+  const loadOrders = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/admin/catering/orders?tenant=${encodeURIComponent(tenant)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setOrders(data.orders || [])
+      }
+    } catch (e) {
+      console.error('Failed to load orders:', e)
+    } finally {
+      setLoading(false)
+    }
+  }, [tenant])
+  
+  useEffect(() => {
+    loadOrders()
+  }, [loadOrders])
+
+  const sendQuote = async (orderId: string) => {
+    setSendingQuote(true)
+    try {
+      const res = await fetch(`/api/admin/catering/orders/${orderId}/send-quote`, {
+        method: 'POST',
+      })
+      if (res.ok) {
+        loadOrders()
+        setSelectedOrder(null)
+      }
+    } catch (e) {
+      console.error('Failed to send quote:', e)
+    } finally {
+      setSendingQuote(false)
+    }
+  }
+
+  const columns = [
+    { key: 'INQUIRY', label: 'Inquiries', color: 'bg-blue-500' },
+    { key: 'QUOTED', label: 'Quoted', color: 'bg-amber-500' },
+    { key: 'DEPOSIT_PAID', label: 'Confirmed', color: 'bg-green-500' },
+    { key: 'COMPLETED', label: 'Completed', color: 'bg-gray-400' },
+  ]
+
+  // Demo data for the pipeline
+  const demoOrders: CateringOrder[] = [
+    {
+      id: 'demo-1',
+      quoteNumber: 'QT-2026-0042',
+      status: 'INQUIRY',
+      quoteStatus: 'DRAFT',
+      customerName: 'Sarah Johnson',
+      customerEmail: 'sarah@example.com',
+      customerPhone: '(555) 123-4567',
+      companyName: null,
+      eventDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      eventTime: '4:00 PM - 8:00 PM',
+      eventType: 'Wedding Reception',
+      guestCount: 75,
+      deliveryAddress: '123 Venue Dr, San Francisco, CA',
+      totalCents: 245000,
+      depositCents: null,
+      depositPaidAt: null,
+      balanceCents: null,
+      balancePaidAt: null,
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'demo-2',
+      quoteNumber: 'QT-2026-0041',
+      status: 'INQUIRY',
+      quoteStatus: 'DRAFT',
+      customerName: 'Mike Chen',
+      customerEmail: 'mike@techcorp.com',
+      customerPhone: '(555) 987-6543',
+      companyName: 'TechCorp Inc',
+      eventDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      eventTime: '12:00 PM - 2:00 PM',
+      eventType: 'Corporate Lunch',
+      guestCount: 30,
+      deliveryAddress: '500 Market St, Suite 400',
+      totalCents: 89000,
+      depositCents: null,
+      depositPaidAt: null,
+      balanceCents: null,
+      balancePaidAt: null,
+      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'demo-3',
+      quoteNumber: 'QT-2026-0039',
+      status: 'QUOTED',
+      quoteStatus: 'SENT',
+      customerName: 'Lisa Park',
+      customerEmail: 'lisa@email.com',
+      customerPhone: '(555) 456-7890',
+      companyName: null,
+      eventDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+      eventTime: '6:00 PM - 10:00 PM',
+      eventType: 'Birthday Party',
+      guestCount: 45,
+      deliveryAddress: '789 Party Lane',
+      totalCents: 156000,
+      depositCents: 78000,
+      depositPaidAt: null,
+      balanceCents: 78000,
+      balancePaidAt: null,
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'demo-4',
+      quoteNumber: 'QT-2026-0035',
+      status: 'DEPOSIT_PAID',
+      quoteStatus: 'ACCEPTED',
+      customerName: 'David Williams',
+      customerEmail: 'david@company.com',
+      customerPhone: '(555) 321-0987',
+      companyName: 'Williams & Co',
+      eventDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      eventTime: '11:30 AM - 1:30 PM',
+      eventType: 'Corporate Meeting',
+      guestCount: 25,
+      deliveryAddress: '200 Business Blvd',
+      totalCents: 67500,
+      depositCents: 33750,
+      depositPaidAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+      balanceCents: 33750,
+      balancePaidAt: null,
+      createdAt: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'demo-5',
+      quoteNumber: 'QT-2026-0030',
+      status: 'COMPLETED',
+      quoteStatus: 'ACCEPTED',
+      customerName: 'Green Valley HOA',
+      customerEmail: 'events@greenvalley.org',
+      customerPhone: '(555) 111-2222',
+      companyName: 'Green Valley HOA',
+      eventDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      eventTime: '2:00 PM - 5:00 PM',
+      eventType: 'Community Event',
+      guestCount: 120,
+      deliveryAddress: '100 Community Center Blvd',
+      totalCents: 312000,
+      depositCents: 156000,
+      depositPaidAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      balanceCents: 156000,
+      balancePaidAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ]
+
+  const displayOrders = orders.length > 0 ? orders : demoOrders
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Catering Orders</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage inquiries, quotes, and confirmed events</p>
+        </div>
+        <button
+          onClick={loadOrders}
+          className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          ↻ Refresh
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">Loading orders...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {columns.map((col) => {
+            const colOrders = displayOrders.filter(o => {
+              if (col.key === 'INQUIRY') return o.status === 'INQUIRY' || (o.status === 'NEW' && o.quoteStatus === 'DRAFT')
+              if (col.key === 'QUOTED') return o.quoteStatus === 'SENT' || o.status === 'QUOTED'
+              if (col.key === 'DEPOSIT_PAID') return o.status === 'DEPOSIT_PAID' || o.status === 'BALANCE_DUE' || o.status === 'PAID_IN_FULL'
+              if (col.key === 'COMPLETED') return o.status === 'COMPLETED'
+              return false
+            })
+            
+            return (
+              <div key={col.key} className="bg-gray-100 rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <div className={`w-2 h-2 rounded-full ${col.color}`} />
+                  <span className="text-sm font-semibold text-gray-700">{col.label}</span>
+                  <span className="ml-auto text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full">
+                    {colOrders.length}
+                  </span>
+                </div>
+                
+                <div className="space-y-2">
+                  {colOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      onClick={() => setSelectedOrder(order)}
+                      className="bg-white rounded-lg p-3 shadow-sm border border-gray-200 cursor-pointer hover:shadow-md hover:border-[#C4A76A]/30 transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <span className="text-xs font-medium text-gray-500">{order.quoteNumber}</span>
+                        {order.depositPaidAt && !order.balancePaidAt && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Balance Due</span>
+                        )}
+                      </div>
+                      <div className="font-medium text-gray-900 text-sm mb-1">
+                        {order.customerName}
+                        {order.companyName && (
+                          <span className="text-gray-500 font-normal"> • {order.companyName}</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-500 space-y-0.5">
+                        {order.eventDate && (
+                          <div className="flex items-center gap-1">
+                            <span>📅</span>
+                            <span>{formatShortDate(order.eventDate)}</span>
+                            {order.eventType && <span>• {order.eventType}</span>}
+                          </div>
+                        )}
+                        {order.guestCount && (
+                          <div className="flex items-center gap-1">
+                            <span>👥</span>
+                            <span>{order.guestCount} guests</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 font-medium text-gray-700">
+                          <span>💰</span>
+                          <span>{formatMoney(order.totalCents)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {colOrders.length === 0 && (
+                    <div className="text-center py-6 text-xs text-gray-400">
+                      No orders
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">{selectedOrder.quoteNumber}</h2>
+                <p className="text-sm text-gray-500">{selectedOrder.eventType || 'Catering Order'}</p>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Customer Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Customer</h3>
+                  <p className="font-medium text-gray-900">{selectedOrder.customerName}</p>
+                  {selectedOrder.companyName && (
+                    <p className="text-sm text-gray-600">{selectedOrder.companyName}</p>
+                  )}
+                  <p className="text-sm text-gray-600">{selectedOrder.customerEmail}</p>
+                  <p className="text-sm text-gray-600">{selectedOrder.customerPhone}</p>
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Event</h3>
+                  {selectedOrder.eventDate && (
+                    <p className="text-sm text-gray-900">
+                      {new Date(selectedOrder.eventDate).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  )}
+                  {selectedOrder.eventTime && (
+                    <p className="text-sm text-gray-600">{selectedOrder.eventTime}</p>
+                  )}
+                  {selectedOrder.guestCount && (
+                    <p className="text-sm text-gray-600">{selectedOrder.guestCount} guests</p>
+                  )}
+                  {selectedOrder.deliveryAddress && (
+                    <p className="text-sm text-gray-600 mt-2">{selectedOrder.deliveryAddress}</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Payment Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Payment</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Total</span>
+                    <span className="font-bold text-gray-900">{formatMoney(selectedOrder.totalCents)}</span>
+                  </div>
+                  {selectedOrder.depositCents && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Deposit (50%)</span>
+                        <span className={selectedOrder.depositPaidAt ? 'text-green-600' : 'text-gray-900'}>
+                          {formatMoney(selectedOrder.depositCents)}
+                          {selectedOrder.depositPaidAt && ' ✓'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Balance</span>
+                        <span className={selectedOrder.balancePaidAt ? 'text-green-600' : 'text-gray-900'}>
+                          {formatMoney(selectedOrder.balanceCents || 0)}
+                          {selectedOrder.balancePaidAt && ' ✓'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                {(selectedOrder.status === 'INQUIRY' || selectedOrder.quoteStatus === 'DRAFT') && (
+                  <>
+                    <button
+                      onClick={() => sendQuote(selectedOrder.id)}
+                      disabled={sendingQuote}
+                      className="flex-1 px-4 py-2.5 bg-[#C4A76A] text-white font-semibold rounded-lg hover:bg-[#b3965d] disabled:opacity-50 transition-colors"
+                    >
+                      {sendingQuote ? 'Sending...' : 'Send Quote to Customer'}
+                    </button>
+                    <a
+                      href={`/quote/${selectedOrder.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      Preview Quote
+                    </a>
+                  </>
+                )}
+                {selectedOrder.quoteStatus === 'SENT' && (
+                  <a
+                    href={`/quote/${selectedOrder.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 px-4 py-2.5 bg-[#C4A76A] text-white font-semibold rounded-lg hover:bg-[#b3965d] transition-colors text-center"
+                  >
+                    View Quote Page
+                  </a>
+                )}
+                {selectedOrder.depositPaidAt && !selectedOrder.balancePaidAt && (
+                  <div className="flex-1 text-center py-2.5 text-amber-700 bg-amber-50 rounded-lg font-medium">
+                    Awaiting Balance Payment
+                  </div>
+                )}
+                {selectedOrder.balancePaidAt && (
+                  <div className="flex-1 text-center py-2.5 text-green-700 bg-green-50 rounded-lg font-medium">
+                    ✓ Fully Paid
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

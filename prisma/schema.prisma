@@ -121,12 +121,17 @@ model Order {
 
   status                 OrderStatus      @default(PENDING_PAYMENT)
   fulfillment            FulfillmentType  @default(PICKUP)
+  orderType              OrderType        @default(PICKUP)
 
   // Money stored as integer cents to avoid float issues.
   currency               String           @default("usd")
   subtotalCents          Int
   tipCents               Int              @default(0)
   totalCents             Int
+  
+  // Delivery/service fees
+  deliveryFeeCents       Int              @default(0)
+  serviceFeeCents        Int              @default(0)
 
   // Scheduling
   scheduledFor           DateTime?
@@ -149,7 +154,40 @@ model Order {
   // Company/organization (for corporate catering)
   companyName            String?
 
-  // Stripe identifiers for idempotency
+  // ═══════════════════════════════════════════════════════════════════
+  // QUOTE & PROPOSAL SYSTEM
+  // ═══════════════════════════════════════════════════════════════════
+  quoteStatus            QuoteStatus?     // DRAFT, SENT, ACCEPTED, DECLINED, EXPIRED
+  quoteNumber            String?          // e.g., "QT-2026-0042"
+  quoteSentAt            DateTime?
+  quoteExpiresAt         DateTime?
+  quoteAcceptedAt        DateTime?
+  quoteDeclinedAt        DateTime?
+  quoteDeclineReason     String?
+  quotePdfUrl            String?          // Generated PDF storage URL
+  quoteNotes             String?          // Notes shown to customer on quote
+  internalNotes          String?          // Business-only notes (not shown to customer)
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // DEPOSIT & BALANCE PAYMENT TRACKING
+  // ═══════════════════════════════════════════════════════════════════
+  depositPercent         Int?             // e.g., 50 = 50%
+  depositCents           Int?             // Calculated deposit amount
+  depositPaidAt          DateTime?
+  depositPaymentIntentId String?          // Stripe PaymentIntent for deposit
+  depositCheckoutSessionId String?        // Stripe Checkout Session for deposit
+  
+  balanceCents           Int?             // Remaining amount after deposit
+  balancePaidAt          DateTime?
+  balancePaymentIntentId String?          // Stripe PaymentIntent for balance
+  balanceCheckoutSessionId String?        // Stripe Checkout Session for balance
+  balanceReminderSentAt  DateTime?        // When balance reminder email was sent
+  
+  // Payment terms
+  paymentTerms           String?          // e.g., "50% deposit, balance due 48h before event"
+  cancellationPolicy     String?          // e.g., "Full refund if canceled 7+ days before"
+
+  // Stripe identifiers for idempotency (legacy - for non-catering orders)
   stripeCheckoutSessionId String?         @unique
   stripePaymentIntentId   String?         @unique
   // Stripe Connect: which connected account was charged (if any)
@@ -193,6 +231,9 @@ model Order {
 
   @@index([tenantId, createdAt])
   @@index([tenantId, eventDate])
+  @@index([tenantId, status])
+  @@index([tenantId, orderType])
+  @@index([quoteNumber])
   @@map("orders")
 }
 
@@ -283,8 +324,30 @@ enum OrderStatus {
   READY
   COMPLETED
   CANCELED
+  // Catering-specific statuses
+  INQUIRY           // Customer submitted inquiry, awaiting quote
+  QUOTED            // Quote sent, awaiting customer response  
+  DEPOSIT_PAID      // Deposit collected, event confirmed
+  BALANCE_DUE       // Approaching event, balance reminder sent
+  PAID_IN_FULL      // All payments collected
 }
 
 enum FulfillmentType {
   PICKUP
+  CATERING
+  DELIVERY
+}
+
+enum OrderType {
+  PICKUP
+  CATERING
+  FOODTRUCK
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
 }
