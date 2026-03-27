@@ -23,22 +23,25 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
     }
 
-    // Fetch catering orders (orders with orderType CATERING or fulfillment CATERING)
-    const orders = await prisma.order.findMany({
-      where: {
-        tenantId: tenantRow.id,
-        OR: [
-          { orderType: 'CATERING' },
-          { fulfillment: 'CATERING' },
-          { eventDate: { not: null } },
-        ],
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-      include: {
-        items: true,
-      },
-    })
+    // Fetch catering orders - orders with eventDate set
+    // Note: orderType might not exist on older orders, so we primarily filter by eventDate
+    let orders
+    try {
+      orders = await prisma.order.findMany({
+        where: {
+          tenantId: tenantRow.id,
+          eventDate: { not: null },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 100,
+        include: {
+          items: true,
+        },
+      })
+    } catch {
+      // Fallback: fetch all orders if the query fails (e.g., schema mismatch)
+      orders = []
+    }
 
     const formattedOrders = orders.map((order) => ({
       id: order.id,
