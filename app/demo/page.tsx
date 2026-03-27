@@ -7,209 +7,150 @@ export const metadata: Metadata = {
   description: 'Try PlateHaven demos for catering and food truck ordering',
 }
 
-type Props = {
-  searchParams?: Record<string, string | string[] | undefined>
-}
-
-export default function DemoPage({ searchParams }: Props) {
-  const mode = searchParams?.mode as string | undefined
-
+export default function DemoPage() {
   return (
-    <main className="bg-[#111] text-white min-h-screen">
+    <main className="bg-[#0f0f0f] text-white min-h-screen">
       {/* Header */}
-      <nav className="border-b border-white/10 py-4 px-6">
-        <div className="mx-auto max-w-6xl flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/assets/platepilot-logo.png" alt="PlateHaven" className="h-8 w-auto object-contain" />
-            <span className="text-lg font-semibold text-[#C4A76A]">PlateHaven</span>
+      <nav className="border-b border-white/5 py-5 px-6">
+        <div className="mx-auto max-w-5xl flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2.5">
+            <img src="/assets/platepilot-logo.png" alt="PlateHaven" className="h-10 w-auto object-contain" />
+            <span className="text-xl font-semibold text-[#C4A76A]">PlateHaven</span>
           </Link>
-          <Link href="/" className="text-sm text-white/60 hover:text-white">
-            ← Back to Home
+          <Link href="/" className="text-sm text-white/50 hover:text-white transition-colors">
+            ← Back
           </Link>
         </div>
       </nav>
 
-      <div className="py-16 px-6">
-        <div className="mx-auto max-w-4xl">
+      <div className="py-12 px-6">
+        <div className="mx-auto max-w-5xl">
+          
           {/* Hero */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Experience PlateHaven</h1>
-            <p className="text-white/60 max-w-2xl mx-auto">
-              See how PlateHaven transforms the ordering experience for your customers. 
-              Choose a demo mode below to explore the full system.
+          <div className="text-center mb-14">
+            <h1 className="text-3xl font-bold mb-3">Try PlateHaven</h1>
+            <p className="text-white/50 max-w-lg mx-auto text-sm">
+              Explore the ordering experience your customers will love.
             </p>
           </div>
 
-          {/* How It Works Explanation */}
-          <div className="bg-[#1a1a1a] rounded-lg p-6 md:p-8 mb-12">
-            <h2 className="text-xl font-semibold text-[#C4A76A] mb-4">How PlateHaven Works</h2>
-            <div className="grid md:grid-cols-2 gap-6 text-sm">
-              <div>
-                <h3 className="font-semibold mb-2 text-white">For Your Customers</h3>
-                <ul className="space-y-2 text-white/70">
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#C4A76A]">•</span>
-                    Scan a QR code or click your ordering link
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#C4A76A]">•</span>
-                    Browse your menu with photos, descriptions, and prices
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#C4A76A]">•</span>
-                    Add items to their order and see the total instantly
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#C4A76A]">•</span>
-                    Submit their order with all details in one go
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2 text-white">For Your Business</h3>
-                <ul className="space-y-2 text-white/70">
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#C4A76A]">•</span>
-                    Receive orders with complete details — no back-and-forth
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#C4A76A]">•</span>
-                    View orders in the Kitchen Display System (KDS)
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#C4A76A]">•</span>
-                    Manage your menu, pricing, and settings from the Admin Panel
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-[#C4A76A]">•</span>
-                    Get notified instantly via email or SMS
-                  </li>
-                </ul>
-              </div>
+          {/* How It Works - Compact */}
+          <div className="mb-14">
+            <h2 className="text-sm font-medium text-[#C4A76A] uppercase tracking-wider mb-6 text-center">How It Works</h2>
+            <div className="grid md:grid-cols-4 gap-4">
+              {[
+                { step: '1', title: 'Share Link', desc: 'Send your menu link or display QR code' },
+                { step: '2', title: 'They Order', desc: 'Customers browse and build their order' },
+                { step: '3', title: 'You Receive', desc: 'Get complete order details instantly' },
+                { step: '4', title: 'You Deliver', desc: 'Fulfill orders with confidence' },
+              ].map((item) => (
+                <div key={item.step} className="text-center">
+                  <div className="w-8 h-8 rounded-full bg-[#C4A76A] text-[#111] text-sm font-bold flex items-center justify-center mx-auto mb-2">
+                    {item.step}
+                  </div>
+                  <div className="text-sm font-medium mb-1">{item.title}</div>
+                  <div className="text-xs text-white/40">{item.desc}</div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Demo Cards */}
-          <h2 className="text-xl font-semibold mb-6 text-center">Choose a Demo</h2>
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            {/* Catering Demo */}
-            <div className={`bg-[#1a1a1a] rounded-lg p-6 border-2 transition-colors ${mode === 'catering' || !mode ? 'border-[#C4A76A]' : 'border-transparent hover:border-[#C4A76A]/50'}`}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-[#C4A76A]/20 flex items-center justify-center">
-                  <span className="text-2xl">🍽️</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Catering Demo</h3>
-                  <p className="text-white/50 text-sm">For events & large orders</p>
-                </div>
-              </div>
-              <p className="text-white/70 text-sm mb-4">
-                Experience the full catering order flow. Customers select items with serving sizes, 
-                enter event details (date, guests, location), and submit a complete catering inquiry.
-              </p>
-              <ul className="text-xs text-white/50 mb-4 space-y-1">
-                <li>✓ Items show &quot;Serves X people&quot;</li>
-                <li>✓ Event details form (date, time, guests, location)</li>
-                <li>✓ Dietary requirements capture</li>
-                <li>✓ Order summary with total estimate</li>
-              </ul>
-              <Link
-                href="/menu?tenant=platehaven-demo&mode=catering"
-                className="block w-full bg-[#C4A76A] text-[#111] py-3 text-center font-semibold hover:bg-[#d4b87a] transition-colors rounded"
+          {/* Customer Demos */}
+          <div className="mb-12">
+            <h2 className="text-lg font-semibold mb-5">Customer Ordering</h2>
+            <div className="grid md:grid-cols-2 gap-5">
+              
+              {/* Catering Demo */}
+              <Link 
+                href="/menu?tenant=platehaven-demo"
+                className="group bg-[#161616] rounded-xl p-5 border border-white/5 hover:border-[#C4A76A]/30 transition-all"
               >
-                Try Catering Demo
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-lg bg-[#C4A76A]/10 flex items-center justify-center shrink-0">
+                    <span className="text-xl">🍽️</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 group-hover:text-[#C4A76A] transition-colors">Catering Orders</h3>
+                    <p className="text-white/40 text-sm leading-relaxed">
+                      Full event ordering with serving sizes, event details, and dietary requirements.
+                    </p>
+                  </div>
+                  <div className="text-white/20 group-hover:text-[#C4A76A] transition-colors">→</div>
+                </div>
               </Link>
-            </div>
 
-            {/* Food Truck Demo */}
-            <div className={`bg-[#1a1a1a] rounded-lg p-6 border-2 transition-colors ${mode === 'foodtruck' ? 'border-[#C4A76A]' : 'border-transparent hover:border-[#C4A76A]/50'}`}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-[#C4A76A]/20 flex items-center justify-center">
-                  <span className="text-2xl">🚚</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Food Truck Demo</h3>
-                  <p className="text-white/50 text-sm">Quick pickup orders</p>
-                </div>
-              </div>
-              <p className="text-white/70 text-sm mb-4">
-                Simplified ordering for fast-paced environments. Customers add items to their order, 
-                enter a pickup name, and submit. No event details needed — just quick, clean orders.
-              </p>
-              <ul className="text-xs text-white/50 mb-4 space-y-1">
-                <li>✓ Streamlined item selection</li>
-                <li>✓ Simple pickup name field</li>
-                <li>✓ No event details required</li>
-                <li>✓ Fast checkout flow</li>
-              </ul>
-              <Link
+              {/* Food Truck Demo */}
+              <Link 
                 href="/menu?tenant=platehaven-demo&mode=foodtruck"
-                className="block w-full bg-[#C4A76A] text-[#111] py-3 text-center font-semibold hover:bg-[#d4b87a] transition-colors rounded"
+                className="group bg-[#161616] rounded-xl p-5 border border-white/5 hover:border-[#C4A76A]/30 transition-all"
               >
-                Try Food Truck Demo
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-lg bg-[#C4A76A]/10 flex items-center justify-center shrink-0">
+                    <span className="text-xl">🚚</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 group-hover:text-[#C4A76A] transition-colors">Quick Pickup</h3>
+                    <p className="text-white/40 text-sm leading-relaxed">
+                      Fast ordering for food trucks. Just items and a pickup name.
+                    </p>
+                  </div>
+                  <div className="text-white/20 group-hover:text-[#C4A76A] transition-colors">→</div>
+                </div>
               </Link>
             </div>
           </div>
 
-          {/* Business Tools Section */}
-          <h2 className="text-xl font-semibold mb-6 text-center">Business Tools</h2>
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
-            {/* Admin Panel */}
-            <div className="bg-[#1a1a1a] rounded-lg p-6 border border-white/10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                  <span className="text-xl">⚙️</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Admin Panel</h3>
-                  <p className="text-white/50 text-xs">Manage your menu & settings</p>
-                </div>
-              </div>
-              <p className="text-white/60 text-sm mb-4">
-                See how you&apos;d manage your menu, update prices, add items, and configure your ordering system.
-              </p>
-              <Link
-                href="/menu?tenant=platehaven-demo&admin=1"
-                className="block w-full border border-[#C4A76A] text-[#C4A76A] py-2.5 text-center font-medium hover:bg-[#C4A76A]/10 transition-colors rounded text-sm"
+          {/* Business Tools */}
+          <div className="mb-12">
+            <h2 className="text-lg font-semibold mb-5">Business Tools</h2>
+            <div className="grid md:grid-cols-2 gap-5">
+              
+              {/* Admin Panel */}
+              <Link 
+                href="/independentbarandgrille?admin=1"
+                className="group bg-[#161616] rounded-xl p-5 border border-white/5 hover:border-[#C4A76A]/30 transition-all"
               >
-                View Admin Panel
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                    <span className="text-xl">⚙️</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 group-hover:text-[#C4A76A] transition-colors">Admin Panel</h3>
+                    <p className="text-white/40 text-sm leading-relaxed">
+                      Manage menu items, prices, categories, and ordering settings.
+                    </p>
+                  </div>
+                  <div className="text-white/20 group-hover:text-[#C4A76A] transition-colors">→</div>
+                </div>
               </Link>
-            </div>
 
-            {/* Kitchen Display */}
-            <div className="bg-[#1a1a1a] rounded-lg p-6 border border-white/10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                  <span className="text-xl">📺</span>
-                </div>
-                <div>
-                  <h3 className="font-semibold">Kitchen Display (KDS)</h3>
-                  <p className="text-white/50 text-xs">View incoming orders</p>
-                </div>
-              </div>
-              <p className="text-white/60 text-sm mb-4">
-                See how orders appear on the kitchen display. Perfect for keeping your team organized during busy periods.
-              </p>
-              <Link
+              {/* Kitchen Display */}
+              <Link 
                 href="/kds/platehaven-demo"
-                className="block w-full border border-[#C4A76A] text-[#C4A76A] py-2.5 text-center font-medium hover:bg-[#C4A76A]/10 transition-colors rounded text-sm"
+                className="group bg-[#161616] rounded-xl p-5 border border-white/5 hover:border-[#C4A76A]/30 transition-all"
               >
-                View Kitchen Display
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                    <span className="text-xl">📺</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 group-hover:text-[#C4A76A] transition-colors">Kitchen Display</h3>
+                    <p className="text-white/40 text-sm leading-relaxed">
+                      See incoming orders on a dedicated kitchen screen.
+                    </p>
+                  </div>
+                  <div className="text-white/20 group-hover:text-[#C4A76A] transition-colors">→</div>
+                </div>
               </Link>
             </div>
           </div>
 
           {/* Disclaimer */}
-          <div className="bg-[#0a0a0a] rounded-lg p-6 border border-white/10">
-            <h3 className="font-semibold text-sm text-white/80 mb-2">Demo Mode Notice</h3>
-            <p className="text-xs text-white/50 leading-relaxed">
-              This is a demonstration environment. Orders placed here are not real and will not be processed. 
-              Menu items, prices, and business information shown are for demonstration purposes only. 
-              No payment information is collected in demo mode. To set up PlateHaven for your business, 
-              <a href="https://calendly.com/tccsolutions2025/30min" target="_blank" rel="noreferrer" className="text-[#C4A76A] hover:underline ml-1">
-                schedule a call with us
-              </a>.
-            </p>
+          <div className="text-center text-xs text-white/30 max-w-md mx-auto">
+            Demo mode — orders are not processed. Menu items shown are for demonstration only.
+            <Link href="https://calendly.com/tccsolutions2025/30min" target="_blank" rel="noreferrer" className="text-[#C4A76A] hover:underline ml-1">
+              Get started →
+            </Link>
           </div>
         </div>
       </div>

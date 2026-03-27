@@ -318,7 +318,7 @@ export async function GET(request: NextRequest) {
     const fbDbOrderingHasEnabled =
       !!(fbDbOrdering && typeof (fbDbOrdering as Record<string, unknown>)['enabled'] === 'boolean')
     const demoOrderingFallbackOk =
-      (tenant === 'demo' || tenant === 'platepilot-demo')
+      (tenant === 'demo' || tenant === 'platepilot-demo' || tenant === 'platehaven-demo')
       && !!process.env.DATABASE_URL
       && !dbOrderingHasEnabled
       && !fbDbOrderingHasEnabled
@@ -335,7 +335,7 @@ export async function GET(request: NextRequest) {
 
     // Demo UI safety: force demo to show ordering/cart and avoid oversized signature grids,
     // even if production DB settings have older demo style values.
-    if (tenant === 'demo' || tenant === 'platepilot-demo') {
+    if (tenant === 'demo' || tenant === 'platepilot-demo' || tenant === 'platehaven-demo') {
       const base = (style && typeof style === 'object') ? (style as Record<string, unknown>) : {}
       const flagsBase = (base.flags && typeof base.flags === 'object') ? (base.flags as Record<string, unknown>) : {}
       style = {
