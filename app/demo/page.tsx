@@ -70,7 +70,10 @@ export default function DemoPage() {
                     <span className="text-xl">🍽️</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 group-hover:text-[#C4A76A] transition-colors">Catering Orders</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold group-hover:text-[#C4A76A] transition-colors">Catering Orders</h3>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#C4A76A]/20 text-[#C4A76A] font-medium">DEMO</span>
+                    </div>
                     <p className="text-white/40 text-sm leading-relaxed">
                       Full event ordering with serving sizes, event details, and dietary requirements.
                     </p>
@@ -89,7 +92,10 @@ export default function DemoPage() {
                     <span className="text-xl">🚚</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 group-hover:text-[#C4A76A] transition-colors">Quick Pickup</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold group-hover:text-[#C4A76A] transition-colors">Quick Pickup</h3>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#C4A76A]/20 text-[#C4A76A] font-medium">DEMO</span>
+                    </div>
                     <p className="text-white/40 text-sm leading-relaxed">
                       Fast ordering for food trucks. Just items and a pickup name.
                     </p>
@@ -115,7 +121,10 @@ export default function DemoPage() {
                     <span className="text-xl">⚙️</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 group-hover:text-[#C4A76A] transition-colors">Admin Panel</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold group-hover:text-[#C4A76A] transition-colors">Admin Panel</h3>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#C4A76A]/20 text-[#C4A76A] font-medium">DEMO</span>
+                    </div>
                     <p className="text-white/40 text-sm leading-relaxed">
                       Manage menu items, prices, categories, and ordering settings.
                     </p>
@@ -134,7 +143,10 @@ export default function DemoPage() {
                     <span className="text-xl">📺</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 group-hover:text-[#C4A76A] transition-colors">Kitchen Display</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold group-hover:text-[#C4A76A] transition-colors">Kitchen Display</h3>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#C4A76A]/20 text-[#C4A76A] font-medium">DEMO</span>
+                    </div>
                     <p className="text-white/40 text-sm leading-relaxed">
                       See incoming orders on a dedicated kitchen screen.
                     </p>
@@ -146,11 +158,25 @@ export default function DemoPage() {
           </div>
 
           {/* Disclaimer */}
-          <div className="text-center text-xs text-white/30 max-w-md mx-auto">
-            Demo mode — orders are not processed. Menu items shown are for demonstration only.
-            <Link href="https://calendly.com/tccsolutions2025/30min" target="_blank" rel="noreferrer" className="text-[#C4A76A] hover:underline ml-1">
-              Get started →
-            </Link>
+          <div className="bg-[#161616] rounded-xl p-5 border border-white/5">
+            <div className="flex items-start gap-3">
+              <span className="text-[#C4A76A]">ℹ️</span>
+              <div>
+                <div className="text-sm font-medium text-white/80 mb-1">Demo Mode</div>
+                <p className="text-xs text-white/40 leading-relaxed">
+                  Orders placed in demo mode are not processed. Menu items and pricing shown are for demonstration purposes only. 
+                  Your actual system will be fully customized with your branding, menu items, and pricing.
+                </p>
+                <Link 
+                  href="https://calendly.com/tccsolutions2025/30min" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="inline-block mt-3 text-sm text-[#C4A76A] hover:underline font-medium"
+                >
+                  Ready to get started? Schedule a call →
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>

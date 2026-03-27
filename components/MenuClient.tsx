@@ -2392,8 +2392,8 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                     </div>
                   )}
 
-                  {/* Fulfillment (dine-in vs pickup) - Hidden for catering mode */}
-                  {orderingEnabled && dineInEnabled && !cateringMode && (
+                  {/* Fulfillment (dine-in vs pickup) - Hidden for catering and food truck modes */}
+                  {orderingEnabled && dineInEnabled && !cateringMode && !isFoodTruckMode && (
                     <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-white">Order type</div>
                       <div className="mt-2 text-sm text-white/70">
