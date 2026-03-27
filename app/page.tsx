@@ -1,13 +1,13 @@
 /* eslint-disable @next/next/no-img-element */
 export const metadata = {
-  title: 'PlatePilot — Catering Orders Without the Back-and-Forth',
+  title: 'PlateHaven — Catering & Food Truck Orders Made Simple',
   description:
-    'Turn 10 back-and-forth messages into 1 structured catering order. Customers build their order, see pricing, and submit — no calls or confusion.',
+    'Turn 10 back-and-forth messages into 1 structured order. Customers build their order, see pricing, and submit — no calls or confusion.',
 }
 
 const LANDING = {
   calendlyUrl: 'https://calendly.com/tccsolutions2025/30min',
-  demoUrl: '/menu?tenant=platepilot-demo',
+  demoUrl: '/demo',
 }
 
 export default function Landing() {
@@ -17,14 +17,17 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#111]/90 backdrop-blur-md border-b border-[#C4A76A]/20">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
-            <img src="/assets/platepilot-logo.png" alt="PlatePilot" className="h-9 w-auto object-contain" />
+            <img src="/assets/platepilot-logo.png" alt="PlateHaven" className="h-9 w-auto object-contain" />
             <span className="text-xl font-semibold tracking-tight text-[#C4A76A]">
-              PlatePilot
+              PlateHaven
             </span>
           </a>
           <div className="flex items-center gap-6">
             <a href="#how-it-works" className="hidden md:inline text-sm text-white/60 hover:text-white">
               How It Works
+            </a>
+            <a href="#food-trucks" className="hidden md:inline text-sm text-white/60 hover:text-white">
+              Food Trucks
             </a>
             <a href="#pricing" className="hidden md:inline text-sm text-white/60 hover:text-white">
               Pricing
@@ -191,8 +194,84 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Food Trucks Section */}
+      <section id="food-trucks" className="py-20 px-6 bg-[#0a0a0a]">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <p className="text-[#C4A76A] text-sm font-medium tracking-widest uppercase mb-4">
+              Not Just for Catering
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Also Built for Busy Food Trucks</h2>
+            <p className="text-white/60 max-w-2xl mx-auto">
+              Handle rushes without losing customers. Let people order from their phone instead of waiting in line.
+            </p>
+          </div>
+          
+          {/* Pain Points */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {[
+              { icon: '⏳', title: 'Long Lines = Lost Customers', desc: 'People see the line and walk away. You lose sales without even knowing it.' },
+              { icon: '😰', title: 'Staff Overwhelmed at Peak', desc: 'Rush hours are chaos. Orders get mixed up. Service slows down.' },
+              { icon: '📵', title: 'Missed Orders During Rush', desc: 'Can\'t take phone orders when you\'re slammed. Revenue walks out the door.' },
+            ].map((pain, i) => (
+              <div key={i} className="bg-[#1a1a1a] p-6 rounded-lg text-center">
+                <div className="text-3xl mb-3">{pain.icon}</div>
+                <h3 className="font-semibold mb-2 text-white">{pain.title}</h3>
+                <p className="text-white/60 text-sm">{pain.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Solution Flow */}
+          <div className="bg-[#1a1a1a] rounded-lg p-8 mb-12">
+            <h3 className="text-xl font-semibold text-center mb-8 text-[#C4A76A]">How It Works for Food Trucks</h3>
+            <div className="grid md:grid-cols-4 gap-6">
+              {[
+                { num: '1', title: 'Display QR Code', desc: 'Post it at your truck or on social media' },
+                { num: '2', title: 'Customers Scan & Order', desc: 'They browse your menu on their phone' },
+                { num: '3', title: 'Orders Come In Organized', desc: 'Each order shows name & items clearly' },
+                { num: '4', title: 'Call Name When Ready', desc: 'Fast pickup, no confusion' },
+              ].map((step, i) => (
+                <div key={i} className="text-center">
+                  <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#C4A76A] text-[#111] font-bold mb-3">
+                    {step.num}
+                  </div>
+                  <h4 className="font-semibold mb-1 text-sm">{step.title}</h4>
+                  <p className="text-white/60 text-xs">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Results */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {[
+              { metric: '↑', title: 'Serve More Per Hour', desc: 'No bottleneck at the counter. Orders flow smoothly.' },
+              { metric: '↓', title: 'Reduce Staff Pressure', desc: 'Less chaos, fewer mistakes, happier team.' },
+              { metric: '💰', title: 'Capture Lost Sales', desc: 'People who would\'ve walked away now order from their phone.' },
+            ].map((result, i) => (
+              <div key={i} className="text-center">
+                <div className="text-3xl font-bold text-[#C4A76A] mb-2">{result.metric}</div>
+                <h3 className="font-semibold mb-1">{result.title}</h3>
+                <p className="text-white/60 text-sm">{result.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <a
+              href="/demo?mode=foodtruck"
+              className="inline-block bg-[#C4A76A] text-[#111] px-8 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors"
+            >
+              See Food Truck Demo
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
-      <section id="pricing" className="py-20 px-6 bg-[#0a0a0a]">
+      <section id="pricing" className="py-20 px-6">
         <div className="mx-auto max-w-3xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple Pricing</h2>
@@ -209,9 +288,9 @@ export default function Landing() {
             </div>
             <div className="grid md:grid-cols-2 gap-4 mb-8">
               {[
-                'Unlimited catering orders',
+                'Unlimited orders',
                 'Full menu customization',
-                'Event details capture',
+                'Catering + Food Truck modes',
                 'Order notifications (email + SMS)',
                 'AI menu assistant',
                 'Order analytics',
@@ -242,9 +321,9 @@ export default function Landing() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-6">
+      <section className="py-20 px-6 bg-[#0a0a0a]">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to simplify catering orders?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to simplify orders?</h2>
           <p className="text-white/60 mb-8">Set up in minutes. No credit card required.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
@@ -269,8 +348,8 @@ export default function Landing() {
       <footer className="border-t border-white/10 py-12 px-6">
         <div className="mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <img src="/assets/platepilot-logo.png" alt="PlatePilot" className="h-7 w-auto object-contain" />
-            <span className="font-semibold text-[#C4A76A]">PlatePilot</span>
+            <img src="/assets/platepilot-logo.png" alt="PlateHaven" className="h-7 w-auto object-contain" />
+            <span className="font-semibold text-[#C4A76A]">PlateHaven</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-white/50">
             <a href="/terms" className="hover:text-white">Terms</a>
@@ -279,7 +358,7 @@ export default function Landing() {
           </div>
         </div>
         <div className="mx-auto max-w-5xl mt-8 pt-8 border-t border-white/10 text-center text-sm text-white/40">
-          © {new Date().getFullYear()} PlatePilot. All rights reserved.
+          © {new Date().getFullYear()} PlateHaven. All rights reserved.
         </div>
       </footer>
     </main>

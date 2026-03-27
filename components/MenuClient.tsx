@@ -124,8 +124,11 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
     : String(tenant || '').trim().toLowerCase()
   const isSouthFork = canonicalTenant === 'south-fork-grille'
   const isDemo = tenant === 'demo'
-  const useElegantListLayout = tenant === 'independentbarandgrille' || tenant === 'platepilot-demo'
+  const useElegantListLayout = tenant === 'independentbarandgrille' || tenant === 'platepilot-demo' || tenant === 'platehaven-demo'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
+  // URL-based mode override: ?mode=foodtruck or ?mode=catering
+  const urlMode = isBrowser ? searchParams!.get('mode') : null
+  const isFoodTruckMode = urlMode === 'foodtruck'
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
@@ -560,8 +563,8 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
   const [tableNumber, setTableNumber] = useState('')
   const [fulfillmentMode, setFulfillmentMode] = useState<'pickup' | 'dinein'>('pickup')
 
-  // Catering-specific state
-  const cateringMode = orderingCfg?.cateringMode === true
+  // Catering-specific state (disabled if food truck mode is active)
+  const cateringMode = orderingCfg?.cateringMode === true && !isFoodTruckMode
   const cateringLeadDays = typeof orderingCfg?.cateringLeadDays === 'number' ? orderingCfg.cateringLeadDays : 2
   const [eventDate, setEventDate] = useState<string>('')
   const [eventTime, setEventTime] = useState<string>('')
@@ -2200,7 +2203,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
           <div className="ml-auto w-full max-w-md bg-neutral-950 text-white h-full shadow-2xl border-l border-white/10 flex flex-col">
             <div className="p-6 border-b border-white/10 bg-neutral-950/90 backdrop-blur">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">{cateringMode ? 'Your Catering Order' : 'Your Plate'}</h2>
+                <h2 className="text-2xl font-bold text-white">{cateringMode ? 'Your Catering Order' : (isFoodTruckMode ? 'Your Order' : 'Your Plate')}</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
                   className="text-white/70 hover:text-white transition-colors"
@@ -2210,6 +2213,9 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
               </div>
               {cateringMode && (
                 <p className="mt-2 text-sm text-white/70">Build your order, add event details, and submit your inquiry.</p>
+              )}
+              {isFoodTruckMode && (
+                <p className="mt-2 text-sm text-white/70">Add items and enter your name for pickup.</p>
               )}
             </div>
             
@@ -2506,8 +2512,29 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                     </div>
                   )}
 
-                  {/* Contact Info */}
-                  {orderingEnabled && (
+                  {/* Food Truck Pickup Info - Simplified */}
+                  {isFoodTruckMode && (
+                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                      <div className="text-sm font-extrabold tracking-wide text-black">👤 Pickup Info</div>
+                      <div className="mt-2 text-sm text-gray-600">
+                        We&apos;ll call this name when your order is ready.
+                      </div>
+                      <div className="mt-4">
+                        <input
+                          type="text"
+                          inputMode="text"
+                          autoComplete="name"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="Pickup Name *"
+                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contact Info - For non-food-truck modes */}
+                  {orderingEnabled && !isFoodTruckMode && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-black">{cateringMode ? '👤 Contact Information' : 'Contact Info'}</div>
                       <div className="mt-2 text-sm text-gray-600">
@@ -2725,9 +2752,9 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                     }}
                     className="rounded-2xl px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)' }}
-                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) || (cateringMode && (!eventDate || !guestCount || !customerName.trim() || !customerPhone.trim()))))}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) || (cateringMode && (!eventDate || !guestCount || !customerName.trim() || !customerPhone.trim())) || (isFoodTruckMode && !customerName.trim())))}
                   >
-                    {cateringMode ? 'Submit Inquiry' : (orderingEnabled ? 'Place order' : 'Proceed with Plate')}
+                    {cateringMode ? 'Submit Inquiry' : (isFoodTruckMode ? 'Submit Order' : (orderingEnabled ? 'Place order' : 'Proceed with Plate'))}
                   </button>
                 </div>
                 {!orderingEnabled && (

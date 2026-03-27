@@ -43,8 +43,8 @@ export default async function MenuPage({ searchParams }: Props) {
   if (isPreview) return <MenuClient initialTenant={tenant} />
 
   // Always allow demo + any draft tenants (drafts are blocked elsewhere on prod anyway).
-  // platepilot-demo uses MenuClient with elegant layout enabled via useElegantListLayout
-  if (!tenant || tenant === 'demo' || tenant.endsWith('-draft') || tenant === 'platepilot-demo') {
+  // platepilot-demo and platehaven-demo use MenuClient with elegant layout enabled via useElegantListLayout
+  if (!tenant || tenant === 'demo' || tenant.endsWith('-draft') || tenant === 'platepilot-demo' || tenant === 'platehaven-demo') {
     return <MenuClient initialTenant={tenant} />
   }
 

@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "fulfillment": "catering",
+  "cateringMode": true,
+  "cateringLeadDays": 2,
+  "cateringDepositPercent": 0,
+  "cateringMinimumCents": 0
+}

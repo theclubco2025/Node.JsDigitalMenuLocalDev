@@ -70,8 +70,8 @@ export function middleware(request: NextRequest) {
     if (isPreview) {
       const url = request.nextUrl.clone()
       const currentTenant = (url.searchParams.get('tenant') || '').toLowerCase()
-      // Allow platepilot-demo to work in preview (for landing page demo links)
-      if (currentTenant === 'platepilot-demo') {
+      // Allow demo tenants to work in preview (for landing page demo links)
+      if (currentTenant === 'platepilot-demo' || currentTenant === 'platehaven-demo') {
         return NextResponse.next()
       }
       const host = request.headers.get('host') || ''
