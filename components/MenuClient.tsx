@@ -2299,7 +2299,8 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                               min={minEventDate}
                               value={eventDate}
                               onChange={(e) => setEventDate(e.target.value)}
-                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white"
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white"
+                              style={{ colorScheme: 'dark' }}
                             />
                           </div>
                           <div>
@@ -2309,7 +2310,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                               placeholder="e.g., 12:00 PM"
                               value={eventTime}
                               onChange={(e) => setEventTime(e.target.value)}
-                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
                             />
                           </div>
                         </div>
@@ -2323,7 +2324,8 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                               placeholder="50"
                               value={guestCount}
                               onChange={(e) => setGuestCount(e.target.value)}
-                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                              style={{ colorScheme: 'dark' }}
                             />
                           </div>
                           <div>
@@ -2331,11 +2333,12 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                             <select
                               value={eventType}
                               onChange={(e) => setEventType(e.target.value)}
-                              className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white"
+                              className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white"
+                              style={{ colorScheme: 'dark' }}
                             >
-                              <option value="">Select...</option>
+                              <option value="" className="bg-neutral-900 text-white">Select...</option>
                               {eventTypes.map((t) => (
-                                <option key={t} value={t}>{t}</option>
+                                <option key={t} value={t} className="bg-neutral-900 text-white">{t}</option>
                               ))}
                             </select>
                           </div>
@@ -2356,7 +2359,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                             value={deliveryAddress}
                             onChange={(e) => setDeliveryAddress(e.target.value)}
                             rows={2}
-                            className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
                           />
                         </div>
                         <div>
@@ -2366,7 +2369,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                             placeholder="e.g., Enter through loading dock, ask for Sarah"
                             value={deliveryNotes}
                             onChange={(e) => setDeliveryNotes(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
                           />
                         </div>
                       </div>
@@ -2386,7 +2389,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                           value={dietaryNotes}
                           onChange={(e) => setDietaryNotes(e.target.value)}
                           rows={2}
-                          className="w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                          className="w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
                         />
                       </div>
                     </div>
@@ -2432,7 +2435,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                             value={tableNumber}
                             onChange={(e) => setTableNumber(e.target.value)}
                             placeholder={dineInLabel}
-                            className="mt-2 w-full rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            className="mt-2 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
                           />
                           {!tableNumber.trim() && (
                             <div className="mt-2 text-xs font-semibold text-amber-700">

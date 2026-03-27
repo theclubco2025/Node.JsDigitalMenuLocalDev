@@ -5,6 +5,7 @@ import { readMenu } from '@/lib/data/menu'
 import { getStripeOrders } from '@/lib/stripe'
 import type { Prisma } from '@prisma/client'
 import { checkRateLimit, clientIp } from '@/lib/server/rateLimit'
+import { sendCateringOrderNotification } from '@/lib/email'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -421,6 +422,47 @@ export async function POST(req: NextRequest) {
 
     // For catering inquiries, skip Stripe checkout and redirect directly to success page
     if (isCatering) {
+      // Send email notification to the business
+      const tenantSettings = (tenantRow.settings && typeof tenantRow.settings === 'object') 
+        ? (tenantRow.settings as Record<string, unknown>) 
+        : {}
+      const contactEmail = (tenantSettings.contactEmail as string) || (tenantSettings.email as string) || null
+      
+      if (contactEmail && customerName && customerPhone && eventDateRaw && guestCount) {
+        // Get tenant name for email
+        const tenantInfo = await prisma.tenant.findUnique({
+          where: { slug: tenant },
+          select: { name: true },
+        })
+        
+        // Send email notification (fire-and-forget, don't block the response)
+        void sendCateringOrderNotification({
+          to: contactEmail,
+          customerName,
+          customerEmail: customerEmail || '',
+          customerPhone,
+          companyName: companyName || undefined,
+          eventDate: eventDateRaw,
+          eventTime: eventTime || undefined,
+          guestCount,
+          eventType: eventType || undefined,
+          deliveryAddress: deliveryAddress || undefined,
+          deliveryNotes: deliveryNotes || undefined,
+          dietaryNotes: dietaryNotes || undefined,
+          items: orderItems.map(it => ({
+            name: it.name,
+            quantity: it.quantity,
+            unitPriceCents: it.unitPriceCents,
+          })),
+          subtotalCents,
+          orderNote: orderNote || undefined,
+          orderId: order.id,
+          tenantName: tenantInfo?.name || tenant,
+        }).catch((e) => {
+          console.error('[checkout] Failed to send catering email:', (e as Error)?.message || e)
+        })
+      }
+      
       const successUrl = `${baseUrl}/order/success?order=${encodeURIComponent(order.id)}&catering=1&tenant=${encodeURIComponent(tenant)}`
       return NextResponse.json({ ok: true, orderId: order.id, url: successUrl, catering: true }, { status: 200 })
     }

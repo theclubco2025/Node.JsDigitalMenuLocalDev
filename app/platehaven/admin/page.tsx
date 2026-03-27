@@ -31,7 +31,7 @@ export default function PlateHavenAdminPage() {
   const [toast, setToast] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [query, setQuery] = useState('')
-  const [activeTab, setActiveTab] = useState<'menu' | 'settings'>('menu')
+  const [activeTab, setActiveTab] = useState<'menu' | 'analytics' | 'settings'>('menu')
 
   useEffect(() => {
     if (!toast) return
@@ -115,6 +115,16 @@ export default function PlateHavenAdminPage() {
             }`}
           >
             Menu Editor
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+              activeTab === 'analytics'
+                ? 'text-[#C4A76A] border-b-2 border-[#C4A76A]'
+                : 'text-gray-500 hover:text-gray-900'
+            }`}
+          >
+            Analytics
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -374,6 +384,123 @@ export default function PlateHavenAdminPage() {
               </div>
             )}
           </>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Analytics</h1>
+              <p className="text-sm text-gray-500 mt-1">Track your catering performance and customer insights</p>
+            </div>
+
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Total Orders', value: '47', change: '+12%', icon: '📦' },
+                { label: 'Revenue', value: '$8,420', change: '+18%', icon: '💰' },
+                { label: 'Avg Order Size', value: '$179', change: '+5%', icon: '📊' },
+                { label: 'Repeat Customers', value: '23%', change: '+8%', icon: '🔄' },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-2xl">{stat.icon}</span>
+                    <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{stat.change}</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Top Items */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
+                <h3 className="font-semibold text-gray-900 mb-4">Top Selling Items</h3>
+                <div className="space-y-3">
+                  {[
+                    { name: 'BBQ Pulled Pork Platter', orders: 32, revenue: '$1,280' },
+                    { name: 'Smoked Brisket Tray', orders: 28, revenue: '$1,680' },
+                    { name: 'Grilled Chicken Wings (50 pc)', orders: 24, revenue: '$720' },
+                    { name: 'Mac & Cheese Family Style', orders: 22, revenue: '$440' },
+                    { name: 'Cornbread Basket', orders: 18, revenue: '$180' },
+                  ].map((item, idx) => (
+                    <div key={item.name} className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-[#C4A76A]/20 text-[#C4A76A] text-xs font-bold flex items-center justify-center">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate">{item.name}</div>
+                        <div className="text-xs text-gray-500">{item.orders} orders</div>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900">{item.revenue}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
+                <h3 className="font-semibold text-gray-900 mb-4">Event Types</h3>
+                <div className="space-y-3">
+                  {[
+                    { type: 'Corporate Lunch', count: 18, pct: 38 },
+                    { type: 'Birthday Party', count: 12, pct: 26 },
+                    { type: 'Wedding', count: 8, pct: 17 },
+                    { type: 'Community Event', count: 5, pct: 11 },
+                    { type: 'Other', count: 4, pct: 8 },
+                  ].map((event) => (
+                    <div key={event.type}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-gray-900">{event.type}</span>
+                        <span className="text-xs text-gray-500">{event.count} orders ({event.pct}%)</span>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-[#C4A76A] rounded-full transition-all"
+                          style={{ width: `${event.pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Orders by Hour */}
+            <div className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
+              <h3 className="font-semibold text-gray-900 mb-4">Orders by Hour</h3>
+              <div className="h-40 flex items-end gap-1">
+                {[2, 3, 5, 8, 12, 18, 22, 20, 15, 10, 6, 4].map((val, idx) => (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                    <div 
+                      className="w-full bg-[#C4A76A]/80 rounded-t"
+                      style={{ height: `${(val / 22) * 100}%` }}
+                    />
+                    <span className="text-[10px] text-gray-400">{8 + idx}:00</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Customer Questions */}
+            <div className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm">
+              <h3 className="font-semibold text-gray-900 mb-4">Common Customer Questions (AI Assistant)</h3>
+              <div className="space-y-2">
+                {[
+                  { question: 'What dietary accommodations do you offer?', count: 28, category: 'dietary' },
+                  { question: 'How far in advance should I order?', count: 22, category: 'logistics' },
+                  { question: 'Do you deliver to [location]?', count: 18, category: 'delivery' },
+                  { question: 'Can you handle nut allergies?', count: 15, category: 'dietary' },
+                  { question: 'What is your minimum order size?', count: 12, category: 'pricing' },
+                ].map((q) => (
+                  <div key={q.question} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-gray-50">
+                    <span className="text-xs px-2 py-0.5 rounded bg-[#C4A76A]/20 text-[#C4A76A] font-medium">{q.category}</span>
+                    <span className="flex-1 text-sm text-gray-700">{q.question}</span>
+                    <span className="text-xs text-gray-500">{q.count}x</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
         {activeTab === 'settings' && (

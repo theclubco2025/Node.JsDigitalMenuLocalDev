@@ -135,7 +135,7 @@ export default function DemoPage() {
 
               {/* Kitchen Display */}
               <Link 
-                href="/kds/platehaven-demo"
+                href="/platehaven/kds"
                 className="group bg-[#161616] rounded-xl p-5 border border-white/5 hover:border-[#C4A76A]/30 transition-all"
               >
                 <div className="flex items-start gap-4">

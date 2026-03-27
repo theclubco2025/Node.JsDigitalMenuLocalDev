@@ -37,3 +37,4 @@ Standard dev commands are in `package.json` scripts. Key ones:
 - **Kitchen PINs**: All kitchen PINs are stored in `Tenant.settings.kitchenPin` — there are no hardcoded universal PINs. The demo tenant's PIN must be set via the seed script or admin panel.
 - **Ops health**: `GET /api/admin/ops/health` requires `X-Admin-Token` header and returns the status of all configured services (DB, Stripe, Upstash, AI, Twilio).
 - **Security docs**: See `docs/GO_NO_GO.md` for the production launch checklist and `docs/SECURITY_ROTATION.md` for the secret rotation runbook.
+- **Catering email notifications**: Catering orders trigger email notifications to the tenant's contact email (set in `Tenant.settings.contactEmail`). Requires SMTP configuration via `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and optionally `SMTP_FROM`. When not configured, email notifications are silently skipped.
