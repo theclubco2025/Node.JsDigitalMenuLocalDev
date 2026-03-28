@@ -119,6 +119,12 @@ export default function QuotePage() {
       
       const data = await res.json()
       
+      // Handle demo mode
+      if (data.demo) {
+        alert('Demo Mode: ' + data.message)
+        return
+      }
+      
       // Redirect to Stripe checkout for deposit
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl

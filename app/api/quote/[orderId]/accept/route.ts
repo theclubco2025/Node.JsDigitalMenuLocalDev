@@ -19,8 +19,18 @@ export async function POST(
   try {
     const { orderId } = await params
     
-    if (!orderId || orderId.length < 10) {
+    if (!orderId || orderId.length < 5) {
       return NextResponse.json({ error: 'Invalid order ID' }, { status: 400 })
+    }
+
+    // Demo mode - show a simulated response
+    if (orderId.startsWith('demo-')) {
+      return NextResponse.json({
+        success: true,
+        demo: true,
+        message: 'This is a demo. In production, customers would be redirected to Stripe to pay their deposit.',
+        checkoutUrl: null,
+      })
     }
 
     const order = await prisma.order.findUnique({
@@ -88,6 +98,7 @@ export async function POST(
     ]
 
     // Create Stripe Checkout session
+    // For connected accounts, the session is created on their account (Stripe Connect Standard)
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       customer_email: order.customerEmail || undefined,

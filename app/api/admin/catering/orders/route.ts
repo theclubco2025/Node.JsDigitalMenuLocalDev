@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import type { Order, OrderItem } from '@prisma/client'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+type OrderWithItems = Order & { items: OrderItem[] }
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,8 +27,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch catering orders - orders with eventDate set
-    // Note: orderType might not exist on older orders, so we primarily filter by eventDate
-    let orders
+    let orders: OrderWithItems[] = []
     try {
       orders = await prisma.order.findMany({
         where: {
@@ -39,11 +41,11 @@ export async function GET(req: NextRequest) {
         },
       })
     } catch {
-      // Fallback: fetch all orders if the query fails (e.g., schema mismatch)
+      // Fallback: return empty if query fails
       orders = []
     }
 
-    const formattedOrders = orders.map((order) => ({
+    const formattedOrders = orders.map((order: OrderWithItems) => ({
       id: order.id,
       quoteNumber: order.quoteNumber || `QT-${order.id.slice(-8).toUpperCase()}`,
       status: order.status,
@@ -63,7 +65,7 @@ export async function GET(req: NextRequest) {
       balanceCents: order.balanceCents,
       balancePaidAt: order.balancePaidAt?.toISOString() || null,
       createdAt: order.createdAt.toISOString(),
-      items: order.items.map((item) => ({
+      items: order.items.map((item: OrderItem) => ({
         name: item.name,
         quantity: item.quantity,
         unitPriceCents: item.unitPriceCents,

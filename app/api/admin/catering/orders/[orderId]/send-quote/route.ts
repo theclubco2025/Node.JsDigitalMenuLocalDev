@@ -23,6 +23,17 @@ export async function POST(
       return NextResponse.json({ error: 'Order ID required' }, { status: 400 })
     }
 
+    // Demo mode - return success without actually sending email
+    if (orderId.startsWith('demo-')) {
+      const baseUrl = baseUrlFromRequest(req)
+      return NextResponse.json({
+        success: true,
+        demo: true,
+        message: 'Demo Mode: Quote would be emailed to the customer.',
+        quoteUrl: `${baseUrl}/quote/${orderId}`,
+      })
+    }
+
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {

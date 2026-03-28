@@ -26,6 +26,7 @@ async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccoun
 
   const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : null
   const emailFromSession = (session.customer_details?.email || session.customer_email || '').trim() || null
+  const paymentKind = session.metadata?.kind || 'order'
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -34,20 +35,17 @@ async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccoun
       paidAt: true,
       status: true,
       stripeAccountId: true,
+      depositPaidAt: true,
+      balancePaidAt: true,
       tenant: { select: { slug: true, stripeConnectAccountId: true } },
     },
   })
   if (!order) return
-  if (order.paidAt || order.status !== 'PENDING_PAYMENT') {
-    // Idempotent: already handled
-    return
-  }
 
   const tenantSlug = (order.tenant?.slug || '').trim().toLowerCase()
-  const isPocTenant = tenantSlug === 'demo' || tenantSlug === 'independentbarandgrille'
+  const isPocTenant = tenantSlug === 'demo' || tenantSlug === 'independentbarandgrille' || tenantSlug === 'platehaven-demo'
 
   // For POC tenants, rely on the per-order stripeAccountId only.
-  // This avoids blocking platform test charges when the tenant has a connect id set.
   const expectedAccountId =
     isPocTenant
       ? (order.stripeAccountId || '').trim()
@@ -65,6 +63,50 @@ async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccoun
       console.warn('[orders:stripe-webhook] connect account mismatch', { orderId, eventAccountId, expectedAccountId })
       return
     }
+  }
+
+  // Handle catering deposit payment
+  if (paymentKind === 'catering_deposit') {
+    if (order.depositPaidAt) {
+      // Already processed
+      return
+    }
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'DEPOSIT_PAID',
+        depositPaidAt: new Date(),
+        depositPaymentIntentId: paymentIntentId || undefined,
+        customerEmail: emailFromSession || undefined,
+        stripeAccountId: expectedAccountId || (eventAccountId || undefined),
+      },
+    })
+    return
+  }
+
+  // Handle catering balance payment
+  if (paymentKind === 'catering_balance') {
+    if (order.balancePaidAt) {
+      // Already processed
+      return
+    }
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'PAID_IN_FULL',
+        balancePaidAt: new Date(),
+        balancePaymentIntentId: paymentIntentId || undefined,
+        paidAt: new Date(),
+        stripeAccountId: expectedAccountId || (eventAccountId || undefined),
+      },
+    })
+    return
+  }
+
+  // Standard order payment
+  if (order.paidAt || order.status !== 'PENDING_PAYMENT') {
+    // Idempotent: already handled
+    return
   }
 
   await prisma.order.update({

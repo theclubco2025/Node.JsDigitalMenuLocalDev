@@ -19,7 +19,7 @@ export async function GET(
   try {
     const { orderId } = await params
     
-    if (!orderId || orderId.length < 10) {
+    if (!orderId || orderId.length < 5) {
       return NextResponse.json({ error: 'Invalid order ID' }, { status: 400 })
     }
 
