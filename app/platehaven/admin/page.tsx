@@ -23,7 +23,7 @@ function parseTags(raw: string): string[] {
 }
 
 export default function PlateHavenAdminPage() {
-  const tenant = 'platehaven-demo'
+  const tenant = 'demo'
   const [menu, setMenu] = useState<DraftMenu | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving] = useState(false)
@@ -78,7 +78,7 @@ export default function PlateHavenAdminPage() {
           </div>
           <div className="flex items-center gap-4">
             <Link
-              href="/menu?tenant=platehaven-demo"
+              href="/menu?tenant=demo"
               className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               View Menu →
