@@ -49,8 +49,8 @@ interface DemoQuote {
   tenant: {
     name: string
     slug: string
-    contactPhone: string
-    contactEmail: string
+    contactPhone: string | null
+    contactEmail: string | null
   }
   createdAt: string
 }
@@ -99,8 +99,8 @@ function getDemoQuote(orderId: string): DemoQuote | null {
       tenant: {
         name: 'PlateHaven Demo',
         slug: 'platehaven-demo',
-        contactPhone: '(555) 987-6543',
-        contactEmail: 'catering@platehaven.app',
+        contactPhone: null,
+        contactEmail: null,
       },
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -144,8 +144,8 @@ function getDemoQuote(orderId: string): DemoQuote | null {
       tenant: {
         name: 'PlateHaven Demo',
         slug: 'platehaven-demo',
-        contactPhone: '(555) 987-6543',
-        contactEmail: 'catering@platehaven.app',
+        contactPhone: null,
+        contactEmail: null,
       },
       createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -187,8 +187,8 @@ function getDemoQuote(orderId: string): DemoQuote | null {
       tenant: {
         name: 'PlateHaven Demo',
         slug: 'platehaven-demo',
-        contactPhone: '(555) 987-6543',
-        contactEmail: 'catering@platehaven.app',
+        contactPhone: null,
+        contactEmail: null,
       },
       createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
     },
@@ -231,8 +231,8 @@ function getDemoQuote(orderId: string): DemoQuote | null {
       tenant: {
         name: 'PlateHaven Demo',
         slug: 'platehaven-demo',
-        contactPhone: '(555) 987-6543',
-        contactEmail: 'catering@platehaven.app',
+        contactPhone: null,
+        contactEmail: null,
       },
       createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
     },
