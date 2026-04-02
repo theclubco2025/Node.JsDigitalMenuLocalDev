@@ -97,8 +97,8 @@ function getDemoQuote(orderId: string): DemoQuote | null {
       paymentTerms: '50% deposit due upon acceptance, balance due 48 hours before event',
       cancellationPolicy: 'Full refund if canceled 7+ days before event',
       tenant: {
-        name: 'PlateHaven Demo',
-        slug: 'platehaven-demo',
+        name: 'TCC Menus Demo',
+        slug: 'demo',
         contactPhone: null,
         contactEmail: null,
       },
@@ -142,8 +142,8 @@ function getDemoQuote(orderId: string): DemoQuote | null {
       paymentTerms: '50% deposit due upon acceptance, balance due 48 hours before event',
       cancellationPolicy: 'Full refund if canceled 7+ days before event',
       tenant: {
-        name: 'PlateHaven Demo',
-        slug: 'platehaven-demo',
+        name: 'TCC Menus Demo',
+        slug: 'demo',
         contactPhone: null,
         contactEmail: null,
       },
@@ -185,8 +185,8 @@ function getDemoQuote(orderId: string): DemoQuote | null {
       paymentTerms: '50% deposit due upon acceptance, balance due 48 hours before event',
       cancellationPolicy: 'Full refund if canceled 7+ days before event',
       tenant: {
-        name: 'PlateHaven Demo',
-        slug: 'platehaven-demo',
+        name: 'TCC Menus Demo',
+        slug: 'demo',
         contactPhone: null,
         contactEmail: null,
       },
@@ -229,8 +229,8 @@ function getDemoQuote(orderId: string): DemoQuote | null {
       paymentTerms: '50% deposit due upon acceptance, balance due 48 hours before event',
       cancellationPolicy: 'Full refund if canceled 7+ days before event',
       tenant: {
-        name: 'PlateHaven Demo',
-        slug: 'platehaven-demo',
+        name: 'TCC Menus Demo',
+        slug: 'demo',
         contactPhone: null,
         contactEmail: null,
       },

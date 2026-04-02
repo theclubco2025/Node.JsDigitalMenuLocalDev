@@ -70,9 +70,9 @@ export default function PlateHavenAdminPage() {
       <header className="border-b border-gray-200 bg-white shadow-sm">
         <div className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src="/assets/platehaven-logo.png" alt="PlateHaven" className="h-9 w-auto" />
+            <img src="/assets/platehaven-logo.png" alt="TCC Menus" className="h-9 w-auto" />
             <div>
-              <div className="text-lg font-semibold text-gray-900">PlateHaven</div>
+              <div className="text-lg font-semibold text-gray-900">TCC Menus</div>
               <div className="text-xs text-gray-500">Admin Panel</div>
             </div>
           </div>
