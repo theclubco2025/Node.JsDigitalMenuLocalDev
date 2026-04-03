@@ -3,8 +3,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Demo | TCC Menus',
-  description: 'Try TCC Menus demos for catering, food truck, and digital menu ordering',
+  title: 'Demo | PlateHaven',
+  description: 'Try PlateHaven demos for catering, food truck, and digital menu ordering',
 }
 
 export default function DemoPage() {
@@ -13,9 +13,8 @@ export default function DemoPage() {
       {/* Header */}
       <nav className="border-b border-white/5 py-5 px-6">
         <div className="mx-auto max-w-5xl flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <img src="/assets/platehaven-logo.png" alt="TCC Menus" className="h-10 w-auto object-contain" />
-            <span className="text-xl font-semibold text-[#C4A76A]">TCC Menus</span>
+          <Link href="/" className="flex items-center gap-3">
+            <img src="/assets/platehaven-logo-v2.jpg" alt="PlateHaven" className="h-10 w-auto object-contain rounded" />
           </Link>
           <Link href="/" className="text-sm text-white/50 hover:text-white transition-colors">
             ← Back
@@ -28,9 +27,9 @@ export default function DemoPage() {
           
           {/* Hero */}
           <div className="text-center mb-14">
-            <h1 className="text-3xl font-bold mb-3">Try TCC Menus</h1>
+            <h1 className="text-3xl font-bold mb-3">Try PlateHaven</h1>
             <p className="text-white/50 max-w-lg mx-auto text-sm">
-              Explore the ordering experience your customers will love.
+              See the ordering experience for yourself.
             </p>
           </div>
 

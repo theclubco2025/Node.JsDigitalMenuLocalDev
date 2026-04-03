@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 export const metadata = {
-  title: 'TCC Menus — Digital Ordering for Modern Food Businesses',
+  title: 'PlateHaven — Online Ordering, Redefined',
   description:
-    'One system for catering orders, food trucks, and modern menus. Turn messy back-and-forth into a clean digital flow.',
+    'A digital ordering system for catering businesses, food trucks, and modern food operations. Clean menus. Structured orders. Less back-and-forth.',
 }
 
 const LANDING = {
@@ -12,323 +12,285 @@ const LANDING = {
 
 export default function Landing() {
   return (
-    <main className="bg-[#111] text-white min-h-screen">
+    <main className="bg-[#0a0a0a] text-white min-h-screen antialiased">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#111]/95 backdrop-blur-md border-b border-white/5">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2.5">
-            <img src="/assets/platehaven-logo.png" alt="TCC Menus" className="h-10 w-auto object-contain" />
-            <span className="text-xl font-semibold tracking-tight text-[#C4A76A]">
-              TCC Menus
-            </span>
+          <a href="/" className="flex items-center gap-3">
+            <img 
+              src="/assets/platehaven-logo-v2.jpg" 
+              alt="PlateHaven" 
+              className="h-10 w-auto object-contain rounded"
+            />
           </a>
-          <div className="flex items-center gap-6">
-            <a href="#use-cases" className="hidden md:inline text-sm text-white/60 hover:text-white transition-colors">
-              Use Cases
+          <div className="flex items-center gap-8">
+            <a href="#how-it-works" className="hidden md:inline text-sm text-white/50 hover:text-white transition-colors">
+              How It Works
             </a>
-            <a href="#features" className="hidden md:inline text-sm text-white/60 hover:text-white transition-colors">
-              Features
+            <a href="#demo" className="hidden md:inline text-sm text-white/50 hover:text-white transition-colors">
+              Demo
             </a>
             <a
               href={LANDING.demoUrl}
-              className="bg-[#C4A76A] text-[#111] px-5 py-2 text-sm font-semibold hover:bg-[#d4b87a] transition-colors rounded"
+              className="bg-[#C9A227] text-[#0a0a0a] px-5 py-2.5 text-sm font-semibold hover:bg-[#d4af37] transition-colors rounded"
             >
-              See Demo
+              Try the Demo
             </a>
           </div>
         </div>
       </nav>
 
-      {/* ===== HERO ===== */}
-      <section className="pt-32 pb-12 md:pt-40 md:pb-16 px-6">
-        <div className="mx-auto max-w-5xl text-center">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight mb-6">
-            One system for catering orders,<br />
-            food trucks, and modern menus
+      {/* Hero */}
+      <section className="pt-36 pb-20 md:pt-44 md:pb-28 px-6">
+        <div className="mx-auto max-w-4xl text-center">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.1] tracking-tight mb-6">
+            Digital ordering for<br />
+            <span className="text-[#C9A227]">modern food businesses</span>
           </h1>
-          <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Turn messy back-and-forth, menu confusion, and slow ordering<br className="hidden md:block" />
-            into a clean digital flow your customers can actually use.
+          <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
+            A cleaner way to handle catering requests, food truck orders, and digital menus. 
+            Your customers build their order. You receive it complete.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={LANDING.demoUrl}
-              className="w-full sm:w-auto bg-[#C4A76A] text-[#111] px-8 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors rounded"
+              className="w-full sm:w-auto bg-[#C9A227] text-[#0a0a0a] px-8 py-4 text-base font-semibold hover:bg-[#d4af37] transition-colors rounded"
             >
-              See Demo
+              See the Demo
             </a>
             <a
               href={LANDING.calendlyUrl}
               target="_blank"
               rel="noreferrer"
-              className="w-full sm:w-auto border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/5 transition-colors rounded"
+              className="w-full sm:w-auto border border-white/15 px-8 py-4 text-base font-medium text-white/80 hover:text-white hover:border-white/30 transition-colors rounded"
             >
-              Book Setup
+              Talk to Us
             </a>
           </div>
         </div>
       </section>
 
-      {/* ===== BUILT FOR ROW ===== */}
-      <section className="pb-16 px-6">
-        <div className="mx-auto max-w-4xl">
-          <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4">
-            {['Catering', 'Food Trucks', 'Pop-Ups', 'Pickup', 'QR Menus', 'Fast Casual'].map((item) => (
-              <span
-                key={item}
-                className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-white/70"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== PROBLEM SECTION ===== */}
-      <section className="py-20 px-6 bg-[#0a0a0a]">
-        <div className="mx-auto max-w-4xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Where food businesses lose time first</h2>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
-              <div className="text-2xl mb-3">📱</div>
-              <h3 className="font-semibold mb-2">Catering chaos</h3>
-              <p className="text-sm text-white/60">Orders scattered across texts, calls, and emails. Every request turns into 10 messages.</p>
-            </div>
-            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
-              <div className="text-2xl mb-3">🚚</div>
-              <h3 className="font-semibold mb-2">Rush hour pressure</h3>
-              <p className="text-sm text-white/60">Food trucks losing customers to long lines. Staff bottlenecked at the counter.</p>
-            </div>
-            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
-              <div className="text-2xl mb-3">📋</div>
-              <h3 className="font-semibold mb-2">Menu confusion</h3>
-              <p className="text-sm text-white/60">Hard-to-update menus, unclear pricing, customers asking the same questions.</p>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <p className="text-lg text-white/60">
-              The problem is <span className="text-white font-medium">disorder</span> — and it costs you time, orders, and sanity.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== SOLUTION SECTION ===== */}
-      <section className="py-20 px-6">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">A cleaner way to take orders and present your menu</h2>
-            <p className="text-lg text-white/60 max-w-2xl mx-auto">
-              TCC Menus gives you a digital system that handles the chaos so you can focus on the food.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8 items-start">
-            {/* What customers see */}
-            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
-              <div className="text-xs text-[#C4A76A] font-semibold uppercase tracking-wider mb-4">What customers get</div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-[#C4A76A]">✓</span>
-                  <span className="text-white/80">Clean menu they can browse on any device</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#C4A76A]">✓</span>
-                  <span className="text-white/80">Real pricing — no &quot;call for quote&quot;</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#C4A76A]">✓</span>
-                  <span className="text-white/80">Structured way to send their full order</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#C4A76A]">✓</span>
-                  <span className="text-white/80">Optional AI to help with questions</span>
-                </div>
-              </div>
-            </div>
-
-            {/* What you get */}
-            <div className="bg-[#1a1a1a] rounded-xl p-6 border border-white/5">
-              <div className="text-xs text-[#C4A76A] font-semibold uppercase tracking-wider mb-4">What you get</div>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <span className="text-[#C4A76A]">✓</span>
-                  <span className="text-white/80">Complete orders instead of scattered messages</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#C4A76A]">✓</span>
-                  <span className="text-white/80">Menu you can update in minutes</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#C4A76A]">✓</span>
-                  <span className="text-white/80">Less time repeating yourself</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-[#C4A76A]">✓</span>
-                  <span className="text-white/80">Optional kitchen workflow tools</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <p className="text-center mt-10 text-white/50 text-sm">
-            The system is modular. Start with what you need, add more later.
+      {/* Problem */}
+      <section className="py-20 px-6 border-t border-white/5">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-6">
+            Ordering is messier than it should be
+          </h2>
+          <p className="text-white/50 leading-relaxed mb-10 max-w-2xl mx-auto">
+            Catering requests scattered across texts and calls. Food truck lines slowing down at the counter. 
+            Menus that are hard to update. Customers asking the same questions over and over.
           </p>
+          <div className="grid md:grid-cols-3 gap-6 text-left">
+            <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
+              <div className="text-white/30 text-sm font-medium mb-2">Catering</div>
+              <p className="text-white/60 text-sm">Every order becomes a 10-message conversation before you even have the details.</p>
+            </div>
+            <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
+              <div className="text-white/30 text-sm font-medium mb-2">Food Trucks</div>
+              <p className="text-white/60 text-sm">Rush periods bottleneck at the counter. Customers leave instead of waiting.</p>
+            </div>
+            <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
+              <div className="text-white/30 text-sm font-medium mb-2">Menus</div>
+              <p className="text-white/60 text-sm">Static menus that are hard to change. No clear way for customers to order.</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ===== USE CASES SECTION ===== */}
-      <section id="use-cases" className="py-20 px-6 bg-[#0a0a0a]">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for how you actually work</h2>
+      {/* Solution */}
+      <section id="how-it-works" className="py-20 px-6 bg-[#0d0d0d]">
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center mb-14">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-4">
+              One system that handles it
+            </h2>
+            <p className="text-white/50 max-w-xl mx-auto">
+              PlateHaven gives your customers a clean way to browse, build, and send their order. 
+              You receive everything structured and ready.
+            </p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Catering Card */}
-            <div className="bg-[#1a1a1a] rounded-xl p-8 border border-white/5">
-              <div className="text-3xl mb-4">🍱</div>
-              <h3 className="text-xl font-bold mb-3">For Catering</h3>
-              <ul className="space-y-3 text-sm text-white/70 mb-6">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#C4A76A]">•</span>
-                  Structured requests with all event details upfront
+            <div className="bg-[#111] border border-white/5 rounded-xl p-8">
+              <div className="text-[#C9A227] text-xs font-semibold uppercase tracking-wider mb-5">
+                What your customer sees
+              </div>
+              <ul className="space-y-4 text-white/70 text-[15px]">
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>Your menu, browsable on any device</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#C4A76A]">•</span>
-                  Instant pricing customers can see while ordering
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>Clear pricing and item details</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#C4A76A]">•</span>
-                  No more 10-message quote conversations
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>A structured way to build and submit their order</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#C4A76A]">•</span>
-                  Professional ordering experience for your brand
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>Event details, dietary notes, everything in one form</span>
                 </li>
               </ul>
-              <a
-                href="/demo?mode=catering"
-                className="inline-block text-[#C4A76A] font-medium hover:underline"
-              >
-                Try catering demo →
-              </a>
             </div>
 
-            {/* Food Truck Card */}
-            <div className="bg-[#1a1a1a] rounded-xl p-8 border border-white/5">
-              <div className="text-3xl mb-4">🚚</div>
-              <h3 className="text-xl font-bold mb-3">For Food Trucks</h3>
-              <ul className="space-y-3 text-sm text-white/70 mb-6">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#C4A76A]">•</span>
-                  Customers order from their phone while in line
+            <div className="bg-[#111] border border-white/5 rounded-xl p-8">
+              <div className="text-[#C9A227] text-xs font-semibold uppercase tracking-wider mb-5">
+                What you receive
+              </div>
+              <ul className="space-y-4 text-white/70 text-[15px]">
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>Complete order details, not scattered messages</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#C4A76A]">•</span>
-                  Faster throughput during rush periods
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>Guest count, event date, location, dietary needs</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#C4A76A]">•</span>
-                  No counter bottleneck slowing everything down
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>Itemized order with pricing already calculated</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#C4A76A]">•</span>
-                  Serve more customers per hour
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>Ready to confirm, no back-and-forth required</span>
                 </li>
               </ul>
-              <a
-                href="/demo?mode=foodtruck"
-                className="inline-block text-[#C4A76A] font-medium hover:underline"
-              >
-                Try food truck demo →
-              </a>
             </div>
           </div>
-
-          <p className="text-center mt-10 text-white/50 text-sm">
-            Also works for pop-ups, fast casual, pickup-focused restaurants, and other modern food operations.
-          </p>
         </div>
       </section>
 
-      {/* ===== FEATURES SECTION ===== */}
-      <section id="features" className="py-20 px-6">
+      {/* Demo Section */}
+      <section id="demo" className="py-20 px-6 border-t border-white/5">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">What the system includes</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold mb-4">
+              See how it works
+            </h2>
+            <p className="text-white/50 max-w-xl mx-auto">
+              Try the ordering flow yourself. See what your customers see, 
+              and what you receive on the other end.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <a 
+              href="/demo?mode=catering"
+              className="group bg-[#111] border border-white/5 hover:border-[#C9A227]/30 rounded-xl p-8 transition-all"
+            >
+              <div className="text-white/30 text-sm font-medium mb-3">Catering Demo</div>
+              <h3 className="text-lg font-semibold mb-2 group-hover:text-[#C9A227] transition-colors">
+                Full event ordering
+              </h3>
+              <p className="text-white/50 text-sm leading-relaxed">
+                Serving sizes, event details, dietary requirements. 
+                The complete catering request flow.
+              </p>
+            </a>
+
+            <a 
+              href="/demo?mode=foodtruck"
+              className="group bg-[#111] border border-white/5 hover:border-[#C9A227]/30 rounded-xl p-8 transition-all"
+            >
+              <div className="text-white/30 text-sm font-medium mb-3">Food Truck Demo</div>
+              <h3 className="text-lg font-semibold mb-2 group-hover:text-[#C9A227] transition-colors">
+                Quick pickup ordering
+              </h3>
+              <p className="text-white/50 text-sm leading-relaxed">
+                Fast mobile ordering for rush periods. 
+                Customers order from their phone while in line.
+              </p>
+            </a>
+          </div>
+
+          <div className="text-center mt-10">
+            <a
+              href={LANDING.demoUrl}
+              className="inline-block bg-[#C9A227] text-[#0a0a0a] px-8 py-4 text-base font-semibold hover:bg-[#d4af37] transition-colors rounded"
+            >
+              Try the Demo
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-20 px-6 bg-[#0d0d0d]">
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-4">
+              Built for real operations
+            </h2>
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: '📱', title: 'Clean digital menus', desc: 'Mobile-first design that looks professional on any device.' },
-              { icon: '📋', title: 'Structured order flow', desc: 'Customers send complete requests, not scattered messages.' },
-              { icon: '✏️', title: 'Easy menu updates', desc: 'Change items, prices, or availability in minutes.' },
-              { icon: '🤖', title: 'Optional AI assistance', desc: 'Answer customer questions without extra staff time.' },
-              { icon: '🍳', title: 'Optional kitchen workflow', desc: 'Order display screens when you need them.' },
-              { icon: '⚙️', title: 'Admin control', desc: 'Manage everything from a simple dashboard.' },
+              { title: 'Digital menus', desc: 'Clean, mobile-first design. Update items and prices in minutes.' },
+              { title: 'Structured ordering', desc: 'Customers send complete requests instead of scattered messages.' },
+              { title: 'Catering workflow', desc: 'Event details, serving sizes, dietary notes — all captured upfront.' },
+              { title: 'Admin dashboard', desc: 'Manage your menu, orders, and settings from one place.' },
+              { title: 'Kitchen display', desc: 'Optional order screens for back-of-house workflow.' },
+              { title: 'AI assistance', desc: 'Optional AI to help customers with menu questions.' },
             ].map((feature, i) => (
-              <div key={i} className="bg-[#1a1a1a] rounded-xl p-5 border border-white/5">
-                <div className="text-2xl mb-3">{feature.icon}</div>
-                <h3 className="font-semibold mb-1">{feature.title}</h3>
-                <p className="text-sm text-white/60">{feature.desc}</p>
+              <div key={i} className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
+                <h3 className="font-medium mb-2">{feature.title}</h3>
+                <p className="text-sm text-white/50">{feature.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== FINAL CTA ===== */}
-      <section className="py-20 px-6 bg-[#0a0a0a]">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Start with what saves you the most time</h2>
-          <p className="text-lg text-white/60 mb-4 max-w-xl mx-auto">
-            Whether that&apos;s catering orders, truck rushes, or a cleaner digital menu —<br className="hidden md:block" />
-            TCC Menus gives you a system you can build on.
-          </p>
-          <p className="text-lg text-white/60 mb-10 max-w-xl mx-auto">
-            Free setup. You only pay if it works for you.
+      {/* CTA */}
+      <section className="py-24 px-6 border-t border-white/5">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-4">
+            Ready to clean up your ordering?
+          </h2>
+          <p className="text-white/50 mb-8 max-w-lg mx-auto">
+            We set up your menu and ordering flow. You try it with real customers. 
+            If it works, you keep it. Simple.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={LANDING.demoUrl}
-              className="w-full sm:w-auto bg-[#C4A76A] text-[#111] px-8 py-4 text-lg font-semibold hover:bg-[#d4b87a] transition-colors rounded"
+              className="w-full sm:w-auto bg-[#C9A227] text-[#0a0a0a] px-8 py-4 text-base font-semibold hover:bg-[#d4af37] transition-colors rounded"
             >
-              See Demo
+              See the Demo
             </a>
             <a
               href={LANDING.calendlyUrl}
               target="_blank"
               rel="noreferrer"
-              className="w-full sm:w-auto border border-white/20 px-8 py-4 text-lg font-medium text-white hover:bg-white/5 transition-colors rounded"
+              className="w-full sm:w-auto border border-white/15 px-8 py-4 text-base font-medium text-white/80 hover:text-white hover:border-white/30 transition-colors rounded"
             >
-              Talk About Setup
+              Schedule Setup
             </a>
           </div>
-          <p className="mt-6 text-sm text-white/40">$50/month after free trial. Cancel anytime.</p>
+          <p className="mt-6 text-sm text-white/30">Free setup. $50/month if you keep it.</p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-12 px-6">
+      <footer className="border-t border-white/5 py-12 px-6">
         <div className="mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2.5">
-            <img src="/assets/platehaven-logo.png" alt="TCC Menus" className="h-8 w-auto object-contain" />
-            <span className="font-semibold text-[#C4A76A]">TCC Menus</span>
+          <div className="flex items-center gap-3">
+            <img 
+              src="/assets/platehaven-logo-v2.jpg" 
+              alt="PlateHaven" 
+              className="h-8 w-auto object-contain rounded"
+            />
           </div>
-          <div className="flex items-center gap-6 text-sm text-white/50">
+          <div className="flex items-center gap-8 text-sm text-white/40">
             <a href="/terms" className="hover:text-white transition-colors">Terms</a>
             <a href="/privacy" className="hover:text-white transition-colors">Privacy</a>
             <a href={LANDING.calendlyUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Contact</a>
           </div>
         </div>
-        <div className="mx-auto max-w-5xl mt-8 pt-8 border-t border-white/10 text-center text-sm text-white/40">
-          © {new Date().getFullYear()} TCC Menus. All rights reserved.
+        <div className="mx-auto max-w-5xl mt-8 pt-8 border-t border-white/5 text-center text-sm text-white/30">
+          {new Date().getFullYear()} PlateHaven. All rights reserved.
         </div>
       </footer>
     </main>

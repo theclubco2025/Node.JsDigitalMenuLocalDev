@@ -13,14 +13,14 @@ const lora = Lora({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
-    default: 'TCC Menus',
-    template: '%s | TCC Menus',
+    default: 'PlateHaven',
+    template: '%s | PlateHaven',
   },
-  description: 'Digital ordering for modern food businesses. One system for catering orders, food trucks, and clean digital menus.',
+  description: 'Online ordering, redefined. A digital ordering system for catering businesses, food trucks, and modern food operations.',
   icons: {
-    icon: '/assets/platehaven-logo.png',
-    shortcut: '/assets/platehaven-logo.png',
-    apple: '/assets/platehaven-logo.png',
+    icon: '/assets/platehaven-logo-v2.jpg',
+    shortcut: '/assets/platehaven-logo-v2.jpg',
+    apple: '/assets/platehaven-logo-v2.jpg',
   },
 }
 
