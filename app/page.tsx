@@ -18,7 +18,7 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
             <img 
-              src="/assets/platehaven-logo-current.png" 
+              src="/assets/platehaven-logo-transparent.png" 
               alt="PlateHaven" 
               className="h-10 w-auto object-contain"
             />
@@ -278,7 +278,7 @@ export default function Landing() {
         <div className="mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
             <img 
-              src="/assets/platehaven-logo-current.png" 
+              src="/assets/platehaven-logo-transparent.png" 
               alt="PlateHaven" 
               className="h-8 w-auto object-contain"
             />
