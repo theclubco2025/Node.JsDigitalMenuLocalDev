@@ -14,7 +14,7 @@ export default function DemoPage() {
       <nav className="border-b border-white/5 py-5 px-6">
         <div className="mx-auto max-w-5xl flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <img src="/assets/platehaven-logo-v3.png" alt="PlateHaven" className="h-10 w-auto object-contain" />
+            <img src="/assets/platehaven-logo-current.png" alt="PlateHaven" className="h-10 w-auto object-contain" />
           </Link>
           <Link href="/" className="text-sm text-white/50 hover:text-white transition-colors">
             ← Back

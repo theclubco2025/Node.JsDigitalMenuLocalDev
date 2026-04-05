@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   },
   description: 'Online ordering, redefined. A digital ordering system for catering businesses, food trucks, and modern food operations.',
   icons: {
-    icon: '/assets/platehaven-logo-v3.png',
-    shortcut: '/assets/platehaven-logo-v3.png',
-    apple: '/assets/platehaven-logo-v3.png',
+    icon: '/assets/platehaven-logo-current.png',
+    shortcut: '/assets/platehaven-logo-current.png',
+    apple: '/assets/platehaven-logo-current.png',
   },
 }
 
