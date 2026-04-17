@@ -191,7 +191,7 @@ export default function Landing() {
             </a>
 
             <a 
-              href="/demo?mode=foodtruck"
+              href="/demo?mode=quickpickup"
               className="group bg-[#111] border border-white/5 hover:border-[#C9A227]/30 rounded-xl p-8 transition-all"
             >
               <div className="text-white/30 text-sm font-medium mb-3">Quick Pickup Demo</div>

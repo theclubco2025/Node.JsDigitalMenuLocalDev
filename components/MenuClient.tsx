@@ -127,9 +127,9 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
   const isPlateHavenDemo = tenant === 'platehaven-demo' || tenant === 'platepilot-demo'
   const useElegantListLayout = tenant === 'independentbarandgrille' || tenant === 'platepilot-demo' || tenant === 'platehaven-demo'
   const isAdmin = isBrowser ? searchParams!.get('admin') === '1' : false
-  // URL-based mode override: ?mode=foodtruck or ?mode=catering
+  // URL-based mode override: ?mode=quickpickup (legacy: foodtruck) or ?mode=catering
   const urlMode = isBrowser ? searchParams!.get('mode') : null
-  const isFoodTruckMode = urlMode === 'foodtruck'
+  const isFoodTruckMode = urlMode === 'foodtruck' || urlMode === 'quickpickup'
   const demoAcknowledgeKey = 'demoAcknowledged_v4'
   // Admin token handling for preview saves: read from URL (?token=) then persist to localStorage
   const [adminToken, setAdminToken] = useState<string | null>(null)
