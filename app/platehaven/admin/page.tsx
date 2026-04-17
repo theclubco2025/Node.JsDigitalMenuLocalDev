@@ -561,7 +561,7 @@ export default function PlateHavenAdminPage() {
                 <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors">
                   <input type="radio" name="mode" className="accent-[#C4A76A] w-4 h-4" />
                   <div>
-                    <div className="text-sm font-medium text-gray-900">Food Truck Mode</div>
+                    <div className="text-sm font-medium text-gray-900">Quick Pickup Mode</div>
                     <div className="text-xs text-gray-500">Quick pickup orders with name only</div>
                   </div>
                 </label>

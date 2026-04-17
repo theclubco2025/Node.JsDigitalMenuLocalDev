@@ -1105,7 +1105,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
             <div className="text-center mb-5">
               <div className="text-lg font-bold text-white mb-2">Welcome to the Demo</div>
               <p className="text-sm text-white/60">
-                You&apos;re viewing a sample {isFoodTruckMode ? 'food truck' : 'catering'} menu.
+                You&apos;re viewing a sample {isFoodTruckMode ? 'quick pickup' : 'catering'} menu.
               </p>
             </div>
             

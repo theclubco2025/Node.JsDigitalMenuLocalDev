@@ -11,7 +11,7 @@ const PLANS = [
     name: 'Starter',
     setup: 299,
     monthly: 49,
-    description: 'Perfect for small cafes and food trucks',
+    description: 'Perfect for small cafes and quick-pickup teams',
     features: [
       'QR menu for up to 50 items',
       'Basic branding (logo + colors)',

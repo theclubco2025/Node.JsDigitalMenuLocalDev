@@ -2,7 +2,7 @@
 export const metadata = {
   title: 'PlateHaven — Online Ordering, Redefined',
   description:
-    'A digital ordering system for catering businesses, food trucks, and modern food operations. Clean menus. Structured orders. Less back-and-forth.',
+    'A digital ordering system for catering businesses, quick-pickup teams, and modern food operations. Clean menus. Structured orders. Less back-and-forth.',
 }
 
 const LANDING = {
@@ -48,7 +48,7 @@ export default function Landing() {
             <span className="text-[#C9A227]">modern food businesses</span>
           </h1>
           <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
-            A cleaner way to handle catering requests, food truck orders, and digital menus. 
+            A cleaner way to handle catering requests, quick pickup orders, and digital menus. 
             Your customers build their order. You receive it complete.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -77,7 +77,7 @@ export default function Landing() {
             Ordering is messier than it should be
           </h2>
           <p className="text-white/50 leading-relaxed mb-10 max-w-2xl mx-auto">
-            Catering requests scattered across texts and calls. Food truck lines slowing down at the counter. 
+            Catering requests scattered across texts and calls. Quick pickup lines slowing down at the counter. 
             Menus that are hard to update. Customers asking the same questions over and over.
           </p>
           <div className="grid md:grid-cols-3 gap-6 text-left">
@@ -86,7 +86,7 @@ export default function Landing() {
               <p className="text-white/60 text-sm">Every order becomes a 10-message conversation before you even have the details.</p>
             </div>
             <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
-              <div className="text-white/30 text-sm font-medium mb-2">Food Trucks</div>
+              <div className="text-white/30 text-sm font-medium mb-2">Quick Pickup</div>
               <p className="text-white/60 text-sm">Rush periods bottleneck at the counter. Customers leave instead of waiting.</p>
             </div>
             <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
@@ -194,7 +194,7 @@ export default function Landing() {
               href="/demo?mode=foodtruck"
               className="group bg-[#111] border border-white/5 hover:border-[#C9A227]/30 rounded-xl p-8 transition-all"
             >
-              <div className="text-white/30 text-sm font-medium mb-3">Food Truck Demo</div>
+              <div className="text-white/30 text-sm font-medium mb-3">Quick Pickup Demo</div>
               <h3 className="text-lg font-semibold mb-2 group-hover:text-[#C9A227] transition-colors">
                 Quick pickup ordering
               </h3>

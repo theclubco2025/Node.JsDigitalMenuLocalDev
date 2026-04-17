@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Demo | PlateHaven',
-  description: 'Try PlateHaven demos for catering, food truck, and digital menu ordering',
+  description: 'Try PlateHaven demos for catering, quick pickup, and digital menu ordering',
 }
 
 export default function DemoPage() {
@@ -81,7 +81,7 @@ export default function DemoPage() {
                 </div>
               </Link>
 
-              {/* Food Truck Demo */}
+              {/* Quick Pickup Demo */}
               <Link 
                 href="/menu?tenant=platehaven-demo&mode=foodtruck"
                 className="group bg-[#161616] rounded-xl p-5 border border-white/5 hover:border-[#C4A76A]/30 transition-all"
@@ -96,7 +96,7 @@ export default function DemoPage() {
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#C4A76A]/20 text-[#C4A76A] font-medium">DEMO</span>
                     </div>
                     <p className="text-white/40 text-sm leading-relaxed">
-                      Fast ordering for food trucks. Just items and a pickup name.
+                      Fast ordering for quick-pickup businesses. Just items and a pickup name.
                     </p>
                   </div>
                   <div className="text-white/20 group-hover:text-[#C4A76A] transition-colors">→</div>

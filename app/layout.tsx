@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     default: 'PlateHaven',
     template: '%s | PlateHaven',
   },
-  description: 'Online ordering, redefined. A digital ordering system for catering businesses, food trucks, and modern food operations.',
+  description: 'Online ordering, redefined. A digital ordering system for catering businesses, quick-pickup teams, and modern food operations.',
   icons: {
     icon: '/assets/platehaven-logo-transparent.png',
     shortcut: '/assets/platehaven-logo-transparent.png',
