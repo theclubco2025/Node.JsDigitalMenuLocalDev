@@ -7,7 +7,7 @@
         {
           "id": "bbq-pulled-pork-tray",
           "name": "BBQ Pulled Pork Tray",
-          "description": "Slow-smoked pulled pork with our signature BBQ sauce. Served with slider buns on the side.",
+          "description": "",
           "price": 89,
           "servingSize": 12,
           "servingUnit": "people",
@@ -16,7 +16,7 @@
         {
           "id": "grilled-chicken-tray",
           "name": "Grilled Chicken Tray",
-          "description": "Herb-marinated grilled chicken breast, sliced and ready to serve.",
+          "description": "",
           "price": 79,
           "servingSize": 10,
           "servingUnit": "people",
@@ -25,7 +25,7 @@
         {
           "id": "beef-brisket-tray",
           "name": "Smoked Beef Brisket Tray",
-          "description": "12-hour smoked brisket with our house dry rub. Sliced thick and tender.",
+          "description": "",
           "price": 129,
           "servingSize": 12,
           "servingUnit": "people",
@@ -34,7 +34,7 @@
         {
           "id": "italian-meatball-tray",
           "name": "Italian Meatball Tray",
-          "description": "Handcrafted beef and pork meatballs in marinara sauce, topped with parmesan.",
+          "description": "",
           "price": 69,
           "servingSize": 15,
           "servingUnit": "people",
@@ -43,7 +43,7 @@
         {
           "id": "veggie-fajita-tray",
           "name": "Grilled Veggie Fajita Tray",
-          "description": "Grilled peppers, onions, mushrooms, and zucchini with fajita seasoning.",
+          "description": "",
           "price": 59,
           "servingSize": 10,
           "servingUnit": "people",
@@ -58,7 +58,7 @@
         {
           "id": "mac-cheese-tray",
           "name": "Creamy Mac & Cheese",
-          "description": "Four-cheese blend with a crispy breadcrumb topping. A crowd favorite.",
+          "description": "",
           "price": 45,
           "servingSize": 15,
           "servingUnit": "people",
@@ -67,7 +67,7 @@
         {
           "id": "garden-salad-bowl",
           "name": "Fresh Garden Salad",
-          "description": "Mixed greens, tomatoes, cucumbers, carrots, and red onion. Dressings on the side.",
+          "description": "",
           "price": 35,
           "servingSize": 12,
           "servingUnit": "people",
@@ -76,7 +76,7 @@
         {
           "id": "coleslaw-tray",
           "name": "Classic Coleslaw",
-          "description": "Creamy coleslaw with shredded cabbage and carrots.",
+          "description": "",
           "price": 25,
           "servingSize": 15,
           "servingUnit": "people",
@@ -85,7 +85,7 @@
         {
           "id": "roasted-veggies",
           "name": "Roasted Seasonal Vegetables",
-          "description": "Roasted broccoli, carrots, and Brussels sprouts with olive oil and herbs.",
+          "description": "",
           "price": 45,
           "servingSize": 12,
           "servingUnit": "people",
@@ -94,7 +94,7 @@
         {
           "id": "cornbread-basket",
           "name": "Honey Cornbread Basket",
-          "description": "Warm cornbread muffins with honey butter on the side.",
+          "description": "",
           "price": 25,
           "servingSize": 12,
           "servingUnit": "pieces",
@@ -103,7 +103,7 @@
         {
           "id": "baked-beans",
           "name": "Slow-Cooked Baked Beans",
-          "description": "Sweet and savory baked beans with bacon and brown sugar.",
+          "description": "",
           "price": 35,
           "servingSize": 15,
           "servingUnit": "people",
@@ -112,7 +112,7 @@
         {
           "id": "potato-salad",
           "name": "Classic Potato Salad",
-          "description": "Creamy potato salad with celery, egg, and a touch of mustard.",
+          "description": "",
           "price": 30,
           "servingSize": 12,
           "servingUnit": "people",
@@ -127,7 +127,7 @@
         {
           "id": "deli-sandwich-platter",
           "name": "Deli Sandwich Platter",
-          "description": "Assorted deli sandwiches: turkey, ham, and roast beef. Cut in halves and arranged beautifully.",
+          "description": "",
           "price": 99,
           "servingSize": 12,
           "servingUnit": "people",
@@ -136,7 +136,7 @@
         {
           "id": "veggie-wrap-platter",
           "name": "Veggie Wrap Platter",
-          "description": "Hummus, grilled vegetables, and feta in spinach wraps. Cut and arranged.",
+          "description": "",
           "price": 79,
           "servingSize": 10,
           "servingUnit": "people",
@@ -145,7 +145,7 @@
         {
           "id": "chicken-caesar-wrap",
           "name": "Chicken Caesar Wrap Platter",
-          "description": "Grilled chicken, romaine, parmesan, and Caesar dressing in flour tortillas.",
+          "description": "",
           "price": 85,
           "servingSize": 10,
           "servingUnit": "people",
@@ -160,7 +160,7 @@
         {
           "id": "spinach-dip",
           "name": "Spinach & Artichoke Dip",
-          "description": "Warm spinach artichoke dip with pita chips and vegetables for dipping.",
+          "description": "",
           "price": 45,
           "servingSize": 15,
           "servingUnit": "people",
@@ -169,7 +169,7 @@
         {
           "id": "chicken-wings",
           "name": "Chicken Wing Platter",
-          "description": "Crispy fried wings with your choice of sauce: Buffalo, BBQ, or Garlic Parmesan.",
+          "description": "",
           "price": 75,
           "servingSize": 50,
           "servingUnit": "pieces",
@@ -178,7 +178,7 @@
         {
           "id": "meatball-bites",
           "name": "Mini Meatball Bites",
-          "description": "Bite-sized meatballs with toothpicks and marinara dipping sauce.",
+          "description": "",
           "price": 55,
           "servingSize": 40,
           "servingUnit": "pieces",
@@ -187,7 +187,7 @@
         {
           "id": "veggie-platter",
           "name": "Fresh Veggie Platter",
-          "description": "Carrots, celery, broccoli, cherry tomatoes, and cucumbers with ranch dip.",
+          "description": "",
           "price": 40,
           "servingSize": 15,
           "servingUnit": "people",
@@ -196,7 +196,7 @@
         {
           "id": "cheese-board",
           "name": "Artisan Cheese Board",
-          "description": "Selection of cheeses with crackers, grapes, and honey.",
+          "description": "",
           "price": 65,
           "servingSize": 12,
           "servingUnit": "people",
@@ -211,7 +211,7 @@
         {
           "id": "brownie-tray",
           "name": "Chocolate Brownie Tray",
-          "description": "Rich, fudgy chocolate brownies cut into squares.",
+          "description": "",
           "price": 35,
           "servingSize": 16,
           "servingUnit": "pieces",
@@ -220,7 +220,7 @@
         {
           "id": "cookie-platter",
           "name": "Assorted Cookie Platter",
-          "description": "Chocolate chip, oatmeal raisin, and snickerdoodle cookies.",
+          "description": "",
           "price": 30,
           "servingSize": 24,
           "servingUnit": "cookies",
@@ -229,7 +229,7 @@
         {
           "id": "mini-cheesecakes",
           "name": "Mini Cheesecakes",
-          "description": "Individual New York-style cheesecakes with fruit topping.",
+          "description": "",
           "price": 55,
           "servingSize": 12,
           "servingUnit": "pieces",
@@ -238,7 +238,7 @@
         {
           "id": "fruit-platter",
           "name": "Fresh Fruit Platter",
-          "description": "Seasonal fresh fruits beautifully arranged.",
+          "description": "",
           "price": 45,
           "servingSize": 15,
           "servingUnit": "people",
@@ -253,7 +253,7 @@
         {
           "id": "lemonade-gallon",
           "name": "Fresh Lemonade (Gallon)",
-          "description": "House-made lemonade. One gallon serves approximately 10-12 cups.",
+          "description": "",
           "price": 15,
           "servingSize": 12,
           "servingUnit": "cups",
@@ -262,7 +262,7 @@
         {
           "id": "iced-tea-gallon",
           "name": "Sweet Tea (Gallon)",
-          "description": "Classic Southern sweet tea. One gallon serves approximately 10-12 cups.",
+          "description": "",
           "price": 12,
           "servingSize": 12,
           "servingUnit": "cups",
@@ -271,7 +271,7 @@
         {
           "id": "bottled-water-case",
           "name": "Bottled Water Case",
-          "description": "Case of 24 bottled waters.",
+          "description": "",
           "price": 20,
           "servingSize": 24,
           "servingUnit": "bottles",
