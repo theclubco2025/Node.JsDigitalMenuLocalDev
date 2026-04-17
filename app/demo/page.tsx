@@ -74,7 +74,7 @@ export default function DemoPage() {
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#C4A76A]/20 text-[#C4A76A] font-medium">DEMO</span>
                     </div>
                     <p className="text-white/40 text-sm leading-relaxed">
-                      Full event ordering with serving sizes, event details, and dietary requirements.
+                      Event ordering with serving sizes, event details, and dietary notes.
                     </p>
                   </div>
                   <div className="text-white/20 group-hover:text-[#C4A76A] transition-colors">→</div>
@@ -96,7 +96,7 @@ export default function DemoPage() {
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#C4A76A]/20 text-[#C4A76A] font-medium">DEMO</span>
                     </div>
                     <p className="text-white/40 text-sm leading-relaxed">
-                      Fast ordering for quick-pickup businesses. Just items and a pickup name.
+                      Fast ordering: items + pickup name, built for quick service.
                     </p>
                   </div>
                   <div className="text-white/20 group-hover:text-[#C4A76A] transition-colors">→</div>
