@@ -185,15 +185,26 @@ export default function PrivacyPage() {
 
           <h2 className="text-lg font-semibold">6. SMS Communications</h2>
           <p>
-            If you opt in to SMS notifications when placing an order:
+            If you opt in to SMS/text notifications when placing an order, you agree to
+            receive transactional messages from the restaurant powered by PlateHaven
+            about that order. Transactional SMS categories may include order
+            confirmations, pickup or ready alerts, and order status updates.
           </p>
           <ul>
-            <li>You consent to receive transactional SMS messages about your order status.</li>
-            <li>Message frequency depends on order activity.</li>
+            <li>Consent to transactional SMS is optional and is not required to purchase or place an order.</li>
+            <li>Message frequency varies based on your order activity and restaurant updates.</li>
             <li>Message and data rates may apply.</li>
-            <li>You can opt out by not selecting SMS notifications on future orders.</li>
+            <li>Reply STOP to opt out of SMS messages.</li>
+            <li>Reply HELP for help.</li>
             <li>SMS is provided through Twilio. See Twilio&apos;s privacy policy for details.</li>
           </ul>
+          <p>
+            Marketing or retention SMS messages, such as review requests, holiday
+            reminders, promotions, or similar non-transactional messages, are sent only
+            if you separately opt in to receive marketing SMS from the restaurant. An
+            order-ready or order-status SMS opt-in does not authorize marketing or
+            retention SMS messages.
+          </p>
 
           <h2 className="text-lg font-semibold">7. Cookies and Tracking</h2>
           <p>

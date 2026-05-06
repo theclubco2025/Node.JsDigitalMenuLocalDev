@@ -41,10 +41,10 @@ export function buildReadySmsBody(ctx: ReadySmsContext): string {
   if (ctx.isDineIn) {
     const table = (ctx.tableNumber || '').trim()
     const where = table ? ` for table ${table}` : ''
-    return `Your order from ${tenant} is ready${where}. Reply STOP to opt out.`
+    return `Your order from ${tenant} is ready${where}. Reply STOP to opt out, HELP for help.`
   }
   const code = computePickupCode(ctx.orderId)
-  return `Your order from ${tenant} is ready for pickup. Pickup code: ${code}. Reply STOP to opt out.`
+  return `Your order from ${tenant} is ready for pickup. Pickup code: ${code}. Reply STOP to opt out, HELP for help.`
 }
 
 type TwilioMessageCreateResponse = {

@@ -2658,9 +2658,11 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                           onChange={(e) => setSmsOptIn(e.target.checked)}
                         />
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-black">Text me when my order is ready</div>
+                          <div className="text-sm font-semibold text-black">
+                            I agree to receive SMS/text messages from this restaurant powered by PlateHaven about my order, including order confirmations, pickup/ready alerts, and order status updates.
+                          </div>
                           <div className="text-xs text-gray-600">
-                            Optional. Message &amp; data rates may apply. Reply STOP to opt out.
+                            Consent is optional and not required to place an order. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
                           </div>
                         </div>
                       </label>
