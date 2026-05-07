@@ -75,6 +75,22 @@ curl -s -H "X-Admin-Token: $ADMIN_TOKEN" \
 
 ---
 
+## Email (Resend) (Optional)
+
+Used for **staff "new order" email notifications** (sent when a paid order is confirmed).
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `RESEND_API_KEY` | Resend API key | `re_...` |
+| `RESEND_FROM` | Verified sender address/domain | `orders@yourdomain.com` |
+| `RESEND_REPLY_TO` | Optional reply-to | `owner@yourdomain.com` |
+
+**Notes:**
+- `RESEND_FROM` must be a **verified sender** in Resend (domain or single sender).
+- Per-tenant recipients are configured in Admin → Menu → **New order email notifications** (stored in `Tenant.settings.notifications.newOrderEmails`).
+
+---
+
 ## AI Assistant (Optional)
 
 | Variable | Description | Example |

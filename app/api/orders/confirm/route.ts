@@ -3,6 +3,8 @@ import { z } from 'zod'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { getStripeOrders } from '@/lib/stripe'
+import { sendNewOrderEmail } from '@/lib/notifications/resend'
+import { baseUrlFromRequest } from '@/lib/server/baseUrl'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,7 +17,7 @@ const BodySchema = z.object({
   sessionId: z.string().min(1).optional(),
 })
 
-async function markPaidFromSession(orderId: string, session: Stripe.Checkout.Session, stripeAccountId: string) {
+async function markPaidFromSession(orderId: string, session: Stripe.Checkout.Session, stripeAccountId: string, baseUrl: string) {
   const paid = session.payment_status === 'paid' || session.payment_status === 'no_payment_required'
   if (!paid) return { ok: false, error: `Session not paid (payment_status=${session.payment_status})` } as const
 
@@ -36,6 +38,9 @@ async function markPaidFromSession(orderId: string, session: Stripe.Checkout.Ses
       stripeAccountId: stripeAccountId || undefined,
     },
   })
+
+  // Best-effort: send staff notification email (if configured).
+  await sendNewOrderEmail({ orderId, baseUrl }).catch(() => {})
 
   return { ok: true } as const
 }
@@ -103,7 +108,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Session order mismatch' }, { status: 403 })
     }
 
-    const updated = await markPaidFromSession(orderId, session, usePlatformStripe ? '' : stripeAccountId)
+    const baseUrl = baseUrlFromRequest(req)
+    const updated = await markPaidFromSession(orderId, session, usePlatformStripe ? '' : stripeAccountId, baseUrl)
     return NextResponse.json(updated, { status: updated.ok ? 200 : 400 })
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error)?.message || 'Confirm error' }, { status: 500 })

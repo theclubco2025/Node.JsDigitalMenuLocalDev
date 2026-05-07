@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { getStripeOrders } from '@/lib/stripe'
+import { sendNewOrderEmail } from '@/lib/notifications/resend'
+import { baseUrlFromRequest } from '@/lib/server/baseUrl'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -16,7 +18,7 @@ function webhookSecret() {
   )
 }
 
-async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccountId: string | null) {
+async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccountId: string | null, baseUrl: string) {
   const orderId = String(session.metadata?.orderId || '').trim()
   if (!orderId) return
 
@@ -120,6 +122,9 @@ async function markPaidFromSession(session: Stripe.Checkout.Session, eventAccoun
       stripeAccountId: expectedAccountId || (eventAccountId || undefined),
     },
   })
+
+  // Best-effort: send staff notification email (if configured).
+  await sendNewOrderEmail({ orderId, baseUrl }).catch(() => {})
 }
 
 export async function POST(req: NextRequest) {
@@ -144,15 +149,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const baseUrl = baseUrlFromRequest(req)
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        await markPaidFromSession(session, typeof event.account === 'string' ? event.account : null)
+        await markPaidFromSession(session, typeof event.account === 'string' ? event.account : null, baseUrl)
         break
       }
       case 'checkout.session.async_payment_succeeded': {
         const session = event.data.object as Stripe.Checkout.Session
-        await markPaidFromSession(session, typeof event.account === 'string' ? event.account : null)
+        await markPaidFromSession(session, typeof event.account === 'string' ? event.account : null, baseUrl)
         break
       }
       default:

@@ -95,6 +95,12 @@ The Kitchen PIN allows restaurant staff to access the Kitchen Display System (KD
 2. Enter the Kitchen PIN you just created
 3. Confirm you land on the Kitchen Display screen
 
+### 4.3 Set New Order Email Notifications (Recommended)
+If the restaurant wants an email whenever a new paid order comes in:
+1. In the menu editor, under **Restaurant settings**, find **New order email notifications**
+2. Enter one or more emails (comma-separated), e.g. `owner@restaurant.com, kitchen@restaurant.com`
+3. Click **Save emails**
+
 > **Give the kitchen staff this info:**
 > - KDS URL: `tccmenus.com/kds`
 > - Kitchen PIN: (the PIN you created)

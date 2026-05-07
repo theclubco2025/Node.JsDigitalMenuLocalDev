@@ -217,6 +217,12 @@ model Order {
   // Kitchen note / special instructions
   note                   String?
 
+  // Staff email notifications (new paid order)
+  newOrderEmailSentAt        DateTime?
+  newOrderEmailLastAttemptAt DateTime?
+  newOrderEmailAttemptCount  Int            @default(0)
+  newOrderEmailLastError     String?
+
   // Refund metadata (audit)
   refundedAt             DateTime?
   refundAmountCents      Int?

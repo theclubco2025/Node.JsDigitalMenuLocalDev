@@ -43,6 +43,8 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   const [stripeConnectLoading, setStripeConnectLoading] = useState(false)
   const [stripeConnectAccountId, setStripeConnectAccountId] = useState<string | null>(null)
   const [stripeConnectOnboardedAt, setStripeConnectOnboardedAt] = useState<string | null>(null)
+  const [newOrderEmails, setNewOrderEmails] = useState('')
+  const [notificationsSaving, setNotificationsSaving] = useState(false)
   const [orderingPaused, setOrderingPaused] = useState(false)
   const [pauseMessage, setPauseMessage] = useState('')
   const [schedulingEnabled, setSchedulingEnabled] = useState(true)
@@ -153,6 +155,25 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   }, [tenant])
 
   useEffect(() => {
+    let cancelled = false
+    async function loadNotifications() {
+      try {
+        const res = await fetch(`/api/tenant/notifications?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
+        const json = await res.json().catch(() => null) as null | { ok?: boolean; notifications?: { newOrderEmails?: unknown } }
+        if (!res.ok || !json?.ok) return
+        const list = Array.isArray(json.notifications?.newOrderEmails)
+          ? (json.notifications?.newOrderEmails as unknown[]).map(v => String(v || '').trim()).filter(Boolean)
+          : []
+        if (!cancelled) setNewOrderEmails(list.join(', '))
+      } catch {
+        // ignore
+      }
+    }
+    void loadNotifications()
+    return () => { cancelled = true }
+  }, [tenant])
+
+  useEffect(() => {
     if (typeof window === 'undefined') return
     const sp = new URLSearchParams(window.location.search)
     const connect = (sp.get('connect') || '').trim()
@@ -210,6 +231,29 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
       setError((e as Error)?.message || 'Kitchen PIN save error')
     } finally {
       setPinSaving(false)
+    }
+  }
+
+  const saveNotifications = async () => {
+    setNotificationsSaving(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/tenant/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenant, newOrderEmails }),
+      })
+      const json = await res.json().catch(() => null) as null | { ok?: boolean; error?: string; notifications?: { newOrderEmails?: unknown } }
+      if (!res.ok || !json?.ok) throw new Error(json?.error || `Save failed (${res.status})`)
+      const list = Array.isArray(json.notifications?.newOrderEmails)
+        ? (json.notifications?.newOrderEmails as unknown[]).map(v => String(v || '').trim()).filter(Boolean)
+        : []
+      setNewOrderEmails(list.join(', '))
+      setToast('Notification emails saved')
+    } catch (e) {
+      setError((e as Error)?.message || 'Notification emails save error')
+    } finally {
+      setNotificationsSaving(false)
     }
   }
 
@@ -368,6 +412,32 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
             </div>
             <div className="mt-2 text-xs text-gray-700">
               Staff enters this PIN on the kitchen login screen to open the correct kitchen display.
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-indigo-200 bg-white p-4">
+            <div className="text-sm font-semibold text-gray-900">New order email notifications</div>
+            <div className="mt-1 text-xs text-gray-700">
+              When a paid order comes in, we’ll email these addresses the full order details.
+            </div>
+            <div className="mt-2 flex flex-col sm:flex-row gap-2">
+              <input
+                value={newOrderEmails}
+                onChange={(e) => setNewOrderEmails(e.target.value)}
+                placeholder="owner@yourbiz.com, kitchen@yourbiz.com"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={saveNotifications}
+                disabled={notificationsSaving}
+                className="inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+              >
+                {notificationsSaving ? 'Saving…' : 'Save emails'}
+              </button>
+            </div>
+            <div className="mt-2 text-xs text-gray-700">
+              Tip: use commas to separate multiple emails.
             </div>
           </div>
 
