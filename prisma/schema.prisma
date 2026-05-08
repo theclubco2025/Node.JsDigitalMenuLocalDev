@@ -110,8 +110,24 @@ model Tenant {
   users                 User[]
   menus                 Menu[]
   orders                Order[]
+  smsSuppressions       SmsSuppression[]
+  retentionMessages     SmsRetentionMessage[]
   
   @@map("tenants")
+}
+
+model SmsSuppression {
+  id          String   @id @default(cuid())
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  phoneE164   String
+  reason      String?
+  source      String?
+  createdAt   DateTime @default(now())
+
+  @@index([phoneE164, createdAt])
+  @@index([tenantId, phoneE164, createdAt])
+  @@map("sms_suppressions")
 }
 
 model Order {
@@ -205,6 +221,8 @@ model Order {
   // SMS notifications (opt-in, per order)
   smsOptIn               Boolean          @default(false)
   smsOptInAt             DateTime?
+  marketingSmsOptIn      Boolean          @default(false)
+  marketingSmsOptInAt    DateTime?
   readySmsSentAt         DateTime?
   twilioReadyMessageSid  String?
   twilioReadyStatus      String?
@@ -234,6 +252,7 @@ model Order {
   updatedAt              DateTime         @updatedAt
 
   items                  OrderItem[]
+  retentionMessages      SmsRetentionMessage[]
 
   @@index([tenantId, createdAt])
   @@index([tenantId, eventDate])
@@ -241,6 +260,27 @@ model Order {
   @@index([tenantId, orderType])
   @@index([quoteNumber])
   @@map("orders")
+}
+
+model SmsRetentionMessage {
+  id           String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderId       String?
+  order         Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  phoneRaw      String
+  campaignKey   String
+  messageBody   String
+  messageSid    String?
+  status        String   @default("pending")
+  error         String?
+  sentAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  @@unique([tenantId, phoneRaw, campaignKey])
+  @@index([tenantId, campaignKey])
+  @@index([sentAt])
+  @@map("sms_retention_messages")
 }
 
 model OrderItem {

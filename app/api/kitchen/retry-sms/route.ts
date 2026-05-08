@@ -124,6 +124,7 @@ export async function POST(req: NextRequest) {
     const isDineIn = Boolean((order.tableNumber || '').trim())
     try {
       const sent = await sendTwilioReadySms({
+        tenantId: t.id,
         tenantName: t.name || tenant,
         orderId: order.id,
         toPhone: order.customerPhone || '',

@@ -1,4 +1,5 @@
 import { computePickupCode } from '@/lib/orders/pickupCode'
+import { prisma } from '@/lib/prisma'
 
 function env(name: string): string {
   return String(process.env[name] || '').trim()
@@ -29,6 +30,7 @@ function toE164(raw: string): string | null {
 }
 
 export type ReadySmsContext = {
+  tenantId?: string
   tenantName: string
   orderId: string
   toPhone: string
@@ -37,7 +39,7 @@ export type ReadySmsContext = {
 }
 
 export function buildReadySmsBody(ctx: ReadySmsContext): string {
-  const tenant = (ctx.tenantName || 'the restaurant').trim()
+  const tenant = (ctx.tenantName || 'this business').trim()
   if (ctx.isDineIn) {
     const table = (ctx.tableNumber || '').trim()
     const where = table ? ` for table ${table}` : ''
@@ -52,7 +54,20 @@ type TwilioMessageCreateResponse = {
   status?: string
 }
 
-export async function sendTwilioSms(args: { toPhone: string; body: string }): Promise<{ sid: string; status: string }> {
+async function isSuppressed(args: { tenantId?: string; toE164: string }): Promise<boolean> {
+  const tenantId = String(args.tenantId || '').trim()
+  const where = tenantId
+    ? { phoneE164: args.toE164, OR: [{ tenantId }, { tenantId: null }] }
+    : { phoneE164: args.toE164 }
+  const row = await prisma.smsSuppression.findFirst({
+    where,
+    select: { id: true },
+    orderBy: { createdAt: 'desc' },
+  }).catch(() => null)
+  return Boolean(row?.id)
+}
+
+export async function sendTwilioSms(args: { tenantId?: string; toPhone: string; body: string }): Promise<{ sid: string; status: string }> {
   if (!twilioConfigured()) {
     throw new Error('Twilio is not configured (missing env vars).')
   }
@@ -63,6 +78,9 @@ export async function sendTwilioSms(args: { toPhone: string; body: string }): Pr
 
   const to = toE164(args.toPhone)
   if (!to) throw new Error('Invalid phone number')
+  if (await isSuppressed({ tenantId: args.tenantId, toE164: to })) {
+    throw new Error('SMS blocked: recipient is unsubscribed')
+  }
 
   const body = String(args.body || '').trim()
   if (!body) throw new Error('Missing SMS body')
@@ -98,7 +116,7 @@ export async function sendTwilioSms(args: { toPhone: string; body: string }): Pr
 }
 
 export async function sendTwilioReadySms(ctx: ReadySmsContext): Promise<{ sid: string; status: string }> {
-  return await sendTwilioSms({ toPhone: ctx.toPhone, body: buildReadySmsBody(ctx) })
+  return await sendTwilioSms({ tenantId: ctx.tenantId, toPhone: ctx.toPhone, body: buildReadySmsBody(ctx) })
 }
 
 export async function getTwilioMessageStatus(sid: string): Promise<{
@@ -142,5 +160,29 @@ export async function getTwilioMessageStatus(sid: string): Promise<{
   const errorCode = typeof rec.error_code === 'number' ? rec.error_code : null
   const errorMessage = typeof rec.error_message === 'string' ? rec.error_message : null
   return { sid: s, status, to, from, errorCode, errorMessage }
+}
+
+export async function pingTwilioAccount(): Promise<{ ok: boolean; error?: string }> {
+  if (!twilioConfigured()) return { ok: false, error: 'twilio_not_configured' }
+  try {
+    const accountSid = env('TWILIO_ACCOUNT_SID')
+    const apiKeySid = env('TWILIO_API_KEY_SID')
+    const apiKeySecret = env('TWILIO_API_KEY_SECRET')
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}.json`
+    const basic = Buffer.from(`${apiKeySid}:${apiKeySecret}`).toString('base64')
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Authorization': `Basic ${basic}` },
+      cache: 'no-store',
+    })
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      return { ok: false, error: `twilio_ping_failed_${res.status}:${(body || res.statusText).slice(0, 160)}` }
+    }
+    return { ok: true }
+  } catch (e) {
+    const msg = (e instanceof Error ? e.message : String(e || '')).trim()
+    return { ok: false, error: msg.slice(0, 160) || 'twilio_ping_error' }
+  }
 }
 

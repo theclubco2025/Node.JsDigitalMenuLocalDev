@@ -82,12 +82,28 @@ Used for **staff "new order" email notifications** (sent when a paid order is co
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `RESEND_API_KEY` | Resend API key | `re_...` |
-| `RESEND_FROM` | Verified sender address/domain | `orders@yourdomain.com` |
+| `RESEND_FROM` | Verified sender email at your verified domain | `orders@platehaven.com` |
 | `RESEND_REPLY_TO` | Optional reply-to | `owner@yourdomain.com` |
 
 **Notes:**
 - `RESEND_FROM` must be a **verified sender** in Resend (domain or single sender).
+- If you provide domain-only (e.g. `platehaven.com`), the app auto-normalizes to `orders@platehaven.com`.
 - Per-tenant recipients are configured in Admin → Menu → **New order email notifications** (stored in `Tenant.settings.notifications.newOrderEmails`).
+
+---
+
+## Twilio (Order SMS + inbound STOP/HELP)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `TWILIO_ACCOUNT_SID` | Twilio account SID | `AC...` |
+| `TWILIO_API_KEY_SID` | Twilio API key SID | `SK...` |
+| `TWILIO_API_KEY_SECRET` | Twilio API key secret | `...` |
+| `TWILIO_MESSAGING_SERVICE_SID` | Messaging Service SID | `MG...` |
+| `TWILIO_AUTH_TOKEN` | Auth token used to verify inbound webhook signatures | `...` |
+| `CRON_SECRET` | Bearer token for retention cron endpoint | `random-long-secret` |
+
+Retention automation endpoint: `POST /api/cron/retention-sms` with header `Authorization: Bearer $CRON_SECRET`.
 
 ---
 

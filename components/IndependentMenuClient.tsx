@@ -316,6 +316,7 @@ export default function MenuClient() {
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [smsOptIn, setSmsOptIn] = useState(false)
+  const [marketingSmsOptIn, setMarketingSmsOptIn] = useState(false)
   const [orderNote, setOrderNote] = useState('')
   const [tipPercent, setTipPercent] = useState<number>(15)
   const [customTip, setCustomTip] = useState('')
@@ -548,7 +549,7 @@ export default function MenuClient() {
         setToast('Email is required for your receipt.')
         return
       }
-      if (orderingEnabled && smsOptIn && !customerPhone.trim()) {
+      if (orderingEnabled && (smsOptIn || marketingSmsOptIn) && !customerPhone.trim()) {
         setToast('Please add a phone number to receive SMS updates.')
         return
       }
@@ -568,6 +569,7 @@ export default function MenuClient() {
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         smsOptIn: Boolean(smsOptIn),
+        marketingSmsOptIn: Boolean(marketingSmsOptIn),
         tipCents,
         orderNote: orderNote.trim() || null,
       }
@@ -1689,13 +1691,31 @@ export default function MenuClient() {
                           onChange={(e) => setSmsOptIn(e.target.checked)}
                         />
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-black">Text me when my order is ready</div>
+                          <div className="text-sm font-semibold text-black">
+                            By checking this box, you agree to receive SMS text messages from {brandName} about your order, including order confirmations, status updates, and pickup/ready alerts.
+                          </div>
                           <div className="text-xs text-gray-600">
-                            Optional. Message &amp; data rates may apply. Reply STOP to opt out.
+                            Consent is optional and not required to place an order. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
                           </div>
                         </div>
                       </label>
-                      {smsOptIn && !customerPhone.trim() && (
+                      <label className="mt-3 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                        <input
+                          type="checkbox"
+                          className="mt-1 h-4 w-4"
+                          checked={marketingSmsOptIn}
+                          onChange={(e) => setMarketingSmsOptIn(e.target.checked)}
+                        />
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-black">
+                            Optional: I agree to receive marketing and retention SMS from {brandName}, including review requests and occasional promotions.
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            Separate from order-status messages. Consent is optional. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
+                          </div>
+                        </div>
+                      </label>
+                      {(smsOptIn || marketingSmsOptIn) && !customerPhone.trim() && (
                         <div className="mt-2 text-sm font-semibold text-amber-700">
                           Please add a phone number to receive SMS updates.
                         </div>
@@ -1713,7 +1733,7 @@ export default function MenuClient() {
                   {orderingEnabled && (
                     <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="text-sm font-extrabold tracking-wide text-black">Tip</div>
-                      <div className="mt-2 text-sm text-gray-600">Optional. Tips go directly to the restaurant.</div>
+                      <div className="mt-2 text-sm text-gray-600">Optional. Tips go directly to the business.</div>
                       <div className="mt-4 grid grid-cols-4 gap-2">
                         {[0, 10, 15, 20].map((pct) => (
                           <button
@@ -1844,7 +1864,7 @@ export default function MenuClient() {
                     }}
                     className="rounded-2xl px-5 py-3 text-sm font-extrabold shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)', color: '#0b0b0b' }}
-                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || ((smsOptIn || marketingSmsOptIn) && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
                   >
                     {orderingEnabled ? 'Place order' : 'Proceed with Plate'}
                   </button>

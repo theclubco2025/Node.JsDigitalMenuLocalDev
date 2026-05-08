@@ -129,6 +129,7 @@ async function maybeSendReadySms(args: { tenantId: string; tenantName: string; o
     const isDineIn = Boolean((o.tableNumber || '').trim())
     try {
       const sent = await sendTwilioReadySms({
+        tenantId: args.tenantId,
         tenantName: args.tenantName,
         orderId: o.id,
         toPhone: o.customerPhone || '',

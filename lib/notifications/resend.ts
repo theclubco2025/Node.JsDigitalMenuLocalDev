@@ -9,6 +9,15 @@ export function resendConfigured(): boolean {
   return Boolean(env('RESEND_API_KEY') && env('RESEND_FROM'))
 }
 
+function normalizedResendFrom(raw: string): string {
+  const v = String(raw || '').trim()
+  if (!v) return ''
+  if (v.includes('@')) return v
+  // Accept domain-only env input and convert to a valid sender.
+  const domain = v.replace(/^@+/, '')
+  return `orders@${domain}`
+}
+
 function splitEmails(raw: string): string[] {
   return raw
     .split(',')
@@ -197,7 +206,7 @@ export async function sendNewOrderEmail(args: {
 
   try {
     const resend = new Resend(env('RESEND_API_KEY'))
-    const from = env('RESEND_FROM')
+    const from = normalizedResendFrom(env('RESEND_FROM'))
     const replyTo = env('RESEND_REPLY_TO')
 
     const sent = await resend.emails.send({

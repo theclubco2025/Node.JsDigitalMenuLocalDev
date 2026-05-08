@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { resendConfigured } from '@/lib/notifications/resend'
+import { pingTwilioAccount, twilioConfigured } from '@/lib/notifications/twilio'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -18,8 +20,12 @@ export async function GET(req: NextRequest) {
     Boolean(String(process.env.UPSTASH_REDIS_REST_TOKEN || '').trim())
 
   const dbConfigured = Boolean(String(process.env.DATABASE_URL || '').trim())
+  const resendOk = resendConfigured()
+  const twilioOk = twilioConfigured()
   let dbOk: boolean | null = null
   let dbError: string | null = null
+  let twilioReachable: boolean | null = null
+  let twilioError: string | null = null
   if (dbConfigured) {
     try {
       await prisma.$queryRaw`SELECT 1`
@@ -28,6 +34,11 @@ export async function GET(req: NextRequest) {
       dbOk = false
       dbError = (e instanceof Error ? e.message : String(e || '')).slice(0, 400) || 'db_error'
     }
+  }
+  if (twilioOk) {
+    const ping = await pingTwilioAccount()
+    twilioReachable = ping.ok
+    twilioError = ping.ok ? null : (ping.error || 'twilio_ping_failed')
   }
 
   return NextResponse.json({
@@ -38,6 +49,10 @@ export async function GET(req: NextRequest) {
     dbConfigured,
     dbOk,
     dbError,
+    resendConfigured: resendOk,
+    twilioConfigured: twilioOk,
+    twilioReachable,
+    twilioError,
   }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
 }
 

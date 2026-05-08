@@ -29,6 +29,7 @@ const BodySchema = z.object({
   customerName: z.string().max(100).optional().nullable(),
   customerPhone: z.string().max(40).optional().nullable(),
   smsOptIn: z.boolean().optional().default(false),
+  marketingSmsOptIn: z.boolean().optional().default(false),
   tipCents: z.number().int().min(0).max(25_000).optional().default(0),
   // Optional order-level note for kitchen
   orderNote: z.string().max(800).optional().nullable(),
@@ -159,6 +160,7 @@ export async function POST(req: NextRequest) {
     const customerName = (parsed.data.customerName || '').trim() || null
     const customerPhone = (parsed.data.customerPhone || '').trim() || null
     const smsOptIn = parsed.data.smsOptIn === true
+    const marketingSmsOptIn = parsed.data.marketingSmsOptIn === true
     const orderNote = (parsed.data.orderNote || '').trim() || null
     const tipCentsRaw = Math.max(0, Math.floor(parsed.data.tipCents || 0))
 
@@ -231,6 +233,9 @@ export async function POST(req: NextRequest) {
     // If user opted into SMS updates, a phone number is required.
     if (smsOptIn && !customerPhone) {
       return NextResponse.json({ ok: false, error: 'customer_phone_required_for_sms' }, { status: 400 })
+    }
+    if (marketingSmsOptIn && !customerPhone) {
+      return NextResponse.json({ ok: false, error: 'customer_phone_required_for_marketing_sms' }, { status: 400 })
     }
 
     // Sales-ready: ordering payments require a connected Stripe account for this tenant.
@@ -386,6 +391,8 @@ export async function POST(req: NextRequest) {
           tableNumber: tableNumber || undefined,
           smsOptIn,
           smsOptInAt: smsOptIn ? new Date() : undefined,
+          marketingSmsOptIn,
+          marketingSmsOptInAt: marketingSmsOptIn ? new Date() : undefined,
           note: orderNote || undefined,
           stripeAccountId: usePlatformStripe ? undefined : stripeAccountId,
           // Catering-specific fields
@@ -525,6 +532,8 @@ export async function POST(req: NextRequest) {
               customerPhone: customerPhone || undefined,
               smsOptIn,
               smsOptInAt: smsOptIn ? new Date() : undefined,
+              marketingSmsOptIn,
+              marketingSmsOptInAt: marketingSmsOptIn ? new Date() : undefined,
               tipCents,
               stripeAccountId: usePlatformStripe ? undefined : stripeAccountId,
             },

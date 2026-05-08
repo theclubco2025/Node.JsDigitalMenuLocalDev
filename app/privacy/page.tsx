@@ -186,7 +186,8 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-semibold">6. SMS Communications</h2>
           <p>
             If you opt in to SMS/text notifications when placing an order, you agree to
-            receive transactional messages from the restaurant powered by PlateHaven
+            receive transactional messages from the business you ordered from (delivered
+            via PlateHaven)
             about that order. Transactional SMS categories may include order
             confirmations, pickup or ready alerts, and order status updates.
           </p>
@@ -201,7 +202,7 @@ export default function PrivacyPage() {
           <p>
             Marketing or retention SMS messages, such as review requests, holiday
             reminders, promotions, or similar non-transactional messages, are sent only
-            if you separately opt in to receive marketing SMS from the restaurant. An
+            if you separately opt in to receive marketing SMS from the business. An
             order-ready or order-status SMS opt-in does not authorize marketing or
             retention SMS messages.
           </p>
