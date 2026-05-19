@@ -2661,10 +2661,10 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                         />
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-black">
-                            By checking this box, you agree to receive SMS text messages from {brandName} about your order, including order confirmations, status updates, and pickup/ready alerts.
+                            By checking this box, you agree to receive SMS/text messages from <span className="underline">{brandName}</span> (the business you are ordering from) about this order, including order confirmations, status updates, and pickup/ready alerts.
                           </div>
                           <div className="text-xs text-gray-600">
-                            Consent is optional and not required to place an order. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
+                            Consent is optional and not required to purchase. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help. See our <a href="/sms-terms" className="underline">SMS Terms</a>.
                           </div>
                         </div>
                       </label>
@@ -2677,10 +2677,10 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                         />
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-black">
-                            Optional: I agree to receive marketing and retention SMS from {brandName}, including review requests and occasional promotions.
+                            Optional: I agree to receive recurring marketing/retention SMS from <span className="underline">{brandName}</span>, including review requests and occasional promotions.
                           </div>
                           <div className="text-xs text-gray-600">
-                            Separate from order-status messages. Consent is optional. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
+                            Separate from order-status SMS. Consent is optional and not required to purchase. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help.
                           </div>
                         </div>
                       </label>

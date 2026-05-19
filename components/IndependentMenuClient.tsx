@@ -1692,10 +1692,10 @@ export default function MenuClient() {
                         />
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-black">
-                            By checking this box, you agree to receive SMS text messages from {brandName} about your order, including order confirmations, status updates, and pickup/ready alerts.
+                            By checking this box, you agree to receive SMS/text messages from <span className="underline">{brandName}</span> (the business you are ordering from) about this order, including order confirmations, status updates, and pickup/ready alerts.
                           </div>
                           <div className="text-xs text-gray-600">
-                            Consent is optional and not required to place an order. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
+                            Consent is optional and not required to purchase. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help. See our <a href="/sms-terms" className="underline">SMS Terms</a>.
                           </div>
                         </div>
                       </label>
