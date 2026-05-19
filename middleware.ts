@@ -135,6 +135,7 @@ export function middleware(request: NextRequest) {
       'demo-admin',
       'terms',
       'privacy',
+      'sms-terms',
       'favicon.ico',
       'robots.txt',
       'sitemap.xml',
