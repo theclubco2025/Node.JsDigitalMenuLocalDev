@@ -1,14 +1,25 @@
 /* eslint-disable @next/next/no-img-element */
 export const metadata = {
-  title: 'PlateHaven — Online Ordering, Redefined',
+  title: 'PlateHaven — Order Growth & Retention',
   description:
-    'A digital ordering system for catering businesses, quick-pickup teams, and modern food operations. Clean menus. Structured orders. Less back-and-forth.',
+    'PlateHaven helps restaurants, caterers, and food trucks capture more direct orders, increase average ticket size, and bring customers back with a branded ordering flow built around your business.',
 }
 
 const LANDING = {
   calendlyUrl: 'https://calendly.com/tccsolutions2025/30min',
   demoUrl: '/demo',
 }
+
+const FEATURES = [
+  { title: 'Branded digital menu', desc: 'Your menu becomes a mobile-first sales page, not a static PDF.' },
+  { title: 'Direct ordering flow', desc: 'Customers order from your link or QR code without getting pushed into third-party platforms.' },
+  { title: 'Catering request capture', desc: 'Event date, guest count, dietary notes, serving sizes, and itemized pricing collected upfront.' },
+  { title: 'Smart upsell structure', desc: 'Add-ons, modifiers, bundles, and upgrades placed directly inside the ordering flow.' },
+  { title: 'Customer ownership', desc: 'Build the foundation for repeat orders, follow-ups, loyalty, and direct customer communication.' },
+  { title: 'Admin dashboard', desc: 'Update items, pricing, categories, and settings without needing a developer.' },
+  { title: 'Kitchen display', desc: 'Route incoming orders clearly for back-of-house execution.' },
+  { title: 'Optional AI assistance', desc: 'Help customers understand the menu, make choices, and ask questions without calling the staff.' },
+]
 
 export default function Landing() {
   return (
@@ -34,7 +45,7 @@ export default function Landing() {
               href={LANDING.demoUrl}
               className="bg-[#C9A227] text-[#0a0a0a] px-5 py-2.5 text-sm font-semibold hover:bg-[#d4af37] transition-colors rounded"
             >
-              Try the Demo
+              See the Demo
             </a>
           </div>
         </div>
@@ -44,13 +55,21 @@ export default function Landing() {
       <section className="pt-36 pb-20 md:pt-44 md:pb-28 px-6">
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-[1.1] tracking-tight mb-6">
-            Digital ordering for<br />
-            <span className="text-[#C9A227]">modern food businesses</span>
+            Turn your menu into an<br />
+            <span className="text-[#C9A227]">order growth system</span>
           </h1>
-          <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
-            A cleaner way to handle catering requests, quick pickup orders, and digital menus. 
-            Your customers build their order. You receive it complete.
+          <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-6 leading-relaxed">
+            PlateHaven helps restaurants, caterers, and food trucks capture more direct orders, increase average ticket size, and bring customers back with a branded ordering flow built around your business.
           </p>
+          <p className="text-sm text-white/40 max-w-xl mx-auto mb-8 leading-relaxed">
+            Your menu should not just display food. It should sell it, capture the customer, and bring them back.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/50 mb-10">
+            <span>Customers browse faster.</span>
+            <span>Orders come in cleaner.</span>
+            <span>Upsells become obvious.</span>
+            <span>You keep the relationship.</span>
+          </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={LANDING.demoUrl}
@@ -64,34 +83,47 @@ export default function Landing() {
               rel="noreferrer"
               className="w-full sm:w-auto border border-white/15 px-8 py-4 text-base font-medium text-white/80 hover:text-white hover:border-white/30 transition-colors rounded"
             >
-              Talk to Us
+              Get Setup
             </a>
           </div>
         </div>
       </section>
 
+      {/* Positioning strip */}
+      <section className="pb-8 px-6">
+        <p className="mx-auto max-w-2xl text-center text-sm text-white/40">
+          Not a POS. Not DoorDash. Not another app fighting for your customers.
+        </p>
+      </section>
+
       {/* Problem */}
       <section className="py-20 px-6 border-t border-white/5">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-6">
-            Ordering is messier than it should be
+          <h2 className="text-2xl md:text-3xl font-semibold mb-3">
+            Most restaurants do not have an ordering problem
           </h2>
-          <p className="text-white/50 leading-relaxed mb-10 max-w-2xl mx-auto">
-            Catering requests scattered across texts and calls. Quick pickup lines slowing down at the counter. 
-            Menus that are hard to update. Customers asking the same questions over and over.
+          <p className="text-xl md:text-2xl text-white/70 font-medium mb-6">
+            They have a revenue leak
+          </p>
+          <p className="text-white/50 leading-relaxed mb-6 max-w-2xl mx-auto">
+            Customers get confused. Lines slow down. Catering requests turn into back-and-forth messages.
+            Upsells get missed. Repeat customers are not captured. Third-party platforms keep owning the relationship.
+          </p>
+          <p className="text-white/70 font-medium mb-10">
+            PlateHaven fixes the flow before the money leaks out.
           </p>
           <div className="grid md:grid-cols-3 gap-6 text-left">
             <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
-              <div className="text-white/30 text-sm font-medium mb-2">Catering</div>
-              <p className="text-white/60 text-sm">Every order becomes a 10-message conversation before you even have the details.</p>
+              <div className="text-white/30 text-sm font-medium mb-2">Direct Orders</div>
+              <p className="text-white/60 text-sm">Stop sending your best customers into apps, DMs, phone calls, and scattered ordering paths. Give them one clean branded link to order directly.</p>
             </div>
             <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
-              <div className="text-white/30 text-sm font-medium mb-2">Quick Pickup</div>
-              <p className="text-white/60 text-sm">Rush periods bottleneck at the counter. Customers leave instead of waiting.</p>
+              <div className="text-white/30 text-sm font-medium mb-2">Higher Ticket Size</div>
+              <p className="text-white/60 text-sm">Make add-ons, upgrades, modifiers, catering quantities, and package options easier to choose before the order is submitted.</p>
             </div>
             <div className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
-              <div className="text-white/30 text-sm font-medium mb-2">Menus</div>
-              <p className="text-white/60 text-sm">Static menus that are hard to change. No clear way for customers to order.</p>
+              <div className="text-white/30 text-sm font-medium mb-2">Customer Retention</div>
+              <p className="text-white/60 text-sm">Capture the customer relationship so you can drive repeat orders instead of starting from zero every time.</p>
             </div>
           </div>
         </div>
@@ -102,11 +134,13 @@ export default function Landing() {
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-14">
             <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-              One system that handles it
+              One system built to grow the order
             </h2>
-            <p className="text-white/50 max-w-xl mx-auto">
-              PlateHaven gives your customers a clean way to browse, build, and send their order. 
-              You receive everything structured and ready.
+            <p className="text-white/50 max-w-xl mx-auto mb-4">
+              PlateHaven gives your customers a clean ordering experience while giving your business a stronger direct-order channel.
+            </p>
+            <p className="text-white/70 text-sm max-w-lg mx-auto">
+              Less friction. More control. More chances to increase the order before it is placed.
             </p>
           </div>
           
@@ -118,19 +152,19 @@ export default function Landing() {
               <ul className="space-y-4 text-white/70 text-[15px]">
                 <li className="flex items-start gap-3">
                   <span className="text-[#C9A227] mt-0.5">-</span>
-                  <span>Your menu, browsable on any device</span>
+                  <span>They browse your menu</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-[#C9A227] mt-0.5">-</span>
-                  <span>Clear pricing and item details</span>
+                  <span>They build the order</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-[#C9A227] mt-0.5">-</span>
-                  <span>A structured way to build and submit their order</span>
+                  <span>They see add-ons and options</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="text-[#C9A227] mt-0.5">-</span>
-                  <span>Event details, dietary notes, everything in one form</span>
+                  <span>They submit clean details</span>
                 </li>
               </ul>
             </div>
@@ -140,6 +174,10 @@ export default function Landing() {
                 What you receive
               </div>
               <ul className="space-y-4 text-white/70 text-[15px]">
+                <li className="flex items-start gap-3">
+                  <span className="text-[#C9A227] mt-0.5">-</span>
+                  <span>The order ready to confirm, prepare, and fulfill</span>
+                </li>
                 <li className="flex items-start gap-3">
                   <span className="text-[#C9A227] mt-0.5">-</span>
                   <span>Complete order details, not scattered messages</span>
@@ -152,10 +190,6 @@ export default function Landing() {
                   <span className="text-[#C9A227] mt-0.5">-</span>
                   <span>Itemized order with pricing already calculated</span>
                 </li>
-                <li className="flex items-start gap-3">
-                  <span className="text-[#C9A227] mt-0.5">-</span>
-                  <span>Ready to confirm, no back-and-forth required</span>
-                </li>
               </ul>
             </div>
           </div>
@@ -167,11 +201,10 @@ export default function Landing() {
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-              See how it works
+              See direct-order growth in action
             </h2>
             <p className="text-white/50 max-w-xl mx-auto">
-              Try the ordering flow yourself. See what your customers see, 
-              and what you receive on the other end.
+              Try the flow yourself. See how customers browse, add extras, and submit — and what your business receives on the other end.
             </p>
           </div>
           
@@ -182,11 +215,10 @@ export default function Landing() {
             >
               <div className="text-white/30 text-sm font-medium mb-3">Catering Demo</div>
               <h3 className="text-lg font-semibold mb-2 group-hover:text-[#C9A227] transition-colors">
-                Full event ordering
+                Capture bigger events upfront
               </h3>
               <p className="text-white/50 text-sm leading-relaxed">
-                Serving sizes, event details, dietary requirements. 
-                The complete catering request flow.
+                Event details, quantities, packages, and dietary requirements collected before the back-and-forth starts — so you quote and fulfill with a higher ticket in mind.
               </p>
             </a>
 
@@ -196,11 +228,10 @@ export default function Landing() {
             >
               <div className="text-white/30 text-sm font-medium mb-3">Quick Pickup Demo</div>
               <h3 className="text-lg font-semibold mb-2 group-hover:text-[#C9A227] transition-colors">
-                Quick pickup ordering
+                Less counter friction, more direct orders
               </h3>
               <p className="text-white/50 text-sm leading-relaxed">
-                Fast mobile ordering for rush periods. 
-                Customers order from their phone while in line.
+                Customers order from your branded link on their phone — fewer bottlenecks at the counter and more orders completed on your channel.
               </p>
             </a>
           </div>
@@ -210,7 +241,7 @@ export default function Landing() {
               href={LANDING.demoUrl}
               className="inline-block bg-[#C9A227] text-[#0a0a0a] px-8 py-4 text-base font-semibold hover:bg-[#d4af37] transition-colors rounded"
             >
-              Try the Demo
+              See the Demo
             </a>
           </div>
         </div>
@@ -221,19 +252,12 @@ export default function Landing() {
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-              Built for real operations
+              Built to grow your orders
             </h2>
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: 'Digital menus', desc: 'Clean, mobile-first design. Update items and prices in minutes.' },
-              { title: 'Structured ordering', desc: 'Customers send complete requests instead of scattered messages.' },
-              { title: 'Catering workflow', desc: 'Event details, serving sizes, dietary notes — all captured upfront.' },
-              { title: 'Admin dashboard', desc: 'Manage your menu, orders, and settings from one place.' },
-              { title: 'Kitchen display', desc: 'Optional order screens for back-of-house workflow.' },
-              { title: 'AI assistance', desc: 'Optional AI to help customers with menu questions.' },
-            ].map((feature, i) => (
+            {FEATURES.map((feature, i) => (
               <div key={i} className="bg-white/[0.02] border border-white/5 rounded-lg p-5">
                 <h3 className="font-medium mb-2">{feature.title}</h3>
                 <p className="text-sm text-white/50">{feature.desc}</p>
@@ -247,11 +271,11 @@ export default function Landing() {
       <section className="py-24 px-6 border-t border-white/5">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-            Ready to clean up your ordering?
+            Ready to turn your menu into a growth system?
           </h2>
-          <p className="text-white/50 mb-8 max-w-lg mx-auto">
-            We set up your menu and ordering flow. You try it with real customers. 
-            If it works, you keep it. Simple.
+          <p className="text-white/50 mb-8 max-w-lg mx-auto leading-relaxed">
+            We set up your branded ordering flow, load your menu, structure your add-ons, and give your customers a cleaner way to order directly.
+            You test it with real customers. If it helps, you keep it. If it does not, you do not.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
@@ -266,7 +290,7 @@ export default function Landing() {
               rel="noreferrer"
               className="w-full sm:w-auto border border-white/15 px-8 py-4 text-base font-medium text-white/80 hover:text-white hover:border-white/30 transition-colors rounded"
             >
-              Schedule Setup
+              Get Setup
             </a>
           </div>
           <p className="mt-6 text-sm text-white/30">Free setup. $50/month if you keep it.</p>
