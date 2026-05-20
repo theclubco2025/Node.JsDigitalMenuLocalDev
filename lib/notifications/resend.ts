@@ -1,6 +1,5 @@
 import { prisma } from '@/lib/prisma'
 import {
-  normalizedResendFrom,
   resendConfigured,
   safeErr,
   sendResendEmail,
