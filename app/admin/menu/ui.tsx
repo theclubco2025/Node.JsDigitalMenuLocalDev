@@ -45,6 +45,12 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
   const [stripeConnectOnboardedAt, setStripeConnectOnboardedAt] = useState<string | null>(null)
   const [newOrderEmails, setNewOrderEmails] = useState('')
   const [notificationsSaving, setNotificationsSaving] = useState(false)
+  const [retentionEnabled, setRetentionEnabled] = useState(true)
+  const [reviewUrl, setReviewUrl] = useState('')
+  const [reviewSubject, setReviewSubject] = useState('')
+  const [reviewBody, setReviewBody] = useState('')
+  const [followupD21Body, setFollowupD21Body] = useState('')
+  const [followupD45Body, setFollowupD45Body] = useState('')
   const [orderingPaused, setOrderingPaused] = useState(false)
   const [pauseMessage, setPauseMessage] = useState('')
   const [schedulingEnabled, setSchedulingEnabled] = useState(true)
@@ -159,12 +165,34 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
     async function loadNotifications() {
       try {
         const res = await fetch(`/api/tenant/notifications?tenant=${encodeURIComponent(tenant)}`, { cache: 'no-store' })
-        const json = await res.json().catch(() => null) as null | { ok?: boolean; notifications?: { newOrderEmails?: unknown } }
+        const json = await res.json().catch(() => null) as null | {
+          ok?: boolean
+          notifications?: {
+            newOrderEmails?: unknown
+            retention?: {
+              enabled?: boolean
+              reviewUrl?: string
+              reviewSubject?: string
+              reviewBody?: string
+              followupD21Body?: string
+              followupD45Body?: string
+            }
+          }
+        }
         if (!res.ok || !json?.ok) return
         const list = Array.isArray(json.notifications?.newOrderEmails)
           ? (json.notifications?.newOrderEmails as unknown[]).map(v => String(v || '').trim()).filter(Boolean)
           : []
-        if (!cancelled) setNewOrderEmails(list.join(', '))
+        const r = json.notifications?.retention
+        if (!cancelled) {
+          setNewOrderEmails(list.join(', '))
+          setRetentionEnabled(r?.enabled !== false)
+          setReviewUrl(String(r?.reviewUrl || ''))
+          setReviewSubject(String(r?.reviewSubject || ''))
+          setReviewBody(String(r?.reviewBody || ''))
+          setFollowupD21Body(String(r?.followupD21Body || ''))
+          setFollowupD45Body(String(r?.followupD45Body || ''))
+        }
       } catch {
         // ignore
       }
@@ -241,7 +269,16 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
       const res = await fetch('/api/tenant/notifications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenant, newOrderEmails }),
+        body: JSON.stringify({
+          tenant,
+          newOrderEmails,
+          retentionEnabled,
+          reviewUrl,
+          reviewSubject,
+          reviewBody,
+          followupD21Body,
+          followupD45Body,
+        }),
       })
       const json = await res.json().catch(() => null) as null | { ok?: boolean; error?: string; notifications?: { newOrderEmails?: unknown } }
       if (!res.ok || !json?.ok) throw new Error(json?.error || `Save failed (${res.status})`)
@@ -438,6 +475,80 @@ export default function AdminMenuClient({ tenant }: { tenant: string }) {
             </div>
             <div className="mt-2 text-xs text-gray-700">
               Tip: use commas to separate multiple emails.
+            </div>
+            <div className="mt-4 border-t border-gray-200 pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">Retention email &amp; SMS</div>
+                  <div className="mt-1 text-xs text-gray-700">
+                    Customers who opt in at checkout can receive review requests and follow-ups by email (and SMS when enabled). Leave copy blank to use defaults.
+                  </div>
+                </div>
+                <label className="inline-flex items-center gap-2 text-sm font-semibold text-gray-900 select-none">
+                  <input
+                    type="checkbox"
+                    checked={retentionEnabled}
+                    onChange={(e) => setRetentionEnabled(e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  Enabled
+                </label>
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700">Google review URL</label>
+                  <input
+                    value={reviewUrl}
+                    onChange={(e) => setReviewUrl(e.target.value)}
+                    placeholder="https://g.page/r/..."
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700">Review email subject (optional)</label>
+                  <input
+                    value={reviewSubject}
+                    onChange={(e) => setReviewSubject(e.target.value)}
+                    placeholder="How was your visit?"
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700">D+7 review email body (optional)</label>
+                  <textarea
+                    value={reviewBody}
+                    onChange={(e) => setReviewBody(e.target.value)}
+                    rows={2}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700">D+21 follow-up body (optional)</label>
+                  <textarea
+                    value={followupD21Body}
+                    onChange={(e) => setFollowupD21Body(e.target.value)}
+                    rows={2}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700">D+45 follow-up body (optional)</label>
+                  <textarea
+                    value={followupD45Body}
+                    onChange={(e) => setFollowupD45Body(e.target.value)}
+                    rows={2}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={saveNotifications}
+                disabled={notificationsSaving}
+                className="mt-3 inline-flex items-center justify-center rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 disabled:opacity-50"
+              >
+                {notificationsSaving ? 'Saving…' : 'Save notifications'}
+              </button>
             </div>
           </div>
 

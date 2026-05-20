@@ -5,7 +5,7 @@ import { readMenu } from '@/lib/data/menu'
 import { getStripeOrders } from '@/lib/stripe'
 import type { Prisma } from '@prisma/client'
 import { checkRateLimit, clientIp } from '@/lib/server/rateLimit'
-import { sendCateringOrderNotification } from '@/lib/email'
+import { sendCateringOrderNotification } from '@/lib/notifications/resend-catering'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -233,9 +233,6 @@ export async function POST(req: NextRequest) {
     // If user opted into SMS updates, a phone number is required.
     if (smsOptIn && !customerPhone) {
       return NextResponse.json({ ok: false, error: 'customer_phone_required_for_sms' }, { status: 400 })
-    }
-    if (marketingSmsOptIn && !customerPhone) {
-      return NextResponse.json({ ok: false, error: 'customer_phone_required_for_marketing_sms' }, { status: 400 })
     }
 
     // Sales-ready: ordering payments require a connected Stripe account for this tenant.

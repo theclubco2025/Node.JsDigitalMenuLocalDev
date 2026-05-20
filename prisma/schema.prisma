@@ -112,6 +112,7 @@ model Tenant {
   orders                Order[]
   smsSuppressions       SmsSuppression[]
   retentionMessages     SmsRetentionMessage[]
+  emailRetentionMessages EmailRetentionMessage[]
   
   @@map("tenants")
 }
@@ -232,6 +233,10 @@ model Order {
   twilioReadyAttemptCount Int            @default(0)
   twilioReadyLastAttemptAt DateTime?
 
+  readyEmailSentAt       DateTime?
+  readyEmailMessageId    String?
+  readyEmailLastError    String?
+
   // Kitchen note / special instructions
   note                   String?
 
@@ -253,6 +258,7 @@ model Order {
 
   items                  OrderItem[]
   retentionMessages      SmsRetentionMessage[]
+  emailRetentionMessages EmailRetentionMessage[]
 
   @@index([tenantId, createdAt])
   @@index([tenantId, eventDate])
@@ -281,6 +287,27 @@ model SmsRetentionMessage {
   @@index([tenantId, campaignKey])
   @@index([sentAt])
   @@map("sms_retention_messages")
+}
+
+model EmailRetentionMessage {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderId       String?
+  order         Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  customerEmail String
+  campaignKey   String
+  messageBody   String
+  messageId     String?
+  status        String   @default("pending")
+  error         String?
+  sentAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  @@unique([tenantId, customerEmail, campaignKey])
+  @@index([tenantId, campaignKey])
+  @@index([sentAt])
+  @@map("email_retention_messages")
 }
 
 model OrderItem {

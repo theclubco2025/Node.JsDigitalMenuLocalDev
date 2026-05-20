@@ -1,44 +1,49 @@
-# Resend Setup (platehaven.com)
+# Resend Setup (platehaven.app)
 
-Use this after Resend support releases your domain.
+Use this after your domain is verified in Resend.
 
 ## 1) Domain in Resend
 
-Domain should exist in Resend as `platehaven.com`.
+Domain should exist in Resend as `platehaven.app` (verified).
 
-If missing, add it in Resend dashboard or via API.
+`RESEND_FROM` must use that domain, for example:
 
-## 2) DNS records (add in Vercel DNS for platehaven.com)
+```bash
+RESEND_FROM=orders@platehaven.app
+```
 
-| Type | Name/Host | Value | Priority |
-|------|-----------|-------|----------|
-| TXT | `resend._domainkey` | `p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDfMResfKSOe4Obkdx+UQOUewKV2DgXLq1G+8U8xU4HtOroEuEzGHdhS5BCew8FJBbFi57XMK5Jso5BX+JlNAIX3cnXhl/DEA+8tea9J7DjaRa1KCMxUJxoTPaFqp3rvsr+mejGGi9JbGP82/QYKZSMuNL0Y9lyBo/3MGNjjt/5aQIDAQAB` | — |
-| MX | `send` | `feedback-smtp.us-east-1.amazonses.com` | `10` |
-| TXT | `send` | `v=spf1 include:amazonses.com ~all` | — |
-
-Notes:
-- In Vercel DNS, host/name is usually the subdomain part only (`resend._domainkey`, `send`).
-- Wait for DNS propagation (often 5–30 minutes, sometimes up to 24h).
-- Click **Verify** in Resend after records propagate.
-
-## 3) Vercel env vars (Production)
+## 2) Vercel env vars (Production)
 
 ```bash
 RESEND_API_KEY=re_...
-RESEND_FROM=orders@platehaven.com
-RESEND_REPLY_TO=platehaven2025@gmail.com
+RESEND_FROM=orders@platehaven.app
+RESEND_REPLY_TO=owner@yourdomain.com
 ```
 
-`RESEND_FROM` must be an address on the verified domain.
+## 3) App-side recipient config
 
-## 4) App-side recipient config
+| Notification | Where to configure |
+|--------------|-------------------|
+| Staff alert on paid order | Admin → Menu → **New order email notifications** |
+| Ready-for-pickup (customer) | Automatic when kitchen marks order READY (uses checkout email) |
+| Retention / holidays (customer) | Daily cron + checkout marketing opt-in; copy in Admin → **Retention email & SMS** |
+| Catering inquiry (business) | Tenant `settings.contactEmail` or notifications list |
 
-Per tenant, set staff recipients in Admin → Menu → **New order email notifications**.
+## 4) Retention cron
+
+Set `CRON_SECRET` in Vercel. Vercel runs `GET /api/cron/retention` daily (see `vercel.json`).
+
+Manual test:
+
+```bash
+curl -s -X POST https://platehaven.app/api/cron/retention \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
 
 ## 5) Verify after deploy
 
-1. Place a paid test order.
-2. Confirm staff email arrives from `orders@platehaven.com`.
+1. Place a paid test order — staff email should arrive from `orders@platehaven.app`.
+2. Mark order READY in kitchen — customer should receive ready email (if email on order).
 3. Optional health check:
 
 ```bash

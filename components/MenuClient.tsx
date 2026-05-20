@@ -719,7 +719,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
         setToast('Email is required for your receipt.')
         return
       }
-      if (orderingEnabled && (smsOptIn || marketingSmsOptIn) && !customerPhone.trim()) {
+      if (orderingEnabled && smsOptIn && !customerPhone.trim()) {
         setToast('Please add a phone number to receive SMS updates.')
         return
       }
@@ -2677,16 +2677,16 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                         />
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-black">
-                            Optional: I agree to receive recurring marketing/retention SMS from <span className="underline">{brandName}</span>, including review requests and occasional promotions.
+                            Optional: I agree to receive recurring marketing and retention messages from <span className="underline">{brandName}</span> by email and, if I provided a phone number, by SMS — including review requests and occasional promotions.
                           </div>
                           <div className="text-xs text-gray-600">
-                            Separate from order-status SMS. Consent is optional and not required to purchase. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help.
+                            Separate from order-status SMS. Consent is optional and not required to purchase. Email unsubscribe links are included in marketing emails. For SMS: message frequency varies; msg &amp; data rates may apply; reply STOP to opt out or HELP for help.
                           </div>
                         </div>
                       </label>
-                      {(smsOptIn || marketingSmsOptIn) && !customerPhone.trim() && (
+                      {smsOptIn && !customerPhone.trim() && (
                         <div className="mt-2 text-sm font-semibold text-amber-700">
-                          Please add a phone number to receive SMS updates.
+                          Please add a phone number to receive order-status SMS.
                         </div>
                       )}
 
@@ -2838,7 +2838,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                     }}
                     className="rounded-2xl px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)' }}
-                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || ((smsOptIn || marketingSmsOptIn) && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) || (cateringMode && (!eventDate || !guestCount || !customerName.trim() || !customerPhone.trim())) || (isFoodTruckMode && !customerName.trim())))}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) || (cateringMode && (!eventDate || !guestCount || !customerName.trim() || !customerPhone.trim())) || (isFoodTruckMode && !customerName.trim())))}
                   >
                     {cateringMode ? 'Submit Inquiry' : (isFoodTruckMode ? 'Submit Order' : (orderingEnabled ? 'Place order' : 'Proceed with Plate'))}
                   </button>

@@ -1,22 +1,12 @@
-import { Resend } from 'resend'
 import { prisma } from '@/lib/prisma'
+import {
+  normalizedResendFrom,
+  resendConfigured,
+  safeErr,
+  sendResendEmail,
+} from '@/lib/notifications/resend-client'
 
-function env(name: string): string {
-  return String(process.env[name] || '').trim()
-}
-
-export function resendConfigured(): boolean {
-  return Boolean(env('RESEND_API_KEY') && env('RESEND_FROM'))
-}
-
-function normalizedResendFrom(raw: string): string {
-  const v = String(raw || '').trim()
-  if (!v) return ''
-  if (v.includes('@')) return v
-  // Accept domain-only env input and convert to a valid sender.
-  const domain = v.replace(/^@+/, '')
-  return `orders@${domain}`
-}
+export { resendConfigured, normalizedResendFrom } from '@/lib/notifications/resend-client'
 
 function splitEmails(raw: string): string[] {
   return raw
@@ -44,12 +34,6 @@ function formatMoney(cents: number, currency: string) {
   } catch {
     return `${cur} ${dollars.toFixed(2)}`
   }
-}
-
-function safeErr(e: unknown): string {
-  const msg = (e instanceof Error ? e.message : String(e || '')).trim()
-  const trimmed = msg.length > 300 ? `${msg.slice(0, 300)}…` : msg
-  return trimmed || 'unknown_error'
 }
 
 type AddOn = { name?: unknown; priceDeltaCents?: unknown }
@@ -123,19 +107,16 @@ export async function sendNewOrderEmail(args: {
   if (!order.tenant?.id) return { ok: false, status: 'failed', error: 'tenant_not_found' }
   if (!order.paidAt) return { ok: true, status: 'skipped', reason: 'not_paid' }
 
-  // Idempotency: if already sent, do nothing.
   if (order.newOrderEmailSentAt) return { ok: true, status: 'skipped', reason: 'already_sent' }
 
   const to = newOrderEmailsFromSettings(order.tenant.settings)
   if (to.length === 0) return { ok: true, status: 'skipped', reason: 'no_recipients' }
 
-  // Avoid spamming on rapid webhook retries: only attempt once every 2 minutes until it succeeds.
   const lastAttemptAt = order.newOrderEmailLastAttemptAt ? new Date(order.newOrderEmailLastAttemptAt).getTime() : 0
   if (lastAttemptAt && Date.now() - lastAttemptAt < 2 * 60_000) {
     return { ok: true, status: 'skipped', reason: 'recent_attempt' }
   }
 
-  // Mark attempt before sending (best-effort). This is intentionally not a hard gate; it just reduces duplicates.
   await prisma.order.update({
     where: { id: orderId },
     data: {
@@ -205,20 +186,11 @@ export async function sendNewOrderEmail(args: {
   const subject = subjectBits.join(' — ').slice(0, 200)
 
   try {
-    const resend = new Resend(env('RESEND_API_KEY'))
-    const from = normalizedResendFrom(env('RESEND_FROM'))
-    const replyTo = env('RESEND_REPLY_TO')
-
-    const sent = await resend.emails.send({
-      from,
+    const { messageId } = await sendResendEmail({
       to,
-      ...(replyTo ? { replyTo } : {}),
       subject,
       text: lines.join('\n'),
     })
-
-    const messageId = String((sent as unknown as { id?: unknown })?.id || '').trim()
-    if (!messageId) throw new Error('Resend returned no message id')
 
     await prisma.order.update({
       where: { id: orderId },
@@ -240,4 +212,3 @@ export async function sendNewOrderEmail(args: {
     return { ok: false, status: 'failed', error }
   }
 }
-

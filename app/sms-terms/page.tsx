@@ -29,9 +29,20 @@ export default function SmsTermsPage() {
         <section className="mt-6 space-y-3 text-sm leading-6 text-neutral-200">
           <h2 className="text-lg font-semibold text-white">Marketing and Retention Messages</h2>
           <p>
-            Marketing or retention SMS messages (for example review requests, promotions, or holiday reminders)
-            are only sent if you separately opt in to marketing SMS. Order-status opt-in does not authorize
-            marketing messaging.
+            If you opt in at checkout, you may receive marketing or retention messages by email and,
+            when you provide a phone number, by SMS (for example review requests, promotions, or holiday
+            reminders). Order-status SMS opt-in does not authorize marketing messaging.
+          </p>
+          <p>
+            Marketing emails include an unsubscribe link. For SMS, reply STOP to opt out or HELP for help.
+          </p>
+        </section>
+
+        <section className="mt-6 space-y-3 text-sm leading-6 text-neutral-200">
+          <h2 className="text-lg font-semibold text-white">Ready-for-Pickup Email</h2>
+          <p>
+            When your order is marked ready, we may email the address you provided at checkout even if you
+            did not opt in to marketing messages. This is a transactional notice about your order.
           </p>
         </section>
 

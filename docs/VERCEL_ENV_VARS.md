@@ -77,18 +77,19 @@ curl -s -H "X-Admin-Token: $ADMIN_TOKEN" \
 
 ## Email (Resend) (Optional)
 
-Used for **staff "new order" email notifications** (sent when a paid order is confirmed).
+Used for staff new-order alerts, customer ready-for-pickup email, retention/holiday email (cron), and catering inquiries (SMTP fallback if Resend fails).
 
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `RESEND_API_KEY` | Resend API key | `re_...` |
-| `RESEND_FROM` | Verified sender email at your verified domain | `orders@platehaven.com` |
+| `RESEND_FROM` | Verified sender email at your verified domain | `orders@platehaven.app` |
 | `RESEND_REPLY_TO` | Optional reply-to | `owner@yourdomain.com` |
 
 **Notes:**
 - `RESEND_FROM` must be a **verified sender** in Resend (domain or single sender).
-- If you provide domain-only (e.g. `platehaven.com`), the app auto-normalizes to `orders@platehaven.com`.
-- Per-tenant recipients are configured in Admin → Menu → **New order email notifications** (stored in `Tenant.settings.notifications.newOrderEmails`).
+- If you provide domain-only (e.g. `platehaven.app`), the app auto-normalizes to `orders@platehaven.app`.
+- Staff recipients: Admin → Menu → **New order email notifications** (`Tenant.settings.notifications.newOrderEmails`).
+- Retention copy: Admin → Menu → **Retention email & SMS** (`Tenant.settings.messaging.retention`).
 
 ---
 
@@ -101,9 +102,9 @@ Used for **staff "new order" email notifications** (sent when a paid order is co
 | `TWILIO_API_KEY_SECRET` | Twilio API key secret | `...` |
 | `TWILIO_MESSAGING_SERVICE_SID` | Messaging Service SID | `MG...` |
 | `TWILIO_AUTH_TOKEN` | Auth token used to verify inbound webhook signatures | `...` |
-| `CRON_SECRET` | Bearer token for retention cron endpoint | `random-long-secret` |
+| `CRON_SECRET` | Bearer token for retention cron (email + SMS) | `random-long-secret` |
 
-Retention automation endpoint: `POST /api/cron/retention-sms` with header `Authorization: Bearer $CRON_SECRET`.
+Retention cron (Vercel schedule in `vercel.json`): `GET /api/cron/retention` with header `Authorization: Bearer $CRON_SECRET`. Legacy alias: `POST /api/cron/retention-sms`.
 
 ---
 

@@ -1,4 +1,4 @@
-import { computePickupCode } from '@/lib/orders/pickupCode'
+import { buildReadyMessage } from '@/lib/notifications/email-copy'
 import { prisma } from '@/lib/prisma'
 
 function env(name: string): string {
@@ -39,14 +39,8 @@ export type ReadySmsContext = {
 }
 
 export function buildReadySmsBody(ctx: ReadySmsContext): string {
-  const tenant = (ctx.tenantName || 'this business').trim()
-  if (ctx.isDineIn) {
-    const table = (ctx.tableNumber || '').trim()
-    const where = table ? ` for table ${table}` : ''
-    return `Your order from ${tenant} is ready${where}. Reply STOP to opt out, HELP for help.`
-  }
-  const code = computePickupCode(ctx.orderId)
-  return `Your order from ${tenant} is ready for pickup. Pickup code: ${code}. Reply STOP to opt out, HELP for help.`
+  const base = buildReadyMessage(ctx)
+  return `${base} Reply STOP to opt out, HELP for help.`
 }
 
 type TwilioMessageCreateResponse = {

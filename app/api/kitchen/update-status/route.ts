@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { sendTwilioReadySms, twilioConfigured } from '@/lib/notifications/twilio'
+import { maybeSendReadyNotifications } from '@/lib/notifications/ready-notifications'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -48,117 +48,6 @@ function isAuthorized(req: NextRequest, tenantSlug: string, settings: unknown): 
   return provided === pin
 }
 
-type SmsResult =
-  | { status: 'disabled' }
-  | { status: 'skipped'; reason: 'not_opted_in' | 'missing_phone' | 'already_sent' | 'not_ready' | 'not_found' }
-  | { status: 'queued'; sid: string; twilioStatus: string }
-  | { status: 'failed'; error: string }
-
-function safeErr(e: unknown): string {
-  let msg = (e instanceof Error ? e.message : String(e || '')).trim()
-  msg = msg.replace(/\+?\d{10,15}/g, '[REDACTED_PHONE]')
-  return msg.length > 220 ? `${msg.slice(0, 220)}…` : (msg || 'unknown_error')
-}
-
-async function maybeSendReadySms(args: { tenantId: string; tenantName: string; orderId: string }): Promise<SmsResult> {
-  if (!twilioConfigured()) return { status: 'disabled' }
-  try {
-    type SmsOrderRow = {
-      id: string
-      tenantId: string
-      status: string
-      smsOptIn: boolean
-      readySmsSentAt: Date | null
-      customerPhone: string | null
-      tableNumber: string | null
-    }
-    let o: SmsOrderRow | null = null
-
-    try {
-      o = await prisma.order.findUnique({
-        where: { id: args.orderId },
-        select: {
-          id: true,
-          tenantId: true,
-          status: true,
-          smsOptIn: true,
-          readySmsSentAt: true,
-          customerPhone: true,
-          tableNumber: true,
-        },
-      }) as unknown as SmsOrderRow | null
-    } catch (e) {
-      const code = (e as { code?: string } | null)?.code
-      const msg = safeErr(e)
-      if (code === 'P2022' || msg.toLowerCase().includes('does not exist')) {
-        console.error('[sms] DB schema missing SMS columns', { orderId: args.orderId, tenantId: args.tenantId, msg })
-        return { status: 'failed', error: 'SMS database migration not applied yet' }
-      }
-      console.error('[sms] Failed to load order for SMS', { orderId: args.orderId, tenantId: args.tenantId, msg })
-      return { status: 'failed', error: msg }
-    }
-
-    if (!o || o.tenantId !== args.tenantId) return { status: 'skipped', reason: 'not_found' }
-    if (o.status !== 'READY') return { status: 'skipped', reason: 'not_ready' }
-    if (!o.smsOptIn) return { status: 'skipped', reason: 'not_opted_in' }
-    if (!o.customerPhone) return { status: 'skipped', reason: 'missing_phone' }
-    if (o.readySmsSentAt) return { status: 'skipped', reason: 'already_sent' }
-
-    const claimed = await prisma.order.updateMany({
-      where: {
-        id: args.orderId,
-        tenantId: args.tenantId,
-        status: 'READY',
-        smsOptIn: true,
-        readySmsSentAt: null,
-        customerPhone: { not: null },
-      },
-      data: { readySmsSentAt: new Date() },
-    })
-    if (claimed.count !== 1) return { status: 'skipped', reason: 'already_sent' }
-
-    await prisma.order.update({
-      where: { id: o.id },
-      data: {
-        twilioReadyAttemptCount: { increment: 1 },
-        twilioReadyLastAttemptAt: new Date(),
-        twilioReadyTo: o.customerPhone,
-      },
-    }).catch(() => {})
-
-    const isDineIn = Boolean((o.tableNumber || '').trim())
-    try {
-      const sent = await sendTwilioReadySms({
-        tenantId: args.tenantId,
-        tenantName: args.tenantName,
-        orderId: o.id,
-        toPhone: o.customerPhone || '',
-        isDineIn,
-        tableNumber: o.tableNumber,
-      })
-      await prisma.order.update({ where: { id: o.id }, data: { twilioReadyMessageSid: sent.sid, twilioReadyStatus: sent.status, twilioReadyTo: o.customerPhone } })
-      return { status: 'queued', sid: sent.sid, twilioStatus: sent.status }
-    } catch (e) {
-      const msg = safeErr(e)
-      console.error('[sms] Twilio send failed', { orderId: o.id, tenantId: args.tenantId, msg })
-      await prisma.order.update({
-        where: { id: o.id },
-        data: {
-          readySmsSentAt: null,
-          twilioReadyMessageSid: null,
-          twilioReadyStatus: 'failed',
-          twilioReadyErrorMessage: msg,
-        },
-      }).catch(() => {})
-      return { status: 'failed', error: msg }
-    }
-  } catch (e) {
-    const msg = safeErr(e)
-    console.error('[sms] Unexpected SMS error', { orderId: args.orderId, tenantId: args.tenantId, msg })
-    return { status: 'failed', error: msg }
-  }
-}
-
 export async function GET(req: NextRequest) {
   try {
     if (!process.env.DATABASE_URL) {
@@ -197,12 +86,20 @@ export async function GET(req: NextRequest) {
     })
 
     if (updated.status === 'READY') {
-      const sms = await maybeSendReadySms({ tenantId: t.id, tenantName: t.name || tenant, orderId: updated.id })
-      return NextResponse.json({ ok: true, order: updated, sms }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
+      const notifications = await maybeSendReadyNotifications({
+        tenantId: t.id,
+        tenantName: t.name || tenant,
+        orderId: updated.id,
+      })
+      return NextResponse.json({
+        ok: true,
+        order: updated,
+        sms: notifications.sms,
+        email: notifications.email,
+      }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
     }
     return NextResponse.json({ ok: true, order: updated }, { status: 200, headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {
     return NextResponse.json({ ok: false, error: (e as Error)?.message || 'Kitchen update error' }, { status: 500 })
   }
 }
-

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { sendTwilioReadySms, twilioConfigured } from '@/lib/notifications/twilio'
+import { maybeSendReadyNotifications } from '@/lib/notifications/ready-notifications'
+import { resendConfigured } from '@/lib/notifications/resend-client'
+import { twilioConfigured } from '@/lib/notifications/twilio'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -35,19 +37,13 @@ function isAuthorized(req: NextRequest, tenantSlug: string, settings: unknown): 
   return provided === pin
 }
 
-function safeErr(e: unknown): string {
-  let msg = (e instanceof Error ? e.message : String(e || '')).trim()
-  msg = msg.replace(/\+?\d{10,15}/g, '[REDACTED_PHONE]')
-  return msg.length > 220 ? `${msg.slice(0, 220)}…` : (msg || 'unknown_error')
-}
-
 export async function POST(req: NextRequest) {
   try {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json({ ok: false, error: 'DATABASE_URL required' }, { status: 501 })
     }
-    if (!twilioConfigured()) {
-      return NextResponse.json({ ok: false, error: 'Twilio not configured' }, { status: 501 })
+    if (!twilioConfigured() && !resendConfigured()) {
+      return NextResponse.json({ ok: false, error: 'Notifications not configured' }, { status: 501 })
     }
 
     const { searchParams } = new URL(req.url)
@@ -68,93 +64,44 @@ export async function POST(req: NextRequest) {
         id: true,
         tenantId: true,
         status: true,
-        smsOptIn: true,
-        customerPhone: true,
-        tableNumber: true,
-        twilioReadyAttemptCount: true,
-        twilioReadyLastAttemptAt: true,
+        customerEmail: true,
+        readyEmailSentAt: true,
+        readySmsSentAt: true,
       },
     })
     if (!order) return NextResponse.json({ ok: false, error: 'Order not found' }, { status: 404 })
     if (order.tenantId !== t.id) return NextResponse.json({ ok: false, error: 'Forbidden' }, { status: 403 })
-    if (String(order.status).toUpperCase() !== 'READY') return NextResponse.json({ ok: false, error: 'Order is not READY' }, { status: 409 })
-    if (!order.smsOptIn) return NextResponse.json({ ok: false, error: 'Customer did not opt in' }, { status: 409 })
-    if (!order.customerPhone) return NextResponse.json({ ok: false, error: 'Missing customer phone' }, { status: 409 })
-
-    const attempts = Number(order.twilioReadyAttemptCount || 0)
-    if (attempts >= 3) {
-      return NextResponse.json({ ok: false, error: 'Retry limit reached' }, { status: 429 })
-    }
-    const lastAt = order.twilioReadyLastAttemptAt ? new Date(order.twilioReadyLastAttemptAt).getTime() : 0
-    if (lastAt && Date.now() - lastAt < 60_000) {
-      return NextResponse.json({ ok: false, error: 'Please wait a moment before retrying' }, { status: 429 })
+    if (String(order.status).toUpperCase() !== 'READY') {
+      return NextResponse.json({ ok: false, error: 'Order is not READY' }, { status: 409 })
     }
 
-    // Clear prior claim so the send can be retried.
     await prisma.order.update({
       where: { id: order.id },
       data: {
         readySmsSentAt: null,
+        readyEmailSentAt: null,
         twilioReadyMessageSid: null,
         twilioReadyStatus: null,
         twilioReadyErrorCode: null,
         twilioReadyErrorMessage: null,
+        readyEmailLastError: null,
         twilioReadyAttemptCount: { increment: 1 },
         twilioReadyLastAttemptAt: new Date(),
-        twilioReadyTo: order.customerPhone,
       },
     })
 
-    // Claim send (idempotent) and send
-    const claimed = await prisma.order.updateMany({
-      where: {
-        id: order.id,
-        tenantId: t.id,
-        status: 'READY',
-        smsOptIn: true,
-        readySmsSentAt: null,
-        customerPhone: { not: null },
-      },
-      data: { readySmsSentAt: new Date() },
+    const notifications = await maybeSendReadyNotifications({
+      tenantId: t.id,
+      tenantName: t.name || tenant,
+      orderId: order.id,
     })
-    if (claimed.count !== 1) {
-      return NextResponse.json({ ok: true, sms: { status: 'skipped', reason: 'already_sent' } }, { status: 200 })
-    }
 
-    const isDineIn = Boolean((order.tableNumber || '').trim())
-    try {
-      const sent = await sendTwilioReadySms({
-        tenantId: t.id,
-        tenantName: t.name || tenant,
-        orderId: order.id,
-        toPhone: order.customerPhone || '',
-        isDineIn,
-        tableNumber: order.tableNumber,
-      })
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          twilioReadyMessageSid: sent.sid,
-          twilioReadyStatus: sent.status,
-          twilioReadyTo: order.customerPhone,
-        },
-      })
-      return NextResponse.json({ ok: true, sms: { status: 'queued', sid: sent.sid, twilioStatus: sent.status } }, { status: 200 })
-    } catch (e) {
-      const msg = safeErr(e)
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          readySmsSentAt: null,
-          twilioReadyMessageSid: null,
-          twilioReadyStatus: 'failed',
-          twilioReadyErrorMessage: msg,
-        },
-      }).catch(() => {})
-      return NextResponse.json({ ok: false, error: msg }, { status: 502 })
-    }
+    return NextResponse.json({
+      ok: true,
+      sms: notifications.sms,
+      email: notifications.email,
+    }, { status: 200 })
   } catch (e) {
-    return NextResponse.json({ ok: false, error: (e as Error)?.message || 'Retry SMS error' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: (e as Error)?.message || 'Retry notifications error' }, { status: 500 })
   }
 }
-

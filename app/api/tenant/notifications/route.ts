@@ -24,20 +24,61 @@ function parseEmailsOrThrow(raw: unknown): string[] {
   return emails
 }
 
-function notificationsFromSettings(settings: unknown): { newOrderEmails: string[] } {
+function strField(obj: Record<string, unknown>, key: string): string {
+  return typeof obj[key] === 'string' ? String(obj[key]).trim() : ''
+}
+
+function notificationsFromSettings(settings: unknown): {
+  newOrderEmails: string[]
+  retention: {
+    enabled: boolean
+    reviewUrl: string
+    reviewSubject: string
+    reviewBody: string
+    followupD21Body: string
+    followupD45Body: string
+    holidayThanksgiving: string
+    holidayWinter: string
+    holidaySummer: string
+  }
+} {
   const s = (settings && typeof settings === 'object') ? (settings as Record<string, unknown>) : {}
   const notifications = (s.notifications && typeof s.notifications === 'object') ? (s.notifications as Record<string, unknown>) : {}
+  const messaging = (s.messaging && typeof s.messaging === 'object') ? (s.messaging as Record<string, unknown>) : {}
+  const retention = (messaging.retention && typeof messaging.retention === 'object') ? (messaging.retention as Record<string, unknown>) : {}
   const raw = notifications.newOrderEmails
   const list =
     Array.isArray(raw)
       ? raw.map(v => String(v || '').trim()).filter(Boolean)
       : (typeof raw === 'string' ? normalizeEmails(raw) : [])
-  return { newOrderEmails: list }
+  return {
+    newOrderEmails: list,
+    retention: {
+      enabled: retention.enabled !== false,
+      reviewUrl: strField(retention, 'reviewUrl'),
+      reviewSubject: strField(retention, 'reviewSubject'),
+      reviewBody: strField(retention, 'reviewBody'),
+      followupD21Body: strField(retention, 'followupD21Body'),
+      followupD45Body: strField(retention, 'followupD45Body'),
+      holidayThanksgiving: strField(retention, 'holidayThanksgiving'),
+      holidayWinter: strField(retention, 'holidayWinter'),
+      holidaySummer: strField(retention, 'holidaySummer'),
+    },
+  }
 }
 
 const PostBody = z.object({
   tenant: z.string().min(1),
   newOrderEmails: z.string().max(2000).optional().default(''),
+  retentionEnabled: z.boolean().optional(),
+  reviewUrl: z.string().max(500).optional().default(''),
+  reviewSubject: z.string().max(200).optional().default(''),
+  reviewBody: z.string().max(2000).optional().default(''),
+  followupD21Body: z.string().max(2000).optional().default(''),
+  followupD45Body: z.string().max(2000).optional().default(''),
+  holidayThanksgiving: z.string().max(500).optional().default(''),
+  holidayWinter: z.string().max(500).optional().default(''),
+  holidaySummer: z.string().max(500).optional().default(''),
 })
 
 export async function GET(req: NextRequest) {
@@ -100,11 +141,33 @@ export async function POST(req: NextRequest) {
     const currentNotifs = (currentSettings.notifications && typeof currentSettings.notifications === 'object')
       ? (currentSettings.notifications as Record<string, unknown>)
       : {}
+    const currentMessaging = (currentSettings.messaging && typeof currentSettings.messaging === 'object')
+      ? (currentSettings.messaging as Record<string, unknown>)
+      : {}
+    const currentRetention = (currentMessaging.retention && typeof currentMessaging.retention === 'object')
+      ? (currentMessaging.retention as Record<string, unknown>)
+      : {}
+
+    const retentionPatch: Record<string, unknown> = { ...currentRetention }
+    if (parsed.data.retentionEnabled !== undefined) retentionPatch.enabled = parsed.data.retentionEnabled
+    if (parsed.data.reviewUrl !== undefined) retentionPatch.reviewUrl = parsed.data.reviewUrl.trim()
+    if (parsed.data.reviewSubject !== undefined) retentionPatch.reviewSubject = parsed.data.reviewSubject.trim()
+    if (parsed.data.reviewBody !== undefined) retentionPatch.reviewBody = parsed.data.reviewBody.trim()
+    if (parsed.data.followupD21Body !== undefined) retentionPatch.followupD21Body = parsed.data.followupD21Body.trim()
+    if (parsed.data.followupD45Body !== undefined) retentionPatch.followupD45Body = parsed.data.followupD45Body.trim()
+    if (parsed.data.holidayThanksgiving !== undefined) retentionPatch.holidayThanksgiving = parsed.data.holidayThanksgiving.trim()
+    if (parsed.data.holidayWinter !== undefined) retentionPatch.holidayWinter = parsed.data.holidayWinter.trim()
+    if (parsed.data.holidaySummer !== undefined) retentionPatch.holidaySummer = parsed.data.holidaySummer.trim()
+
     const nextSettings = {
       ...currentSettings,
       notifications: {
         ...currentNotifs,
         newOrderEmails: nextEmails,
+      },
+      messaging: {
+        ...currentMessaging,
+        retention: retentionPatch,
       },
     }
 
@@ -114,7 +177,8 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     })
 
-    return NextResponse.json({ ok: true, tenant: requestedTenant, notifications: { newOrderEmails: nextEmails } }, { status: 200 })
+    const notifs = notificationsFromSettings(nextSettings)
+    return NextResponse.json({ ok: true, tenant: requestedTenant, notifications: notifs }, { status: 200 })
   } catch (e) {
     const msg = (e as Error)?.message || 'Notifications save error'
     return NextResponse.json({ ok: false, error: msg }, { status: 500 })

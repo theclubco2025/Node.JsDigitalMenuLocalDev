@@ -83,7 +83,7 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>Communications:</strong> Send transactional emails (order confirmations, 
-              receipts) and optional SMS notifications when opted in.
+              receipts, ready-for-pickup notices), optional marketing/retention emails and SMS when opted in.
             </li>
             <li>
               <strong>Analytics:</strong> Provide restaurant clients with order analytics and 
@@ -113,6 +113,7 @@ export default function PrivacyPage() {
               <strong>Service Providers:</strong> We use third-party providers for:
               <ul>
                 <li>Payment processing (Stripe)</li>
+                <li>Email delivery (Resend)</li>
                 <li>SMS notifications (Twilio, when enabled)</li>
                 <li>Cloud hosting and infrastructure (Vercel, Neon)</li>
                 <li>AI services (OpenAI)</li>
@@ -200,20 +201,26 @@ export default function PrivacyPage() {
             <li>SMS is provided through Twilio. See Twilio&apos;s privacy policy for details.</li>
           </ul>
           <p>
-            Marketing or retention SMS messages, such as review requests, holiday
-            reminders, promotions, or similar non-transactional messages, are sent only
-            if you separately opt in to receive marketing SMS from the business. An
-            order-ready or order-status SMS opt-in does not authorize marketing or
-            retention SMS messages.
+            Marketing or retention messages (email and/or SMS), such as review requests, holiday
+            reminders, or promotions, are sent only if you separately opt in at checkout. An
+            order-status SMS opt-in does not authorize marketing or retention messages.
           </p>
 
-          <h2 className="text-lg font-semibold">7. Cookies and Tracking</h2>
+          <h2 className="text-lg font-semibold">7. Email Communications</h2>
+          <p>
+            We send transactional emails about your order (for example receipts and ready-for-pickup
+            notices) to the email address you provide at checkout. Marketing or retention emails are
+            sent only if you opt in separately at checkout. You can unsubscribe from marketing emails
+            using the link in each message.
+          </p>
+
+          <h2 className="text-lg font-semibold">8. Cookies and Tracking</h2>
           <p>
             We use essential cookies for authentication and session management. We do not use 
             third-party advertising cookies or tracking pixels for advertising purposes.
           </p>
 
-          <h2 className="text-lg font-semibold">8. Security</h2>
+          <h2 className="text-lg font-semibold">9. Security</h2>
           <p>
             We implement industry-standard security measures including:
           </p>
@@ -228,28 +235,28 @@ export default function PrivacyPage() {
             absolute security.
           </p>
 
-          <h2 className="text-lg font-semibold">9. Children&apos;s Privacy</h2>
+          <h2 className="text-lg font-semibold">10. Children&apos;s Privacy</h2>
           <p>
             The Service is not directed to children under 13. We do not knowingly collect 
             personal information from children under 13. If you believe we have collected 
             information from a child under 13, please contact us immediately.
           </p>
 
-          <h2 className="text-lg font-semibold">10. International Users</h2>
+          <h2 className="text-lg font-semibold">11. International Users</h2>
           <p>
             The Service is operated from the United States. If you access the Service from 
             outside the U.S., your information will be transferred to and processed in the 
             United States.
           </p>
 
-          <h2 className="text-lg font-semibold">11. Changes to This Policy</h2>
+          <h2 className="text-lg font-semibold">12. Changes to This Policy</h2>
           <p>
             We may update this Privacy Policy from time to time. We will notify restaurant 
             clients of material changes via email. The &ldquo;Effective Date&rdquo; at the top indicates 
             when this policy was last revised.
           </p>
 
-          <h2 className="text-lg font-semibold">12. Contact Us</h2>
+          <h2 className="text-lg font-semibold">13. Contact Us</h2>
           <p>
             For privacy-related questions or to exercise your rights:
           </p>
