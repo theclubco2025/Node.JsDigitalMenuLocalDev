@@ -34,7 +34,10 @@ export default function Landing() {
               className="h-10 w-auto object-contain"
             />
           </a>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4 md:gap-8">
+            <span className="hidden sm:inline text-xs font-semibold uppercase tracking-wider text-[#C9A227] border border-[#C9A227]/40 rounded px-2 py-1">
+              Pilot
+            </span>
             <a href="#how-it-works" className="hidden md:inline text-sm text-white/50 hover:text-white transition-colors">
               How It Works
             </a>
@@ -63,6 +66,9 @@ export default function Landing() {
           </p>
           <p className="text-sm text-white/40 max-w-xl mx-auto mb-8 leading-relaxed">
             Your menu should not just display food. It should sell it, capture the customer, and bring them back.
+          </p>
+          <p className="text-sm font-medium text-[#C9A227]/90 mb-6">
+            Now onboarding pilot restaurants
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/50 mb-10">
             <span>Customers browse faster.</span>
@@ -274,8 +280,8 @@ export default function Landing() {
             Ready to turn your menu into a growth system?
           </h2>
           <p className="text-white/50 mb-8 max-w-lg mx-auto leading-relaxed">
-            We set up your branded ordering flow, load your menu, structure your add-ons, and give your customers a cleaner way to order directly.
-            You test it with real customers. If it helps, you keep it. If it does not, you do not.
+            Join the pilot — we set up your branded ordering flow, load your menu, and structure your add-ons at no cost while we onboard the first restaurants.
+            You use it with real customers and share feedback. If it helps, you keep it. Pricing comes later if you want to stay on.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
@@ -290,10 +296,12 @@ export default function Landing() {
               rel="noreferrer"
               className="w-full sm:w-auto border border-white/15 px-8 py-4 text-base font-medium text-white/80 hover:text-white hover:border-white/30 transition-colors rounded"
             >
-              Get Setup
+              Join the Pilot
             </a>
           </div>
-          <p className="mt-6 text-sm text-white/30">Free setup. $50/month if you keep it.</p>
+          <p className="mt-6 text-sm text-white/30 max-w-md mx-auto leading-relaxed">
+            Pilot program — free while we onboard the first restaurants. We set it up; you use it with real customers and share feedback. Pricing comes later if you want to keep it.
+          </p>
         </div>
       </section>
 

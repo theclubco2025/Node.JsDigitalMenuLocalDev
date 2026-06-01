@@ -95,6 +95,8 @@ Used for staff new-order alerts, customer ready-for-pickup email, retention/holi
 
 ## Twilio (Order SMS + inbound STOP/HELP)
 
+**Pilot default:** leave SMS disabled; all customer notifications use Resend email until Twilio toll-free verification and keys are ready.
+
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `TWILIO_ACCOUNT_SID` | Twilio account SID | `AC...` |
@@ -102,7 +104,11 @@ Used for staff new-order alerts, customer ready-for-pickup email, retention/holi
 | `TWILIO_API_KEY_SECRET` | Twilio API key secret | `...` |
 | `TWILIO_MESSAGING_SERVICE_SID` | Messaging Service SID | `MG...` |
 | `TWILIO_AUTH_TOKEN` | Auth token used to verify inbound webhook signatures | `...` |
+| `TWILIO_SMS_ENABLED` | Set to `true` to send SMS (ready, retention). Unset/`false` = email-only | `true` |
+| `NEXT_PUBLIC_TWILIO_SMS_ENABLED` | Set to `true` to show SMS opt-in at checkout | `true` |
 | `CRON_SECRET` | Bearer token for retention cron (email + SMS) | `random-long-secret` |
+
+When going live on SMS, set **both** `TWILIO_SMS_ENABLED` and `NEXT_PUBLIC_TWILIO_SMS_ENABLED` to `true` and redeploy.
 
 Retention cron (Vercel schedule in `vercel.json`): `GET /api/cron/retention` with header `Authorization: Bearer $CRON_SECRET`. Legacy alias: `POST /api/cron/retention-sms`.
 

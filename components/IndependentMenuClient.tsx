@@ -6,6 +6,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
+import { smsCheckoutUiEnabled } from '@/lib/notifications/sms-ui-enabled'
 
 type TenantStyleFlags = {
   flags?: Record<string, boolean>
@@ -549,7 +550,7 @@ export default function MenuClient() {
         setToast('Email is required for your receipt.')
         return
       }
-      if (orderingEnabled && smsOptIn && !customerPhone.trim()) {
+      if (orderingEnabled && smsCheckoutUiEnabled && smsOptIn && !customerPhone.trim()) {
         setToast('Please add a phone number to receive SMS updates.')
         return
       }
@@ -1683,23 +1684,25 @@ export default function MenuClient() {
                         />
                       </div>
 
-                      <label className="mt-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
-                        <input
-                          type="checkbox"
-                          className="mt-1 h-4 w-4"
-                          checked={smsOptIn}
-                          onChange={(e) => setSmsOptIn(e.target.checked)}
-                        />
-                        <div className="min-w-0">
-                          <div className="text-sm font-semibold text-black">
-                            By checking this box, you agree to receive SMS/text messages from <span className="underline">{brandName}</span> (the business you are ordering from) about this order, including order confirmations, status updates, and pickup/ready alerts.
+                      {smsCheckoutUiEnabled && (
+                        <label className="mt-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                          <input
+                            type="checkbox"
+                            className="mt-1 h-4 w-4"
+                            checked={smsOptIn}
+                            onChange={(e) => setSmsOptIn(e.target.checked)}
+                          />
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-black">
+                              By checking this box, you agree to receive SMS/text messages from <span className="underline">{brandName}</span> (the business you are ordering from) about this order, including order confirmations, status updates, and pickup/ready alerts.
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Consent is optional and not required to purchase. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help. See our <a href="/sms-terms" className="underline">SMS Terms</a>.
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-600">
-                            Consent is optional and not required to purchase. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help. See our <a href="/sms-terms" className="underline">SMS Terms</a>.
-                          </div>
-                        </div>
-                      </label>
-                      <label className="mt-3 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                        </label>
+                      )}
+                      <label className={`flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 ${smsCheckoutUiEnabled ? 'mt-3' : 'mt-4'}`}>
                         <input
                           type="checkbox"
                           className="mt-1 h-4 w-4"
@@ -1708,14 +1711,22 @@ export default function MenuClient() {
                         />
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-black">
-                            Optional: I agree to receive recurring marketing and retention messages from {brandName} by email and, if I provided a phone number, by SMS — including review requests and occasional promotions.
+                            {smsCheckoutUiEnabled ? (
+                              <>Optional: I agree to receive recurring marketing and retention messages from {brandName} by email and, if I provided a phone number, by SMS — including review requests and occasional promotions.</>
+                            ) : (
+                              <>Optional: I agree to receive recurring marketing and retention emails from {brandName}, including review requests and occasional promotions.</>
+                            )}
                           </div>
                           <div className="text-xs text-gray-600">
-                            Separate from order-status SMS. Consent is optional. Email unsubscribe links are included in marketing emails. For SMS: message frequency varies; msg &amp; data rates may apply; reply STOP to opt out or HELP for help.
+                            {smsCheckoutUiEnabled ? (
+                              <>Separate from order-status SMS. Consent is optional. Email unsubscribe links are included in marketing emails. For SMS: message frequency varies; msg &amp; data rates may apply; reply STOP to opt out or HELP for help.</>
+                            ) : (
+                              <>Consent is optional. Unsubscribe links are included in each email.</>
+                            )}
                           </div>
                         </div>
                       </label>
-                      {smsOptIn && !customerPhone.trim() && (
+                      {smsCheckoutUiEnabled && smsOptIn && !customerPhone.trim() && (
                         <div className="mt-2 text-sm font-semibold text-amber-700">
                           Please add a phone number to receive order-status SMS.
                         </div>
@@ -1864,7 +1875,7 @@ export default function MenuClient() {
                     }}
                     className="rounded-2xl px-5 py-3 text-sm font-extrabold shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)', color: '#0b0b0b' }}
-                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
+                    disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsCheckoutUiEnabled && smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim())))}
                   >
                     {orderingEnabled ? 'Place order' : 'Proceed with Plate'}
                   </button>

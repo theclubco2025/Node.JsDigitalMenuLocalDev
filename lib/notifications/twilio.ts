@@ -14,6 +14,11 @@ export function twilioConfigured(): boolean {
   )
 }
 
+/** SMS sends only when credentials exist and TWILIO_SMS_ENABLED=true (pilot default: email-only). */
+export function smsNotificationsEnabled(): boolean {
+  return twilioConfigured() && env('TWILIO_SMS_ENABLED') === 'true'
+}
+
 function toE164(raw: string): string | null {
   const s = String(raw || '').trim()
   if (!s) return null

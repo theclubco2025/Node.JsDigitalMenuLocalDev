@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { resendConfigured } from '@/lib/notifications/resend'
-import { pingTwilioAccount, twilioConfigured } from '@/lib/notifications/twilio'
+import { pingTwilioAccount, smsNotificationsEnabled, twilioConfigured } from '@/lib/notifications/twilio'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -51,6 +51,7 @@ export async function GET(req: NextRequest) {
     dbError,
     resendConfigured: resendOk,
     twilioConfigured: twilioOk,
+    twilioSmsEnabled: smsNotificationsEnabled(),
     twilioReachable,
     twilioError,
   }, { status: 200, headers: { 'Cache-Control': 'no-store' } })

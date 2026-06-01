@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma'
-import { sendTwilioSms, twilioConfigured } from '@/lib/notifications/twilio'
+import { sendTwilioSms, smsNotificationsEnabled } from '@/lib/notifications/twilio'
 
 type Campaign = {
   key: string
@@ -69,8 +69,8 @@ type Candidate = {
 }
 
 export async function runRetentionSmsCron(now: Date = new Date()) {
-  if (!twilioConfigured()) {
-    return { ok: true, skipped: 'twilio_not_configured', scanned: 0, queued: 0, sent: 0, failed: 0 }
+  if (!smsNotificationsEnabled()) {
+    return { ok: true, skipped: 'sms_not_enabled', scanned: 0, queued: 0, sent: 0, failed: 0 }
   }
 
   const since = new Date(now.getTime() - 120 * 86_400_000)

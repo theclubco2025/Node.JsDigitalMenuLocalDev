@@ -1,5 +1,5 @@
 import { sendReadyOrderEmail } from '@/lib/notifications/resend-ready'
-import { sendTwilioReadySms, twilioConfigured } from '@/lib/notifications/twilio'
+import { sendTwilioReadySms, smsNotificationsEnabled } from '@/lib/notifications/twilio'
 import { prisma } from '@/lib/prisma'
 
 export type ReadySmsResult =
@@ -21,7 +21,7 @@ function safeErr(e: unknown): string {
 }
 
 async function maybeSendReadySms(args: { tenantId: string; tenantName: string; orderId: string }): Promise<ReadySmsResult> {
-  if (!twilioConfigured()) return { status: 'disabled' }
+  if (!smsNotificationsEnabled()) return { status: 'disabled' }
   try {
     type SmsOrderRow = {
       id: string
