@@ -136,6 +136,7 @@ export function middleware(request: NextRequest) {
       'terms',
       'privacy',
       'sms-terms',
+      'compliance',
       'favicon.ico',
       'robots.txt',
       'sitemap.xml',

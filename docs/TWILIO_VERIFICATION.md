@@ -2,91 +2,107 @@
 
 Verification SID: `HH7f6dd047ffc3ae9c79542db7a0ce14a7`  
 Number: `+1 (844) 524-1711`  
-**Last API status:** `PENDING_REVIEW` (opt-in URLs and sample message updated; **30484 business name still needs your manual fix**)
+Account SID: see Twilio Console (do not commit full SID)  
+**Status:** `REJECTED` (May 25, 2026 — resubmit after checklist below; **do not submit until legal name + evidence are ready**)
 
-## Current rejection codes (fix all 3)
+## Rejection codes (fix all 3)
 
 | Code | Meaning | Fix |
 |------|---------|-----|
-| **30484** | Business name must match official records | Use exact legal name from EIN/SOS filing (not nickname). If sole prop uses DBA, set legal name + `Doing Business As` correctly in Twilio. |
-| **30506** | Opt-in must clearly reflect the **end business** | Customer must opt in to messages from the restaurant they ordered from (tenant name), not PlateHaven as sender. |
-| **30513** | Opt-in consent language/evidence insufficient | Public opt-in page + checkout screenshot with unchecked box and full SMS disclosure. |
+| **30484** | Business name must match official records | Legal name + EIN must match IRS/state records exactly. DBA `PlateHaven` only if filed. |
+| **30506** | Opt-in must reflect the **end business** | Evidence must show restaurant name (not PlateHaven as SMS sender). |
+| **30513** | Opt-in consent / public proof insufficient | Public opt-in page + screenshots: unchecked boxes, full disclosure, phone field. |
 
-## What PlateHaven is (important for reviewers)
+## What PlateHaven is (for reviewers)
 
 PlateHaven is the **technology layer**. The **end business** is each restaurant/operator on the platform.
 
-- Transactional SMS sender identity in messages: **{Restaurant Name}**
-- PlateHaven should appear only as optional platform context in policy pages, not as primary SMS sender in opt-in or sample messages.
+- SMS body and opt-in name the **restaurant the customer ordered from**
+- PlateHaven appears only as platform context in policy pages
 
 ---
 
-## 30484 — Business name fix (you must do this manually)
+## 30484 — Business name (YOU fix in Twilio Console)
 
-In Twilio TFV form, set:
+In **Twilio Console → Messaging → Toll-Free Verification** (edit `HH7f6dd047ffc3ae9c79542db7a0ce14a7`) and **Trust Hub**:
 
-- **Business legal name**: exact match to government/EIN records
-- **Doing Business As (DBA)**: `PlateHaven` (only if filed/used on official records)
-- **Business type**: match your filing (`SOLE_PROPRIETOR`, LLC, etc.)
-- **Address/phone/email**: match compliance profile
+| Field | What to enter |
+|-------|----------------|
+| **Legal business name** | Exact name on EIN letter / state registration (not nickname) |
+| **DBA** | `PlateHaven` only if you have a filed fictitious-name/DBA on that EIN |
+| **Business type** | Match filing (`SOLE_PROPRIETOR`, `LLC`, etc.) |
+| **EIN / registration number** | Full 9-digit EIN (was empty — triggers 30484) |
+| **Address / phone / email** | Match Trust Hub / compliance profile |
+| **Website** | `https://platehaven.app` |
 
-If your legal name is personal but you operate as PlateHaven, ensure your state DBA/fictitious business name filing is reflected in Twilio fields.
-
-Do **not** use a personal name unless that is the legal registered business name.
+If the EIN is issued to an LLC (e.g. TCC Solutions LLC), use that as legal name — not a personal name unless the EIN is sole prop under that name.
 
 ---
 
-## 30506 + 30513 — Opt-in and sample message fix
+## 30506 + 30513 — Live URLs (deployed on platehaven.app)
 
-### Live URLs to submit
+| Purpose | URL |
+|---------|-----|
+| Business website | `https://platehaven.app` |
+| Privacy policy | `https://platehaven.app/privacy` |
+| SMS terms | `https://platehaven.app/sms-terms` |
+| **Opt-in disclosure (primary evidence)** | `https://platehaven.app/compliance/sms-opt-in` |
+| Live menu with end-business branding | `https://platehaven.app/menu?tenant=independentbarandgrille` |
 
-- Business website: `https://platehaven.app`
-- Privacy policy: `https://platehaven.app/privacy`
-- SMS terms: `https://platehaven.app/sms-terms`
-- Opt-in evidence URL #1: `https://platehaven.app/demo?tenant=demo` (checkout with SMS checkbox)
-- Opt-in evidence URL #2: `https://platehaven.app/sms-terms`
+### Screenshots to upload
 
-Upload screenshots showing:
-1. Unchecked SMS checkbox (default off)
-2. Full consent text visible
-3. Phone field in same checkout form
-4. Restaurant/business name visible in page branding
+1. Full `/compliance/sms-opt-in` — both checkboxes **unchecked**, restaurant name visible, STOP/HELP/rates visible, phone + email fields visible
+2. `/sms-terms` — “Who sends the messages” + example opt-in language
+3. (Optional) Checkout on independentbarandgrille with items in cart — only if SMS UI temporarily enabled for capture
 
-### Transactional opt-in language (use this exact pattern)
+### Transactional opt-in language (checkout + compliance page)
 
 > By checking this box, you agree to receive SMS/text messages from **[Restaurant Name]** (the business you are ordering from) about this order, including order confirmations, status updates, and pickup/ready alerts. Consent is optional and not required to purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out or HELP for help.
 
 ### Marketing opt-in language (separate checkbox)
 
-> Optional: I agree to receive recurring marketing/retention SMS from **[Restaurant Name]**, including review requests and occasional promotions. Separate from order-status SMS. Consent is optional and not required to purchase. Message frequency varies. Msg & data rates may apply. Reply STOP to opt out or HELP for help.
+> Optional: I agree to receive recurring marketing and retention messages from **[Restaurant Name]** by email and, if I provided a phone number, by SMS — including review requests and occasional promotions. Separate from order-status SMS. Consent is optional and not required to purchase. Email unsubscribe links are included in marketing emails. For SMS: message frequency varies; msg & data rates may apply; reply STOP to opt out or HELP for help.
 
-### Production sample message (must name end business)
+### Sample messages for Twilio form (use end business name)
 
-`Your order from Bella Vista is ready for pickup. Pickup code: 1234. Reply STOP to opt out, HELP for help.`
+**Transactional:**
 
-Do **not** use “PlateHaven business” in sample messages.
+`Your order from The Independent Restaurant & Bar is ready for pickup. Pickup code: 1234. Reply STOP to opt out, HELP for help.`
 
-### Use case fields
+**Marketing (if declaring MARKETING category):**
 
-- **Use case categories**: `CUSTOMER_CARE` (transactional). Add `MARKETING` only if marketing checkbox + separate consent is included in evidence.
-- **Use case summary**: Transactional order updates and optional marketing/retention messages for customers who separately opt in at checkout. Messages identify the restaurant the customer ordered from.
-- **Additional information**: Consent is collected via separate unchecked checkboxes at checkout. Consent is not a condition of purchase. STOP/HELP supported. Platform processes SMS on behalf of end businesses.
+`How was your meal from The Independent Restaurant & Bar? We'd love your feedback: https://example.com/review Reply STOP to opt out, HELP for help.`
 
----
+Do **not** use “PlateHaven” as the sender in sample messages.
 
-## Resubmission checklist
+### Use case fields (paste into Twilio)
 
-- [ ] Business legal name matches official records (30484)
-- [ ] Opt-in screenshots show end-business branding (30506)
-- [ ] Opt-in text includes SMS, optional consent, STOP/HELP, rates (30513)
-- [ ] Sample message uses restaurant name, not PlateHaven
-- [ ] Privacy + SMS terms URLs included
-- [ ] Resubmit TFV `HH7f6dd047ffc3ae9c79542db7a0ce14a7`
+- **Categories:** `CUSTOMER_CARE`. Add `MARKETING` only if marketing checkbox evidence is uploaded.
+- **Summary:** PlateHaven enables direct ordering for independent restaurants. Customers opt in at checkout via separate unchecked boxes to receive SMS from the restaurant they ordered from for order status and optional marketing. Consent is not required to purchase. STOP/HELP supported.
+- **Opt-in description:** Public page at `/compliance/sms-opt-in`; two separate unchecked checkboxes at checkout; default off; phone field in same form.
 
 ---
 
-## After approval
+## Resubmission checklist (YOU complete, then resubmit in Console)
 
-1. Set Vercel env vars: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_API_KEY_SID`, `TWILIO_API_KEY_SECRET`, `TWILIO_MESSAGING_SERVICE_SID`
-2. Configure inbound webhook in Twilio Messaging Service: `https://platehaven.app/api/twilio/inbound`
-3. Run one live order with SMS opt-in and mark order READY to confirm delivery
+- [ ] Legal name + EIN match official records (30484)
+- [ ] DBA filed correctly if using “PlateHaven” as trade name
+- [ ] `/compliance/sms-opt-in` live and reviewed
+- [ ] Screenshots attached (30506 + 30513)
+- [ ] Sample messages use restaurant name, not PlateHaven
+- [ ] Privacy + SMS terms URLs in form
+- [ ] Resubmit TFV `HH7f6dd047ffc3ae9c79542db7a0ce14a7` within 7 days of rejection for prioritized queue
+
+**Agent will NOT submit TFV for you.** Confirm when ready.
+
+---
+
+## After approval — enable SMS in PlateHaven
+
+1. Vercel Production env:
+   - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_API_KEY_SID`, `TWILIO_API_KEY_SECRET`, `TWILIO_MESSAGING_SERVICE_SID`
+   - `TWILIO_SMS_ENABLED=true`
+   - `NEXT_PUBLIC_TWILIO_SMS_ENABLED=true`
+2. Inbound webhook on Messaging Service: `https://platehaven.app/api/twilio/inbound`
+3. Test: order with SMS opt-in → kitchen marks READY → SMS delivers
+4. Until then: all notifications remain **email-only** via Resend (pilot default)
