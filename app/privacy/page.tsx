@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Privacy Policy | TCC Menus',
-  description: 'Privacy Policy for TCC Menus digital restaurant menu platform.',
+  title: 'Privacy Policy | PlateHaven',
+  description: 'Privacy Policy for PlateHaven direct ordering platform.',
 }
 
 const EFFECTIVE_DATE = 'March 2, 2025'
@@ -17,10 +17,13 @@ export default function PrivacyPage() {
 
         <div className="prose prose-neutral mt-8 max-w-none text-sm leading-relaxed">
           <p className="text-base">
-            This Privacy Policy describes how TCC Solutions (&ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) collects, 
-            uses, and shares information when you use the TCC Menus platform (the &ldquo;Service&rdquo;). This policy 
-            applies to restaurant clients, their staff, and guests who interact with menus and ordering 
-            features.
+            PlateHaven (platehaven.app) is operated by Aiden Dennis, a sole proprietorship. In this policy,
+            &ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo; refers to that operator.
+          </p>
+          <p className="text-base">
+            This Privacy Policy describes how we collect, use, and share information when you use the PlateHaven
+            platform (the &ldquo;Service&rdquo;). This policy applies to restaurant clients, their staff, and guests who
+            interact with menus and ordering features.
           </p>
 
           <hr className="my-6" />
@@ -263,7 +266,7 @@ export default function PrivacyPage() {
           <ul>
             <li><strong>Email:</strong> privacy@tccsolutions.com</li>
             <li><strong>Subject Line:</strong> &ldquo;Privacy Inquiry&rdquo; or &ldquo;CCPA Request&rdquo;</li>
-            <li><strong>Website:</strong> tccmenus.com</li>
+            <li><strong>Website:</strong> platehaven.app</li>
           </ul>
 
           <hr className="my-6" />

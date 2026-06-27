@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Terms of Service | TCC Menus',
-  description: 'Terms of Service for TCC Menus digital restaurant menu platform.',
+  title: 'Terms of Service | PlateHaven',
+  description: 'Terms of Service for PlateHaven direct ordering platform.',
 }
 
 const EFFECTIVE_DATE = 'March 2, 2025'
@@ -17,8 +17,11 @@ export default function TermsPage() {
 
         <div className="prose prose-neutral mt-8 max-w-none text-sm leading-relaxed">
           <p className="text-base">
-            These Terms of Service (&ldquo;Terms&rdquo;) constitute a legally binding agreement between you and TCC Solutions 
-            (&ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) governing your access to and use of the TCC Menus platform and 
+            PlateHaven (platehaven.app) is operated by Aiden Dennis, a sole proprietorship. In these Terms,
+            &ldquo;Company,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo; refers to that operator.
+          </p>
+          <p className="text-base">
+            These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of the PlateHaven platform and
             related services (collectively, the &ldquo;Service&rdquo;).
           </p>
 
@@ -39,7 +42,7 @@ export default function TermsPage() {
 
           <h2 className="text-lg font-semibold">2. Description of Service</h2>
           <p>
-            TCC Menus provides a cloud-based software-as-a-service (SaaS) platform that enables restaurants to:
+            PlateHaven provides a cloud-based software-as-a-service (SaaS) platform that enables restaurants to:
           </p>
           <ul>
             <li>Create and manage digital menus accessible via QR codes and web links</li>
@@ -91,7 +94,7 @@ export default function TermsPage() {
           <h3 className="text-base font-semibold">5.3 Order Payments (Stripe Connect)</h3>
           <p>
             When ordering is enabled, customer payments for food orders are processed through Stripe Connect 
-            and deposited directly to the Restaurant&apos;s connected Stripe account. TCC Solutions does not hold 
+            and deposited directly to the Restaurant&apos;s connected Stripe account. The Company does not hold
             customer funds.
           </p>
 
@@ -137,7 +140,7 @@ export default function TermsPage() {
           <ul>
             <li>
               <strong>Our Property:</strong> The Service, including its software, design, features, and 
-              documentation, is owned by TCC Solutions and protected by intellectual property laws.
+              documentation, is owned by the Company and protected by intellectual property laws.
             </li>
             <li>
               <strong>Your Content:</strong> Restaurants retain ownership of their menu content, branding, 
@@ -170,7 +173,7 @@ export default function TermsPage() {
           </p>
           <h3 className="text-base font-semibold">10.2 Limitation of Liability</h3>
           <p>
-            TO THE MAXIMUM EXTENT PERMITTED BY CALIFORNIA LAW, IN NO EVENT SHALL TCC SOLUTIONS BE LIABLE 
+            TO THE MAXIMUM EXTENT PERMITTED BY CALIFORNIA LAW, IN NO EVENT SHALL THE COMPANY BE LIABLE
             FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF 
             PROFITS, REVENUE, DATA, OR USE, ARISING OUT OF OR RELATED TO THESE TERMS OR THE SERVICE, 
             REGARDLESS OF THE THEORY OF LIABILITY.
@@ -187,7 +190,7 @@ export default function TermsPage() {
 
           <h2 className="text-lg font-semibold">11. Indemnification</h2>
           <p>
-            You agree to indemnify, defend, and hold harmless TCC Solutions and its officers, directors, 
+            You agree to indemnify, defend, and hold harmless the Company and its officers, directors,
             employees, and agents from any claims, damages, losses, liabilities, costs, and expenses 
             (including attorneys&apos; fees) arising from:
           </p>
@@ -243,7 +246,7 @@ export default function TermsPage() {
           <ul>
             <li>
               <strong>Entire Agreement:</strong> These Terms, together with our Privacy Policy, 
-              constitute the entire agreement between you and TCC Solutions.
+              constitute the entire agreement between you and the Company.
             </li>
             <li>
               <strong>Severability:</strong> If any provision is found unenforceable, the remaining 

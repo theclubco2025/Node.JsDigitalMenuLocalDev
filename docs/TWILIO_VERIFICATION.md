@@ -83,6 +83,76 @@ Do **not** use “PlateHaven” as the sender in sample messages.
 
 ---
 
+## Submission readiness (site + app)
+
+**Last verified:** compliance URLs return HTTP 200 on production with required copy (restaurant name, STOP/HELP, unchecked consent note).
+
+| Check | Status |
+|-------|--------|
+| `/compliance/sms-opt-in` live | Ready |
+| `/sms-terms` end-business sender section | Ready |
+| SMS bodies use tenant/restaurant name | Ready |
+| Checkout SMS UI (when enabled) matches compliance copy | Ready |
+| Privacy/terms name `platehaven.app` → Aiden Dennis sole prop | Ready (deploy pending) |
+| Twilio Trust Hub legal name + EIN | **You verify in Console** |
+| TFV resubmitted | **Not submitted — waiting on your go-ahead** |
+
+---
+
+## Twilio Console — copy/paste resubmission (sole proprietorship)
+
+Edit verification `HH7f6dd047ffc3ae9c79542db7a0ce14a7`. **Do not submit until EIN matches your letter exactly.**
+
+| Field | Enter |
+|-------|--------|
+| Legal business name | `Aiden Dennis` (must match EIN letter exactly — adjust spelling if EIN differs) |
+| Business type | Sole Proprietorship |
+| EIN / business registration number | Your 9-digit EIN (required — was empty before) |
+| DBA / trade name | `PlateHaven` only if filed with your state; otherwise leave blank |
+| Website | `https://platehaven.app` |
+| Privacy policy | `https://platehaven.app/privacy` |
+| Terms / SMS policy | `https://platehaven.app/sms-terms` |
+| Opt-in workflow URL #1 | `https://platehaven.app/compliance/sms-opt-in` |
+| Opt-in workflow URL #2 | `https://platehaven.app/sms-terms` |
+| Phone number | `+1 (844) 524-1711` |
+| Use case categories | `CUSTOMER_CARE` (add `MARKETING` only if uploading marketing checkbox screenshot) |
+
+**Production sample message (transactional):**
+
+`Your order from The Independent Restaurant & Bar is ready for pickup. Pickup code: 1234. Reply STOP to opt out, HELP for help.`
+
+**Use case summary (paste):**
+
+`PlateHaven is ordering software operated by a sole proprietorship. Customers opt in at checkout via separate unchecked checkboxes to receive SMS from the restaurant they ordered from for order status and optional marketing. Consent is not required to purchase. STOP/HELP supported.`
+
+**Additional information (paste):**
+
+`Legal operator: Aiden Dennis, sole proprietorship. PlateHaven (platehaven.app) is the product website. SMS content and opt-in identify the restaurant the customer ordered from, not the platform brand.`
+
+### Screenshots to attach
+
+1. Full page: `https://platehaven.app/compliance/sms-opt-in`
+2. Full page: `https://platehaven.app/sms-terms`
+3. (Optional) `https://platehaven.app/privacy` — operator paragraph at top
+
+---
+
+## Go / no-go before you click Resubmit
+
+**Go** if all are true:
+
+- [ ] EIN on TFV form matches IRS letter exactly
+- [ ] Legal name spelling matches EIN exactly
+- [ ] Trust Hub address/phone/email match your filing
+- [ ] Screenshots uploaded
+- [ ] Sample message uses restaurant name, not PlateHaven
+
+**No-go** if EIN still blank or legal name ≠ EIN record.
+
+**Expected pass rate:** 30506/30513 high after deploy; 30484 depends on EIN/Trust Hub only you can confirm.
+
+---
+
 ## Resubmission checklist (YOU complete, then resubmit in Console)
 
 - [ ] Legal name + EIN match official records (30484)
