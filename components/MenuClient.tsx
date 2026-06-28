@@ -3,7 +3,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import useSWR from 'swr'
 import { MenuResponse, MenuItem } from '@/types/api'
 import { smsCheckoutUiEnabled } from '@/lib/notifications/sms-ui-enabled'
@@ -92,6 +92,27 @@ const DIETARY_OPTIONS_BASE: readonly DietaryOption[] = [
 ]
 
 
+function SpinningPlate({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
+  const stroke = tone === 'light' ? '#ffffff' : '#059669'
+  const well = tone === 'light' ? '#ffffff' : '#059669'
+  return (
+    <div className="flex items-center gap-3 py-0.5" role="status" aria-live="polite" aria-label="Assistant is thinking">
+      <svg className="h-9 w-9 shrink-0 animate-spin" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <circle cx="24" cy="24" r="20" stroke={stroke} strokeWidth="2.5" opacity="0.22" />
+        <path
+          d="M24 4a20 20 0 0 1 17.32 10"
+          stroke={stroke}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+        <ellipse cx="24" cy="26" rx="11" ry="6.5" fill={well} opacity="0.2" />
+      </svg>
+      <span className={`text-sm ${tone === 'light' ? 'text-white/70' : 'text-gray-500'}`}>Plating your answer…</span>
+    </div>
+  )
+}
+
+
 export default function MenuClient({ initialTenant }: { initialTenant?: string } = {}) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -103,6 +124,8 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
   const [assistantMessage, setAssistantMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<Array<{role: 'user' | 'assistant', message: string}>>([])
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+  const [assistantLoading, setAssistantLoading] = useState(false)
+  const assistantChatRef = useRef<HTMLDivElement>(null)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [cartBump, setCartBump] = useState(false)
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null)
@@ -167,6 +190,13 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
       setShowDemoAcknowledgement(true)
     }
   }, [isBrowser, isDemo, isPlateHavenDemo, demoAcknowledgeKey])
+
+  useEffect(() => {
+    if (!isAssistantOpen) return
+    const el = assistantChatRef.current
+    if (!el) return
+    el.scrollTop = el.scrollHeight
+  }, [chatHistory, assistantLoading, isAssistantOpen])
 
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
@@ -501,10 +531,11 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
 
   const sendAssistantMessage = async (overrideMessage?: string) => {
     const userMessage = (overrideMessage ?? assistantMessage).trim()
-    if (!userMessage) return
+    if (!userMessage || assistantLoading) return
 
     setAssistantMessage('')
     setChatHistory(prev => [...prev, { role: 'user', message: userMessage }])
+    setAssistantLoading(true)
 
     try {
       const response = await fetch('/api/assistant', {
@@ -539,6 +570,8 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Sorry, I had trouble processing your request.'
       setChatHistory(prev => [...prev, { role: 'assistant', message }])
+    } finally {
+      setAssistantLoading(false)
     }
   }
 
@@ -2950,8 +2983,8 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
               </p>
             </div>
             
-            <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6">
-              {chatHistory.length === 0 ? (
+            <div ref={assistantChatRef} className="flex-1 overflow-y-auto px-4 py-4 md:p-6">
+              {chatHistory.length === 0 && !assistantLoading ? (
                 <div className="text-center text-gray-500 mt-8">
                   <div className="text-4xl mb-4">🤖</div>
                   <p>Start a conversation!</p>
@@ -2976,6 +3009,12 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                       <div className="text-sm">{msg.message}</div>
                     </div>
                   ))}
+                  {assistantLoading && (
+                    <div className="p-3 rounded-lg bg-black text-white mr-8">
+                      <div className="font-medium text-xs mb-2 opacity-70">Assistant</div>
+                      <SpinningPlate tone="light" />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -2985,10 +3024,11 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                 <input
                   type="text"
                   placeholder="Ask about our menu..."
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-colors text-base text-black bg-white placeholder-gray-500"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition-colors text-base text-black bg-white placeholder-gray-500 disabled:opacity-60"
                   style={{ fontSize: 16 }}
                   inputMode="text"
                   value={assistantMessage}
+                  disabled={assistantLoading}
                   onChange={(e) => setAssistantMessage(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -2999,9 +3039,10 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                 />
                 <button
                   onClick={() => { void sendAssistantMessage() }}
-                  className="bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-500 transition-colors text-sm font-bold"
+                  disabled={assistantLoading || !assistantMessage.trim()}
+                  className="bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-500 transition-colors text-sm font-bold disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Send
+                  {assistantLoading ? '…' : 'Send'}
                 </button>
               </div>
               <div className="mt-3 text-xs text-gray-500">
