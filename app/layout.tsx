@@ -6,6 +6,7 @@ import { getTheme } from '@/lib/theme'
 import { type CSSProperties, Suspense } from 'react'
 import Providers from '@/components/Providers'
 import ThemeSync from '@/components/ThemeSync'
+import { Analytics } from '@vercel/analytics/react'
 
 const inter = Inter({ subsets: ['latin'] })
 const italiana = Italiana({ weight: '400', subsets: ['latin'] })
@@ -49,6 +50,7 @@ export default async function RootLayout({
           <ThemeSync />
         </Suspense>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   )
