@@ -7,32 +7,32 @@
         {
           "id": "bbq-pulled-pork-tray",
           "name": "BBQ Pulled Pork Tray",
-          "description": "Slow-smoked pulled pork in house BBQ sauce. Serves 12.",
+          "description": "Slow-smoked pulled pork in tangy house BBQ sauce. Tender, crowd-sized tray — serves 12.",
           "price": 89,
           "servingSize": 12,
           "servingUnit": "people",
           "tags": ["popular", "gluten-free option"],
-          "imageUrl": "https://images.unsplash.com/photo-1529193591184-bbd5770ac869?w=600&q=80"
+          "imageUrl": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=600&auto=format&fit=crop"
         },
         {
           "id": "grilled-chicken-tray",
           "name": "Grilled Chicken Tray",
-          "description": "Herb-marinated grilled chicken, sliced. Serves 10.",
+          "description": "Herb-marinated grilled chicken, sliced for easy serving. Lean protein tray — serves 10.",
           "price": 79,
           "servingSize": 10,
           "servingUnit": "people",
           "tags": ["popular", "gluten-free"],
-          "imageUrl": "https://images.unsplash.com/photo-1598103440817-5c745fa3f465?w=600&q=80"
+          "imageUrl": "https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=600&auto=format&fit=crop"
         },
         {
           "id": "beef-brisket-tray",
           "name": "Smoked Beef Brisket Tray",
-          "description": "12-hour smoked Texas brisket with rich bark. Serves 12.",
+          "description": "12-hour smoked Texas brisket with rich bark and smoke ring. Premium crowd tray — serves 12.",
           "price": 129,
           "servingSize": 12,
           "servingUnit": "people",
           "tags": ["premium", "gluten-free"],
-          "imageUrl": "https://images.unsplash.com/photo-1558030006-450675393462?w=600&q=80"
+          "imageUrl": "https://images.unsplash.com/photo-1558030006-450675393462?q=80&w=600&auto=format&fit=crop"
         },
         {
           "id": "italian-meatball-tray",
@@ -130,12 +130,12 @@
         {
           "id": "deli-sandwich-platter",
           "name": "Deli Sandwich Platter",
-          "description": "Turkey, ham, roast beef, and veggie on artisan rolls.",
+          "description": "Turkey, ham, roast beef, and veggie on artisan rolls. Cut into halves for easy grab-and-go.",
           "price": 99,
           "servingSize": 12,
           "servingUnit": "people",
           "tags": ["popular"],
-          "imageUrl": "https://images.unsplash.com/photo-1528735602788-9923578f2dbe?w=600&q=80"
+          "imageUrl": "https://images.unsplash.com/photo-1551782450-17144efb9c50?q=80&w=600&auto=format&fit=crop"
         },
         {
           "id": "veggie-wrap-platter",
@@ -164,22 +164,22 @@
         {
           "id": "spinach-dip",
           "name": "Spinach & Artichoke Dip",
-          "description": "Warm creamy dip with baguette slices and chips.",
+          "description": "Warm creamy spinach and artichoke dip with baguette slices and chips. Always a crowd favorite.",
           "price": 45,
           "servingSize": 15,
           "servingUnit": "people",
           "tags": ["vegetarian", "popular"],
-          "imageUrl": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&q=80"
+          "imageUrl": "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?q=80&w=600&auto=format&fit=crop"
         },
         {
           "id": "chicken-wings",
           "name": "Chicken Wing Platter",
-          "description": "Jumbo wings — buffalo, BBQ, or honey garlic.",
+          "description": "Jumbo wings tossed in buffalo, BBQ, or honey garlic. Crispy outside, juicy inside — 50 pieces.",
           "price": 75,
           "servingSize": 50,
           "servingUnit": "pieces",
           "tags": ["gluten-free option"],
-          "imageUrl": "https://images.unsplash.com/photo-1608030692622-44c97f066a55?w=600&q=80"
+          "imageUrl": "https://images.unsplash.com/photo-1527477396000-e27163b481c2?q=80&w=600&auto=format&fit=crop"
         },
         {
           "id": "meatball-bites",
@@ -226,12 +226,12 @@
         {
           "id": "cookie-platter",
           "name": "Assorted Cookie Platter",
-          "description": "Chocolate chip, oatmeal raisin, and sugar cookies.",
+          "description": "Chocolate chip, oatmeal raisin, and sugar cookies baked fresh. Two dozen assorted treats.",
           "price": 30,
           "servingSize": 24,
           "servingUnit": "cookies",
           "tags": ["vegetarian"],
-          "imageUrl": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=600&q=80"
+          "imageUrl": "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?q=80&w=600&auto=format&fit=crop"
         },
         {
           "id": "mini-cheesecakes",
@@ -245,12 +245,12 @@
         {
           "id": "fruit-platter",
           "name": "Fresh Fruit Platter",
-          "description": "Berries, melon, grapes, and seasonal fruit.",
+          "description": "Berries, melon, grapes, and seasonal fruit arranged on a platter. Light, fresh finish — serves 15.",
           "price": 45,
           "servingSize": 15,
           "servingUnit": "people",
           "tags": ["vegetarian", "vegan", "gluten-free"],
-          "imageUrl": "https://images.unsplash.com/photo-1464960352369-681a7bb71849?w=600&q=80"
+          "imageUrl": "https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=600&auto=format&fit=crop"
         }
       ]
     },

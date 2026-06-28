@@ -109,6 +109,16 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [showDemoAcknowledgement, setShowDemoAcknowledgement] = useState(false)
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set())
+  const [expandedDescIds, setExpandedDescIds] = useState<Set<string>>(new Set())
+  const toggleDescExpand = (id: string) => {
+    setExpandedDescIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   // Get tenant/admin from URL params or pathname
   const isBrowser = typeof window !== 'undefined'
@@ -1640,6 +1650,9 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                 {category.items.map((item, itemIdx) => {
                   const tags = visibleTags(item.tags).slice(0, 3)
                   const thumbSrc = (imageMap[item.id] as string | undefined) || item.imageUrl || ''
+                  const descText = typeof item.description === 'string' ? item.description.trim() : ''
+                  const showDescExpand = descText.length > 45
+                  const isDescExpanded = expandedDescIds.has(item.id)
                   return (
                     <div
                       key={item.id}
@@ -1651,24 +1664,41 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                     >
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                         <div className="flex gap-2.5 sm:gap-3 flex-1 min-w-0">
-                          {thumbSrc ? (
+                          {thumbSrc && !brokenImages.has(item.id) ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={thumbSrc}
                               alt=""
-                              className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-cover shrink-0"
+                              className="h-14 w-14 sm:h-16 sm:w-16 rounded-lg object-cover object-center shrink-0"
                               loading="lazy"
                               decoding="async"
+                              onError={() => setBrokenImages(prev => new Set(prev).add(item.id))}
                             />
                           ) : null}
                           <div className="flex-1 min-w-0">
                             <div className="text-sm sm:text-base font-semibold text-white">
                               {highlightText(item.name, searchQuery)}
                             </div>
-                            {typeof item.description === 'string' && item.description.trim() !== '' && (
-                              <div className="mt-0.5 text-xs sm:text-sm text-gray-400 line-clamp-1 sm:line-clamp-2">
-                                {minimalDescription(item.description)}
-                              </div>
+                            {descText !== '' && (
+                              showDescExpand ? (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleDescExpand(item.id)}
+                                  className="mt-0.5 flex w-full items-start gap-1 text-left text-xs sm:text-sm text-gray-400"
+                                  aria-expanded={isDescExpanded}
+                                >
+                                  <span className={isDescExpanded ? '' : 'line-clamp-1 sm:line-clamp-2'}>
+                                    {cleanMojibake(item.description!)}
+                                  </span>
+                                  <span className="shrink-0 text-[10px] opacity-60 mt-0.5" aria-hidden>
+                                    {isDescExpanded ? '▲' : '▼'}
+                                  </span>
+                                </button>
+                              ) : (
+                                <div className="mt-0.5 text-xs sm:text-sm text-gray-400 line-clamp-1 sm:line-clamp-2">
+                                  {cleanMojibake(item.description!)}
+                                </div>
+                              )
                             )}
                             {(tags.length > 0) && (
                               <div className="mt-1.5 sm:mt-2 flex flex-wrap gap-1">
@@ -2138,11 +2168,25 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                         </div>
                       )}
                       {!isAdmin && typeof item.description === 'string' && item.description.trim() !== '' && (
-                        <p
-                          className="mb-2 sm:mb-3 text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2"
-                        >
-                          {minimalDescription(item.description)}
-                        </p>
+                        item.description.trim().length > 45 ? (
+                          <button
+                            type="button"
+                            onClick={() => toggleDescExpand(item.id)}
+                            className="mb-2 sm:mb-3 flex w-full items-start gap-1 text-left text-xs sm:text-sm text-gray-700"
+                            aria-expanded={expandedDescIds.has(item.id)}
+                          >
+                            <span className={expandedDescIds.has(item.id) ? '' : 'line-clamp-1 sm:line-clamp-2'}>
+                              {cleanMojibake(item.description)}
+                            </span>
+                            <span className="shrink-0 text-[10px] opacity-60 mt-0.5" aria-hidden>
+                              {expandedDescIds.has(item.id) ? '▲' : '▼'}
+                            </span>
+                          </button>
+                        ) : (
+                          <p className="mb-2 sm:mb-3 text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2">
+                            {cleanMojibake(item.description)}
+                          </p>
+                        )
                       )}
                       
                       {isAdmin ? (
