@@ -2360,7 +2360,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                             min={minEventDate}
                             value={eventDate}
                             onChange={(e) => setEventDate(e.target.value)}
-                            className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white"
+                            className="block w-auto max-w-[10.5rem] min-w-0 rounded-lg border border-white/15 bg-neutral-900 px-2.5 py-2 text-sm text-white"
                             style={{ colorScheme: 'dark' }}
                           />
                         </div>
