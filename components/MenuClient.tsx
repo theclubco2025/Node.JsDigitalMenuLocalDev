@@ -2352,31 +2352,31 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                         Tell us about your event so we can prepare everything perfectly.
                       </div>
                       <div className="mt-4 space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="min-w-0">
                             <label className="block text-xs font-semibold text-white/80">Event Date *</label>
                             <input
                               type="date"
                               min={minEventDate}
                               value={eventDate}
                               onChange={(e) => setEventDate(e.target.value)}
-                              className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white"
+                              className="mt-1 w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white"
                               style={{ colorScheme: 'dark' }}
                             />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <label className="block text-xs font-semibold text-white/80">Event Time</label>
                             <input
                               type="text"
                               placeholder="e.g., 12:00 PM"
                               value={eventTime}
                               onChange={(e) => setEventTime(e.target.value)}
-                              className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                              className="mt-1 w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
                             />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="min-w-0">
                             <label className="block text-xs font-semibold text-white/80">Guest Count *</label>
                             <input
                               type="number"
@@ -2389,7 +2389,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                               style={{ colorScheme: 'dark' }}
                             />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <label className="block text-xs font-semibold text-white/80">Event Type</label>
                             <select
                               value={eventType}
