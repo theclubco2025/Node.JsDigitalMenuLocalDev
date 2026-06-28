@@ -2317,13 +2317,14 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
       {/* Plate Drawer */}
       {isCartOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex">
-          <div className="ml-auto w-full max-w-md bg-neutral-950 text-white h-full shadow-2xl border-l border-white/10 flex flex-col">
-            <div className="p-6 border-b border-white/10 bg-neutral-950/90 backdrop-blur">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white">{cateringMode ? 'Your Catering Order' : (isFoodTruckMode ? 'Your Order' : 'Your Plate')}</h2>
+          <div className="ml-auto w-full max-w-md bg-neutral-950 text-white h-full shadow-2xl border-l border-white/10 flex flex-col min-w-0">
+            <div className="p-4 sm:p-6 border-b border-white/10 bg-neutral-950/90 backdrop-blur shrink-0">
+              <div className="flex justify-between items-start gap-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight min-w-0">{cateringMode ? 'Your Catering Order' : (isFoodTruckMode ? 'Your Order' : 'Your Plate')}</h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="text-white/70 hover:text-white transition-colors"
+                  className="shrink-0 text-white/70 hover:text-white transition-colors p-1 -mr-1"
+                  aria-label="Close order"
                 >
                   ✕
                 </button>
@@ -2336,73 +2337,69 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
               )}
             </div>
             
-            <div className="flex-1 overflow-y-auto px-6 py-6 bg-neutral-950 overscroll-contain">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6 bg-neutral-950 overscroll-contain min-w-0">
               {cart.length === 0 ? (
                 <div className="text-center text-white/70 mt-8">
                   <div className="text-4xl mb-4">🛒</div>
                   <p>Your plate is empty</p>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-5">
                   {/* Catering Event Details */}
                   {cateringMode && (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 shadow-sm min-w-0">
                       <div className="text-sm font-extrabold tracking-wide text-white">📅 Event Details</div>
                       <div className="mt-2 text-sm text-white/70">
                         Tell us about your event so we can prepare everything perfectly.
                       </div>
-                      <div className="mt-4 space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="min-w-0">
-                            <label className="block text-xs font-semibold text-white/80">Event Date *</label>
-                            <input
-                              type="date"
-                              min={minEventDate}
-                              value={eventDate}
-                              onChange={(e) => setEventDate(e.target.value)}
-                              className="mt-1 w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white"
-                              style={{ colorScheme: 'dark' }}
-                            />
-                          </div>
-                          <div className="min-w-0">
-                            <label className="block text-xs font-semibold text-white/80">Event Time</label>
-                            <input
-                              type="text"
-                              placeholder="e.g., 12:00 PM"
-                              value={eventTime}
-                              onChange={(e) => setEventTime(e.target.value)}
-                              className="mt-1 w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
-                            />
-                          </div>
+                      <div className="mt-4 flex flex-col gap-4">
+                        <div className="min-w-0">
+                          <label className="block text-xs font-semibold text-white/80 mb-1.5">Event Date *</label>
+                          <input
+                            type="date"
+                            min={minEventDate}
+                            value={eventDate}
+                            onChange={(e) => setEventDate(e.target.value)}
+                            className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white"
+                            style={{ colorScheme: 'dark' }}
+                          />
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="min-w-0">
-                            <label className="block text-xs font-semibold text-white/80">Guest Count *</label>
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              min="1"
-                              placeholder="50"
-                              value={guestCount}
-                              onChange={(e) => setGuestCount(e.target.value)}
-                              className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
-                              style={{ colorScheme: 'dark' }}
-                            />
-                          </div>
-                          <div className="min-w-0">
-                            <label className="block text-xs font-semibold text-white/80">Event Type</label>
-                            <select
-                              value={eventType}
-                              onChange={(e) => setEventType(e.target.value)}
-                              className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white"
-                              style={{ colorScheme: 'dark' }}
-                            >
-                              <option value="" className="bg-neutral-900 text-white">Select...</option>
-                              {eventTypes.map((t) => (
-                                <option key={t} value={t} className="bg-neutral-900 text-white">{t}</option>
-                              ))}
-                            </select>
-                          </div>
+                        <div className="min-w-0">
+                          <label className="block text-xs font-semibold text-white/80 mb-1.5">Event Time</label>
+                          <input
+                            type="text"
+                            placeholder="e.g., 12:00 PM"
+                            value={eventTime}
+                            onChange={(e) => setEventTime(e.target.value)}
+                            className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white placeholder-white/40"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <label className="block text-xs font-semibold text-white/80 mb-1.5">Guest Count *</label>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min="1"
+                            placeholder="50"
+                            value={guestCount}
+                            onChange={(e) => setGuestCount(e.target.value)}
+                            className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white placeholder-white/40"
+                            style={{ colorScheme: 'dark' }}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <label className="block text-xs font-semibold text-white/80 mb-1.5">Event Type</label>
+                          <select
+                            value={eventType}
+                            onChange={(e) => setEventType(e.target.value)}
+                            className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white"
+                            style={{ colorScheme: 'dark' }}
+                          >
+                            <option value="" className="bg-neutral-900 text-white">Select...</option>
+                            {eventTypes.map((t) => (
+                              <option key={t} value={t} className="bg-neutral-900 text-white">{t}</option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                     </div>
@@ -2410,27 +2407,27 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
 
                   {/* Catering Delivery Location */}
                   {cateringMode && (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 shadow-sm min-w-0">
                       <div className="text-sm font-extrabold tracking-wide text-white">📍 Delivery Location</div>
-                      <div className="mt-4 space-y-3">
-                        <div>
-                          <label className="block text-xs font-semibold text-white/80">Delivery Address</label>
+                      <div className="mt-4 flex flex-col gap-4">
+                        <div className="min-w-0">
+                          <label className="block text-xs font-semibold text-white/80 mb-1.5">Delivery Address</label>
                           <textarea
                             placeholder="123 Main St, Suite 400&#10;San Francisco, CA 94102"
                             value={deliveryAddress}
                             onChange={(e) => setDeliveryAddress(e.target.value)}
                             rows={2}
-                            className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white placeholder-white/40 resize-none"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-white/80">Delivery Notes</label>
+                        <div className="min-w-0">
+                          <label className="block text-xs font-semibold text-white/80 mb-1.5">Delivery Notes</label>
                           <input
                             type="text"
-                            placeholder="e.g., Enter through loading dock, ask for Sarah"
+                            placeholder="e.g., Loading dock, ask for Sarah"
                             value={deliveryNotes}
                             onChange={(e) => setDeliveryNotes(e.target.value)}
-                            className="mt-1 w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                            className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white placeholder-white/40"
                           />
                         </div>
                       </div>
@@ -2439,7 +2436,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
 
                   {/* Catering Dietary Requirements */}
                   {cateringMode && (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 shadow-sm min-w-0">
                       <div className="text-sm font-extrabold tracking-wide text-white">🥗 Dietary Requirements</div>
                       <div className="mt-2 text-sm text-white/70">
                         Let us know about any dietary needs for your guests.
@@ -2450,7 +2447,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                           value={dietaryNotes}
                           onChange={(e) => setDietaryNotes(e.target.value)}
                           rows={2}
-                          className="w-full rounded-xl border border-white/15 bg-neutral-900 px-3 py-2 text-[16px] text-white placeholder-white/40"
+                          className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white placeholder-white/40 resize-none"
                         />
                       </div>
                     </div>
@@ -2509,9 +2506,9 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                   )}
 
                   {/* Your Order */}
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-sm">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 shadow-sm min-w-0">
                     <div className="text-sm font-extrabold tracking-wide text-white">Your Order</div>
-                    <div className="mt-4 space-y-4">
+                    <div className="mt-4 space-y-3">
                       {cart.map(cartItem => {
                         const defs = parseAddOnDefs(cartItem.item.tags)
                         const base = Math.round((cartItem.item.price || 0) * 100)
@@ -2519,95 +2516,101 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                         const unitCents = base + addOnCents
                         const lineCents = unitCents * cartItem.quantity
                         return (
-                          <div key={cartItem.item.id} className="rounded-2xl border border-gray-200 bg-white p-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0">
-                                    <div className="font-semibold text-black truncate">{cartItem.item.name}</div>
-                                  </div>
-                                  <div className="shrink-0 text-right">
-                                    <div className="text-xs text-gray-500">Per item</div>
-                                    <div className="font-semibold text-black">${(unitCents / 100).toFixed(2)}</div>
-                                  </div>
+                          <div
+                            key={cartItem.item.id}
+                            className={cateringMode
+                              ? 'rounded-xl border border-white/15 bg-neutral-900/80 p-3 sm:p-4 min-w-0'
+                              : 'rounded-2xl border border-gray-200 bg-white p-4 min-w-0'}
+                          >
+                            <div className="space-y-3">
+                              <div className="flex items-start justify-between gap-2 min-w-0">
+                                <div className={`min-w-0 flex-1 font-semibold leading-snug ${cateringMode ? 'text-white' : 'text-black'}`}>
+                                  {cartItem.item.name}
                                 </div>
-
-                                {(defs.length > 0 || cartItem.note) && (
-                                  <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
-                                    <div className="text-xs font-bold text-gray-800">Item customization</div>
-
-                                    {defs.length > 0 && (
-                                      <div className="mt-2 space-y-1">
-                                        {defs.map((opt) => {
-                                          const checked = (cartItem.addOns || []).some(a => a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents)
-                                          return (
-                                            <label key={`${opt.name}:${opt.priceDeltaCents}`} className="flex items-center gap-2 text-sm text-gray-900">
-                                              <input
-                                                type="checkbox"
-                                                checked={checked}
-                                                onChange={(e) => {
-                                                  const nextChecked = e.target.checked
-                                                  setCart(prev => prev.map(ci => {
-                                                    if (ci.item.id !== cartItem.item.id) return ci
-                                                    const existing = ci.addOns || []
-                                                    const without = existing.filter(a => !(a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents))
-                                                    return {
-                                                      ...ci,
-                                                      addOns: nextChecked ? [...without, opt] : without,
-                                                    }
-                                                  }))
-                                                }}
-                                                className="h-4 w-4"
-                                              />
-                                              <span className="flex-1">{opt.name}</span>
-                                              <span className="font-mono text-gray-600">+${(opt.priceDeltaCents / 100).toFixed(2)}</span>
-                                            </label>
-                                          )
-                                        })}
-                                      </div>
-                                    )}
-
-                                    <div className="mt-3">
-                                      <input
-                                        inputMode="text"
-                                        value={cartItem.note || ''}
-                                        onChange={(e) => {
-                                          const v = e.target.value
-                                          setCart(prev => prev.map(ci => ci.item.id === cartItem.item.id ? { ...ci, note: v } : ci))
-                                        }}
-                                        placeholder="Add a note for this item (optional)"
-                                        className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
-                                      />
-                                    </div>
-                                  </div>
-                                )}
+                                <div className="shrink-0 text-right">
+                                  <div className={`text-[10px] ${cateringMode ? 'text-white/50' : 'text-gray-500'}`}>Per item</div>
+                                  <div className={`text-sm font-semibold ${cateringMode ? 'text-white' : 'text-black'}`}>${(unitCents / 100).toFixed(2)}</div>
+                                </div>
                               </div>
 
-                              <div className="shrink-0 flex flex-col items-end gap-3">
-                                {/* Branded quantity stepper */}
-                                <div className="inline-flex items-center rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                              {(defs.length > 0 || cartItem.note) && (
+                                <div className={`rounded-xl border px-3 py-3 ${cateringMode ? 'border-white/10 bg-neutral-950/60' : 'border-gray-200 bg-gray-50'}`}>
+                                  <div className={`text-xs font-bold ${cateringMode ? 'text-white/80' : 'text-gray-800'}`}>Item customization</div>
+
+                                  {defs.length > 0 && (
+                                    <div className="mt-2 space-y-1">
+                                      {defs.map((opt) => {
+                                        const checked = (cartItem.addOns || []).some(a => a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents)
+                                        return (
+                                          <label key={`${opt.name}:${opt.priceDeltaCents}`} className={`flex items-center gap-2 text-sm ${cateringMode ? 'text-white/90' : 'text-gray-900'}`}>
+                                            <input
+                                              type="checkbox"
+                                              checked={checked}
+                                              onChange={(e) => {
+                                                const nextChecked = e.target.checked
+                                                setCart(prev => prev.map(ci => {
+                                                  if (ci.item.id !== cartItem.item.id) return ci
+                                                  const existing = ci.addOns || []
+                                                  const without = existing.filter(a => !(a.name === opt.name && a.priceDeltaCents === opt.priceDeltaCents))
+                                                  return {
+                                                    ...ci,
+                                                    addOns: nextChecked ? [...without, opt] : without,
+                                                  }
+                                                }))
+                                              }}
+                                              className="h-4 w-4 shrink-0"
+                                            />
+                                            <span className="flex-1 min-w-0">{opt.name}</span>
+                                            <span className={`shrink-0 font-mono text-xs ${cateringMode ? 'text-white/60' : 'text-gray-600'}`}>+${(opt.priceDeltaCents / 100).toFixed(2)}</span>
+                                          </label>
+                                        )
+                                      })}
+                                    </div>
+                                  )}
+
+                                  <div className="mt-3">
+                                    <input
+                                      inputMode="text"
+                                      value={cartItem.note || ''}
+                                      onChange={(e) => {
+                                        const v = e.target.value
+                                        setCart(prev => prev.map(ci => ci.item.id === cartItem.item.id ? { ...ci, note: v } : ci))
+                                      }}
+                                      placeholder="Add a note for this item (optional)"
+                                      className={`w-full min-w-0 rounded-xl border px-3 py-2 text-[16px] ${cateringMode ? 'border-white/15 bg-neutral-900 text-white placeholder-white/40' : 'border-gray-300 bg-white text-black'}`}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="flex items-center justify-between gap-2 pt-0.5">
+                                <div className="inline-flex items-center rounded-xl border overflow-hidden shrink-0"
+                                  style={cateringMode
+                                    ? { borderColor: 'rgba(255,255,255,0.15)', background: 'rgba(0,0,0,0.25)' }
+                                    : { borderColor: '#e5e7eb', background: '#fff' }}
+                                >
                                   <button
                                     onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity - 1)}
-                                    className="h-11 w-11 flex items-center justify-center text-base font-black text-black hover:bg-gray-50"
+                                    className={`h-10 w-10 flex items-center justify-center text-base font-black ${cateringMode ? 'text-white hover:bg-white/10' : 'text-black hover:bg-gray-50'}`}
                                     aria-label={`Decrease quantity for ${cartItem.item.name}`}
                                   >
                                     −
                                   </button>
-                                  <div className="h-11 w-12 flex items-center justify-center text-base font-extrabold text-black">
+                                  <div className={`h-10 w-10 flex items-center justify-center text-sm font-extrabold ${cateringMode ? 'text-white' : 'text-black'}`}>
                                     {cartItem.quantity}
                                   </div>
                                   <button
                                     onClick={() => updateCartQuantity(cartItem.item.id, cartItem.quantity + 1)}
-                                    className="h-11 w-11 flex items-center justify-center text-base font-black text-black hover:bg-gray-50"
+                                    className={`h-10 w-10 flex items-center justify-center text-base font-black ${cateringMode ? 'text-white hover:bg-white/10' : 'text-black hover:bg-gray-50'}`}
                                     aria-label={`Increase quantity for ${cartItem.item.name}`}
                                   >
                                     +
                                   </button>
                                 </div>
 
-                                <div className="text-right">
-                                  <div className="text-xs text-gray-500">Line total</div>
-                                  <div className="text-lg font-extrabold text-black">${(lineCents / 100).toFixed(2)}</div>
+                                <div className="text-right shrink-0">
+                                  <div className={`text-[10px] ${cateringMode ? 'text-white/50' : 'text-gray-500'}`}>Line total</div>
+                                  <div className={`text-base sm:text-lg font-extrabold ${cateringMode ? 'text-white' : 'text-black'}`}>${(lineCents / 100).toFixed(2)}</div>
                                 </div>
                               </div>
                             </div>
@@ -2619,14 +2622,14 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
 
                   {/* Order-wide notes - hidden in food truck mode (included in pickup section) */}
                   {orderingEnabled && !isFoodTruckMode && (
-                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <div className="text-sm font-extrabold tracking-wide text-black">Order-wide notes</div>
-                      <div className="mt-2 text-sm text-gray-600">Anything the kitchen should know for the whole order.</div>
+                    <div className={`rounded-2xl border p-4 sm:p-5 shadow-sm min-w-0 ${cateringMode ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'}`}>
+                      <div className={`text-sm font-extrabold tracking-wide ${cateringMode ? 'text-white' : 'text-black'}`}>Order-wide notes</div>
+                      <div className={`mt-2 text-sm ${cateringMode ? 'text-white/70' : 'text-gray-600'}`}>Anything the kitchen should know for the whole order.</div>
                       <textarea
                         value={orderNote}
                         onChange={(e) => setOrderNote(e.target.value)}
                         placeholder="Example: allergy note, extra napkins, etc."
-                        className="mt-4 w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                        className={`mt-4 w-full min-w-0 rounded-xl border px-3 py-2.5 text-[16px] resize-none ${cateringMode ? 'border-white/15 bg-neutral-900 text-white placeholder-white/40' : 'border-gray-300 bg-white text-black'}`}
                         rows={3}
                       />
                     </div>
@@ -2662,15 +2665,15 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
 
                   {/* Contact Info - For non-food-truck modes */}
                   {orderingEnabled && !isFoodTruckMode && (
-                    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <div className="text-sm font-extrabold tracking-wide text-black">{cateringMode ? '👤 Contact Information' : 'Contact Info'}</div>
-                      <div className="mt-2 text-sm text-gray-600">
+                    <div className={`rounded-2xl border p-4 sm:p-5 shadow-sm min-w-0 ${cateringMode ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'}`}>
+                      <div className={`text-sm font-extrabold tracking-wide ${cateringMode ? 'text-white' : 'text-black'}`}>{cateringMode ? '👤 Contact Information' : 'Contact Info'}</div>
+                      <div className={`mt-2 text-sm ${cateringMode ? 'text-white/70' : 'text-gray-600'}`}>
                         {cateringMode 
                           ? "We'll use this to confirm your order and coordinate delivery."
                           : "Receipt & updates. We'll send your receipt and pickup updates here."
                         }
                       </div>
-                      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="mt-4 flex flex-col gap-3">
                         <input
                           type="text"
                           inputMode="text"
@@ -2678,7 +2681,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                           value={customerName}
                           onChange={(e) => setCustomerName(e.target.value)}
                           placeholder={cateringMode ? "Your Name *" : "Name (optional)"}
-                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                          className={`w-full min-w-0 rounded-xl border px-3 py-2.5 text-[16px] ${cateringMode ? 'border-white/15 bg-neutral-900 text-white placeholder-white/40' : 'border-gray-300 bg-white text-black'}`}
                         />
                         <input
                           type="email"
@@ -2687,7 +2690,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                           value={customerEmail}
                           onChange={(e) => setCustomerEmail(e.target.value)}
                           placeholder="Email *"
-                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                          className={`w-full min-w-0 rounded-xl border px-3 py-2.5 text-[16px] ${cateringMode ? 'border-white/15 bg-neutral-900 text-white placeholder-white/40' : 'border-gray-300 bg-white text-black'}`}
                         />
                         <input
                           type="tel"
@@ -2696,7 +2699,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                           value={customerPhone}
                           onChange={(e) => setCustomerPhone(e.target.value)}
                           placeholder={cateringMode ? "Phone *" : "Phone (optional)"}
-                          className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                          className={`w-full min-w-0 rounded-xl border px-3 py-2.5 text-[16px] ${cateringMode ? 'border-white/15 bg-neutral-900 text-white placeholder-white/40' : 'border-gray-300 bg-white text-black'}`}
                         />
                         {cateringMode && (
                           <input
@@ -2706,45 +2709,45 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                             value={companyName}
                             onChange={(e) => setCompanyName(e.target.value)}
                             placeholder="Company/Organization (optional)"
-                            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-[16px] text-black"
+                            className="w-full min-w-0 rounded-xl border border-white/15 bg-neutral-900 px-3 py-2.5 text-[16px] text-white placeholder-white/40"
                           />
                         )}
                       </div>
 
                       {smsCheckoutUiEnabled && (
-                        <label className="mt-4 flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3">
+                        <label className={`mt-4 flex items-start gap-3 rounded-xl border px-3 py-3 ${cateringMode ? 'border-white/15 bg-neutral-900/60' : 'border-gray-200 bg-gray-50'}`}>
                           <input
                             type="checkbox"
-                            className="mt-1 h-4 w-4"
+                            className="mt-1 h-4 w-4 shrink-0"
                             checked={smsOptIn}
                             onChange={(e) => setSmsOptIn(e.target.checked)}
                           />
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold text-black">
+                            <div className={`text-xs sm:text-sm font-semibold ${cateringMode ? 'text-white' : 'text-black'}`}>
                               By checking this box, you agree to receive SMS/text messages from <span className="underline">{brandName}</span> (the business you are ordering from) about this order, including order confirmations, status updates, and pickup/ready alerts.
                             </div>
-                            <div className="text-xs text-gray-600">
+                            <div className={`text-[11px] sm:text-xs mt-1 ${cateringMode ? 'text-white/60' : 'text-gray-600'}`}>
                               Consent is optional and not required to purchase. Message frequency varies. Msg &amp; data rates may apply. Reply STOP to opt out or HELP for help. See our <a href="/sms-terms" className="underline">SMS Terms</a>.
                             </div>
                           </div>
                         </label>
                       )}
-                      <label className={`flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 ${smsCheckoutUiEnabled ? 'mt-3' : 'mt-4'}`}>
+                      <label className={`flex items-start gap-3 rounded-xl border px-3 py-3 ${cateringMode ? 'border-white/15 bg-neutral-900/60' : 'border-gray-200 bg-gray-50'} ${smsCheckoutUiEnabled ? 'mt-3' : 'mt-4'}`}>
                         <input
                           type="checkbox"
-                          className="mt-1 h-4 w-4"
+                          className="mt-1 h-4 w-4 shrink-0"
                           checked={marketingSmsOptIn}
                           onChange={(e) => setMarketingSmsOptIn(e.target.checked)}
                         />
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-black">
+                          <div className={`text-xs sm:text-sm font-semibold ${cateringMode ? 'text-white' : 'text-black'}`}>
                             {smsCheckoutUiEnabled ? (
                               <>Optional: I agree to receive recurring marketing and retention messages from <span className="underline">{brandName}</span> by email and, if I provided a phone number, by SMS — including review requests and occasional promotions.</>
                             ) : (
                               <>Optional: I agree to receive recurring marketing and retention emails from <span className="underline">{brandName}</span>, including review requests and occasional promotions.</>
                             )}
                           </div>
-                          <div className="text-xs text-gray-600">
+                          <div className={`text-[11px] sm:text-xs mt-1 ${cateringMode ? 'text-white/60' : 'text-gray-600'}`}>
                             {smsCheckoutUiEnabled ? (
                               <>Separate from order-status SMS. Consent is optional and not required to purchase. Email unsubscribe links are included in marketing emails. For SMS: message frequency varies; msg &amp; data rates may apply; reply STOP to opt out or HELP for help.</>
                             ) : (
@@ -2754,13 +2757,13 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                         </div>
                       </label>
                       {smsCheckoutUiEnabled && smsOptIn && !customerPhone.trim() && (
-                        <div className="mt-2 text-sm font-semibold text-amber-700">
+                        <div className={`mt-2 text-xs sm:text-sm font-semibold ${cateringMode ? 'text-amber-400' : 'text-amber-700'}`}>
                           Please add a phone number to receive order-status SMS.
                         </div>
                       )}
 
                       {!emailOk && (
-                        <div className="mt-3 text-sm font-semibold text-amber-700">
+                        <div className={`mt-3 text-xs sm:text-sm font-semibold ${cateringMode ? 'text-amber-400' : 'text-amber-700'}`}>
                           Please enter a valid email to place your order.
                         </div>
                       )}
@@ -2881,9 +2884,9 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
             </div>
             
             {cart.length > 0 && (
-              <div className="p-5 border-t border-white/10 bg-neutral-950 shadow-[0_-10px_24px_rgba(0,0,0,0.35)]">
-                <div className="flex items-center justify-between">
-                  <div>
+              <div className="p-4 sm:p-5 border-t border-white/10 bg-neutral-950 shadow-[0_-10px_24px_rgba(0,0,0,0.35)] shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div className="min-w-0">
                     <div className="text-xs font-semibold text-white/70">{cateringMode ? 'Estimated Total' : 'Order total'}</div>
                     <div className="text-2xl font-extrabold text-white">${orderTotal.toFixed(2)}</div>
                     {cateringMode && guestCount && parseInt(guestCount) > 0 && (
@@ -2905,7 +2908,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                       }
                       setToast('Demo mode — ordering is not enabled for this tenant yet.')
                     }}
-                    className="rounded-2xl px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
+                    className="w-full sm:w-auto shrink-0 rounded-2xl px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
                     style={{ background: 'var(--accent)' }}
                     disabled={cart.length === 0 || (orderingEnabled && (!emailOk || orderingPaused || (smsCheckoutUiEnabled && smsOptIn && !customerPhone.trim()) || (dineInEnabled && fulfillmentMode === 'dinein' && !tableNumber.trim()) || (cateringMode && (!eventDate || !guestCount || !customerName.trim() || !customerPhone.trim())) || (isFoodTruckMode && !customerName.trim())))}
                   >
