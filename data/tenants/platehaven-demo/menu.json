@@ -7,7 +7,7 @@
         {
           "id": "bbq-pulled-pork-tray",
           "name": "BBQ Pulled Pork Tray",
-          "description": "Slow-smoked pork shoulder, hand-pulled and tossed in our tangy house BBQ sauce. Serves 12.",
+          "description": "Slow-smoked pulled pork in house BBQ sauce. Serves 12.",
           "price": 89,
           "servingSize": 12,
           "servingUnit": "people",
@@ -17,7 +17,7 @@
         {
           "id": "grilled-chicken-tray",
           "name": "Grilled Chicken Tray",
-          "description": "Herb-marinated chicken breasts, grilled and sliced. Tender, flavorful, and perfect for any crowd.",
+          "description": "Herb-marinated grilled chicken, sliced. Serves 10.",
           "price": 79,
           "servingSize": 10,
           "servingUnit": "people",
@@ -27,7 +27,7 @@
         {
           "id": "beef-brisket-tray",
           "name": "Smoked Beef Brisket Tray",
-          "description": "Texas-style brisket smoked low and slow for 12 hours. Rich bark with melt-in-your-mouth tenderness.",
+          "description": "12-hour smoked Texas brisket with rich bark. Serves 12.",
           "price": 129,
           "servingSize": 12,
           "servingUnit": "people",
@@ -37,7 +37,7 @@
         {
           "id": "italian-meatball-tray",
           "name": "Italian Meatball Tray",
-          "description": "House-made beef and pork meatballs simmered in marinara. Classic Italian comfort food for your event.",
+          "description": "House-made meatballs in marinara. Serves 15.",
           "price": 69,
           "servingSize": 15,
           "servingUnit": "people",
@@ -46,7 +46,7 @@
         {
           "id": "veggie-fajita-tray",
           "name": "Grilled Veggie Fajita Tray",
-          "description": "Sautéed peppers, onions, and seasonal vegetables with warm tortillas and fresh pico de gallo.",
+          "description": "Peppers, onions, and veggies with tortillas and pico.",
           "price": 59,
           "servingSize": 10,
           "servingUnit": "people",
@@ -61,7 +61,7 @@
         {
           "id": "mac-cheese-tray",
           "name": "Creamy Mac & Cheese",
-          "description": "Three-cheese blend baked golden and creamy. A crowd-pleasing favorite at every gathering.",
+          "description": "Three-cheese baked mac, golden and creamy. Serves 15.",
           "price": 45,
           "servingSize": 15,
           "servingUnit": "people",
@@ -70,7 +70,7 @@
         {
           "id": "garden-salad-bowl",
           "name": "Fresh Garden Salad",
-          "description": "Crisp mixed greens with cucumber, tomato, and our house vinaigrette. Light and refreshing.",
+          "description": "Mixed greens, cucumber, tomato, house vinaigrette.",
           "price": 35,
           "servingSize": 12,
           "servingUnit": "people",
@@ -79,7 +79,7 @@
         {
           "id": "coleslaw-tray",
           "name": "Classic Coleslaw",
-          "description": "Creamy cabbage slaw with a touch of sweetness. The perfect cool complement to BBQ mains.",
+          "description": "Creamy cabbage slaw — the perfect BBQ side.",
           "price": 25,
           "servingSize": 15,
           "servingUnit": "people",
@@ -88,7 +88,7 @@
         {
           "id": "roasted-veggies",
           "name": "Roasted Seasonal Vegetables",
-          "description": "Seasonal vegetables roasted with olive oil, garlic, and fresh herbs until caramelized.",
+          "description": "Seasonal veggies roasted with garlic and herbs.",
           "price": 45,
           "servingSize": 12,
           "servingUnit": "people",
@@ -97,7 +97,7 @@
         {
           "id": "cornbread-basket",
           "name": "Honey Cornbread Basket",
-          "description": "Warm honey-sweet cornbread muffins, baked fresh and served in a rustic basket.",
+          "description": "Warm honey-sweet cornbread muffins, baked fresh.",
           "price": 25,
           "servingSize": 12,
           "servingUnit": "pieces",
@@ -106,7 +106,7 @@
         {
           "id": "baked-beans",
           "name": "Slow-Cooked Baked Beans",
-          "description": "Sweet and smoky beans slow-baked with bacon and molasses. A Southern BBQ classic.",
+          "description": "Smoky baked beans with bacon and molasses.",
           "price": 35,
           "servingSize": 15,
           "servingUnit": "people",
@@ -115,7 +115,7 @@
         {
           "id": "potato-salad",
           "name": "Classic Potato Salad",
-          "description": "Classic creamy potato salad with celery, egg, and a touch of mustard. Made fresh daily.",
+          "description": "Creamy potato salad with celery, egg, and mustard.",
           "price": 30,
           "servingSize": 12,
           "servingUnit": "people",
@@ -130,7 +130,7 @@
         {
           "id": "deli-sandwich-platter",
           "name": "Deli Sandwich Platter",
-          "description": "Assorted deli sandwiches on artisan rolls — turkey, ham, roast beef, and veggie options.",
+          "description": "Turkey, ham, roast beef, and veggie on artisan rolls.",
           "price": 99,
           "servingSize": 12,
           "servingUnit": "people",
@@ -140,7 +140,7 @@
         {
           "id": "veggie-wrap-platter",
           "name": "Veggie Wrap Platter",
-          "description": "Colorful veggie wraps with hummus, roasted peppers, and fresh greens in spinach tortillas.",
+          "description": "Hummus, roasted peppers, and greens in spinach wraps.",
           "price": 79,
           "servingSize": 10,
           "servingUnit": "people",
@@ -149,7 +149,7 @@
         {
           "id": "chicken-caesar-wrap",
           "name": "Chicken Caesar Wrap Platter",
-          "description": "Grilled chicken, romaine, parmesan, and Caesar dressing wrapped in flour tortillas.",
+          "description": "Grilled chicken, romaine, parmesan, Caesar dressing.",
           "price": 85,
           "servingSize": 10,
           "servingUnit": "people",
@@ -164,7 +164,7 @@
         {
           "id": "spinach-dip",
           "name": "Spinach & Artichoke Dip",
-          "description": "Warm, creamy spinach and artichoke dip served with toasted baguette slices and chips.",
+          "description": "Warm creamy dip with baguette slices and chips.",
           "price": 45,
           "servingSize": 15,
           "servingUnit": "people",
@@ -174,7 +174,7 @@
         {
           "id": "chicken-wings",
           "name": "Chicken Wing Platter",
-          "description": "Crispy jumbo wings tossed in your choice of buffalo, BBQ, or honey garlic sauce.",
+          "description": "Jumbo wings — buffalo, BBQ, or honey garlic.",
           "price": 75,
           "servingSize": 50,
           "servingUnit": "pieces",
@@ -184,7 +184,7 @@
         {
           "id": "meatball-bites",
           "name": "Mini Meatball Bites",
-          "description": "Bite-sized Italian meatballs in marinara, perfect for passing trays and cocktail hours.",
+          "description": "Bite-sized meatballs in marinara for passing trays.",
           "price": 55,
           "servingSize": 40,
           "servingUnit": "pieces",
@@ -193,7 +193,7 @@
         {
           "id": "veggie-platter",
           "name": "Fresh Veggie Platter",
-          "description": "Crisp seasonal vegetables with ranch and hummus dips. Fresh, colorful, and always a hit.",
+          "description": "Seasonal vegetables with ranch and hummus dips.",
           "price": 40,
           "servingSize": 15,
           "servingUnit": "people",
@@ -202,7 +202,7 @@
         {
           "id": "cheese-board",
           "name": "Artisan Cheese Board",
-          "description": "Curated selection of artisan cheeses with crackers, grapes, and honey comb.",
+          "description": "Artisan cheeses with crackers, grapes, and honey.",
           "price": 65,
           "servingSize": 12,
           "servingUnit": "people",
@@ -217,7 +217,7 @@
         {
           "id": "brownie-tray",
           "name": "Chocolate Brownie Tray",
-          "description": "Fudgy chocolate brownies cut into generous squares. Rich, decadent, and always the first to go.",
+          "description": "Fudgy chocolate brownies cut into generous squares.",
           "price": 35,
           "servingSize": 16,
           "servingUnit": "pieces",
@@ -226,7 +226,7 @@
         {
           "id": "cookie-platter",
           "name": "Assorted Cookie Platter",
-          "description": "Fresh-baked chocolate chip, oatmeal raisin, and sugar cookies. Assorted for every taste.",
+          "description": "Chocolate chip, oatmeal raisin, and sugar cookies.",
           "price": 30,
           "servingSize": 24,
           "servingUnit": "cookies",
@@ -236,7 +236,7 @@
         {
           "id": "mini-cheesecakes",
           "name": "Mini Cheesecakes",
-          "description": "Individual New York-style cheesecakes with graham cracker crust and berry topping.",
+          "description": "Individual NY-style cheesecakes with berry topping.",
           "price": 55,
           "servingSize": 12,
           "servingUnit": "pieces",
@@ -245,7 +245,7 @@
         {
           "id": "fruit-platter",
           "name": "Fresh Fruit Platter",
-          "description": "Seasonal fruit artfully arranged — berries, melon, grapes, and tropical favorites.",
+          "description": "Berries, melon, grapes, and seasonal fruit.",
           "price": 45,
           "servingSize": 15,
           "servingUnit": "people",
@@ -261,7 +261,7 @@
         {
           "id": "lemonade-gallon",
           "name": "Fresh Lemonade (Gallon)",
-          "description": "Fresh-squeezed lemonade brewed daily. Bright, tart, and refreshing by the gallon.",
+          "description": "Fresh-squeezed lemonade by the gallon.",
           "price": 15,
           "servingSize": 12,
           "servingUnit": "cups",
@@ -270,7 +270,7 @@
         {
           "id": "iced-tea-gallon",
           "name": "Sweet Tea (Gallon)",
-          "description": "Southern-style sweet tea brewed fresh. A classic addition to any catering spread.",
+          "description": "Southern-style sweet tea, brewed fresh.",
           "price": 12,
           "servingSize": 12,
           "servingUnit": "cups",
@@ -279,7 +279,7 @@
         {
           "id": "bottled-water-case",
           "name": "Bottled Water Case",
-          "description": "Chilled bottled water — convenient hydration for events, meetings, and outdoor gatherings.",
+          "description": "Chilled bottled water for events and meetings.",
           "price": 20,
           "servingSize": 24,
           "servingUnit": "bottles",

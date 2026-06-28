@@ -221,7 +221,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
     const s = cleanMojibake(raw).replace(/\s+/g, ' ').trim()
     if (!s) return ''
     // Keep it short and kitchen/menu-friendly (not a full paragraph).
-    return s.length > 140 ? `${s.slice(0, 137)}…` : s
+    return s.length > 80 ? `${s.slice(0, 77)}…` : s
   }, [cleanMojibake])
 
   const groupForCategory = useCallback((categoryName: string) => {
@@ -1103,18 +1103,18 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
         <>
       {/* Demo reminder - PlateHaven version */}
       {isPlateHavenDemo && showDemoAcknowledgement && (
-        <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
-          <div className="w-full max-w-md rounded-2xl bg-[#111] border border-[#C4A76A]/20 p-6 shadow-2xl">
-            <div className="text-center mb-5">
-              <div className="text-lg font-bold text-white mb-2">See PlateHaven in Action</div>
-              <p className="text-sm text-white/60">
-                You&apos;re browsing a live demo catering menu. Your version will be fully branded with your logo, your menu, and your pricing.
+        <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/70 p-3 sm:p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-2xl bg-[#111] border border-[#C4A76A]/20 p-4 sm:p-6 shadow-2xl">
+            <div className="text-center mb-4 sm:mb-5">
+              <div className="text-base sm:text-lg font-bold text-white mb-1.5 sm:mb-2">See PlateHaven in Action</div>
+              <p className="text-xs sm:text-sm text-white/60">
+                Live demo menu — yours will be fully branded with your logo, menu, and pricing.
               </p>
             </div>
             
-            <div className="bg-[#1a1a1a] rounded-xl p-4 mb-5 border border-white/5">
-              <div className="text-sm font-semibold text-[#C4A76A] mb-2">What You&apos;ll Get</div>
-              <ul className="space-y-2 text-sm text-white/70">
+            <div className="bg-[#1a1a1a] rounded-xl p-3 mb-4 sm:p-4 sm:mb-5 border border-white/5">
+              <div className="text-xs sm:text-sm font-semibold text-[#C4A76A] mb-1.5 sm:mb-2">What You&apos;ll Get</div>
+              <ul className="space-y-1.5 text-xs sm:text-sm text-white/70">
                 <li className="flex items-start gap-2">
                   <span className="text-[#C4A76A]">✓</span>
                   <span>Your branding, colors, and logo — not ours</span>
@@ -1223,22 +1223,22 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
           {useElegantListLayout ? (
             /* Dark minimal header for Independent/PlatePilot style */
             <div className="fixed top-0 left-0 right-0 z-50" style={{ background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="max-w-4xl mx-auto px-3 h-14 sm:px-4 sm:h-16 flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                   {brand?.header?.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={brand.header.logoUrl} alt={brandName} className="h-10 w-auto" />
+                    <img src={brand.header.logoUrl} alt={brandName} className="h-8 w-auto sm:h-10" />
                   ) : (
-                    <span className="text-xl font-semibold text-white">{brandName}</span>
+                    <span className="text-base sm:text-xl font-semibold text-white">{brandName}</span>
                   )}
                 </div>
-                <div className="flex-1 max-w-md mx-8">
+                <div className="flex-1 min-w-0 ml-1 sm:ml-4">
                   <input
                     type="text"
                     placeholder="Search the menu..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg bg-white text-neutral-900 text-sm placeholder-neutral-500"
+                    className="w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-white text-neutral-900 text-sm placeholder-neutral-500"
                   />
                 </div>
               </div>
@@ -1250,19 +1250,19 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
               style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))' }}
             >
               <div
-                className="px-4"
-                style={{ height: 72, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+                className="px-4 sm:px-4"
+                style={{ height: 56, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
               >
-                <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">🍽️</div>
+                <div className="max-w-7xl mx-auto h-full flex items-center justify-center gap-2 sm:gap-3">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-black flex items-center justify-center text-sm">🍽️</div>
                   <div className="text-center">
                     <h1
-                      className={`text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
+                      className={`text-xl sm:text-3xl font-bold text-white tracking-wide ${tenant === 'demo' ? 'elegant-cursive' : ''}`}
                       style={{ fontFamily: tenant === 'demo' ? undefined : 'var(--font-italian)' }}
                     >
                       {brandName}
                     </h1>
-                    <p className="text-gray-200 text-xs">{brandTagline}</p>
+                    <p className="text-gray-200 text-[10px] sm:text-xs">{brandTagline}</p>
                   </div>
                 </div>
               </div>
@@ -1270,7 +1270,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
           )}
 
           {/* Spacer to offset fixed header height */}
-          <div style={{ height: useElegantListLayout ? 64 : 80 }} />
+          <div className={useElegantListLayout ? 'h-14 sm:h-16' : 'h-[56px] sm:h-20'} />
         </>
       )}
 
@@ -1624,12 +1624,12 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
 
       {/* Main Content */}
       {useElegantListLayout ? (
-        <div className="max-w-4xl mx-auto px-4 py-6" id="top">
+        <div className="max-w-4xl mx-auto px-3 py-4 sm:px-4 sm:py-6" id="top">
           {filteredCategories.map((category, catIdx) => (
-            <div key={category.id} id={`cat-${category.id}`} className={catIdx > 0 ? 'mt-10' : ''}>
+            <div key={category.id} id={`cat-${category.id}`} className={catIdx > 0 ? 'mt-6 sm:mt-10' : ''}>
               {/* Category Header */}
-              <div className="flex items-center gap-4 mb-6">
-                <h2 className="text-xl font-bold text-white tracking-wide">
+              <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-bold text-white tracking-wide">
                   {cleanMojibake(category.name)}
                 </h2>
                 <div className="flex-1 h-px" style={{ background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
@@ -1639,76 +1639,96 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
               <div className="rounded-xl overflow-hidden" style={{ background: '#1a1a1a' }}>
                 {category.items.map((item, itemIdx) => {
                   const tags = visibleTags(item.tags).slice(0, 3)
+                  const thumbSrc = (imageMap[item.id] as string | undefined) || item.imageUrl || ''
                   return (
                     <div
                       key={item.id}
                       id={`item-${item.id}`}
                       data-menu-item-id={item.id}
                       data-menu-item-name={item.name}
-                      className="px-5 py-5"
+                      className="px-3 py-3 sm:px-5 sm:py-4"
                       style={itemIdx > 0 ? { borderTop: '1px solid rgba(255,255,255,0.08)' } : undefined}
                     >
-                      <div className="flex items-start justify-between gap-6">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-base font-semibold text-white">
-                            {highlightText(item.name, searchQuery)}
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                        <div className="flex gap-2.5 sm:gap-3 flex-1 min-w-0">
+                          {thumbSrc ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={thumbSrc}
+                              alt=""
+                              className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-cover shrink-0"
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          ) : null}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm sm:text-base font-semibold text-white">
+                              {highlightText(item.name, searchQuery)}
+                            </div>
+                            {typeof item.description === 'string' && item.description.trim() !== '' && (
+                              <div className="mt-0.5 text-xs sm:text-sm text-gray-400 line-clamp-1 sm:line-clamp-2">
+                                {minimalDescription(item.description)}
+                              </div>
+                            )}
+                            {(tags.length > 0) && (
+                              <div className="mt-1.5 sm:mt-2 flex flex-wrap gap-1">
+                                {tags.slice(0, 2).map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium bg-neutral-800 text-neutral-300"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                                {tags.length > 2 && (
+                                  <span className="hidden sm:inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-neutral-800 text-neutral-300">
+                                    {tags[2]}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          {typeof item.description === 'string' && item.description.trim() !== '' && (
-                            <div className="mt-1 text-sm text-gray-400">
-                              {minimalDescription(item.description)}
-                            </div>
-                          )}
-                          {(tags.length > 0) && (
-                            <div className="mt-2 flex flex-wrap gap-1">
-                              {tags.map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium bg-neutral-800 text-neutral-300"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          )}
                         </div>
 
-                        <div className="shrink-0 text-right">
-                          <div className="text-base font-semibold" style={{ color: 'var(--accent)' }}>
-                            ${Number(item.price ?? 0).toFixed(2)}
-                          </div>
-                          {cateringMode && item.servingSize && (
-                            <div className="text-xs mt-0.5" style={{ color: 'var(--accent)', opacity: 0.85 }}>
-                              Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                        <div className="flex items-center justify-between gap-2 sm:flex-col sm:items-end sm:shrink-0">
+                          <div className="text-left sm:text-right">
+                            <div className="text-sm sm:text-base font-semibold" style={{ color: 'var(--accent)' }}>
+                              ${Number(item.price ?? 0).toFixed(2)}
                             </div>
-                          )}
-                        </div>
+                            {cateringMode && item.servingSize && (
+                              <div className="text-[10px] sm:text-xs mt-0.5" style={{ color: 'var(--accent)', opacity: 0.85 }}>
+                                Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
+                              </div>
+                            )}
+                          </div>
 
-                        <div className="shrink-0 flex flex-col gap-2">
-                          {!hideCart && (
+                          <div className="flex gap-2 sm:flex-col">
+                            {!hideCart && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  addToCart(item)
+                                  setRecentlyAddedId(item.id)
+                                  setCartBump(true)
+                                  setToast(`Added ${item.name}`)
+                                  setIsCartOpen(true)
+                                  setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
+                                }}
+                                className="h-8 rounded-lg px-3 text-xs font-semibold sm:h-9 sm:px-5 sm:text-sm"
+                                style={{ background: 'var(--accent)', color: '#0a0a0a' }}
+                              >
+                                Add
+                              </button>
+                            )}
                             <button
                               type="button"
-                              onClick={() => {
-                                addToCart(item)
-                                setRecentlyAddedId(item.id)
-                                setCartBump(true)
-                                setToast(`Added ${item.name}`)
-                                setIsCartOpen(true)
-                                setTimeout(() => setRecentlyAddedId(prev => (prev === item.id ? null : prev)), 600)
-                              }}
-                              className="h-9 rounded-lg px-5 text-sm font-semibold"
-                              style={{ background: 'var(--accent)', color: '#0a0a0a' }}
+                              onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                              className="h-8 rounded-lg px-3 text-xs font-medium flex items-center justify-center gap-1 sm:h-9 sm:px-5 sm:text-sm"
+                              style={{ background: '#2a2a2a', color: '#e5e5e5' }}
                             >
-                              Add
+                              <span className="text-xs">○</span> Ask
                             </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                            className="h-9 rounded-lg px-5 text-sm font-medium flex items-center justify-center gap-1"
-                            style={{ background: '#2a2a2a', color: '#e5e5e5' }}
-                          >
-                            <span className="text-xs">○</span> Ask
-                          </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1719,7 +1739,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
           ))}
         </div>
       ) : (
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8 lg:grid lg:grid-cols-12 lg:gap-8" style={{ color: 'var(--ink)' }}>
         {/* Current Category Chip */}
         <div className="lg:col-span-12 mb-4">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-medium" style={{ background: '#2a2a2a', color: '#f5f5f5' }}>
@@ -1767,7 +1787,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
         </aside>
 
         {/* Menu Grid */}
-        <div className="space-y-12 lg:col-span-9" id="top">
+        <div className="space-y-6 sm:space-y-12 lg:col-span-9" id="top">
           {filteredCategories.length === 0 && (
             <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--muted)' }}>
               <div className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
@@ -1792,16 +1812,16 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
             <div
               key={category.id}
               id={`cat-${category.id}`}
-              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-8 border-t' : ''}`}
+              className={`category-section scroll-mt-24 ${idx > 0 ? 'pt-4 sm:pt-8 border-t' : ''}`}
               style={{
                 background: 'var(--card)',
                 borderColor: 'var(--muted)',
                 borderRadius: 12,
-                padding: 12
+                padding: 8
               }}
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-2 sm:gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
                   {getCategoryImage(category.name) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -2035,7 +2055,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                   })}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
                   {category.items.map(item => (
                     <div 
                       key={item.id}
@@ -2061,7 +2081,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                               id={`img-${item.id}`}
                               src={src}
                               alt={item.name}
-                              className="w-full h-48 object-cover"
+                              className="w-full h-28 sm:h-48 object-cover"
                               loading="lazy"
                               decoding="async"
                             />
@@ -2069,19 +2089,19 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                         )
                       })()}
                       
-                      <div className="p-6">
-                        <div className="flex justify-between items-start mb-3">
+                      <div className="p-3 sm:p-6">
+                        <div className="flex justify-between items-start mb-2 sm:mb-3">
                         {isAdmin ? (
                           <input
-                            className="text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
+                            className="text-base sm:text-xl font-semibold text-black leading-tight w-full mr-4 border border-gray-300 rounded px-2 py-1"
                             value={item.name}
                             onChange={e => updateItemField(category.id, item.id, 'name', e.target.value)}
                           />
                         ) : (
-                          <h3 className="text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+                          <h3 className="text-base sm:text-xl font-semibold text-black leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>
                             {highlightText(item.name, searchQuery)}
                             {typeof item.calories === 'number' && (
-                              <span className="ml-2 align-middle text-sm font-normal text-gray-500">{item.calories} cal</span>
+                              <span className="ml-2 align-middle text-xs sm:text-sm font-normal text-gray-500">{item.calories} cal</span>
                             )}
                           </h3>
                         )}
@@ -2089,13 +2109,13 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                           <input
                             type="number"
                             step="0.01"
-                            className="w-28 text-right text-xl font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
+                            className="w-28 text-right text-base sm:text-xl font-bold text-black ml-4 border border-gray-300 rounded px-2 py-1"
                             value={Number(item.price).toString()}
                             onChange={e => updateItemField(category.id, item.id, 'price', e.target.value)}
                           />
                         ) : (
                           <div className="ml-4 text-right">
-                            <span className="text-xl font-bold text-black px-2 py-0.5 rounded-full inline-block" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
+                            <span className="text-base sm:text-xl font-bold text-black px-2 py-0.5 rounded-full inline-block" style={{ background: 'var(--accent)', color: '#0b0b0b' }}>${item.price.toFixed(2)}</span>
                             {cateringMode && item.servingSize && (
                               <div className="text-xs text-amber-600 font-semibold mt-1">
                                 Serves {item.servingSize}{item.servingUnit ? ` ${item.servingUnit}` : ''}
@@ -2119,20 +2139,14 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                       )}
                       {!isAdmin && typeof item.description === 'string' && item.description.trim() !== '' && (
                         <p
-                          className="mb-3 text-sm text-gray-700"
-                          style={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                          }}
+                          className="mb-2 sm:mb-3 text-xs sm:text-sm text-gray-700 line-clamp-1 sm:line-clamp-2"
                         >
                           {minimalDescription(item.description)}
                         </p>
                       )}
                       
                       {isAdmin ? (
-                        <div className="space-y-2 mb-4">
+                        <div className="space-y-2 mb-3 sm:mb-4">
                           <textarea
                             className="w-full border border-gray-300 rounded px-2 py-1 text-sm text-black"
                             placeholder="Description"
@@ -2147,7 +2161,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                           />
                         </div>
                       ) : (
-                        <div className="mb-4" />
+                        <div className="mb-2 sm:mb-4" />
                       )}
                       
                       <div className="flex items-center justify-between gap-3">
