@@ -246,6 +246,7 @@ export async function GET(request: NextRequest) {
     const fsImages = await readJson(path.join(base, 'images.json'))
     const fsStyle = await readJson(path.join(base, 'style.json'))
     const fsCopy = await readJson(path.join(base, 'copy.json'))
+    const fsOrdering = await readJson(path.join(base, 'ordering.json'))
     // Filesystem fallback from draft tenant (preview only)
     const fbFsBrand = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'brand.json')) : null
     const fbFsTheme = fallbackTenant ? await readJson(path.join(process.cwd(), 'data', 'tenants', fallbackTenant, 'theme.json')) : null
@@ -308,7 +309,7 @@ export async function GET(request: NextRequest) {
       ?? fbFsCopy
       ?? embeddedCopy
 
-    let ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? null)
+    let ordering = normalizeOrdering(dbOrdering ?? fbDbOrdering ?? fsOrdering ?? null)
 
     // Demo defaults: allow the demo menu to exercise the ordering UI without redeploying DB settings.
     // Guardrails:
@@ -317,11 +318,14 @@ export async function GET(request: NextRequest) {
       !!(dbOrdering && typeof (dbOrdering as Record<string, unknown>)['enabled'] === 'boolean')
     const fbDbOrderingHasEnabled =
       !!(fbDbOrdering && typeof (fbDbOrdering as Record<string, unknown>)['enabled'] === 'boolean')
+    const fsOrderingHasEnabled =
+      !!(fsOrdering && typeof (fsOrdering as Record<string, unknown>)['enabled'] === 'boolean')
     const demoOrderingFallbackOk =
       (tenant === 'demo' || tenant === 'platepilot-demo' || tenant === 'platehaven-demo')
       && !!process.env.DATABASE_URL
       && !dbOrderingHasEnabled
       && !fbDbOrderingHasEnabled
+      && !fsOrderingHasEnabled
     if (demoOrderingFallbackOk) {
       ordering = normalizeOrdering({
         ...DEFAULT_ORDERING,
@@ -351,6 +355,19 @@ export async function GET(request: NextRequest) {
         ...ordering,
         cateringMode: true,
         cateringLeadDays: 2,
+      }
+    }
+
+    // Quick Pickup demo: ensure cart is visible without forcing catering mode
+    if (tenant === 'quickpickup-demo') {
+      const base = (style && typeof style === 'object') ? (style as Record<string, unknown>) : {}
+      const flagsBase = (base.flags && typeof base.flags === 'object') ? (base.flags as Record<string, unknown>) : {}
+      style = {
+        ...base,
+        flags: {
+          ...flagsBase,
+          hideCart: false,
+        },
       }
     }
 

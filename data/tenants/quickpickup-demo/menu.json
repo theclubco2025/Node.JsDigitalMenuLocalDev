@@ -1,0 +1,140 @@
+{
+  "categories": [
+    {
+      "id": "tacos",
+      "name": "Tacos",
+      "items": [
+        {
+          "id": "carne-asada-taco",
+          "name": "Carne Asada Taco",
+          "description": "Grilled marinated steak, cilantro, onion, and lime on a warm corn tortilla.",
+          "price": 4.5,
+          "tags": ["popular", "gluten-free"]
+        },
+        {
+          "id": "al-pastor-taco",
+          "name": "Al Pastor Taco",
+          "description": "Spit-roasted pork with pineapple, onion, and cilantro. A street-food classic.",
+          "price": 4.25,
+          "tags": ["popular"]
+        },
+        {
+          "id": "fish-taco",
+          "name": "Baja Fish Taco",
+          "description": "Crispy beer-battered cod, cabbage slaw, and chipotle crema on a flour tortilla.",
+          "price": 5,
+          "tags": []
+        },
+        {
+          "id": "veggie-taco",
+          "name": "Grilled Veggie Taco",
+          "description": "Roasted peppers, black beans, avocado, and queso fresco on a corn tortilla.",
+          "price": 3.75,
+          "tags": ["vegetarian"]
+        }
+      ]
+    },
+    {
+      "id": "burgers",
+      "name": "Burgers",
+      "items": [
+        {
+          "id": "classic-smash",
+          "name": "Classic Smash Burger",
+          "description": "Double smashed patties, American cheese, pickles, and special sauce on a brioche bun.",
+          "price": 9.5,
+          "tags": ["popular"]
+        },
+        {
+          "id": "bacon-cheddar",
+          "name": "Bacon Cheddar Burger",
+          "description": "Thick-cut bacon, sharp cheddar, caramelized onions, and smoky BBQ aioli.",
+          "price": 11,
+          "tags": []
+        },
+        {
+          "id": "mushroom-swiss",
+          "name": "Mushroom Swiss Burger",
+          "description": "Sautéed cremini mushrooms, melted Swiss, and garlic herb butter on a toasted bun.",
+          "price": 10.5,
+          "tags": []
+        },
+        {
+          "id": "veggie-burger",
+          "name": "Black Bean Veggie Burger",
+          "description": "House-made black bean patty with avocado, sprouts, and chipotle mayo.",
+          "price": 9,
+          "tags": ["vegetarian"]
+        }
+      ]
+    },
+    {
+      "id": "sides",
+      "name": "Sides",
+      "items": [
+        {
+          "id": "street-fries",
+          "name": "Street Fries",
+          "description": "Crispy seasoned fries tossed with cotija, cilantro, and lime crema.",
+          "price": 4.5,
+          "tags": ["vegetarian"]
+        },
+        {
+          "id": "elote-cup",
+          "name": "Elote Cup",
+          "description": "Roasted corn off the cob with mayo, cotija, chili powder, and lime.",
+          "price": 5,
+          "tags": ["vegetarian", "gluten-free"]
+        },
+        {
+          "id": "chips-guac",
+          "name": "Chips & Guacamole",
+          "description": "Fresh-made guacamole with house-fried tortilla chips. Made to order.",
+          "price": 6,
+          "tags": ["vegetarian", "vegan", "gluten-free"]
+        },
+        {
+          "id": "onion-rings",
+          "name": "Crispy Onion Rings",
+          "description": "Beer-battered onion rings with ranch dipping sauce. Golden and crunchy.",
+          "price": 4,
+          "tags": ["vegetarian"]
+        }
+      ]
+    },
+    {
+      "id": "drinks",
+      "name": "Drinks",
+      "items": [
+        {
+          "id": "horchata",
+          "name": "Horchata",
+          "description": "Creamy cinnamon rice milk — sweet, refreshing, and made fresh daily.",
+          "price": 3.5,
+          "tags": ["vegetarian"]
+        },
+        {
+          "id": "agua-fresca",
+          "name": "Agua Fresca",
+          "description": "Light fruit-infused water — ask what's fresh today. Watermelon or mango.",
+          "price": 3,
+          "tags": ["vegetarian", "vegan", "gluten-free"]
+        },
+        {
+          "id": "bottled-soda",
+          "name": "Bottled Soda",
+          "description": "Assorted bottled sodas — cola, lemon-lime, and root beer. Ice cold.",
+          "price": 2.5,
+          "tags": []
+        },
+        {
+          "id": "iced-coffee",
+          "name": "Iced Coffee",
+          "description": "Cold-brew coffee over ice with optional oat milk and vanilla syrup.",
+          "price": 4,
+          "tags": ["vegetarian"]
+        }
+      ]
+    }
+  ]
+}

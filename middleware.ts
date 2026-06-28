@@ -71,7 +71,7 @@ export function middleware(request: NextRequest) {
       const url = request.nextUrl.clone()
       const currentTenant = (url.searchParams.get('tenant') || '').toLowerCase()
       // Allow demo tenants to work in preview (for landing page demo links)
-      if (currentTenant === 'platepilot-demo' || currentTenant === 'platehaven-demo') {
+      if (currentTenant === 'platepilot-demo' || currentTenant === 'platehaven-demo' || currentTenant === 'quickpickup-demo') {
         return NextResponse.next()
       }
       const host = request.headers.get('host') || ''

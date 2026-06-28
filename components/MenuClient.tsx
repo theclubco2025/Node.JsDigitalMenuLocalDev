@@ -1106,9 +1106,9 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
         <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true">
           <div className="w-full max-w-md rounded-2xl bg-[#111] border border-[#C4A76A]/20 p-6 shadow-2xl">
             <div className="text-center mb-5">
-              <div className="text-lg font-bold text-white mb-2">Welcome to the Demo</div>
+              <div className="text-lg font-bold text-white mb-2">See PlateHaven in Action</div>
               <p className="text-sm text-white/60">
-                You&apos;re viewing a sample {isFoodTruckMode ? 'quick pickup' : 'catering'} menu.
+                You&apos;re browsing a live demo catering menu. Your version will be fully branded with your logo, your menu, and your pricing.
               </p>
             </div>
             
@@ -1117,19 +1117,19 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
               <ul className="space-y-2 text-sm text-white/70">
                 <li className="flex items-start gap-2">
                   <span className="text-[#C4A76A]">✓</span>
-                  <span>Fully personalized to your brand, colors &amp; logo</span>
+                  <span>Your branding, colors, and logo — not ours</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#C4A76A]">✓</span>
-                  <span>Your menu items with your pricing</span>
+                  <span>Your real menu with your pricing</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#C4A76A]">✓</span>
-                  <span>Your own shareable link &amp; QR code</span>
+                  <span>Your own shareable link and QR code</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#C4A76A]">✓</span>
-                  <span>Custom features available for additional fees</span>
+                  <span>Customers order directly — no commission fees</span>
                 </li>
               </ul>
             </div>
