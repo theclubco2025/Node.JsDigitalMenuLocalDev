@@ -9,49 +9,56 @@
           "name": "Enchiladas Suizas con Puerco Verde y Swiss Cheese",
           "description": "Grilled tortilla, salsa verde pork, Swiss, carrots en escabeche, romaine, salsa aguacate on ciabatta",
           "price": 14.5,
-          "tags": ["contains-meat", "contains-dairy"]
+          "tags": ["contains-meat", "contains-dairy", "addon:Add avocado|1.50", "addon:Extra pork|2.50"]
         },
         {
           "id": "i-cubano-nugget",
           "name": "Cubano Chicken Cordon Bleu",
           "description": "Crispy chicken nuggets, ham, Swiss, pickles, mustard, hollandaise slaw on ciabatta",
           "price": 14.0,
-          "tags": ["contains-meat", "contains-dairy"]
+          "tags": ["contains-meat", "contains-dairy", "addon:Extra hollandaise slaw|1.00"]
         },
         {
           "id": "i-oyster-bacon",
           "name": "Smoked Oyster & Pressed Pepper Bacon",
-          "description": "Smoked oysters, pepper bacon, pickles, Thai mignonette, mixed greens, mayo on brioche",
+          "description": "Smoked oysters, pressed pepper bacon, Asazuke cucumbers, Thai mignonette, mixed greens, mayo on brioche",
           "price": 15.0,
-          "tags": ["contains-meat", "contains-shellfish"]
+          "tags": ["contains-meat", "contains-shellfish", "addon:Extra bacon|2.00"]
         },
         {
           "id": "i-banhmi",
-          "name": "Timmy's Banh Mi",
-          "description": "Pork, pickled daikon & carrot, cilantro, jalapeno, house aioli on a toasted roll",
+          "name": "Timmy's Bánh Mì",
+          "description": "Cantonese lap cheong sausage, pickled daikon, jalapeño chili slaw, arugula, cilantro, wasabi peas, Korean carrots, BBQ pork floss aioli on brioche",
           "price": 14.5,
-          "tags": ["contains-meat"]
+          "tags": ["contains-meat", "addon:Extra wasabi peas|1.00"]
         },
         {
           "id": "i-satay",
-          "name": "Chicken Satay Sandwich",
-          "description": "Grilled chicken, peanut satay sauce, cucumber, herbs",
+          "name": "Chicken Satay Ayam",
+          "description": "Grilled chicken, sriracha cucumber slaw, peanut chili sauce, spiced rice crispies, key lime mayo on ciabatta",
           "price": 14.0,
-          "tags": ["contains-meat", "contains-nuts"]
+          "tags": ["contains-meat", "contains-nuts", "addon:Extra peanut chili sauce|1.00"]
         },
         {
-          "id": "i-bbqpork",
-          "name": "Backyard BBQ Pork",
-          "description": "Slow BBQ pork, slaw, pickles, house sauce",
-          "price": 13.5,
-          "tags": ["contains-meat"]
+          "id": "i-midwest-meatlovers",
+          "name": "The Midwest Meat Lover's Pizza Ranch Sandwich",
+          "description": "Pepperoni, bacon, Italian sausage, ham, ranch dressing, mozzarella, parmesan crisps, marinara, arugula on Texas toast brioche",
+          "price": 15.5,
+          "tags": ["contains-meat", "contains-dairy", "addon:Extra parmesan crisps|1.50"]
+        },
+        {
+          "id": "i-honeywalnutprawns",
+          "name": "Honey Walnut Prawns Sandwich",
+          "description": "Popcorn shrimp, candied walnuts, honey walnut aioli, mixed greens, prawn crackers, shabu shabu sauce on Texas toast brioche",
+          "price": 15.5,
+          "tags": ["contains-shellfish", "contains-nuts", "addon:Extra candied walnuts|1.50"]
         },
         {
           "id": "i-vadapav",
           "name": "Vada Pav & Hash Brown",
-          "description": "Spiced potato fritter, crispy hash browns, chutneys, soft pav roll",
+          "description": "Hash brown patty, spiced slaw, pickled carrots, jalapeños, green olives, curry mayo on brioche",
           "price": 12.5,
-          "tags": ["vegetarian"]
+          "tags": ["vegetarian", "addon:Add avocado|1.50"]
         }
       ]
     },
@@ -64,14 +71,34 @@
           "name": "Spam & Jalapeno Tater Tots",
           "description": "Crispy tots, grilled spam, jalapeno",
           "price": 6.0,
-          "tags": ["contains-meat"]
+          "tags": ["contains-meat", "addon:Make it truffle tots|2.00"]
+        },
+        {
+          "id": "i-frenchfries",
+          "name": "French Fries",
+          "description": "Crispy crinkle-cut, sometimes truffle",
+          "price": 5.0,
+          "tags": ["vegan", "gluten-free", "addon:Make it truffle fries|2.00"]
         },
         {
           "id": "i-grilledcheese",
-          "name": "Crunchy Grilled Cheese & Tomato Soup",
-          "description": "Griddled cheese sandwich, cup of tomato soup",
-          "price": 8.0,
-          "tags": ["vegetarian"]
+          "name": "Crunchy Four-Cheese & Tomato Soup Sandwich",
+          "description": "Sharp cheddar, pimento beer pub cheese, Cheez-Its, Cheetos, arugula, heirloom tomatoes, tomato soup vinaigrette on Texas toast",
+          "price": 8.5,
+          "tags": ["vegetarian", "contains-dairy"]
+        }
+      ]
+    },
+    {
+      "id": "c-sweets",
+      "name": "Sweets from the Freezer",
+      "items": [
+        {
+          "id": "i-itsit",
+          "name": "It's-It Ice Cream Sandwich",
+          "description": "The world-famous San Francisco original ice cream sandwich",
+          "price": 5.5,
+          "tags": ["vegetarian", "contains-dairy"]
         }
       ]
     },

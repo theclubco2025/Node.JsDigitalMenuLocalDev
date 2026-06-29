@@ -80,6 +80,7 @@ export default function TimmysBrownBagMenuClient() {
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [cartBump, setCartBump] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [upsell, setUpsell] = useState<MenuItem | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   const isBrowser = typeof window !== 'undefined'
@@ -473,6 +474,17 @@ export default function TimmysBrownBagMenuClient() {
       return [...prev, { item, quantity: 1, addOns: [], note: '' }]
     })
     setToast(`Added ${item.name}`)
+
+    // Upsell: suggest a fitting side/sweet/drink the first time a sandwich goes in the bag
+    const sandwichIds = new Set((categories.find(c => c.id === 'c-todays-sandwiches')?.items ?? []).map(i => i.id))
+    const pairingCategoryIds = ['c-sides', 'c-sweets', 'c-drinks']
+    const pairingIds = new Set(
+      categories.filter(c => pairingCategoryIds.includes(c.id)).flatMap(c => c.items.map(i => i.id))
+    )
+    if (sandwichIds.has(item.id) && !cart.some(ci => pairingIds.has(ci.item.id))) {
+      const suggestion = categories.find(c => c.id === 'c-sides')?.items[0]
+      if (suggestion && suggestion.id !== item.id) setUpsell(suggestion)
+    }
   }
 
   const startCheckout = async () => {
@@ -566,6 +578,12 @@ export default function TimmysBrownBagMenuClient() {
     return () => clearTimeout(t)
   }, [toast])
 
+  useEffect(() => {
+    if (!upsell) return
+    const t = setTimeout(() => setUpsell(null), 8000)
+    return () => clearTimeout(t)
+  }, [upsell])
+
   const rootStyle: ThemeCSSVariables = {
     background: effectiveTheme?.bg ?? 'var(--bg)',
     color: effectiveTheme?.text ?? 'var(--text)',
@@ -624,7 +642,13 @@ export default function TimmysBrownBagMenuClient() {
           <div className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b-4" style={{ borderColor: 'var(--primary)' }}>
             <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col items-center text-center gap-1">
               {brandLogoUrl ? (
-                <img src={brandLogoUrl} alt={brandName} className="h-16 w-auto" loading="eager" decoding="async" />
+                <img
+                  src={brandLogoUrl}
+                  alt={brandName}
+                  className="h-24 sm:h-28 w-auto max-w-[85vw] object-contain"
+                  loading="eager"
+                  decoding="async"
+                />
               ) : (
                 <h1 className="text-2xl font-extrabold" style={{ color: 'var(--accent)' }}>{brandName}</h1>
               )}
@@ -829,6 +853,27 @@ export default function TimmysBrownBagMenuClient() {
               </p>
             </div>
           </div>
+
+          {/* Upsell banner */}
+          {upsell && (
+            <div
+              className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-white rounded-2xl border-2 shadow-lg px-4 py-3 flex items-center gap-3 max-w-[92vw]"
+              style={{ borderColor: 'var(--accent)' }}
+            >
+              <div className="text-sm">
+                <span className="font-semibold" style={{ color: 'var(--ink)' }}>Make it a combo? </span>
+                <span className="text-gray-600">Add {upsell.name} for ${Number(upsell.price ?? 0).toFixed(2)}</span>
+              </div>
+              <button
+                onClick={() => { addToCart(upsell); setUpsell(null) }}
+                className="px-3 py-1.5 rounded-full text-sm font-bold text-white whitespace-nowrap"
+                style={{ background: 'var(--accent)' }}
+              >
+                Add
+              </button>
+              <button onClick={() => setUpsell(null)} className="text-gray-400 hover:text-gray-600 text-sm" aria-label="Dismiss">✕</button>
+            </div>
+          )}
 
           {/* Floating buttons */}
           <button
