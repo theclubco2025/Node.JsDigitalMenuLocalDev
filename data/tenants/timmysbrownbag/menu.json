@@ -1,0 +1,92 @@
+{
+  "categories": [
+    {
+      "id": "c-sandwiches",
+      "name": "Sandwiches",
+      "items": [
+        {
+          "id": "i-banhmi",
+          "name": "Timmy's Banh Mi",
+          "description": "Pork, pickled daikon and carrot, cilantro, jalapeno, house aioli on a toasted roll",
+          "price": 15.0,
+          "tags": ["contains-meat"]
+        },
+        {
+          "id": "i-satay",
+          "name": "Chicken Satay Sandwich",
+          "description": "Grilled chicken, peanut satay sauce, cucumber, herbs",
+          "price": 14.5,
+          "tags": ["contains-meat", "contains-nuts"]
+        },
+        {
+          "id": "i-tangblt",
+          "name": "Tang BLT",
+          "description": "Crispy bacon, lettuce, tomato, tangy special sauce",
+          "price": 13.5,
+          "tags": ["contains-meat"]
+        },
+        {
+          "id": "i-falafel",
+          "name": "Falafel Sandwich",
+          "description": "House falafel, tahini, pickled veg, herbs",
+          "price": 13.0,
+          "tags": ["vegetarian", "vegan"]
+        },
+        {
+          "id": "i-vadapav",
+          "name": "Vada Pav",
+          "description": "Spiced potato fritter, chutneys, soft pav roll",
+          "price": 12.5,
+          "tags": ["vegetarian"]
+        },
+        {
+          "id": "i-spamkimchi",
+          "name": "Spam and Kimchi",
+          "description": "Grilled spam, kimchi, scallion mayo on griddled bread",
+          "price": 14.0,
+          "tags": ["contains-meat"]
+        }
+      ]
+    },
+    {
+      "id": "c-sides",
+      "name": "Sides",
+      "items": [
+        {
+          "id": "i-tots",
+          "name": "Tater Tots",
+          "description": "Crispy fried, served hot",
+          "price": 5.0,
+          "tags": ["vegetarian"]
+        },
+        {
+          "id": "i-grilledcheese",
+          "name": "Crunchy Grilled Cheese & Tomato Soup",
+          "description": "Griddled cheese sandwich with a cup of tomato soup",
+          "price": 8.0,
+          "tags": ["vegetarian"]
+        }
+      ]
+    },
+    {
+      "id": "c-drinks",
+      "name": "Drinks",
+      "items": [
+        {
+          "id": "i-lemonade",
+          "name": "Fresh Lemonade",
+          "description": "Squeezed daily",
+          "price": 3.5,
+          "tags": ["vegan", "gluten-free"]
+        },
+        {
+          "id": "i-icedtea",
+          "name": "Sweet Iced Tea",
+          "description": "Brewed in-house",
+          "price": 3.5,
+          "tags": ["vegan", "gluten-free"]
+        }
+      ]
+    }
+  ]
+}
