@@ -5,6 +5,13 @@
       "name": "Today's Sandwich Funky Time",
       "items": [
         {
+          "id": "i-enchiladas-suizas",
+          "name": "Enchiladas Suizas con Puerco Verde y Swiss Cheese",
+          "description": "Grilled corn tortilla pieces, salsa verde pork, Swiss cheese, carrots en escabeche, romaine, salsa aguacate on ciabatta",
+          "price": 14.5,
+          "tags": ["contains-meat", "contains-dairy"]
+        },
+        {
           "id": "i-cubano-nugget",
           "name": "Cubano Chicken Pollo Nugget Cordon Bleu",
           "description": "Crispy chicken nuggets, yellow mustard, ham, Swiss, dill pickles, hollandaise slaw on ciabatta",
