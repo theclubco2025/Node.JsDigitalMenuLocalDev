@@ -779,7 +779,15 @@ export default function TimmysBrownBagMenuClient() {
                           style={{ borderColor: 'var(--muted)', borderRadius: 'var(--radius)', boxShadow: '0 6px 18px rgba(31,122,61,0.06)' }}
                         >
                           {src && (
-                            <img src={src} alt={item.name} className="w-full h-40 object-cover" loading="lazy" decoding="async" />
+                            <div className="w-full h-64 sm:h-56 md:h-48 flex items-center justify-center overflow-hidden" style={{ background: 'var(--muted)' }}>
+                              <img
+                                src={src}
+                                alt={item.name}
+                                className="w-full h-full object-contain"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            </div>
                           )}
                           <div className="p-5">
                             <div className="flex justify-between items-start gap-3 mb-1.5">
