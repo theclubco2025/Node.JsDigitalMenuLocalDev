@@ -1,7 +1,14 @@
 {
   "name": "Timmy's Brown Bag",
   "tagline": "We make sandwich FUNKY TIME yeah!!!",
+  "logoUrl": "/assets/timmysbrownbag-logo.png",
   "header": {
-    "mode": "text"
+    "mode": "logo",
+    "logoUrl": "/assets/timmysbrownbag-logo.png"
+  },
+  "links": {
+    "website": "https://timmysbrownbag.com/",
+    "phone": "+1 530-303-3203",
+    "address": "451 Main St, Suite 10, Placerville, CA 95667"
   }
 }

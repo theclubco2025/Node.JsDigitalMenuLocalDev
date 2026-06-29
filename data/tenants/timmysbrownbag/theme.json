@@ -1,12 +1,12 @@
 {
   "name": "Timmy's Brown Bag",
   "tone": "funky",
-  "primary": "#3f5526",
-  "bg": "#faf6e8",
-  "text": "#22301a",
-  "ink": "#1a2412",
+  "primary": "#1f7a3d",
+  "bg": "#ffffff",
+  "text": "#21281f",
+  "ink": "#16210f",
   "card": "#ffffff",
-  "muted": "#eef0c8",
-  "accent": "#f4d93b",
-  "radius": "18px"
+  "muted": "#dff0fa",
+  "accent": "#e0182b",
+  "radius": "22px"
 }
