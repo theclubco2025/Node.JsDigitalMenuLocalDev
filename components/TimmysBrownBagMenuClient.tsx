@@ -28,6 +28,7 @@ type TenantBrand = {
   tagline?: string
   logoUrl?: string
   header?: { logoUrl?: string }
+  links?: { website?: string; phone?: string; address?: string }
 }
 
 type OrderingScheduling = {
@@ -734,13 +735,12 @@ export default function TimmysBrownBagMenuClient() {
             <div className="space-y-12">
               {filteredCategories.map((category) => (
                 <div key={category.id} id={`cat-${category.id}`} className="scroll-mt-24">
-                  <div className="flex items-center gap-3 mb-1">
+                  <div className="flex items-center gap-2.5 mb-1 pb-2 border-b" style={{ borderColor: 'var(--muted)' }}>
                     <span
-                      className="w-2.5 h-2.5 rounded-full transition-transform"
-                      style={{ background: 'var(--accent)', transform: activeCategoryId === category.id ? 'scale(1.4)' : 'scale(1)' }}
+                      className="w-2 h-2 rounded-full transition-opacity"
+                      style={{ background: 'var(--accent)', opacity: activeCategoryId === category.id ? 1 : 0.55 }}
                     />
                     <h2 className="text-2xl font-extrabold" style={{ color: 'var(--primary)' }}>{category.name}</h2>
-                    <div className="flex-1 h-1 rounded-full" style={{ background: 'var(--primary)', opacity: activeCategoryId === category.id ? 0.35 : 0.18 }} />
                   </div>
                   {typeof categoryIntros[category.name] === 'string' && (
                     <p className="text-sm mb-4 italic" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
@@ -758,13 +758,13 @@ export default function TimmysBrownBagMenuClient() {
                             <img src={src} alt={item.name} className="w-full h-40 object-cover" loading="lazy" decoding="async" />
                           )}
                           <div className="p-5">
-                            <div className="flex justify-between items-start gap-3 mb-2">
-                              <h3 className="text-lg font-bold leading-tight" style={{ color: 'var(--ink)' }}>
+                            <div className="flex justify-between items-start gap-3 mb-1.5">
+                              <h3 className="text-lg font-bold leading-snug" style={{ color: 'var(--ink)' }}>
                                 {highlightText(item.name, searchQuery)}
                               </h3>
                               <span
-                                className="text-sm font-extrabold px-3 py-1 rounded-full whitespace-nowrap text-white"
-                                style={{ background: 'var(--accent)' }}
+                                className="text-base font-extrabold whitespace-nowrap"
+                                style={{ color: 'var(--accent)' }}
                               >
                                 ${Number(item.price ?? 0).toFixed(2)}
                               </span>
@@ -772,37 +772,36 @@ export default function TimmysBrownBagMenuClient() {
                             {typeof item.description === 'string' && item.description.trim() !== '' && (
                               <p className="text-sm text-gray-600 mb-3">{item.description.trim()}</p>
                             )}
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex-1 min-w-0 flex flex-wrap gap-1">
+                            {visibleTags(item.tags).length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mb-4">
                                 {visibleTags(item.tags).map(tag => (
                                   <span
                                     key={tag}
-                                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
-                                    style={{ color: 'var(--primary)', border: '1px solid var(--primary)' }}
+                                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium text-gray-500 border border-gray-200"
                                   >
                                     {tag}
                                   </span>
                                 ))}
                               </div>
-                              <div className="shrink-0 flex items-center gap-2">
-                                <button
-                                  onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
-                                  className="px-3 py-2 rounded-full text-sm font-semibold border-2"
-                                  style={{ borderColor: 'var(--primary)', color: 'var(--primary)', background: '#fff' }}
-                                >
-                                  Ask
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    addToCart(item)
-                                    flyToPlate(e.currentTarget as unknown as HTMLElement, item)
-                                  }}
-                                  className="px-4 py-2 rounded-full text-sm font-bold text-white"
-                                  style={{ background: 'var(--primary)' }}
-                                >
-                                  Add to Bag
-                                </button>
-                              </div>
+                            )}
+                            <div className="flex items-center justify-between gap-3">
+                              <button
+                                onClick={() => { setIsAssistantOpen(true); void sendAssistantMessage(`Tell me about ${item.name}`) }}
+                                className="text-sm font-semibold underline"
+                                style={{ color: 'var(--primary)' }}
+                              >
+                                Ask
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  addToCart(item)
+                                  flyToPlate(e.currentTarget as unknown as HTMLElement, item)
+                                }}
+                                className="px-4 py-2 rounded-full text-sm font-bold text-white"
+                                style={{ background: 'var(--primary)' }}
+                              >
+                                Add to Bag
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -813,7 +812,14 @@ export default function TimmysBrownBagMenuClient() {
               ))}
             </div>
 
-            <div className="mt-10">
+            <div className="mt-12 pt-6 border-t text-center" style={{ borderColor: 'var(--muted)' }}>
+              <p className="text-sm font-bold" style={{ color: 'var(--primary)' }}>
+                {brandName} — Main St, Placerville
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Scratch-made sandwiches, daily experiments.</p>
+            </div>
+
+            <div className="mt-6">
               <p className="text-xs text-gray-500 italic">
                 2,000 calories a day is used for general nutrition advice, but calorie needs vary. Calorie values are
                 estimates and may differ based on preparation or ingredient changes.

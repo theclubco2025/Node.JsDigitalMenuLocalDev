@@ -2,39 +2,39 @@
   "categories": [
     {
       "id": "c-todays-sandwiches",
-      "name": "Today's Sandwich Funky Time",
+      "name": "Today's Sandwiches",
       "items": [
         {
           "id": "i-enchiladas-suizas",
           "name": "Enchiladas Suizas con Puerco Verde y Swiss Cheese",
-          "description": "Grilled corn tortilla pieces, salsa verde pork, Swiss cheese, carrots en escabeche, romaine, salsa aguacate on ciabatta",
+          "description": "Grilled tortilla, salsa verde pork, Swiss, carrots en escabeche, romaine, salsa aguacate on ciabatta",
           "price": 14.5,
           "tags": ["contains-meat", "contains-dairy"]
         },
         {
           "id": "i-cubano-nugget",
-          "name": "Cubano Chicken Pollo Nugget Cordon Bleu",
-          "description": "Crispy chicken nuggets, yellow mustard, ham, Swiss, dill pickles, hollandaise slaw on ciabatta",
+          "name": "Cubano Chicken Cordon Bleu",
+          "description": "Crispy chicken nuggets, ham, Swiss, pickles, mustard, hollandaise slaw on ciabatta",
           "price": 14.0,
           "tags": ["contains-meat", "contains-dairy"]
         },
         {
           "id": "i-oyster-bacon",
-          "name": "Smoked Oyster + Pressed Pepper Bacon",
-          "description": "Smoked oysters, pressed pepper bacon, dill pickles, Thai mignonette, mixed greens, mayo on brioche",
+          "name": "Smoked Oyster & Pressed Pepper Bacon",
+          "description": "Smoked oysters, pepper bacon, pickles, Thai mignonette, mixed greens, mayo on brioche",
           "price": 15.0,
           "tags": ["contains-meat", "contains-shellfish"]
         },
         {
           "id": "i-banhmi",
           "name": "Timmy's Banh Mi",
-          "description": "Pork, pickled daikon and carrot, cilantro, jalapeno, house aioli on a toasted roll",
+          "description": "Pork, pickled daikon & carrot, cilantro, jalapeno, house aioli on a toasted roll",
           "price": 14.5,
           "tags": ["contains-meat"]
         },
         {
           "id": "i-satay",
-          "name": "Chicken Satay, Funky Style",
+          "name": "Chicken Satay Sandwich",
           "description": "Grilled chicken, peanut satay sauce, cucumber, herbs",
           "price": 14.0,
           "tags": ["contains-meat", "contains-nuts"]
@@ -42,13 +42,13 @@
         {
           "id": "i-bbqpork",
           "name": "Backyard BBQ Pork",
-          "description": "Slow BBQ pork, slaw, pickles, today's funky sauce",
+          "description": "Slow BBQ pork, slaw, pickles, house sauce",
           "price": 13.5,
           "tags": ["contains-meat"]
         },
         {
           "id": "i-vadapav",
-          "name": "Vada Pav Hash Brown Mash-Up",
+          "name": "Vada Pav & Hash Brown",
           "description": "Spiced potato fritter, crispy hash browns, chutneys, soft pav roll",
           "price": 12.5,
           "tags": ["vegetarian"]
@@ -62,14 +62,14 @@
         {
           "id": "i-spamtots",
           "name": "Spam & Jalapeno Tater Tots",
-          "description": "Crispy tots, grilled spam bits, jalapeno",
+          "description": "Crispy tots, grilled spam, jalapeno",
           "price": 6.0,
           "tags": ["contains-meat"]
         },
         {
           "id": "i-grilledcheese",
           "name": "Crunchy Grilled Cheese & Tomato Soup",
-          "description": "Griddled cheese sandwich with a cup of tomato soup",
+          "description": "Griddled cheese sandwich, cup of tomato soup",
           "price": 8.0,
           "tags": ["vegetarian"]
         }
