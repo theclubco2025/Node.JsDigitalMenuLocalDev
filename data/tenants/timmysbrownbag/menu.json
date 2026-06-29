@@ -1,63 +1,63 @@
 {
   "categories": [
     {
-      "id": "c-sandwiches",
-      "name": "Sandwiches",
+      "id": "c-todays-sandwiches",
+      "name": "Today's Sandwich Funky Time",
       "items": [
+        {
+          "id": "i-cubano-nugget",
+          "name": "Cubano Chicken Pollo Nugget Cordon Bleu",
+          "description": "Crispy chicken nuggets, yellow mustard, ham, Swiss, dill pickles, hollandaise slaw on ciabatta",
+          "price": 14.0,
+          "tags": ["contains-meat", "contains-dairy"]
+        },
+        {
+          "id": "i-oyster-bacon",
+          "name": "Smoked Oyster + Pressed Pepper Bacon",
+          "description": "Smoked oysters, pressed pepper bacon, dill pickles, Thai mignonette, mixed greens, mayo on brioche",
+          "price": 15.0,
+          "tags": ["contains-meat", "contains-shellfish"]
+        },
         {
           "id": "i-banhmi",
           "name": "Timmy's Banh Mi",
           "description": "Pork, pickled daikon and carrot, cilantro, jalapeno, house aioli on a toasted roll",
-          "price": 15.0,
+          "price": 14.5,
           "tags": ["contains-meat"]
         },
         {
           "id": "i-satay",
-          "name": "Chicken Satay Sandwich",
+          "name": "Chicken Satay, Funky Style",
           "description": "Grilled chicken, peanut satay sauce, cucumber, herbs",
-          "price": 14.5,
+          "price": 14.0,
           "tags": ["contains-meat", "contains-nuts"]
         },
         {
-          "id": "i-tangblt",
-          "name": "Tang BLT",
-          "description": "Crispy bacon, lettuce, tomato, tangy special sauce",
+          "id": "i-bbqpork",
+          "name": "Backyard BBQ Pork",
+          "description": "Slow BBQ pork, slaw, pickles, today's funky sauce",
           "price": 13.5,
           "tags": ["contains-meat"]
         },
         {
-          "id": "i-falafel",
-          "name": "Falafel Sandwich",
-          "description": "House falafel, tahini, pickled veg, herbs",
-          "price": 13.0,
-          "tags": ["vegetarian", "vegan"]
-        },
-        {
           "id": "i-vadapav",
-          "name": "Vada Pav",
-          "description": "Spiced potato fritter, chutneys, soft pav roll",
+          "name": "Vada Pav Hash Brown Mash-Up",
+          "description": "Spiced potato fritter, crispy hash browns, chutneys, soft pav roll",
           "price": 12.5,
           "tags": ["vegetarian"]
-        },
-        {
-          "id": "i-spamkimchi",
-          "name": "Spam and Kimchi",
-          "description": "Grilled spam, kimchi, scallion mayo on griddled bread",
-          "price": 14.0,
-          "tags": ["contains-meat"]
         }
       ]
     },
     {
       "id": "c-sides",
-      "name": "Sides",
+      "name": "Sides from the Window",
       "items": [
         {
-          "id": "i-tots",
-          "name": "Tater Tots",
-          "description": "Crispy fried, served hot",
-          "price": 5.0,
-          "tags": ["vegetarian"]
+          "id": "i-spamtots",
+          "name": "Spam & Jalapeno Tater Tots",
+          "description": "Crispy tots, grilled spam bits, jalapeno",
+          "price": 6.0,
+          "tags": ["contains-meat"]
         },
         {
           "id": "i-grilledcheese",
@@ -74,7 +74,7 @@
       "items": [
         {
           "id": "i-lemonade",
-          "name": "Fresh Lemonade",
+          "name": "Creek-Side Lemonade",
           "description": "Squeezed daily",
           "price": 3.5,
           "tags": ["vegan", "gluten-free"]
