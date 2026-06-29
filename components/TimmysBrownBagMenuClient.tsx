@@ -536,7 +536,6 @@ export default function TimmysBrownBagMenuClient() {
   }
 
   const categories = useMemo(() => menuData?.categories ?? [], [menuData])
-  const allCategories = useMemo(() => categories.map(cat => cat.name), [categories])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -684,17 +683,20 @@ export default function TimmysBrownBagMenuClient() {
               >
                 All Categories
               </button>
-              {allCategories.map(category => (
+              {categories.map(cat => (
                 <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category === selectedCategory ? null : category)}
+                  key={cat.id}
+                  onClick={() => {
+                    setSelectedCategory(cat.name === selectedCategory ? null : cat.name)
+                    scrollTo(`cat-${cat.id}`)
+                  }}
                   className="px-4 py-2 rounded-full text-sm font-bold transition-all"
-                  style={selectedCategory === category
+                  style={selectedCategory === cat.name
                     ? { background: 'var(--accent)', color: '#fff' }
                     : { background: '#fff', color: 'var(--accent)', border: '2px solid var(--accent)' }
                   }
                 >
-                  {category}
+                  {cat.name}
                 </button>
               ))}
             </div>
@@ -733,9 +735,12 @@ export default function TimmysBrownBagMenuClient() {
               {filteredCategories.map((category) => (
                 <div key={category.id} id={`cat-${category.id}`} className="scroll-mt-24">
                   <div className="flex items-center gap-3 mb-1">
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent)' }} />
+                    <span
+                      className="w-2.5 h-2.5 rounded-full transition-transform"
+                      style={{ background: 'var(--accent)', transform: activeCategoryId === category.id ? 'scale(1.4)' : 'scale(1)' }}
+                    />
                     <h2 className="text-2xl font-extrabold" style={{ color: 'var(--primary)' }}>{category.name}</h2>
-                    <div className="flex-1 h-1 rounded-full" style={{ background: 'var(--primary)', opacity: 0.18 }} />
+                    <div className="flex-1 h-1 rounded-full" style={{ background: 'var(--primary)', opacity: activeCategoryId === category.id ? 0.35 : 0.18 }} />
                   </div>
                   {typeof categoryIntros[category.name] === 'string' && (
                     <p className="text-sm mb-4 italic" style={{ color: 'var(--ink)', opacity: 0.7 }}>{categoryIntros[category.name]}</p>
@@ -955,6 +960,20 @@ export default function TimmysBrownBagMenuClient() {
                           </div>
                         )
                       })}
+
+                      {orderingEnabled && (
+                        <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--muted)' }}>
+                          <div className="text-sm font-bold" style={{ color: 'var(--primary)' }}>Order-wide notes</div>
+                          <textarea
+                            value={orderNote}
+                            onChange={(e) => setOrderNote(e.target.value)}
+                            placeholder="Anything the kitchen should know for the whole order"
+                            className="mt-3 w-full rounded-xl border px-3 py-2 text-[16px] text-black"
+                            style={{ borderColor: 'var(--muted)' }}
+                            rows={2}
+                          />
+                        </div>
+                      )}
 
                       {orderingEnabled && (
                         <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--muted)' }}>
