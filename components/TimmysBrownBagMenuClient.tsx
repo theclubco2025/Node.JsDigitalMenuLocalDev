@@ -148,12 +148,14 @@ export default function TimmysBrownBagMenuClient() {
       .map(category => ({
         ...category,
         items: category.items.filter(item => {
-          if (selectedCategory && category.name !== selectedCategory) return false
           if (searchQuery) {
-            const searchLower = searchQuery.toLowerCase()
-            const matchesName = item.name.toLowerCase().includes(searchLower)
-            const matchesTags = (item.tags || []).some(tag => tag.toLowerCase().includes(searchLower))
-            if (!matchesName && !matchesTags) return false
+            const q = searchQuery.toLowerCase()
+            const hit = item.name.toLowerCase().includes(q)
+              || (item.description ?? '').toLowerCase().includes(q)
+              || (item.tags || []).some(t => t.toLowerCase().includes(q))
+            if (!hit) return false
+          } else {
+            if (selectedCategory && category.name !== selectedCategory) return false
           }
           if (selectedDietaryFilters.length > 0) {
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>

@@ -12,13 +12,6 @@
           "tags": ["contains-meat", "contains-dairy", "addon:Add avocado|1.50", "addon:Extra pork|2.50"]
         },
         {
-          "id": "i-cubano-nugget",
-          "name": "Cubano Chicken Cordon Bleu",
-          "description": "Crispy chicken nuggets, ham, Swiss, pickles, mustard, hollandaise slaw on ciabatta",
-          "price": 14.0,
-          "tags": ["contains-meat", "contains-dairy", "addon:Extra hollandaise slaw|1.00"]
-        },
-        {
           "id": "i-oyster-bacon",
           "name": "Smoked Oyster & Pressed Pepper Bacon",
           "description": "Smoked oysters, pressed pepper bacon, Asazuke cucumbers, Thai mignonette, mixed greens, mayo on brioche",
