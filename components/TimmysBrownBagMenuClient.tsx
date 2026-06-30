@@ -645,15 +645,12 @@ export default function TimmysBrownBagMenuClient() {
                 <img
                   src={brandLogoUrl}
                   alt={brandName}
-                  className="h-24 sm:h-28 w-auto max-w-[85vw] object-contain"
+                  className="h-28 sm:h-36 w-auto max-w-[90vw] object-contain"
                   loading="eager"
                   decoding="async"
                 />
               ) : (
                 <h1 className="text-2xl font-extrabold" style={{ color: 'var(--accent)' }}>{brandName}</h1>
-              )}
-              {brandTagline && (
-                <p className="text-sm font-semibold" style={{ color: 'var(--primary)' }}>{brandTagline}</p>
               )}
             </div>
           </div>
