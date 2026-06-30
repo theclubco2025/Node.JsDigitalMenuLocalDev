@@ -70,7 +70,6 @@ const BUBBLES: Array<{ top: string; left: string; size: number; opacity: number 
 
 export default function TimmysBrownBagMenuClient() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedDietaryFilters, setSelectedDietaryFilters] = useState<string[]>([])
   const [cart, setCart] = useState<Array<{ item: MenuItem; quantity: number; addOns: Array<{ name: string; priceDeltaCents: number }>; note: string }>>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -154,8 +153,6 @@ export default function TimmysBrownBagMenuClient() {
               || (item.description ?? '').toLowerCase().includes(q)
               || (item.tags || []).some(t => t.toLowerCase().includes(q))
             if (!hit) return false
-          } else {
-            if (selectedCategory && category.name !== selectedCategory) return false
           }
           if (selectedDietaryFilters.length > 0) {
             const hasAllDietaryFilters = selectedDietaryFilters.every(dietFilter =>
@@ -167,7 +164,7 @@ export default function TimmysBrownBagMenuClient() {
         })
       }))
       .filter(category => category.items.length > 0)
-  }, [baseMenu, searchQuery, selectedCategory, selectedDietaryFilters])
+  }, [baseMenu, searchQuery, selectedDietaryFilters])
 
   const saveAllEdits = async () => {
     if (!isAdmin || !editableMenu) return
@@ -674,8 +671,8 @@ export default function TimmysBrownBagMenuClient() {
                 <input
                   type="text"
                   placeholder="Search the menu..."
-                  className="w-full px-3 py-2 pr-9 rounded-full text-sm text-black bg-white placeholder-gray-500"
-                  style={{ border: '2px solid var(--muted)' }}
+                  className="w-full px-3 py-2 pr-9 rounded-full text-black bg-white placeholder-gray-500"
+                  style={{ border: '2px solid var(--muted)', fontSize: '16px' }}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -696,25 +693,12 @@ export default function TimmysBrownBagMenuClient() {
             </div>
 
             <div className="flex gap-2 justify-center flex-wrap mb-3">
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className="px-4 py-2 rounded-full text-sm font-bold transition-all"
-                style={selectedCategory === null
-                  ? { background: 'var(--primary)', color: '#fff' }
-                  : { background: '#fff', color: 'var(--primary)', border: '2px solid var(--primary)' }
-                }
-              >
-                All Categories
-              </button>
               {categories.map(cat => (
                 <button
                   key={cat.id}
-                  onClick={() => {
-                    setSelectedCategory(cat.name === selectedCategory ? null : cat.name)
-                    scrollTo(`cat-${cat.id}`)
-                  }}
+                  onClick={() => scrollTo(`cat-${cat.id}`)}
                   className="px-4 py-2 rounded-full text-sm font-bold transition-all"
-                  style={selectedCategory === cat.name
+                  style={activeCategoryId === cat.id
                     ? { background: 'var(--accent)', color: '#fff' }
                     : { background: '#fff', color: 'var(--accent)', border: '2px solid var(--accent)' }
                   }
@@ -739,9 +723,9 @@ export default function TimmysBrownBagMenuClient() {
                     {option}
                   </button>
                 ))}
-                {(searchQuery || selectedDietaryFilters.length > 0 || selectedCategory) && (
+                {(searchQuery || selectedDietaryFilters.length > 0) && (
                   <button
-                    onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedDietaryFilters([]) }}
+                    onClick={() => { setSearchQuery(''); setSelectedDietaryFilters([]) }}
                     className="px-3 py-1 rounded-full text-xs font-semibold"
                     style={{ background: '#fff', color: 'var(--ink)', border: '1px solid var(--muted)' }}
                   >
