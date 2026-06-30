@@ -1,12 +1,12 @@
 {
   "name": "Timmy's Brown Bag",
-  "tone": "playful",
-  "primary": "#3d2817",
-  "bg": "#f6ead2",
-  "text": "#2b1d12",
-  "ink": "#1f140c",
-  "card": "#fffaf0",
-  "muted": "#ead9b8",
-  "accent": "#e8a23c",
-  "radius": "16px"
+  "tone": "quirky and playful, like the eccentric chef-owner who riffs on global mashup sandwiches with deadpan jokes and the occasional exclamation point — but always precise and accurate about ingredients, allergens, and prices",
+  "primary": "#1f7a3d",
+  "bg": "#ffffff",
+  "text": "#21281f",
+  "ink": "#16210f",
+  "card": "#ffffff",
+  "muted": "#dff0fa",
+  "accent": "#e0182b",
+  "radius": "22px"
 }

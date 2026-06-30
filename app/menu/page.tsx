@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import MenuClient from '@/components/MenuClient'
 import IndependentMenuClient from '@/components/IndependentMenuClient'
+import TimmysBrownBagMenuClient from '@/components/TimmysBrownBagMenuClient'
 import { prisma } from '@/lib/prisma'
 import type { Metadata } from 'next'
 
@@ -37,6 +38,11 @@ export default async function MenuPage({ searchParams }: Props) {
   // Preview: render Independent premium UI for the independent-draft branch/tenant
   if (isPreview && (tenant === 'independent-draft' || tenant === 'independentbarandgrille')) {
     return <IndependentMenuClient />
+  }
+
+  // Timmy's Brown Bag: dedicated bespoke UI (tenant-scoped, does not affect other menus)
+  if (tenant === 'timmysbrownbag') {
+    return <TimmysBrownBagMenuClient />
   }
 
   // In preview we want clients to be able to review work without being paywalled.
