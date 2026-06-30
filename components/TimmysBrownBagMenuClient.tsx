@@ -114,7 +114,6 @@ export default function TimmysBrownBagMenuClient() {
   const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
   const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || "Timmy's Brown Bag"
-  const brandTagline = brand?.tagline || ''
 
   const effectiveTheme = useMemo(() => theme ?? null, [theme])
 
