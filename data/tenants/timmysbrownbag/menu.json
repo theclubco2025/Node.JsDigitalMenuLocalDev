@@ -59,6 +59,111 @@
           "description": "Hash brown patty, spiced slaw, pickled carrots, jalapeños, green olives, curry mayo on brioche",
           "price": 12.5,
           "tags": ["vegetarian", "addon:Add avocado|1.50"]
+        },
+        {
+          "id": "i-char-siu",
+          "name": "Char Siu {Chinese BBQ Pork} Sandwich",
+          "description": "Char siu pork marinated in char siu spice, Sprite & lemon juice, scallions, sesame-soy-lemon baby bok choy, deep fried ramen noodles, pickled spicy bamboo shoots, sesame aioli on Texas toast brioche",
+          "price": 14.5,
+          "tags": ["contains-meat", "addon:Extra char siu pork|2.50"]
+        },
+        {
+          "id": "i-cajun-fais-do-do",
+          "name": "Cajun Fais DO-DO Dance Party Sandwich",
+          "description": "Red bean hummus, lemon jasmine rice, Slap ya Mama-sauced fake crab, sausage & shrimp on garlic buttered Texas toast brioche",
+          "price": 15.0,
+          "tags": ["contains-meat", "contains-shellfish"]
+        },
+        {
+          "id": "i-falafel",
+          "name": "Falafel Sandwich",
+          "description": "Falafel, Russian pickled pomidori, spiralized cucumber tzatziki, sweet & spicy Korean pepitas, limeade & heirloom tomato vinaigrette, wild arugula, sumac & black lime mayo on ciabatta",
+          "price": 13.0,
+          "tags": ["vegetarian"]
+        },
+        {
+          "id": "i-kung-pao-hotlinks",
+          "name": "Kung Pao Hot Links Sandwich",
+          "description": "Kung pao hot links, chili hoisin braised green onion, kung pao chili hoisin sesame aioli, peanuts, chili sesame oil, shabu shabu slaw, celery on ciabatta",
+          "price": 14.0,
+          "tags": ["contains-meat", "contains-nuts", "addon:Extra peanuts|1.00"]
+        },
+        {
+          "id": "i-apple-brie",
+          "name": "Farmer's Market Apple & Brie Sandwich",
+          "description": "Farmer's market apple, French Brie, Timmy's super combo mostarda, honey almond aioli, wild arugula, super combo vinaigrette on ciabatta",
+          "price": 13.5,
+          "tags": ["vegetarian", "contains-dairy", "contains-nuts"]
+        },
+        {
+          "id": "i-pbj-honeybun",
+          "name": "PB&J & Bacon & Toffee Peanuts & CTC on a Honey Bun",
+          "description": "Peanut butter, strawberry jelly, bacon, toffee peanuts, Cinnamon Toast Crunch on a honey bun",
+          "price": 11.5,
+          "tags": ["contains-meat", "contains-nuts"]
+        },
+        {
+          "id": "i-potsticker-burger",
+          "name": "Potsticker *It's Not a Cheeseburger* Cheeseburger",
+          "description": "Potstickers, American cheese, miso sesame scallion mayo, chili garlic dipping sauce, pickles, cherry tomatoes, red onions, lettuce, hot & sweet tomato chili sauce on brioche bun",
+          "price": 14.0,
+          "tags": ["contains-meat", "contains-dairy"]
+        },
+        {
+          "id": "i-butter-burger",
+          "name": "Pound Butter-Grilled Cheesey Burger",
+          "description": "One pound beef patty, butter-grilled to order, melty cheddar cheese, lettuce, tomato on brioche",
+          "price": 15.5,
+          "tags": ["contains-meat", "contains-dairy", "addon:Add bacon|2.00"]
+        },
+        {
+          "id": "i-pulled-pork-waffle",
+          "name": "Timmy's Pulled Pork & Waffle with Green Chili Mac n' Cheese",
+          "description": "Slow roasted pulled pork in house BBQ sauce, homemade green chili mac n' cheese, between 2 homemade Belgian waffles",
+          "price": 15.5,
+          "tags": ["contains-meat", "contains-dairy"]
+        },
+        {
+          "id": "i-spam-kimchi",
+          "name": "Spam & Kimchi Sandwich",
+          "description": "Spam, kimchi, grilled pineapple, superchunky chili-peanut sauce, pad thai slaw, kewpie mayo, Szechuan pepper peanuts on brioche",
+          "price": 13.5,
+          "tags": ["contains-meat", "contains-nuts"]
+        },
+        {
+          "id": "i-tacos-ahogadas",
+          "name": "Special Grilled Tacos Ahogadas",
+          "description": "Grilled tacos drowned in Timmy's signature salsa roja — ask the window what's inside today",
+          "price": 12.5,
+          "tags": ["contains-meat"]
+        },
+        {
+          "id": "i-tang-blt",
+          "name": "Tang BLT with Popping Crystals",
+          "description": "Tang-crusted bacon, mixed lettuce greens, baby heirloom tomatoes, popping crystals, Tang bacon aioli on sweet sliced brioche",
+          "price": 13.5,
+          "tags": ["contains-meat"]
+        },
+        {
+          "id": "i-thanksgiving",
+          "name": "Thanksgiving Leftover Sandwich",
+          "description": "Mustard & beer braised chicken, cranberry orange horseradish marmalade, hash brown patty, green bean slaw, fried onions, brioche stuffing on Texas toast brioche",
+          "price": 15.0,
+          "tags": ["contains-meat", "contains-dairy"]
+        },
+        {
+          "id": "i-ranchero-shrimp",
+          "name": "Grilled Ranchero Shrimp Sandwich",
+          "description": "Grilled ranchero shrimp, pico de gallo, pickled jalapeños, micro herbs, lemon, tomatoes, greens, sour cream on ciabatta",
+          "price": 14.5,
+          "tags": ["contains-shellfish", "contains-dairy"]
+        },
+        {
+          "id": "i-baloney-fried",
+          "name": "Baloney Fried! Sandwich",
+          "description": "Grilled baloney & mozzarella cheese skirt, candied walnuts, honey aioli, green olives, pistachios, extra honey on sliced brioche",
+          "price": 13.0,
+          "tags": ["contains-meat", "contains-dairy", "contains-nuts"]
         }
       ]
     },

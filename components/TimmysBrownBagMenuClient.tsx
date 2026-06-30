@@ -644,7 +644,7 @@ export default function TimmysBrownBagMenuClient() {
                 <img
                   src={brandLogoUrl}
                   alt={brandName}
-                  className="h-28 sm:h-36 w-auto max-w-[90vw] object-contain"
+                  className="h-36 sm:h-44 w-auto max-w-[92vw] object-contain"
                   loading="eager"
                   decoding="async"
                 />
