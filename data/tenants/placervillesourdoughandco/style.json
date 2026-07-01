@@ -1,0 +1,21 @@
+{
+  "heroVariant": "color",
+  "navVariant": "chipScroller",
+  "motion": "subtle",
+  "texture": {
+    "vignette": false,
+    "paper": true
+  },
+  "flags": {
+    "specials": true,
+    "signatureGrid": false,
+    "hideCart": false,
+    "dietaryFilters": true,
+    "categoryBadges": false
+  },
+  "featuredIds": [
+    "i-sco-plac-french-dip",
+    "i-sco-plac-cholula-chicken",
+    "i-sco-plac-grilled-chicken-caesar"
+  ]
+}

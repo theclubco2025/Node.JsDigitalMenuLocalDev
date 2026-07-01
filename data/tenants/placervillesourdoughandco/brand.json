@@ -1,0 +1,13 @@
+{
+  "name": "Sourdough & Co",
+  "tagline": "385 Main St. · Placerville, CA",
+  "header": {
+    "mode": "logo-only",
+    "height": 140,
+    "logoUrl": "https://sourdoughandco.com/templates/yootheme/cache/82/logowhite-82d84ced.png",
+    "background": "#1a1209"
+  },
+  "links": {
+    "orderOnline": "https://sourdoughandco.com/menu"
+  }
+}

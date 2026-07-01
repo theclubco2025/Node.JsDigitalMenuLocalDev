@@ -1,0 +1,367 @@
+{
+  "categories": [
+    {
+      "id": "c-sco-plac-classic",
+      "name": "Classic Sandwiches",
+      "items": [
+        {
+          "id": "i-sco-plac-ham",
+          "name": "#1 Ham",
+          "description": "Black Forest Smoked Ham on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.49,
+          "calories": 720,
+          "tags": ["ham", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-roast-beef",
+          "name": "#2 Roast Beef",
+          "description": "Top Round London Broil, Thinly Sliced on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.49,
+          "calories": 705,
+          "tags": ["beef", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-turkey",
+          "name": "#3 Turkey",
+          "description": "Gourmet Turkey Breast on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.49,
+          "calories": 690,
+          "tags": ["turkey", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-ham-turkey",
+          "name": "#4 Ham & Turkey",
+          "description": "Black Forest Smoked Ham, Gourmet Turkey Breast on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.99,
+          "calories": 705,
+          "tags": ["ham", "turkey", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-turkey-salami",
+          "name": "#5 Turkey & Dry Salami",
+          "description": "Gourmet Turkey Breast, Genoa Salami on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.99,
+          "calories": 810,
+          "tags": ["turkey", "salami", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-pastrami",
+          "name": "#6 Pastrami",
+          "description": "Thinly Sliced Lean Pastrami, Served Hot on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 11.49,
+          "calories": 735,
+          "tags": ["pastrami", "hot", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-pastrami-reuben",
+          "name": "#7 Pastrami Reuben",
+          "description": "Thinly Sliced Lean Pastrami, Sauerkraut, Swiss Cheese, Served Hot on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 12.49,
+          "calories": 850,
+          "tags": ["pastrami", "reuben", "hot", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-pastrami-turkey",
+          "name": "#8 Pastrami & Turkey",
+          "description": "Thinly Sliced Lean Pastrami, Gourmet Turkey Breast on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 11.49,
+          "calories": 715,
+          "tags": ["pastrami", "turkey", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-cracked-pepper-turkey",
+          "name": "#9 Cracked Pepper Turkey",
+          "description": "Black Pepper Turkey Breast on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.49,
+          "calories": 690,
+          "tags": ["turkey", "pepper", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-veggie",
+          "name": "#10 Veggie",
+          "description": "Garden Fresh Lettuce, Tomatoes, Cucumbers, Carrots and Peppers on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 9.49,
+          "calories": 660,
+          "tags": ["veggie", "vegetarian", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-chicken-salad",
+          "name": "#11 Chicken Salad",
+          "description": "All White Meat Chicken Breast, Celery, Red Grapes, Cranberries, Pecans on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.99,
+          "calories": 810,
+          "tags": ["chicken", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-tuna-salad",
+          "name": "#12 Tuna Salad",
+          "description": "Albacore Tuna Salad on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.49,
+          "calories": 1005,
+          "tags": ["tuna", "seafood", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-garlic-pesto-turkey",
+          "name": "#13 Garlic Pesto Turkey",
+          "description": "Gourmet Turkey Breast with Pesto Aioli spread on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 10.99,
+          "calories": 815,
+          "tags": ["turkey", "pesto", "classic"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-italian",
+          "name": "#14 Italian",
+          "description": "Dry Salami, Thinly Sliced Pepperoni, Mozzarella Cheese, Balsamic Vinegar, Olive Oil on freshly baked sourdough — 4\", 6\", or 8\"",
+          "price": 11.49,
+          "calories": 900,
+          "tags": ["salami", "pepperoni", "italian", "classic"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sco-plac-specialty",
+      "name": "Specialty Sandwiches",
+      "items": [
+        {
+          "id": "i-sco-plac-french-dip",
+          "name": "French Dip",
+          "description": "Thinly Sliced Roast Beef, House Spread, Swiss Cheese & All-Natural Au Jus — Served Hot on Fresh Baked Sourdough (6\")",
+          "price": 13.99,
+          "calories": 1160,
+          "tags": ["beef", "hot", "specialty"],
+          "imageUrl": "https://sourdoughandco.com/templates/yootheme/cache/a3/French_Dip_4-a35d4660.jpeg"
+        },
+        {
+          "id": "i-sco-plac-smoked-brisket",
+          "name": "Smoked Brisket",
+          "description": "Savory Smoked Brisket, House Spread, Tomatoes, Green Chili Coleslaw, Barbecue Sauce, Cheddar Cheese — Served Hot on Fresh Baked Sourdough (6\")",
+          "price": 13.99,
+          "calories": 770,
+          "tags": ["brisket", "bbq", "hot", "specialty"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-caprese",
+          "name": "Caprese",
+          "description": "Fresh Mozzarella Cheese, Pesto Aioli, Lettuce, Tomato, Drizzled Balsamic Glaze on Fresh Baked Sourdough (6\")",
+          "price": 12.99,
+          "calories": 804,
+          "tags": ["vegetarian", "caprese", "specialty"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-cholula-chicken",
+          "name": "Cholula Chicken",
+          "description": "Carved Chicken Marinated in Green Chili Cholula & Jalapeño Ranch Dressing, House Spread, Lettuce, Tomato, Crispy Jalapeños, Pepper Jack Cheese — Served Hot (6\")",
+          "price": 12.99,
+          "calories": 635,
+          "tags": ["chicken", "spicy", "hot", "specialty"],
+          "imageUrl": "https://sourdoughandco.com/templates/yootheme/cache/95/Sourdoughs_Barbeque_Chicken_Flatbread-95df790a.jpeg"
+        },
+        {
+          "id": "i-sco-plac-crispy-crunchy-chicken",
+          "name": "Crispy Crunchy Chicken",
+          "description": "Carved Chicken Marinated in Ranch Dressing, House Spread, Crispy Tortilla Strips and Onion Mix, Lettuce, Tomato, Pepper Jack Cheese — Served Hot (6\")",
+          "price": 12.99,
+          "calories": 632,
+          "tags": ["chicken", "crispy", "hot", "specialty"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sco-plac-salads",
+      "name": "Gourmet Salads",
+      "items": [
+        {
+          "id": "i-sco-plac-grilled-chicken-caesar",
+          "name": "Grilled Chicken Caesar Salad",
+          "description": "Chopped Romaine, Shaved Parmesan, Grilled Chicken, Sourdough Croutons and Caesar Dressing — Served with Sourdough Bread",
+          "price": 13.49,
+          "calories": 1305,
+          "tags": ["salad", "chicken", "caesar"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-southwest-chicken",
+          "name": "Southwest Chicken Salad",
+          "description": "Baby Greens and Chopped Romaine, Grilled Chicken, Sliced Avocado, Black Bean Corn Salsa, Tortilla Strips, Pepper Jack Cheese, Sour Cream and Jalapeño Ranch Dressing",
+          "price": 13.49,
+          "calories": 665,
+          "tags": ["salad", "chicken", "southwest", "avocado"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-cobb",
+          "name": "Cobb Salad",
+          "description": "Chopped Romaine and Spring Mix, Diced Tomatoes, Crisp Bacon, Sliced Hard-Boiled Egg, Avocado, Grilled Chicken, Crumbled Blue Cheese and Blue Cheese Dressing",
+          "price": 13.99,
+          "calories": 835,
+          "tags": ["salad", "chicken", "bacon", "cobb"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-greek",
+          "name": "Greek Salad",
+          "description": "Chopped Romaine, Ham, Cucumbers, Tomatoes, Artichoke Hearts, Kalamata Olives, Red Onions, Feta Cheese and Greek Dressing",
+          "price": 12.49,
+          "calories": 560,
+          "tags": ["salad", "greek", "ham", "feta"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-italian-salad",
+          "name": "Italian Salad",
+          "description": "Chopped Romaine, Bell Peppers, Salami, Mozzarella, Kalamata Olives, Tomatoes, Artichoke Hearts, Pepperoncini's and Italian Dressing",
+          "price": 12.49,
+          "calories": 935,
+          "tags": ["salad", "italian", "salami"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sco-plac-soups",
+      "name": "Soups",
+      "items": [
+        {
+          "id": "i-sco-plac-clam-chowder",
+          "name": "New England Clam Chowder",
+          "description": "Classic New England Clam Chowder — available daily. Cup, bowl, or sourdough bread bowl.",
+          "price": 6.99,
+          "calories": 465,
+          "tags": ["soup", "clam-chowder", "seafood"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-lentil-sausage",
+          "name": "Lentil & Sweet Italian Sausage",
+          "description": "Hearty lentil soup with sweet Italian sausage — Soup of the Day. Cup, bowl, or sourdough bread bowl.",
+          "price": 5.99,
+          "calories": 405,
+          "tags": ["soup", "lentil", "sausage", "soup-of-the-day"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-fire-roasted-veg",
+          "name": "Fire-Roasted Vegetable Soup",
+          "description": "Fire-roasted vegetables in a savory broth — Soup of the Day. Cup, bowl, or sourdough bread bowl.",
+          "price": 5.49,
+          "calories": 105,
+          "tags": ["soup", "vegetarian", "vegan", "soup-of-the-day"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-creamy-tomato",
+          "name": "Creamy Tomato Soup",
+          "description": "Rich and creamy tomato bisque — Soup of the Day. Cup, bowl, or sourdough bread bowl.",
+          "price": 5.99,
+          "calories": 420,
+          "tags": ["soup", "tomato", "vegetarian", "soup-of-the-day"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-cream-potato",
+          "name": "Cream of Potato Soup",
+          "description": "Creamy potato soup, hearty and comforting — Soup of the Day. Cup, bowl, or sourdough bread bowl.",
+          "price": 5.99,
+          "calories": 315,
+          "tags": ["soup", "potato", "vegetarian", "soup-of-the-day"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-chili",
+          "name": "Chili",
+          "description": "Savory house chili — Soup of the Day. Cup, bowl, or sourdough bread bowl.",
+          "price": 5.99,
+          "calories": 375,
+          "tags": ["soup", "chili", "soup-of-the-day"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-broccoli-cheese",
+          "name": "Broccoli & Cheese Soup",
+          "description": "Broccoli and cheddar cheese soup — Soup of the Day. Cup, bowl, or sourdough bread bowl.",
+          "price": 5.99,
+          "calories": 360,
+          "tags": ["soup", "broccoli", "cheese", "vegetarian", "soup-of-the-day"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-mac-cheese",
+          "name": "Mac & Cheese",
+          "description": "Classic macaroni and cheese — small or large size.",
+          "price": 6.49,
+          "calories": 714,
+          "tags": ["mac-and-cheese", "comfort-food"],
+          "imageUrl": ""
+        }
+      ]
+    },
+    {
+      "id": "c-sco-plac-sides",
+      "name": "Sides & Extras",
+      "items": [
+        {
+          "id": "i-sco-plac-chips-drink",
+          "name": "Chips & Fountain Drink",
+          "description": "Bag of chips paired with a fountain drink.",
+          "price": 3.49,
+          "calories": null,
+          "tags": ["sides", "chips"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-garden-salad",
+          "name": "Garden Salad",
+          "description": "Romaine & Spring Mix, Cucumbers, Cherry Tomatoes, Red Onion, your choice of dressing.",
+          "price": 4.99,
+          "calories": 176,
+          "tags": ["sides", "salad", "vegetarian"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-chili-coleslaw",
+          "name": "Green Chili Coleslaw",
+          "description": "House-made green chili coleslaw.",
+          "price": 2.99,
+          "calories": null,
+          "tags": ["sides", "coleslaw"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-avocado",
+          "name": "Avocado Add-On (1/4)",
+          "description": "Add a quarter avocado to any sandwich.",
+          "price": 1.49,
+          "calories": 60,
+          "tags": ["add-on", "avocado", "extras"],
+          "imageUrl": ""
+        },
+        {
+          "id": "i-sco-plac-bacon",
+          "name": "Bacon Add-On (2 slices)",
+          "description": "Add two slices of crispy bacon to any sandwich.",
+          "price": 1.99,
+          "calories": 160,
+          "tags": ["add-on", "bacon", "extras"],
+          "imageUrl": ""
+        }
+      ]
+    }
+  ]
+}
