@@ -74,9 +74,6 @@ export default function MenuClient() {
   const [cartBump, setCartBump] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  // plate button removed
-  // plate pile removed with floating button
-  // fly-to-plate animation removed
 
   // Get tenant/admin from URL params or pathname
   const isBrowser = typeof window !== 'undefined'
@@ -106,9 +103,6 @@ export default function MenuClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Tenant flags
-  const isBenes = false
-
   // Tenant config (brand/theme/images)
   const { data: cfg } = useSWR<TenantConfig>(`/api/tenant/config?tenant=${tenant}`, fetcher)
   const brand = cfg?.brand
@@ -123,7 +117,6 @@ export default function MenuClient() {
   const brandName = brand?.name || 'Menu'
   const brandTagline = brand?.tagline || ''
 
-  // Ensure themed CSS variables exist on first paint, especially for Benes on mobile
   const effectiveTheme = useMemo(() => theme ?? null, [theme])
 
   
@@ -294,9 +287,7 @@ export default function MenuClient() {
     return sum + (base + addOnCents) * line.quantity
   }, 0)
 
-  // Live testing: allow Independent to exercise ordering UI on production even if DB config lags.
-  const forceOrderingUi = tenant === 'independentbarandgrille'
-  const orderingEnabled = orderingCfg?.enabled === true || forceOrderingUi
+  const orderingEnabled = orderingCfg?.enabled === true
   const orderingPaused = (orderingCfg as unknown as { paused?: boolean } | undefined)?.paused === true
   const orderingPauseMessage =
     (orderingCfg as unknown as { pauseMessage?: unknown } | undefined)?.pauseMessage
@@ -744,18 +735,6 @@ export default function MenuClient() {
     ...(paperTexture ? { backgroundImage: 'radial-gradient(rgba(16,16,16,0.03) 1px, transparent 1px)', backgroundSize: '20px 20px' } : {}),
   }
 
-  // Benes-specific featured picks and pairings
-  const featuredItemIds: string[] = isBenes ? [
-    'i-margherita-napoletana-14',
-    'i-fettuccine-bolognese',
-    'i-prosciutto-arugula-14'
-  ] : []
-  const pairingsById: Record<string, string> = isBenes ? {
-    'i-fettuccine-bolognese': 'Pairs with Zinfandel',
-    'i-margherita-napoletana-14': 'Pairs with Chianti',
-    'i-prosciutto-arugula-14': 'Pairs with Pinot Grigio',
-    'i-lasagna': 'Pairs with Sangiovese'
-  } : {}
   function cardStyleForCategory(categoryName: string): React.CSSProperties {
     if (/pizza/i.test(categoryName)) {
       return {
@@ -780,31 +759,6 @@ export default function MenuClient() {
     }
     return {}
   }
-  function resolveFeatured() {
-    const items: Array<MenuItem & { categoryName?: string }> = []
-    if (!menuData?.categories) return items
-    const idToItem: Record<string, MenuItem & { categoryName: string }> = {}
-    for (const cat of menuData.categories) {
-      for (const it of cat.items) {
-        idToItem[it.id] = { ...it, categoryName: cat.name }
-      }
-    }
-    for (const fid of featuredItemIds) {
-      if (idToItem[fid]) items.push(idToItem[fid])
-    }
-    // Fallback: pick first three if any missing
-    if (items.length < 3) {
-      outer: for (const cat of menuData.categories) {
-        for (const it of cat.items) {
-          if (items.some(existing => existing.id === it.id)) continue
-          items.push({ ...it, categoryName: cat.name })
-          if (items.length >= 3) break outer
-        }
-      }
-    }
-    return items
-  }
-
   return (
     <div className="min-h-screen" style={containerStyle}>
       {/* Loading and error states */}
@@ -901,7 +855,7 @@ export default function MenuClient() {
       {/* Optional hero subtitle from copy */}
       {!isIndependentDraft && (
         <>
-          <div style={{ height: isBenes ? 160 : 80 }} />
+          <div style={{ height: 80 }} />
           {showBenesHero && (
             <div className="w-full" style={{height:6, background:'linear-gradient(90deg, var(--accent), #ffffff, var(--accent))'}} />
           )}
@@ -911,34 +865,6 @@ export default function MenuClient() {
             </div>
           )}
         </>
-      )}
-
-      {/* Category chip scroller removed for Benes */}
-
-      {/* Benes hero banner (Benes-only) */}
-      {!isIndependentDraft && isBenes && showBenesHero && (
-        <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div
-            className="relative w-full h-40 md:h-56 rounded-xl overflow-hidden border"
-            style={{ borderColor: 'rgba(0,0,0,0.08)', boxShadow: '0 12px 32px rgba(16,16,16,0.12)' }}
-          >
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, var(--primary), var(--accent))', opacity: 0.22 }} />
-            {brandLogoUrl && (
-              <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url(${brandLogoUrl})`, backgroundRepeat: 'repeat', backgroundSize: '160px 160px' }} />
-            )}
-            <div className="relative h-full flex items-center justify-between px-5">
-              <div className="max-w-lg">
-                {typeof copy?.tagline === 'string' && (
-                  <div className="text-lg md:text-xl font-semibold" style={{ color: '#FFFFFF' }}>{copy.tagline}</div>
-                )}
-                {typeof copy?.heroSubtitle === 'string' && (
-                  <div className="text-sm md:text-base text-gray-100 mt-1">{copy.heroSubtitle}</div>
-                )}
-              </div>
-              <div className="hidden md:flex items-center gap-2" />
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Subtle Specials ribbon */}
@@ -964,40 +890,6 @@ export default function MenuClient() {
                 : "Tonight's Specials are available — ask your server."
               )
             }
-          </div>
-        </div>
-      )}
-
-      {/* Signature Picks (Benes) */}
-      {false && (
-        <div className="max-w-7xl mx-auto px-4 mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg md:text-xl font-semibold" style={{ fontFamily: 'var(--font-serif)', color: '#101010' }}>Signature Picks</h3>
-            <div className="flex-1 ml-4" style={{ height: 2, background: 'linear-gradient(90deg, var(--accent), transparent)' }} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {resolveFeatured().map((it) => {
-              const src = imageMap[it.id] || it.imageUrl || ''
-              return (
-                <div key={it.id} className="relative rounded-xl overflow-hidden border" style={{ borderColor: 'rgba(185,28,28,0.22)', boxShadow: '0 10px 24px rgba(16,16,16,0.12)', background:'#fffdf5' }}>
-                  {src && (
-                    <img src={src} alt={it.name} className="w-full h-44 object-cover" loading="lazy" decoding="async" />
-                  )}
-                  <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(90deg, rgba(18,136,7,.06), rgba(255,255,255,.02), rgba(185,28,28,.06))' }} />
-                  <div className="p-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="text-sm font-semibold" style={{ fontFamily: 'var(--font-serif)', color:'#101010' }}>{it.name}</div>
-                        {pairingsById[it.id] && (
-                          <div className="text-xs text-gray-600 mt-0.5">{pairingsById[it.id]}</div>
-                        )}
-                      </div>
-                  <div className="text-sm font-bold px-2 py-0.5 rounded-full" style={{ color:'#0b0b0b', background:'var(--accent)' }}>${Number(it.price ?? 0).toFixed(2)}</div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
           </div>
         </div>
       )}
@@ -1227,17 +1119,13 @@ export default function MenuClient() {
                   className="text-2xl font-extrabold tracking-wide inline-flex items-center gap-3"
                   style={{
                     fontFamily: 'var(--font-serif)',
-                    color: isIndependentDraft ? '#f8fafc' : (isBenes ? '#101010' : 'var(--ink)')
+                    color: isIndependentDraft ? '#f8fafc' : 'var(--ink)'
                   }}
                 >
                   <span>{category.name}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
               </div>
-              {isBenes && typeof categoryIntros[category.name] === 'string' && (
-                <p className="text-gray-300 text-sm mb-4">{categoryIntros[category.name]}</p>
-              )}
-              
               {isIndependentDraft ? (
                 <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.10)', background: 'rgba(255,255,255,0.04)' }}>
                   {category.items.map((item, itemIdx) => {
@@ -1332,9 +1220,8 @@ export default function MenuClient() {
                       className="menu-item border rounded-lg overflow-hidden transition-all duration-300 hover:-translate-y-1"
                       style={{
                         borderRadius: 'var(--radius)',
-                        background: isBenes ? '#fffdf5' : 'var(--card)',
-                        borderColor: isBenes ? 'rgba(185,28,28,0.12)' : 'var(--muted)',
-                        boxShadow: isBenes ? '0 6px 24px rgba(16,16,16,0.06)' : undefined,
+                        background: 'var(--card)',
+                        borderColor: 'var(--muted)',
                         ...cardStyleForCategory(category.name)
                       }}
                     >

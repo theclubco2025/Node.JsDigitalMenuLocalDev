@@ -999,11 +999,6 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
     )
   }
 
-  function getCategoryImage(_name: string): string | null {
-    void _name
-    return null
-  }
-
   // Scroll spy to highlight active category
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1539,18 +1534,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                 style={selectedCategory===category?{background:'var(--accent)', color:'#0b0b0b'}:{ background:'#ffffff', color:'var(--ink)', border:'1px solid var(--muted)'} }
               >
                 <span className="inline-flex items-center gap-2">
-                  {getCategoryImage(category) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={getCategoryImage(category) as string}
-                      alt=""
-                      className="h-6 w-6 rounded-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    getCategoryIcon(category)
-                  )}
+                  {getCategoryIcon(category)}
                   <span>{category}</span>
                 </span>
               </button>
@@ -1829,18 +1813,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
                   style={activeCategoryId===category.id?{ color: '#0b0b0b', background: 'var(--accent)' }:{ color: '#e5e5e5', background: '#1a1a1a' }}
                 >
                   <span className="inline-flex items-center gap-2">
-                    {getCategoryImage(category.name) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={getCategoryImage(category.name) as string}
-                        alt=""
-                        className="h-6 w-6 rounded-md object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      getCategoryIcon(category.name)
-                    )}
+                    {getCategoryIcon(category.name)}
                     <span>{cleanMojibake(category.name)}</span>
                   </span>
                 </button>
@@ -1885,18 +1858,7 @@ export default function MenuClient({ initialTenant }: { initialTenant?: string }
             >
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <h2 className="text-lg sm:text-2xl font-extrabold tracking-widest uppercase inline-flex items-center gap-2 sm:gap-3" style={{ fontFamily: 'var(--font-serif)', color: 'var(--ink)' }}>
-                  {getCategoryImage(category.name) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={getCategoryImage(category.name) as string}
-                      alt=""
-                      className="h-9 w-9 rounded-lg object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    getCategoryIcon(category.name)
-                  )}
+                  {getCategoryIcon(category.name)}
                   <span>{cleanMojibake(category.name)}</span>
                 </h2>
                 <div className="flex-1 ml-6" style={{ height: 2, background: accentSecondary ? `linear-gradient(90deg, ${accentSecondary}, transparent)` : 'linear-gradient(90deg, var(--accent), transparent)' }}></div>
