@@ -112,8 +112,7 @@ export default function MenuClient() {
   const styleCfg = cfg?.style
   const orderingCfg = cfg?.ordering
   const accentSecondary = styleCfg?.accentSecondary
-  const categoryIntros = (copy?.categoryIntros as Record<string, string | undefined>) || {}
-  const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
+const brandLogoUrl = brand?.header?.logoUrl || brand?.logoUrl || ''
   const brandName = brand?.name || 'Menu'
   const brandTagline = brand?.tagline || ''
 
