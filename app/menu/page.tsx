@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import MenuClient from '@/components/MenuClient'
 import IndependentMenuClient from '@/components/IndependentMenuClient'
+import PlacervilleSourdoughandcoMenuClient from '@/components/PlacervilleSourdoughandcoMenuClient'
 import { prisma } from '@/lib/prisma'
 import type { Metadata } from 'next'
 
@@ -33,6 +34,11 @@ export default async function MenuPage({ searchParams }: Props) {
     canonicalTenant(firstString(searchParams?.tenant)?.trim().toLowerCase() ||
       process.env.NEXT_PUBLIC_DEFAULT_TENANT ||
       'demo')
+
+  // Sourdough & Co – Placerville bespoke UI
+  if (tenant === 'placervillesourdoughandco') {
+    return <PlacervilleSourdoughandcoMenuClient />
+  }
 
   // Preview: render Independent premium UI for the independent-draft branch/tenant
   if (isPreview && (tenant === 'independent-draft' || tenant === 'independentbarandgrille')) {
